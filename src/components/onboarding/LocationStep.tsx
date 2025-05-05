@@ -6,7 +6,7 @@ import type { Location } from '@/services/tax-spending';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MapPin, LocateFixed } from 'lucide-react';
+import { MapPin, LocateFixed, Loader2 } from 'lucide-react'; // Added Loader2
 import { useToast } from '@/hooks/use-toast';
 
 interface LocationStepProps {
@@ -16,58 +16,52 @@ interface LocationStepProps {
 export default function LocationStep({ onSubmit }: LocationStepProps) {
   const [manualLocation, setManualLocation] = useState('');
   const [isLocating, setIsLocating] = useState(false);
+  const [geolocationSupported, setGeolocationSupported] = useState(false); // State to track geolocation support
   const { toast } = useToast();
 
   // State to hold location derived from browser API, used to prevent hydration mismatch
-  const [browserLocation, setBrowserLocation] = useState<Location | null>(null);
+  // We don't need browserLocation state anymore as submission happens directly
+  // const [browserLocation, setBrowserLocation] = useState<Location | null>(null);
 
   useEffect(() => {
     // This effect runs only on the client after hydration
     // We can safely access navigator here
     if (navigator.geolocation) {
-      // Browser supports geolocation
+      setGeolocationSupported(true); // Enable button if supported
     } else {
-       // Browser doesn't support geolocation, maybe inform user or disable button
        console.log("Geolocation is not supported by this browser.");
+       // Keep button disabled, user must enter manually
     }
-  }, []);
+  }, []); // Empty dependency array ensures this runs once on mount
 
 
   const handleUseCurrentLocation = () => {
+    // No need to check navigator.geolocation here again, already handled by disabled state
     setIsLocating(true);
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const location: Location = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          };
-          setBrowserLocation(location); // Store location obtained via browser API
-          onSubmit(location); // Submit the location
-          setIsLocating(false);
-          toast({
-            title: 'Location Found',
-            description: 'Using your current location.',
-          });
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          setIsLocating(false);
-          toast({
-            title: 'Location Error',
-            description: `Could not get your location: ${error.message}. Please enter manually.`,
-            variant: 'destructive',
-          });
-        }
-      );
-    } else {
-      setIsLocating(false);
-      toast({
-        title: 'Location Error',
-        description: 'Geolocation is not supported by your browser. Please enter manually.',
-        variant: 'destructive',
-      });
-    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const location: Location = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+        // setBrowserLocation(location); // No longer needed
+        onSubmit(location); // Submit the location directly
+        setIsLocating(false);
+        toast({
+          title: 'Location Found',
+          description: 'Using your current location.',
+        });
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+        setIsLocating(false);
+        toast({
+          title: 'Location Error',
+          description: `Could not get your location: ${error.message}. Please enter manually.`,
+          variant: 'destructive',
+        });
+      }
+    );
   };
 
   const handleManualSubmit = (event: React.FormEvent) => {
@@ -101,13 +95,28 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
 
       <Button
         onClick={handleUseCurrentLocation}
-        disabled={isLocating}
+        disabled={!geolocationSupported || isLocating} // Disable if not supported or already locating
         className="w-full"
         variant="outline"
       >
-        <LocateFixed className="mr-2 h-4 w-4" />
-        {isLocating ? 'Locating...' : 'Use Current Location'}
+        {isLocating ? (
+            <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Locating...
+            </>
+        ) : (
+            <>
+                <LocateFixed className="mr-2 h-4 w-4" />
+                Use Current Location
+            </>
+        )}
       </Button>
+      {!geolocationSupported && (
+        <p className="text-xs text-center text-muted-foreground">
+            Geolocation is not available or supported by your browser.
+        </p>
+      )}
+
 
       <div className="relative my-4">
         <div className="absolute inset-0 flex items-center">
@@ -133,6 +142,7 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
               onChange={(e) => setManualLocation(e.target.value)}
               className="pl-10"
               aria-label="Enter your location manually"
+              required // Make manual input required if geolocation fails or isn't used
             />
           </div>
         </div>
