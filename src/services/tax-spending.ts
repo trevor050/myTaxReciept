@@ -249,44 +249,108 @@ export async function getTaxSpending(location: Location, taxAmount: number): Pro
 }
 
 /**
- * Generates a draft email to representatives based on selected spending items, with an activism focus.
- *
- * @param selectedItems An array of { id: string, description: string } objects representing the items the user believes are overspent.
- * @returns A string containing the generated email body.
+ * Represents a selected item for email generation, including reduction level.
  */
-export function generateRepresentativeEmail(selectedItems: { id: string; description: string }[]): string {
-  const subject = "Urgent: Re-evaluate Federal Tax Spending Priorities";
-
-  if (!selectedItems || selectedItems.length === 0) {
-    // Default message if nothing is selected (though UI should prevent this)
-    return `Subject: ${subject}\n\nDear Representative,\n\nI am writing as a concerned constituent to urge a critical re-evaluation of our federal tax spending. We must prioritize investments that directly benefit American communities and address pressing domestic needs rather than continuing patterns of potentially wasteful or misplaced spending.\n\nPlease outline your position on ensuring fiscal responsibility and transparency in the federal budget.\n\nSincerely,\nA Concerned Constituent\n[Your Name]\n[Your City, State, Zip Code - Essential for verification]`;
-  }
-
-  const itemDescriptions = selectedItems.map(item => `- ${item.description}`).join('\n');
-
-  // More critical tone, focused on redirecting funds
-  return `Subject: ${subject}
-
-Dear Representative,
-
-I am writing to express my deep concern regarding the current allocation of our federal tax dollars. As a constituent, I believe it is crucial that our hard-earned money is spent responsibly and effectively, prioritizing the needs of the American people.
-
-After reviewing estimates of federal spending, I am particularly troubled by the significant resources directed towards the following areas, which I believe represent misplaced priorities or excessive expenditure:
-
-${itemDescriptions}
-
-Continued funding at these levels, especially in light of pressing domestic issues like [mention 1-2 examples like affordable healthcare, infrastructure, education - *consider making this dynamic or user-input later*], seems fiscally irresponsible. Every dollar spent on questionable programs or excessive military budgets is a dollar not invested in strengthening our communities, improving essential services, or fostering long-term economic security here at home.
-
-I urge you to advocate for a significant shift in our spending priorities. We need greater scrutiny of the budget, reduced spending in the areas I've highlighted, and a redirection of funds towards programs that directly benefit the well-being and future prosperity of your constituents and all Americans.
-
-Could you please detail your stance on reducing spending in these specific categories and outline the concrete actions you are taking or plan to take to promote greater fiscal responsibility and ensure our tax dollars serve the public interest more directly?
-
-Thank you for your time and attention to this critical matter. I expect a response outlining your position and proposed actions.
-
-Sincerely,
-A Concerned Constituent
-[Your Name]
-[Your City, State, Zip Code - Essential for verification]`;
+export interface SelectedItem {
+  id: string;
+  description: string;
+  reductionLevel: number; // 0: Review, 50: Reduce, 100: Reallocate
 }
 
-    
+
+/**
+ * Generates a draft email to representatives based on selected spending items and customization options.
+ *
+ * @param selectedItems An array of SelectedItem objects.
+ * @param aggressiveness The overall tone (0: Polite, 50: Concerned, 100: Stern).
+ * @param userName The user's name.
+ * @param userLocation The user's location (City, State, Zip).
+ * @returns An object containing the generated email subject and body.
+ */
+export function generateRepresentativeEmail(
+    selectedItems: SelectedItem[],
+    aggressiveness: number,
+    userName: string,
+    userLocation: string
+): { subject: string; body: string } {
+
+    // --- Determine Subject Line ---
+    let subject = "Regarding Federal Tax Spending Priorities";
+    if (aggressiveness > 75) {
+        subject = "Urgent: Demand for Re-evaluation of Federal Spending";
+    } else if (aggressiveness > 25) {
+        subject = "Concern Regarding Federal Tax Allocations";
+    }
+
+    // --- Determine Opening ---
+    let opening = "Dear Representative,\n\nI am writing as a constituent";
+    if (aggressiveness > 75) {
+        opening = "Dear Representative,\n\nI am writing to demand immediate attention";
+    } else if (aggressiveness > 25) {
+        opening = "Dear Representative,\n\nI am writing to express my serious concern";
+    }
+    opening += ` regarding the current allocation of our federal tax dollars. As someone residing in ${userLocation || '[Your Area]'}, I believe it is crucial that our hard-earned money is spent responsibly and effectively, prioritizing the needs of the American people.\n\n`;
+
+    // --- Build Item List with Action Phrases ---
+    let itemList = "";
+    if (selectedItems.length > 0) {
+        if (aggressiveness > 75) {
+             itemList = "After reviewing federal spending estimates, I demand scrutiny and significant changes to the funding for the following areas, which represent grossly misplaced priorities or excessive, wasteful expenditure:\n\n";
+        } else if (aggressiveness > 25) {
+             itemList = "After reviewing federal spending estimates, I am particularly concerned by the resources directed towards the following areas, which I believe warrant significant reduction or reallocation:\n\n";
+        } else {
+             itemList = "After reviewing federal spending estimates, I would like to bring the following areas to your attention for review and potential adjustment:\n\n";
+        }
+
+        itemList += selectedItems.map(item => {
+            let actionPhrase = "should be reviewed for necessity and efficiency.";
+            if (item.reductionLevel > 75) { // Reallocate/Gut
+                actionPhrase = aggressiveness > 50
+                    ? "funding must be drastically cut and reallocated to essential domestic programs."
+                    : "funding should be significantly reduced and redirected towards more pressing needs.";
+            } else if (item.reductionLevel > 25) { // Reduce
+                actionPhrase = aggressiveness > 50
+                    ? "spending requires substantial reduction."
+                    : "spending should be carefully evaluated for potential reductions.";
+            }
+            // Add specific boilerplate reason (examples - expand these)
+            let reason = "";
+            if (item.id === 'israel_wars') reason = " Continued funding for foreign conflicts draws resources away from critical domestic needs.";
+            if (item.id === 'pentagon_contractors') reason = " Oversight is needed to prevent waste and ensure taxpayer money is used effectively by contractors.";
+            // Add more reasons for other item.ids...
+
+            return `- ${item.description}: ${actionPhrase}${reason}`;
+        }).join('\n');
+        itemList += "\n\n";
+    } else {
+        // Default message if somehow called with no items
+         itemList = "While I am reviewing the specific breakdown, I urge a general commitment to fiscal responsibility and prioritizing domestic investments.\n\n";
+    }
+
+     // --- Determine Connecting Statement ---
+    let connectingStatement = "";
+     if (aggressiveness > 75) {
+        connectingStatement = "This reckless spending diverts critical funds from vital domestic needs like affordable healthcare, infrastructure repair, and quality education. We cannot afford to continue prioritizing these questionable programs over the well-being of your constituents.\n\n";
+     } else if (aggressiveness > 25) {
+        connectingStatement = "Continued funding at these levels, especially when considering pressing domestic issues, raises concerns about fiscal responsibility. Every dollar potentially misspent is a dollar not invested in strengthening our communities here at home.\n\n";
+     } else {
+         connectingStatement = "Ensuring our tax dollars are used efficiently allows for better investment in programs that benefit our communities directly.\n\n";
+     }
+
+
+    // --- Determine Call to Action ---
+    let callToAction = "";
+    if (aggressiveness > 75) {
+        callToAction = `I demand you take immediate action to advocate for significant cuts in these areas and champion the redirection of funds towards programs that directly benefit the people of ${userLocation || 'our district'}. Outline the specific steps you will take to address this fiscal irresponsibility.\n\nI expect a prompt and detailed response outlining your commitment and planned actions.`;
+    } else if (aggressiveness > 25) {
+        callToAction = `I urge you to advocate for greater scrutiny and reductions in these specific categories. Please detail your stance on this issue and the actions you are taking to promote greater fiscal responsibility.\n\nI look forward to your response outlining your position.`;
+    } else {
+        callToAction = `Could you please provide information on your position regarding the funding levels for these programs and your efforts towards ensuring fiscal responsibility?\n\nThank you for your time and attention to this matter.`;
+    }
+
+
+    // --- Construct Full Body ---
+    const body = `${opening}${itemList}${connectingStatement}${callToAction}\n\nSincerely,\n${userName || '[Your Name]'}\n${userLocation || '[Your City, State, Zip Code]'}`;
+
+    return { subject, body };
+}

@@ -28,11 +28,24 @@ body {
     --border: 0 0% 91%; /* Lighter border */
     --input: 0 0% 91%; /* Input border matches general border */
     --ring: 180 100% 30%; /* Slightly brighter Teal for focus rings */
-    --chart-1: 180 70% 40%; /* Teal shades for charts */
-    --chart-2: 180 60% 50%;
-    --chart-3: 180 50% 60%;
-    --chart-4: 180 40% 70%;
-    --chart-5: 180 30% 80%;
+
+    /* Expanded and more distinct chart colors */
+    --chart-1: 180 70% 40%; /* Teal */
+    --chart-2: 210 70% 50%; /* Blue */
+    --chart-3: 30 90% 55%;  /* Orange */
+    --chart-4: 270 60% 60%; /* Purple */
+    --chart-5: 120 40% 50%; /* Green */
+    --chart-6: 0 70% 60%;   /* Red */
+    --chart-7: 60 80% 45%;  /* Yellow */
+    --chart-8: 300 50% 65%; /* Pink */
+    --chart-9: 240 40% 70%; /* Lavender */
+    --chart-10: 150 60% 45%;/* Teal-Green */
+    --chart-11: 330 70% 70%;/* Light Pink/Rose */
+    --chart-12: 195 65% 55%;/* Sky Blue */
+    --chart-13: 90 50% 50%; /* Lime Green */
+    --chart-14: 20 60% 60%; /* Brownish Orange */
+    --chart-15: 260 40% 55%;/* Indigo */
+
     --radius: 0.75rem; /* Slightly larger radius for modern feel */
 
     /* Sidebar specific colors (can be adjusted if sidebar is used) */
@@ -48,42 +61,53 @@ body {
   }
 
   .dark {
-    /* Define dark theme colors if needed, maintaining teal accent */
-    /* Ensure dark theme also gets a modern refresh */
+    /* Dark theme with Purple accent */
     --background: 240 10% 3.9%; /* Dark Blue/Gray */
-    --foreground: 0 0% 98%;
+    --foreground: 0 0% 95%; /* Lighter text */
     --card: 240 10% 5.9%; /* Slightly lighter card */
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 180 90% 40%; /* Brighter Teal for dark mode */
-    --primary-foreground: 0 0% 5%; /* Dark text on bright teal */
+    --card-foreground: 0 0% 95%;
+    --popover: 240 10% 4.5%; /* Slightly darker popover */
+    --popover-foreground: 0 0% 95%;
+    --primary: 270 70% 60%; /* Purple accent */
+    --primary-foreground: 0 0% 98%; /* Light text on purple */
     --secondary: 240 5% 12%; /* Darker secondary */
-    --secondary-foreground: 0 0% 85%;
+    --secondary-foreground: 0 0% 80%; /* Lighter secondary text */
     --muted: 240 5% 18%; /* Darker muted */
-    --muted-foreground: 0 0% 60%;
-    --accent: 240 5% 12%; /* Use secondary as accent base */
-    --accent-foreground: 180 90% 50%; /* Bright Teal text on accent */
+    --muted-foreground: 0 0% 55%; /* Muted text */
+    --accent: 240 5% 15%; /* Dark accent background */
+    --accent-foreground: 270 70% 70%; /* Lighter Purple text on accent */
     --destructive: 0 62.8% 50.6%; /* Adjusted destructive */
     --destructive-foreground: 0 0% 98%;
     --border: 240 5% 15%; /* Subtle border */
     --input: 240 5% 15%;
-    --ring: 180 90% 45%; /* Bright Teal for focus rings */
-    --chart-1: 180 70% 50%;
-    --chart-2: 180 60% 60%;
-    --chart-3: 180 50% 70%;
-    --chart-4: 180 40% 80%;
-    --chart-5: 180 30% 90%;
+    --ring: 270 70% 65%; /* Purple focus rings */
+
+    /* Expanded and distinct chart colors for dark mode */
+    --chart-1: 270 70% 60%; /* Purple (Primary) */
+    --chart-2: 180 60% 50%; /* Teal */
+    --chart-3: 30 80% 65%;  /* Orange */
+    --chart-4: 210 60% 60%; /* Blue */
+    --chart-5: 120 40% 60%; /* Green */
+    --chart-6: 0 65% 65%;   /* Red */
+    --chart-7: 60 70% 55%;  /* Yellow */
+    --chart-8: 300 50% 70%; /* Pink */
+    --chart-9: 240 30% 75%; /* Lavender */
+    --chart-10: 150 50% 55%;/* Teal-Green */
+    --chart-11: 330 60% 75%;/* Light Pink/Rose */
+    --chart-12: 195 55% 65%;/* Sky Blue */
+    --chart-13: 90 50% 60%; /* Lime Green */
+    --chart-14: 20 50% 70%; /* Brownish Orange */
+    --chart-15: 260 40% 65%;/* Indigo */
 
     /* Sidebar specific colors for dark mode */
     --sidebar-background: 240 10% 4.5%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 180 90% 40%; /* Teal */
-    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-primary: 270 70% 60%; /* Purple */
+    --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 240 5% 12%;
-    --sidebar-accent-foreground: 180 90% 50%; /* Teal */
+    --sidebar-accent-foreground: 270 70% 70%; /* Purple */
     --sidebar-border: 240 5% 15%;
-    --sidebar-ring: 180 90% 45%; /* Teal */
+    --sidebar-ring: 270 70% 65%; /* Purple */
   }
 }
 
@@ -103,40 +127,85 @@ body {
   }
 }
 
-/* Subtle Fade-in */
+/* Smooth Fade-in */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 .animate-fadeIn {
-  animation: fadeIn 0.4s ease-out forwards; /* Faster, smoother ease */
+  animation: fadeIn 0.5s ease-out forwards; /* Slightly slower, smoother ease */
 }
 
 /* Smooth Slide-in from bottom + Fade */
 @keyframes slideInUp {
-  from { transform: translateY(12px); opacity: 0; } /* Slightly less distance */
+  from { transform: translateY(15px); opacity: 0; } /* Slightly more distance */
   to { transform: translateY(0); opacity: 1; }
 }
 .animate-slideInUp {
-  animation: slideInUp 0.35s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; /* Smoother, slightly faster ease */
+  animation: slideInUp 0.45s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; /* Smoother, slightly slower */
+}
+
+/* Slide out to top + Fade */
+@keyframes slideOutUp {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(-15px); opacity: 0; }
+}
+.animate-slideOutUp {
+    animation: slideOutUp 0.3s ease-in forwards;
+}
+
+/* Slide in from top + Fade */
+@keyframes slideInDown {
+    from { transform: translateY(-15px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+.animate-slideInDown {
+    animation: slideInDown 0.45s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
 }
 
 
-/* Accordion animations */
+/* Accordion animations (slightly refined) */
 @keyframes accordion-down {
-  from { height: 0; opacity: 0; }
-  to { height: var(--radix-accordion-content-height); opacity: 1; }
+  from { height: 0; opacity: 0; transform: translateY(-5px); }
+  to { height: var(--radix-accordion-content-height); opacity: 1; transform: translateY(0); }
 }
 .animate-accordion-down {
-    animation: accordion-down 0.25s ease-out; /* Slightly faster */
+    animation: accordion-down 0.3s ease-out; /* Smoother ease */
 }
 
 @keyframes accordion-up {
-  from { height: var(--radix-accordion-content-height); opacity: 1; }
-  to { height: 0; opacity: 0; }
+  from { height: var(--radix-accordion-content-height); opacity: 1; transform: translateY(0); }
+  to { height: 0; opacity: 0; transform: translateY(-5px); }
 }
 .animate-accordion-up {
-    animation: accordion-up 0.2s ease-out;
+    animation: accordion-up 0.25s ease-out; /* Slightly faster exit */
 }
 
-    
+/* Popover/Dialog animation */
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+.animate-scaleIn {
+    animation: scaleIn 0.2s ease-out forwards;
+}
+
+@keyframes scaleOut {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.95); }
+}
+.animate-scaleOut {
+    animation: scaleOut 0.15s ease-in forwards;
+}
+
+/* Glow effect for floating button */
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 5px hsla(var(--primary) / 0.5), 0 0 10px hsla(var(--primary) / 0.3); }
+  50% { box-shadow: 0 0 15px hsla(var(--primary) / 0.6), 0 0 25px hsla(var(--primary) / 0.4); }
+}
+
+.animate-glow {
+    animation: glow 2.5s ease-in-out infinite;
+}
+
+

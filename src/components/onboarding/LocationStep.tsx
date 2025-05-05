@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -8,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MapPin, LocateFixed, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface LocationStepProps {
   onSubmit: (location: Location) => void;
@@ -17,25 +18,20 @@ interface LocationStepProps {
 export default function LocationStep({ onSubmit }: LocationStepProps) {
   const [manualLocation, setManualLocation] = useState('');
   const [isLocating, setIsLocating] = useState(false);
-  const [geolocationSupported, setGeolocationSupported] = useState<boolean | null>(null); // Use null initial state
+  const [geolocationSupported, setGeolocationSupported] = useState<boolean | null>(null);
   const [isClient, setIsClient] = useState(false);
   const { toast } = useToast();
 
-
   useEffect(() => {
-    // This effect runs only on the client after hydration
     setIsClient(true);
-    if (navigator.geolocation) {
-      setGeolocationSupported(true);
-    } else {
+    setGeolocationSupported(!!navigator.geolocation);
+    if (!navigator.geolocation) {
        console.log("Geolocation is not supported by this browser.");
-       setGeolocationSupported(false);
     }
-  }, []); // Empty dependency array ensures this runs once on mount
-
+  }, []);
 
   const handleUseCurrentLocation = () => {
-    if (!navigator.geolocation) return; // Guard against unexpected calls
+    if (!geolocationSupported) return;
 
     setIsLocating(true);
     navigator.geolocation.getCurrentPosition(
@@ -44,7 +40,7 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         };
-        onSubmit(location); // Submit the location directly
+        onSubmit(location);
         setIsLocating(false);
         toast({
           title: 'Location Found',
@@ -73,7 +69,7 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
       });
       return;
     }
-    // TODO: Implement geocoding to convert manualLocation string to lat/lng
+    // Placeholder Geocoding - replace with actual geocoding service call
     console.warn('Geocoding not implemented. Using placeholder location.');
     const placeholderLocation: Location = { lat: 40.7128, lng: -74.0060 }; // Example: NYC
     onSubmit(placeholderLocation);
@@ -83,12 +79,11 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
      });
   };
 
-  // Render loading state until client-side hydration is complete
+  // Skeleton loader for SSR/initial render
   if (!isClient) {
     return (
-      <div className="space-y-6">
-         <Skeleton className="h-8 w-3/4 mx-auto" />
-         <Skeleton className="h-6 w-full mx-auto" />
+      <div className="space-y-6 animate-fadeIn">
+         {/* Simplified Skeleton */}
          <Skeleton className="h-10 w-full" />
          <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
@@ -96,7 +91,7 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground">
-                Or enter manually
+                Or
               </span>
             </div>
         </div>
@@ -105,76 +100,76 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
                  <Skeleton className="h-4 w-1/4" />
                  <Skeleton className="h-10 w-full" />
             </div>
-             <Skeleton className="h-10 w-full" />
+             <Skeleton className="h-10 w-full mt-2" />
          </div>
       </div>
     );
   }
 
-  // Render actual content only on the client
+  // Client-side rendered content
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold text-center">Enter Your Location</h2>
-      <p className="text-center text-muted-foreground">
-        Help us find tax spending data relevant to your area.
-      </p>
-
       {/* Geolocation button section */}
-      <Button
-        onClick={handleUseCurrentLocation}
-        disabled={geolocationSupported === false || isLocating} // Disable if not supported or already locating
-        className="w-full"
-        variant="outline"
-      >
-        {isLocating ? (
-            <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Locating...
-            </>
-        ) : (
-            <>
-                <LocateFixed className="mr-2 h-4 w-4" />
-                Use Current Location
-            </>
-        )}
-      </Button>
-      {geolocationSupported === false && (
-        <p className="text-xs text-center text-muted-foreground">
-            Geolocation is not available or supported by your browser. Please enter manually.
-        </p>
-      )}
+       {geolocationSupported !== null && ( // Only render button section once support is determined
+           <>
+             <Button
+                onClick={handleUseCurrentLocation}
+                disabled={!geolocationSupported || isLocating}
+                className="w-full transition-all duration-200 ease-in-out hover:scale-[1.02]" // Subtle hover effect
+                variant="outline"
+              >
+                {isLocating ? (
+                    <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Locating...
+                    </>
+                ) : (
+                    <>
+                        <LocateFixed className="mr-2 h-4 w-4" />
+                        Use Current Location
+                    </>
+                )}
+             </Button>
+              {!geolocationSupported && (
+                <p className="text-xs text-center text-muted-foreground -mt-3">
+                    Geolocation is not available. Please enter manually.
+                </p>
+              )}
 
-      {/* Separator */}
-      <div className="relative my-4">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            Or enter manually
-          </span>
-        </div>
-      </div>
+              {/* Separator */}
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border/70" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground/80">
+                    Or Enter Manually
+                  </span>
+                </div>
+              </div>
+          </>
+        )}
+
 
       {/* Manual input form */}
       <form onSubmit={handleManualSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="location">Location (Zip Code or City)</Label>
+          <Label htmlFor="location" className="sr-only">Location (Zip Code or City)</Label> {/* Screen reader only label */}
           <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70 pointer-events-none" /> {/* Slightly dimmer icon */}
             <Input
               id="location"
               type="text"
-              placeholder="e.g., 90210 or San Francisco"
+              placeholder="Enter Zip Code or City"
               value={manualLocation}
               onChange={(e) => setManualLocation(e.target.value)}
-              className="pl-10"
+              className="pl-10 text-base" // Ensure consistent text size
               aria-label="Enter your location manually"
-              required // Make manual input required
+              required
             />
           </div>
         </div>
-        <Button type="submit" className="w-full">
+        <Button type="submit" className="w-full transition-all duration-200 ease-in-out hover:scale-[1.02]">
           Next
         </Button>
       </form>

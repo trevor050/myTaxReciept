@@ -1,6 +1,7 @@
 
 import type { Config } from "tailwindcss";
 import { fontFamily } from "tailwindcss/defaultTheme"
+const plugin = require('tailwindcss/plugin'); // Import plugin
 
 export default {
     darkMode: ["class"],
@@ -49,11 +50,11 @@ export default {
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
         chart: {
-          '1': 'hsl(var(--chart-1))',
-          '2': 'hsl(var(--chart-2))',
-          '3': 'hsl(var(--chart-3))',
-          '4': 'hsl(var(--chart-4))',
-          '5': 'hsl(var(--chart-5))'
+          '1': 'hsl(var(--chart-1))', '2': 'hsl(var(--chart-2))', '3': 'hsl(var(--chart-3))',
+          '4': 'hsl(var(--chart-4))', '5': 'hsl(var(--chart-5))', '6': 'hsl(var(--chart-6))',
+          '7': 'hsl(var(--chart-7))', '8': 'hsl(var(--chart-8))', '9': 'hsl(var(--chart-9))',
+          '10': 'hsl(var(--chart-10))', '11': 'hsl(var(--chart-11))', '12': 'hsl(var(--chart-12))',
+          '13': 'hsl(var(--chart-13))', '14': 'hsl(var(--chart-14))', '15': 'hsl(var(--chart-15))',
         },
         sidebar: {
           DEFAULT: 'hsl(var(--sidebar-background))',
@@ -67,37 +68,89 @@ export default {
         }
       },
       borderRadius: {
-        lg: 'var(--radius)', // Use the CSS variable directly
-        md: 'calc(var(--radius) - 4px)', // Adjusted for potentially larger base radius
-        sm: 'calc(var(--radius) - 6px)' // Adjusted for potentially larger base radius
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 4px)',
+        sm: 'calc(var(--radius) - 6px)'
       },
        keyframes: {
-        'accordion-down': { // Using definition from globals.css
-          from: { height: '0', opacity: '0' },
-          to: { height: 'var(--radix-accordion-content-height)', opacity: '1' },
+        'accordion-down': {
+          from: { height: '0', opacity: '0', transform: 'translateY(-5px)' },
+          to: { height: 'var(--radix-accordion-content-height)', opacity: '1', transform: 'translateY(0)' },
         },
-        'accordion-up': { // Using definition from globals.css
-          from: { height: 'var(--radix-accordion-content-height)', opacity: '1' },
-          to: { height: '0', opacity: '0' },
+        'accordion-up': {
+           from: { height: 'var(--radix-accordion-content-height)', opacity: '1', transform: 'translateY(0)' },
+           to: { height: '0', opacity: '0', transform: 'translateY(-5px)' },
         },
-        'fadeIn': { // Using definition from globals.css
-            '0%': { opacity: '0' },
-            '100%': { opacity: '1' },
+        'fadeIn': {
+            'from': { opacity: '0' },
+            'to': { opacity: '1' },
         },
-        'slideInUp': { // Using definition from globals.css
-            '0%': { transform: 'translateY(12px)', opacity: '0' },
-            '100%': { transform: 'translateY(0)', opacity: '1' },
-        }
+        'slideInUp': {
+            'from': { transform: 'translateY(15px)', opacity: '0' },
+            'to': { transform: 'translateY(0)', opacity: '1' },
+        },
+        'slideOutUp': { // Added
+             from: { transform: 'translateY(0)', opacity: '1' },
+             to: { transform: 'translateY(-15px)', opacity: '0' },
+        },
+        'slideInDown': { // Added
+            from: { transform: 'translateY(-15px)', opacity: '0' },
+            to: { transform: 'translateY(0)', opacity: '1' },
+        },
+        'scaleIn': { // Added
+             from: { opacity: '0', transform: 'scale(0.95)' },
+             to: { opacity: '1', transform: 'scale(1)' },
+        },
+        'scaleOut': { // Added
+            from: { opacity: '1', transform: 'scale(1)' },
+            to: { opacity: '0', transform: 'scale(0.95)' },
+        },
+        'glow': { // Added
+            '0%, 100%': { boxShadow: "0 0 5px theme('colors.primary / 50%'), 0 0 10px theme('colors.primary / 30%')" },
+            '50%': { boxShadow: "0 0 15px theme('colors.primary / 60%'), 0 0 25px theme('colors.primary / 40%')" },
+        },
       },
       animation: {
-        'accordion-down': 'accordion-down 0.25s ease-out', // Reference animation from globals.css
-        'accordion-up': 'accordion-up 0.2s ease-out', // Reference animation from globals.css
-        'fadeIn': 'fadeIn 0.4s ease-out forwards', // Reference animation from globals.css
-        'slideInUp': 'slideInUp 0.35s cubic-bezier(0.25, 0.8, 0.25, 1) forwards', // Reference animation from globals.css
+        'accordion-down': 'accordion-down 0.3s ease-out',
+        'accordion-up': 'accordion-up 0.25s ease-out',
+        'fadeIn': 'fadeIn 0.5s ease-out forwards',
+        'slideInUp': 'slideInUp 0.45s cubic-bezier(0.25, 0.8, 0.25, 1) forwards',
+        'slideOutUp': 'slideOutUp 0.3s ease-in forwards', // Added
+        'slideInDown': 'slideInDown 0.45s cubic-bezier(0.25, 0.8, 0.25, 1) forwards', // Added
+        'scaleIn': 'scaleIn 0.2s ease-out forwards', // Added
+        'scaleOut': 'scaleOut 0.15s ease-in forwards', // Added
+        'glow': 'glow 2.5s ease-in-out infinite', // Added
       }
     }
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+      require("tailwindcss-animate"),
+      // Add custom scrollbar utilities
+      plugin(function({ addUtilities }: { addUtilities: any }) {
+          addUtilities({
+              '.scrollbar-thin': {
+                  'scrollbar-width': 'thin',
+                  '&::-webkit-scrollbar': {
+                      width: '8px',
+                      height: '8px',
+                  },
+              },
+              '.scrollbar-thumb-muted': {
+                 '&::-webkit-scrollbar-thumb': {
+                      backgroundColor: 'hsl(var(--muted))',
+                      borderRadius: '10px',
+                      border: '2px solid hsl(var(--background))', // Match background
+                  },
+                  '&::-webkit-scrollbar-thumb:hover': {
+                       backgroundColor: 'hsl(var(--muted-foreground))',
+                  },
+              },
+               '.scrollbar-track-transparent': {
+                   '&::-webkit-scrollbar-track': {
+                       backgroundColor: 'transparent',
+                   },
+               },
+          })
+      })
+    ],
 } satisfies Config;
-
-    

@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -5,12 +6,12 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { DollarSign, Loader2 } from 'lucide-react';
+import { DollarSign, Loader2, Zap } from 'lucide-react'; // Added Zap icon
 import { useToast } from '@/hooks/use-toast';
 
 
 interface TaxAmountStepProps {
-  onSubmit: (amount: number) => void;
+  onSubmit: (amount: number | null) => void; // Allow null for average case
   isLoading: boolean;
 }
 
@@ -33,43 +34,46 @@ export default function TaxAmountStep({ onSubmit, isLoading }: TaxAmountStepProp
     onSubmit(amount);
   };
 
+   const handleUseAverage = () => {
+      // Submit null to indicate using the average/median value
+      onSubmit(null);
+      toast({
+         title: 'Using Average',
+         description: 'Calculating breakdown based on average US federal tax.',
+      });
+   };
+
+
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
      // Allow only numbers and a single decimal point
      const value = event.target.value;
      // Basic filtering - allows digits and one decimal point. More robust validation can be added.
-     if (/^\d*\.?\d*$/.test(value)) {
+     if (/^\d*\.?\d*$/.test(value) || value === '') { // Allow empty string for clearing input
         setTaxAmount(value);
      }
   }
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold text-center">Enter Your Estimated Tax</h2>
-      <p className="text-center text-muted-foreground">
-        Enter the approximate amount of income tax you paid last year.
-      </p>
+      {/* Main Input Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="taxAmount">Estimated Annual Income Tax Paid</Label>
+          <Label htmlFor="taxAmount" className="sr-only">Estimated Annual Income Tax Paid</Label> {/* Screen reader only */}
            <div className="relative">
-             <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+             <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70 pointer-events-none" /> {/* Slightly dimmer icon */}
               <Input
                 id="taxAmount"
                 type="text" // Use text to allow formatting, validate on submit
                 inputMode="decimal" // Hint for mobile keyboards
-                placeholder="e.g., 5000"
+                placeholder="Enter Amount (e.g., 5000)"
                 value={taxAmount}
                 onChange={handleInputChange}
-                className="pl-10"
+                className="pl-10 text-base text-center" // Center align text
                 aria-label="Estimated annual income tax paid"
-                required
               />
            </div>
-           <p className="text-xs text-muted-foreground pt-1">
-             This helps personalize the breakdown. An estimate is fine.
-           </p>
         </div>
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button type="submit" className="w-full transition-all duration-200 ease-in-out hover:scale-[1.02]" disabled={isLoading || !taxAmount}> {/* Disable if no amount entered */}
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -80,6 +84,34 @@ export default function TaxAmountStep({ onSubmit, isLoading }: TaxAmountStepProp
           )}
         </Button>
       </form>
+
+        {/* Separator */}
+        <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-border/70" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground/80">
+                Or
+            </span>
+            </div>
+        </div>
+
+       {/* Use Average Button */}
+        <div className="text-center space-y-2">
+             <Button
+                variant="ghost"
+                onClick={handleUseAverage}
+                disabled={isLoading}
+                className="text-primary hover:text-primary/80 transition-colors w-full sm:w-auto"
+            >
+                <Zap className="mr-2 h-4 w-4" /> Skip & Use U.S. Average
+            </Button>
+            <p className="text-xs text-muted-foreground">
+                Uses an estimated average federal income tax payment.
+            </p>
+       </div>
+
     </div>
   );
 }
