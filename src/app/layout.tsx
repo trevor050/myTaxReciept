@@ -1,12 +1,10 @@
 import type {Metadata} from 'next';
-import { GeistSans } from 'geist/font/sans'; // Correct import for GeistSans from its package
+import { GeistSans } from 'geist/font/sans';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"; // Import Toaster
 
-const geistSans = GeistSans({ // Use GeistSans directly
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
+// Use GeistSans.variable directly instead of calling it as a function
+const geistSansVariable = GeistSans.variable;
 
 // Remove Geist_Mono if not explicitly needed or keep if intended
 // const geistMono = Geist_Mono({
@@ -27,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       {/* Apply font variable and antialiased class */}
-      <body className={`${geistSans.variable} font-sans antialiased`}>
+      <body className={`${geistSansVariable} font-sans antialiased`}>
         {children}
         <Toaster /> {/* Add Toaster component here */}
       </body>
