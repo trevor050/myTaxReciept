@@ -103,24 +103,40 @@ body {
   }
 }
 
-/* Add simple fade-in animation */
+/* Subtle Fade-in */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-
 .animate-fadeIn {
-  animation: fadeIn 0.5s ease-in-out forwards;
+  animation: fadeIn 0.4s ease-out forwards; /* Faster, smoother ease */
 }
 
-/* Add slide-in animation */
+/* Smooth Slide-in from bottom + Fade */
 @keyframes slideInUp {
-  from { transform: translateY(15px); opacity: 0; } /* Slightly less distance */
+  from { transform: translateY(12px); opacity: 0; } /* Slightly less distance */
   to { transform: translateY(0); opacity: 1; }
 }
-
 .animate-slideInUp {
-  animation: slideInUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; /* Smoother ease */
+  animation: slideInUp 0.35s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; /* Smoother, slightly faster ease */
 }
-    
+
+
+/* Accordion animations */
+@keyframes accordion-down {
+  from { height: 0; opacity: 0; }
+  to { height: var(--radix-accordion-content-height); opacity: 1; }
+}
+.animate-accordion-down {
+    animation: accordion-down 0.25s ease-out; /* Slightly faster */
+}
+
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); opacity: 1; }
+  to { height: 0; opacity: 0; }
+}
+.animate-accordion-up {
+    animation: accordion-up 0.2s ease-out;
+}
+
     

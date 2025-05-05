@@ -71,41 +71,33 @@ export default {
         md: 'calc(var(--radius) - 4px)', // Adjusted for potentially larger base radius
         sm: 'calc(var(--radius) - 6px)' // Adjusted for potentially larger base radius
       },
-      keyframes: {
-        'accordion-down': {
-          from: {
-            height: '0'
-          },
-          to: {
-            height: 'var(--radix-accordion-content-height)'
-          }
+       keyframes: {
+        'accordion-down': { // Using definition from globals.css
+          from: { height: '0', opacity: '0' },
+          to: { height: 'var(--radix-accordion-content-height)', opacity: '1' },
         },
-        'accordion-up': {
-          from: {
-            height: 'var(--radix-accordion-content-height)'
-          },
-          to: {
-            height: '0'
-          }
+        'accordion-up': { // Using definition from globals.css
+          from: { height: 'var(--radix-accordion-content-height)', opacity: '1' },
+          to: { height: '0', opacity: '0' },
         },
-        'fadeIn': {
+        'fadeIn': { // Using definition from globals.css
             '0%': { opacity: '0' },
             '100%': { opacity: '1' },
         },
-        'slideInUp': {
-            '0%': { transform: 'translateY(15px)', opacity: '0' }, // Matched globals.css
+        'slideInUp': { // Using definition from globals.css
+            '0%': { transform: 'translateY(12px)', opacity: '0' },
             '100%': { transform: 'translateY(0)', opacity: '1' },
         }
       },
       animation: {
-        'accordion-down': 'accordion-down 0.2s ease-out',
-        'accordion-up': 'accordion-up 0.2s ease-out',
-        'fadeIn': 'fadeIn 0.5s ease-in-out forwards',
-        'slideInUp': 'slideInUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards', // Matched globals.css
+        'accordion-down': 'accordion-down 0.25s ease-out', // Reference animation from globals.css
+        'accordion-up': 'accordion-up 0.2s ease-out', // Reference animation from globals.css
+        'fadeIn': 'fadeIn 0.4s ease-out forwards', // Reference animation from globals.css
+        'slideInUp': 'slideInUp 0.35s cubic-bezier(0.25, 0.8, 0.25, 1) forwards', // Reference animation from globals.css
       }
     }
   },
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
-    
+
     
