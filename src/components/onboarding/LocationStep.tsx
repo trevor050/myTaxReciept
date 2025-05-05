@@ -16,27 +16,24 @@ interface LocationStepProps {
 export default function LocationStep({ onSubmit }: LocationStepProps) {
   const [manualLocation, setManualLocation] = useState('');
   const [isLocating, setIsLocating] = useState(false);
-  const [geolocationSupported, setGeolocationSupported] = useState(false); // State to track geolocation support
+  const [geolocationSupported, setGeolocationSupported] = useState(false);
+  const [isClient, setIsClient] = useState(false); // State to track client-side rendering
   const { toast } = useToast();
 
-  // State to hold location derived from browser API, used to prevent hydration mismatch
-  // We don't need browserLocation state anymore as submission happens directly
-  // const [browserLocation, setBrowserLocation] = useState<Location | null>(null);
 
   useEffect(() => {
     // This effect runs only on the client after hydration
-    // We can safely access navigator here
+    setIsClient(true); // Indicate client-side rendering is active
     if (navigator.geolocation) {
-      setGeolocationSupported(true); // Enable button if supported
+      setGeolocationSupported(true);
     } else {
        console.log("Geolocation is not supported by this browser.");
-       // Keep button disabled, user must enter manually
     }
   }, []); // Empty dependency array ensures this runs once on mount
 
 
   const handleUseCurrentLocation = () => {
-    // No need to check navigator.geolocation here again, already handled by disabled state
+    // navigator.geolocation check is safe here because the button is only rendered on client
     setIsLocating(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -44,7 +41,6 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         };
-        // setBrowserLocation(location); // No longer needed
         onSubmit(location); // Submit the location directly
         setIsLocating(false);
         toast({
@@ -66,7 +62,6 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
 
   const handleManualSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    // Basic validation - ensure input is not empty
     if (!manualLocation.trim()) {
       toast({
         title: 'Invalid Input',
@@ -76,7 +71,6 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
       return;
     }
     // TODO: Implement geocoding to convert manualLocation string to lat/lng
-    // For now, using placeholder coordinates. Replace with actual geocoding API call.
     console.warn('Geocoding not implemented. Using placeholder location.');
     const placeholderLocation: Location = { lat: 40.7128, lng: -74.0060 }; // Example: NYC
     onSubmit(placeholderLocation);
@@ -93,30 +87,34 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
         Help us find tax spending data relevant to your area.
       </p>
 
-      <Button
-        onClick={handleUseCurrentLocation}
-        disabled={!geolocationSupported || isLocating} // Disable if not supported or already locating
-        className="w-full"
-        variant="outline"
-      >
-        {isLocating ? (
-            <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Locating...
-            </>
-        ) : (
-            <>
-                <LocateFixed className="mr-2 h-4 w-4" />
-                Use Current Location
-            </>
-        )}
-      </Button>
-      {!geolocationSupported && (
-        <p className="text-xs text-center text-muted-foreground">
-            Geolocation is not available or supported by your browser.
-        </p>
+      {/* Conditionally render the button and message only on the client */}
+      {isClient && (
+        <>
+          <Button
+            onClick={handleUseCurrentLocation}
+            disabled={!geolocationSupported || isLocating} // Disable if not supported or already locating
+            className="w-full"
+            variant="outline"
+          >
+            {isLocating ? (
+                <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Locating...
+                </>
+            ) : (
+                <>
+                    <LocateFixed className="mr-2 h-4 w-4" />
+                    Use Current Location
+                </>
+            )}
+          </Button>
+          {!geolocationSupported && (
+            <p className="text-xs text-center text-muted-foreground">
+                Geolocation is not available or supported by your browser. Please enter manually.
+            </p>
+          )}
+        </>
       )}
-
 
       <div className="relative my-4">
         <div className="absolute inset-0 flex items-center">
@@ -142,7 +140,7 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
               onChange={(e) => setManualLocation(e.target.value)}
               className="pl-10"
               aria-label="Enter your location manually"
-              required // Make manual input required if geolocation fails or isn't used
+              required // Make manual input required
             />
           </div>
         </div>
