@@ -6,8 +6,9 @@ import type { Location } from '@/services/tax-spending';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MapPin, LocateFixed, Loader2 } from 'lucide-react'; // Added Loader2
+import { MapPin, LocateFixed, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
 
 interface LocationStepProps {
   onSubmit: (location: Location) => void;
@@ -16,24 +17,26 @@ interface LocationStepProps {
 export default function LocationStep({ onSubmit }: LocationStepProps) {
   const [manualLocation, setManualLocation] = useState('');
   const [isLocating, setIsLocating] = useState(false);
-  const [geolocationSupported, setGeolocationSupported] = useState(false);
-  const [isClient, setIsClient] = useState(false); // State to track client-side rendering
+  const [geolocationSupported, setGeolocationSupported] = useState<boolean | null>(null); // Use null initial state
+  const [isClient, setIsClient] = useState(false);
   const { toast } = useToast();
 
 
   useEffect(() => {
     // This effect runs only on the client after hydration
-    setIsClient(true); // Indicate client-side rendering is active
+    setIsClient(true);
     if (navigator.geolocation) {
       setGeolocationSupported(true);
     } else {
        console.log("Geolocation is not supported by this browser.");
+       setGeolocationSupported(false);
     }
   }, []); // Empty dependency array ensures this runs once on mount
 
 
   const handleUseCurrentLocation = () => {
-    // navigator.geolocation check is safe here because the button is only rendered on client
+    if (!navigator.geolocation) return; // Guard against unexpected calls
+
     setIsLocating(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -80,6 +83,35 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
      });
   };
 
+  // Render loading state until client-side hydration is complete
+  if (!isClient) {
+    return (
+      <div className="space-y-6">
+         <Skeleton className="h-8 w-3/4 mx-auto" />
+         <Skeleton className="h-6 w-full mx-auto" />
+         <Skeleton className="h-10 w-full" />
+         <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Or enter manually
+              </span>
+            </div>
+        </div>
+         <div className="space-y-4">
+            <div className="space-y-2">
+                 <Skeleton className="h-4 w-1/4" />
+                 <Skeleton className="h-10 w-full" />
+            </div>
+             <Skeleton className="h-10 w-full" />
+         </div>
+      </div>
+    );
+  }
+
+  // Render actual content only on the client
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold text-center">Enter Your Location</h2>
@@ -87,35 +119,32 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
         Help us find tax spending data relevant to your area.
       </p>
 
-      {/* Conditionally render the button and message only on the client */}
-      {isClient && (
-        <>
-          <Button
-            onClick={handleUseCurrentLocation}
-            disabled={!geolocationSupported || isLocating} // Disable if not supported or already locating
-            className="w-full"
-            variant="outline"
-          >
-            {isLocating ? (
-                <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Locating...
-                </>
-            ) : (
-                <>
-                    <LocateFixed className="mr-2 h-4 w-4" />
-                    Use Current Location
-                </>
-            )}
-          </Button>
-          {!geolocationSupported && (
-            <p className="text-xs text-center text-muted-foreground">
-                Geolocation is not available or supported by your browser. Please enter manually.
-            </p>
-          )}
-        </>
+      {/* Geolocation button section */}
+      <Button
+        onClick={handleUseCurrentLocation}
+        disabled={geolocationSupported === false || isLocating} // Disable if not supported or already locating
+        className="w-full"
+        variant="outline"
+      >
+        {isLocating ? (
+            <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Locating...
+            </>
+        ) : (
+            <>
+                <LocateFixed className="mr-2 h-4 w-4" />
+                Use Current Location
+            </>
+        )}
+      </Button>
+      {geolocationSupported === false && (
+        <p className="text-xs text-center text-muted-foreground">
+            Geolocation is not available or supported by your browser. Please enter manually.
+        </p>
       )}
 
+      {/* Separator */}
       <div className="relative my-4">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t" />
@@ -127,6 +156,7 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
         </div>
       </div>
 
+      {/* Manual input form */}
       <form onSubmit={handleManualSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="location">Location (Zip Code or City)</Label>
