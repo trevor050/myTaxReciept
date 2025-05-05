@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,33 +9,34 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 98%; /* Very light gray */
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%; /* White */
-    --card-foreground: 0 0% 3.9%;
+    --background: 0 0% 100%; /* Cleaner White */
+    --foreground: 0 0% 9%; /* Darker text for contrast */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
+    --popover-foreground: 0 0% 9%;
     --primary: 180 100% 25.1%; /* Teal */
     --primary-foreground: 0 0% 98%; /* Light contrast for teal */
-    --secondary: 0 0% 96.1%; /* Light gray */
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%; /* Light gray */
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%; /* Light gray */
+    --secondary: 0 0% 97.5%; /* Even lighter gray for subtle backgrounds */
+    --secondary-foreground: 0 0% 15%; /* Slightly darker secondary text */
+    --muted: 0 0% 94%; /* Slightly darker muted gray */
+    --muted-foreground: 0 0% 45.1%; /* Muted text */
+    --accent: 0 0% 96.1%; /* Keep light gray accent */
     --accent-foreground: 180 100% 25.1%; /* Teal text on accent */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 180 100% 25.1%; /* Teal for focus rings */
+    --border: 0 0% 91%; /* Lighter border */
+    --input: 0 0% 91%; /* Input border matches general border */
+    --ring: 180 100% 30%; /* Slightly brighter Teal for focus rings */
     --chart-1: 180 70% 40%; /* Teal shades for charts */
     --chart-2: 180 60% 50%;
     --chart-3: 180 50% 60%;
     --chart-4: 180 40% 70%;
     --chart-5: 180 30% 80%;
-    --radius: 0.5rem; /* Keep default radius or adjust if needed */
+    --radius: 0.75rem; /* Slightly larger radius for modern feel */
 
     /* Sidebar specific colors (can be adjusted if sidebar is used) */
+    /* Keep sidebar consistent or define specific modern theme */
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 0 0% 3.9%;
     --sidebar-primary: 180 100% 25.1%; /* Teal */
@@ -44,52 +46,60 @@ body {
     --sidebar-border: 0 0% 89.8%;
     --sidebar-ring: 180 100% 25.1%; /* Teal */
   }
+
   .dark {
     /* Define dark theme colors if needed, maintaining teal accent */
-    --background: 0 0% 3.9%;
+    /* Ensure dark theme also gets a modern refresh */
+    --background: 240 10% 3.9%; /* Dark Blue/Gray */
     --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
+    --card: 240 10% 5.9%; /* Slightly lighter card */
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
+    --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 180 100% 35%; /* Slightly lighter Teal for dark mode */
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 180 100% 35%; /* Teal text on accent */
-    --destructive: 0 62.8% 30.6%;
+    --primary: 180 90% 40%; /* Brighter Teal for dark mode */
+    --primary-foreground: 0 0% 5%; /* Dark text on bright teal */
+    --secondary: 240 5% 12%; /* Darker secondary */
+    --secondary-foreground: 0 0% 85%;
+    --muted: 240 5% 18%; /* Darker muted */
+    --muted-foreground: 0 0% 60%;
+    --accent: 240 5% 12%; /* Use secondary as accent base */
+    --accent-foreground: 180 90% 50%; /* Bright Teal text on accent */
+    --destructive: 0 62.8% 50.6%; /* Adjusted destructive */
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 180 100% 35%; /* Teal for focus rings */
-    --chart-1: 180 70% 50%; /* Teal shades for charts */
+    --border: 240 5% 15%; /* Subtle border */
+    --input: 240 5% 15%;
+    --ring: 180 90% 45%; /* Bright Teal for focus rings */
+    --chart-1: 180 70% 50%;
     --chart-2: 180 60% 60%;
     --chart-3: 180 50% 70%;
     --chart-4: 180 40% 80%;
     --chart-5: 180 30% 90%;
 
     /* Sidebar specific colors for dark mode */
-    --sidebar-background: 0 0% 3.9%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 180 100% 35%; /* Teal */
-    --sidebar-primary-foreground: 0 0% 9%;
-    --sidebar-accent: 0 0% 14.9%;
-    --sidebar-accent-foreground: 180 100% 35%; /* Teal */
-    --sidebar-border: 0 0% 14.9%;
-    --sidebar-ring: 180 100% 35%; /* Teal */
+    --sidebar-background: 240 10% 4.5%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 180 90% 40%; /* Teal */
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 240 5% 12%;
+    --sidebar-accent-foreground: 180 90% 50%; /* Teal */
+    --sidebar-border: 240 5% 15%;
+    --sidebar-ring: 180 90% 45%; /* Teal */
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border transition-colors duration-150; /* Add subtle transition */
   }
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased; /* Smoother fonts */
+    -moz-osx-font-smoothing: grayscale;
+  }
+   /* Improved focus visibility */
+  *:focus-visible {
+     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 }
 
@@ -105,10 +115,12 @@ body {
 
 /* Add slide-in animation */
 @keyframes slideInUp {
-  from { transform: translateY(20px); opacity: 0; }
+  from { transform: translateY(15px); opacity: 0; } /* Slightly less distance */
   to { transform: translateY(0); opacity: 1; }
 }
 
 .animate-slideInUp {
-  animation: slideInUp 0.5s ease-in-out forwards;
+  animation: slideInUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; /* Smoother ease */
 }
+    
+    

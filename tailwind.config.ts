@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 import { fontFamily } from "tailwindcss/defaultTheme"
 
@@ -66,9 +67,9 @@ export default {
         }
       },
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)'
+        lg: 'var(--radius)', // Use the CSS variable directly
+        md: 'calc(var(--radius) - 4px)', // Adjusted for potentially larger base radius
+        sm: 'calc(var(--radius) - 6px)' // Adjusted for potentially larger base radius
       },
       keyframes: {
         'accordion-down': {
@@ -87,24 +88,24 @@ export default {
             height: '0'
           }
         },
-        // Add fade-in and slide-in keyframes if not already present
         'fadeIn': {
             '0%': { opacity: '0' },
             '100%': { opacity: '1' },
         },
         'slideInUp': {
-            '0%': { transform: 'translateY(20px)', opacity: '0' },
+            '0%': { transform: 'translateY(15px)', opacity: '0' }, // Matched globals.css
             '100%': { transform: 'translateY(0)', opacity: '1' },
         }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        'fadeIn': 'fadeIn 0.5s ease-in-out forwards', // Add animation utility
-        'slideInUp': 'slideInUp 0.5s ease-in-out forwards', // Add animation utility
+        'fadeIn': 'fadeIn 0.5s ease-in-out forwards',
+        'slideInUp': 'slideInUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards', // Matched globals.css
       }
     }
   },
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
-
+    
+    
