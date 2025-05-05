@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { DollarSign, Loader2, Zap } from 'lucide-react'; // Added Zap icon
 import { useToast } from '@/hooks/use-toast';
 
-const AVERAGE_FEDERAL_TAX = 10000; // Consistent average value
+// Updated median federal tax amount based on user feedback
+const MEDIAN_FEDERAL_TAX = 17766;
 
 
 interface TaxAmountStepProps {
@@ -36,12 +37,12 @@ export default function TaxAmountStep({ onSubmit, isLoading }: TaxAmountStepProp
     onSubmit(amount);
   };
 
-   const handleUseAverage = () => {
-      // Submit null to indicate using the average/median value
+   const handleUseMedian = () => {
+      // Submit null to indicate using the median value
       onSubmit(null);
       toast({
-         title: 'Using Average',
-         description: `Calculating breakdown based on the U.S. average federal tax of $${AVERAGE_FEDERAL_TAX.toLocaleString()}.`,
+         title: 'Using Median',
+         description: `Calculating breakdown based on the U.S. median federal tax of $${MEDIAN_FEDERAL_TAX.toLocaleString()}.`,
       });
    };
 
@@ -99,19 +100,19 @@ export default function TaxAmountStep({ onSubmit, isLoading }: TaxAmountStepProp
             </div>
         </div>
 
-       {/* Use Average Button */}
+       {/* Use Median Button */}
         <div className="text-center space-y-2">
              <Button
                 variant="ghost"
-                onClick={handleUseAverage}
+                onClick={handleUseMedian} // Updated handler name
                 disabled={isLoading}
                 className="text-primary hover:text-primary/80 transition-colors w-full sm:w-auto text-base" // Larger text
                 size="lg" // Larger button
             >
-                <Zap className="mr-2 h-4 w-4" /> Skip & Use U.S. Average
+                <Zap className="mr-2 h-4 w-4" /> Skip & Use U.S. Median
             </Button>
             <p className="text-xs text-muted-foreground">
-                 Uses an estimated average federal income tax of ${AVERAGE_FEDERAL_TAX.toLocaleString()}.
+                 Uses an estimated median federal income tax of ${MEDIAN_FEDERAL_TAX.toLocaleString()}.
             </p>
        </div>
 

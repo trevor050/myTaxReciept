@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea"; // Keep textarea import for potential future use
 import { generateRepresentativeEmail, type SelectedItem } from '@/services/tax-spending'; // Adjust path as needed
 import { Mail, Send, Settings2, X } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area"; // Import ScrollArea
@@ -64,7 +63,6 @@ export default function EmailCustomizationModal({
   onSubmit,
 }: EmailCustomizationModalProps) {
   const [aggressiveness, setAggressiveness] = useState(50); // Default to 'Concerned'
-  // Initialize reduction levels for each selected item
   const [itemReductions, setItemReductions] = useState<{ [key: string]: number }>(
     selectedItems.reduce((acc, item) => {
       acc[item.id] = 50; // Default to 'Reduce'
@@ -73,39 +71,44 @@ export default function EmailCustomizationModal({
   );
   const [userName, setUserName] = useState('');
   const [userLocation, setUserLocation] = useState(''); // e.g., "City, State, Zip"
-  const formRef = React.useRef<HTMLFormElement>(null); // Ref for the form
+  const formRef = React.useRef<HTMLFormElement>(null);
 
-  // Update itemReductions when selectedItems change externally (e.g., closing and reopening modal)
+  // Reset state when modal opens
   React.useEffect(() => {
-    setItemReductions(
-      selectedItems.reduce((acc, item) => {
-        acc[item.id] = itemReductions[item.id] ?? 50; // Keep existing value or default to 50
-        return acc;
-      }, {} as { [key: string]: number })
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]); // Re-run when modal opens/closes to ensure defaults are set correctly
+    if (isOpen) {
+        setAggressiveness(50); // Reset aggressiveness
+        // Reset item reductions based on currently selected items
+        setItemReductions(
+            selectedItems.reduce((acc, item) => {
+                acc[item.id] = 50; // Default to 'Reduce'
+                return acc;
+            }, {} as { [key: string]: number })
+        );
+        // Optionally clear user info if desired, or keep it persisted
+        // setUserName('');
+        // setUserLocation('');
+    }
+  }, [isOpen, selectedItems]); // Rerun when modal opens or selected items change
+
 
   const handleReductionChange = (itemId: string, value: number[]) => {
     setItemReductions(prev => ({ ...prev, [itemId]: value[0] }));
   };
 
-  // Correctly handle form submission triggered by the button click
   const handleGenerateEmailClick = () => {
-    // Trigger form validation and submission
     formRef.current?.requestSubmit();
   };
 
   const handleFormSubmit = (event: React.FormEvent) => {
-     event.preventDefault(); // Prevent default form submission
+     event.preventDefault();
      if (!userName || !userLocation) {
-        // Optional: Add toast or validation message here if needed
+        // Consider adding a toast message here for better UX
         return;
      }
      const emailDetails = generateRepresentativeEmail(
        selectedItems.map(item => ({
          ...item,
-         reductionLevel: itemReductions[item.id], // Add reduction level to each item
+         reductionLevel: itemReductions[item.id],
        })),
        aggressiveness,
        userName,
@@ -118,9 +121,9 @@ export default function EmailCustomizationModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      {/* Adjusted max-width and height, added flex column layout */}
-      <DialogContent className="sm:max-w-[90vw] md:max-w-[70vw] lg:max-w-[60vw] xl:max-w-[50vw] max-h-[90vh] flex flex-col p-0 rounded-lg">
-        <DialogHeader className="px-6 pt-5 pb-4 border-b border-border"> {/* Added border */}
+      {/* Use flex utilities to center the content */}
+      <DialogContent className="sm:max-w-[90vw] md:max-w-[70vw] lg:max-w-[60vw] xl:max-w-[50vw] max-h-[90vh] flex flex-col p-0 rounded-lg items-center justify-center">
+        <DialogHeader className="px-6 pt-5 pb-4 border-b border-border w-full"> {/* Ensure header spans width */}
           <DialogTitle className="flex items-center gap-2 text-xl sm:text-2xl">
              <Settings2 className="h-5 w-5" /> Customize Your Email
           </DialogTitle>
@@ -129,8 +132,7 @@ export default function EmailCustomizationModal({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Use ScrollArea for content */}
-         <ScrollArea className="flex-grow px-6 py-4">
+        <ScrollArea className="flex-grow px-6 py-4 w-full"> {/* Ensure scroll area spans width */}
             <form ref={formRef} onSubmit={handleFormSubmit} className="space-y-6">
                 {/* Overall Tone Slider */}
                 <div className="space-y-3">
@@ -140,12 +142,12 @@ export default function EmailCustomizationModal({
                             id="aggressiveness"
                             min={0}
                             max={100}
-                            step={50} // Steps match the defined levels
+                            step={50}
                             value={[aggressiveness]}
                             onValueChange={(value) => setAggressiveness(value[0])}
                             className="flex-grow"
                         />
-                         <span className="text-sm font-medium text-muted-foreground w-24 text-right tabular-nums shrink-0"> {/* Prevent shrinking */}
+                         <span className="text-sm font-medium text-muted-foreground w-24 text-right tabular-nums shrink-0">
                             {getLabel(aggressivenessLevels, aggressiveness)}
                         </span>
                     </div>
@@ -171,7 +173,7 @@ export default function EmailCustomizationModal({
                                         onValueChange={(value) => handleReductionChange(item.id, value)}
                                         className="flex-grow"
                                      />
-                                    <span className="text-sm font-medium text-muted-foreground w-24 text-right tabular-nums shrink-0"> {/* Prevent shrinking */}
+                                    <span className="text-sm font-medium text-muted-foreground w-24 text-right tabular-nums shrink-0">
                                         {getLabel(reductionLevels, itemReductions[item.id] ?? 50)}
                                     </span>
                                 </div>
@@ -192,7 +194,7 @@ export default function EmailCustomizationModal({
                                 onChange={(e) => setUserName(e.target.value)}
                                 placeholder="e.g., Jane Doe"
                                 required
-                                className="text-base sm:text-sm" // Adjust text size
+                                className="text-base sm:text-sm"
                             />
                          </div>
                          <div className="space-y-1.5">
@@ -203,7 +205,7 @@ export default function EmailCustomizationModal({
                                 onChange={(e) => setUserLocation(e.target.value)}
                                 placeholder="e.g., Anytown, CA 90210"
                                 required
-                                className="text-base sm:text-sm" // Adjust text size
+                                className="text-base sm:text-sm"
                              />
                          </div>
                     </div>
@@ -213,13 +215,12 @@ export default function EmailCustomizationModal({
          </ScrollArea>
 
 
-        <DialogFooter className="px-6 pb-5 pt-4 border-t border-border"> {/* Added border */}
+        <DialogFooter className="px-6 pb-5 pt-4 border-t border-border w-full"> {/* Ensure footer spans width */}
              <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-             <Button type="button" onClick={handleGenerateEmailClick} disabled={!userName || !userLocation || selectedItems.length === 0}> {/* Ensure items are selected */}
+             <Button type="button" onClick={handleGenerateEmailClick} disabled={!userName || !userLocation || selectedItems.length === 0}>
                  <Send className="mr-2 h-4 w-4" /> Generate Email
             </Button>
         </DialogFooter>
-         {/* Explicit Close Button removed as default close button is sufficient */}
       </DialogContent>
     </Dialog>
   );
