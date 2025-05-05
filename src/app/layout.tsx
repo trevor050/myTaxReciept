@@ -1,5 +1,5 @@
 import type {Metadata} from 'next';
-import { GeistSans } from 'next/font/google'; // Correct import for GeistSans
+import { GeistSans } from 'geist/font/sans'; // Correct import for GeistSans from its package
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"; // Import Toaster
 
