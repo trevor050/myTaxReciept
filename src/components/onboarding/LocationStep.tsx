@@ -24,14 +24,18 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
 
   useEffect(() => {
     setIsClient(true);
-    setGeolocationSupported(!!navigator.geolocation);
-    if (!navigator.geolocation) {
-       console.log("Geolocation is not supported by this browser.");
-    }
+    // Check for geolocation support only on the client
+    const checkGeolocation = () => {
+        setGeolocationSupported(!!navigator.geolocation);
+        if (!navigator.geolocation) {
+           console.log("Geolocation is not supported by this browser.");
+        }
+    };
+    checkGeolocation();
   }, []);
 
   const handleUseCurrentLocation = () => {
-    if (!geolocationSupported) return;
+    if (!geolocationSupported || typeof navigator === 'undefined' || !navigator.geolocation) return;
 
     setIsLocating(true);
     navigator.geolocation.getCurrentPosition(
@@ -117,6 +121,7 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
                 disabled={!geolocationSupported || isLocating}
                 className="w-full transition-all duration-200 ease-in-out hover:scale-[1.02]" // Subtle hover effect
                 variant="outline"
+                size="lg" // Make button slightly larger
               >
                 {isLocating ? (
                     <>
@@ -156,20 +161,20 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
         <div className="space-y-2">
           <Label htmlFor="location" className="sr-only">Location (Zip Code or City)</Label> {/* Screen reader only label */}
           <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70 pointer-events-none" /> {/* Slightly dimmer icon */}
+            <MapPin className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/70 pointer-events-none" /> {/* Slightly larger icon */}
             <Input
               id="location"
               type="text"
               placeholder="Enter Zip Code or City"
               value={manualLocation}
               onChange={(e) => setManualLocation(e.target.value)}
-              className="pl-10 text-base" // Ensure consistent text size
+              className="pl-10 h-12 text-base sm:text-lg" // Larger input
               aria-label="Enter your location manually"
               required
             />
           </div>
         </div>
-        <Button type="submit" className="w-full transition-all duration-200 ease-in-out hover:scale-[1.02]">
+        <Button type="submit" className="w-full transition-all duration-200 ease-in-out hover:scale-[1.02]" size="lg"> {/* Larger button */}
           Next
         </Button>
       </form>

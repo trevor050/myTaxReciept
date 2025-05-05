@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { DollarSign, Loader2, Zap } from 'lucide-react'; // Added Zap icon
 import { useToast } from '@/hooks/use-toast';
 
+const AVERAGE_FEDERAL_TAX = 10000; // Consistent average value
+
 
 interface TaxAmountStepProps {
   onSubmit: (amount: number | null) => void; // Allow null for average case
@@ -39,7 +41,7 @@ export default function TaxAmountStep({ onSubmit, isLoading }: TaxAmountStepProp
       onSubmit(null);
       toast({
          title: 'Using Average',
-         description: 'Calculating breakdown based on average US federal tax.',
+         description: `Calculating breakdown based on the U.S. average federal tax of $${AVERAGE_FEDERAL_TAX.toLocaleString()}.`,
       });
    };
 
@@ -60,7 +62,7 @@ export default function TaxAmountStep({ onSubmit, isLoading }: TaxAmountStepProp
         <div className="space-y-2">
           <Label htmlFor="taxAmount" className="sr-only">Estimated Annual Income Tax Paid</Label> {/* Screen reader only */}
            <div className="relative">
-             <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70 pointer-events-none" /> {/* Slightly dimmer icon */}
+             <DollarSign className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/70 pointer-events-none" /> {/* Slightly larger icon */}
               <Input
                 id="taxAmount"
                 type="text" // Use text to allow formatting, validate on submit
@@ -68,12 +70,12 @@ export default function TaxAmountStep({ onSubmit, isLoading }: TaxAmountStepProp
                 placeholder="Enter Amount (e.g., 5000)"
                 value={taxAmount}
                 onChange={handleInputChange}
-                className="pl-10 text-base text-center" // Center align text
+                className="pl-10 h-12 text-lg sm:text-xl text-center" // Larger input, centered
                 aria-label="Estimated annual income tax paid"
               />
            </div>
         </div>
-        <Button type="submit" className="w-full transition-all duration-200 ease-in-out hover:scale-[1.02]" disabled={isLoading || !taxAmount}> {/* Disable if no amount entered */}
+        <Button type="submit" className="w-full transition-all duration-200 ease-in-out hover:scale-[1.02]" size="lg" disabled={isLoading || !taxAmount}> {/* Larger button, disable if no amount */}
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -103,12 +105,13 @@ export default function TaxAmountStep({ onSubmit, isLoading }: TaxAmountStepProp
                 variant="ghost"
                 onClick={handleUseAverage}
                 disabled={isLoading}
-                className="text-primary hover:text-primary/80 transition-colors w-full sm:w-auto"
+                className="text-primary hover:text-primary/80 transition-colors w-full sm:w-auto text-base" // Larger text
+                size="lg" // Larger button
             >
                 <Zap className="mr-2 h-4 w-4" /> Skip & Use U.S. Average
             </Button>
             <p className="text-xs text-muted-foreground">
-                Uses an estimated average federal income tax payment.
+                 Uses an estimated average federal income tax of ${AVERAGE_FEDERAL_TAX.toLocaleString()}.
             </p>
        </div>
 

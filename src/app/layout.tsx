@@ -1,16 +1,12 @@
+
 import type {Metadata} from 'next';
 import { GeistSans } from 'geist/font/sans';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"; // Import Toaster
+import { ThemeProvider } from "@/components/ThemeProvider"; // Import ThemeProvider
 
-// Use GeistSans.variable directly instead of calling it as a function
+// Use GeistSans.variable directly
 const geistSansVariable = GeistSans.variable;
-
-// Remove Geist_Mono if not explicitly needed or keep if intended
-// const geistMono = Geist_Mono({
-//   variable: '--font-geist-mono',
-//   subsets: ['latin'],
-// });
 
 export const metadata: Metadata = {
   title: 'WhereIsMyTaxMoneyGoing.org', // Update title
@@ -23,11 +19,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning> {/* Add suppressHydrationWarning */}
       {/* Apply font variable and antialiased class */}
       <body className={`${geistSansVariable} font-sans antialiased`}>
-        {children}
-        <Toaster /> {/* Add Toaster component here */}
+         <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+         >
+            {children}
+            <Toaster /> {/* Add Toaster component here */}
+        </ThemeProvider>
       </body>
     </html>
   );

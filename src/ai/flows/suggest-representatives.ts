@@ -2,9 +2,9 @@
 'use server';
 
 /**
- * @fileOverview This file defines a Genkit flow for suggesting relevant representatives to contact based on a user's tax spending breakdown.
+ * @fileOverview This file defines a Genkit flow for identifying the top tax spending categories.
  *
- * - suggestRepresentatives - A function that suggests relevant representatives based on tax spending.
+ * - suggestRepresentatives - A function that identifies top spending categories.
  * - SuggestRepresentativesInput - The input type for the suggestRepresentatives function.
  * - SuggestRepresentativesOutput - The return type for the suggestRepresentatives function.
  */
@@ -28,16 +28,14 @@ const SuggestRepresentativesInputSchema = z.object({
 });
 export type SuggestRepresentativesInput = z.infer<typeof SuggestRepresentativesInputSchema>;
 
+// Simplified Output Schema - Focus on identifying key areas
 const SuggestRepresentativesOutputSchema = z.object({
-  shouldSuggestRepresentatives: z
-    .boolean()
-    .describe('Whether or not the user should be suggested to contact representatives.'),
+  topSpendingCategories: z
+    .array(z.string())
+    .describe('The main spending categories representing the largest portions of the tax breakdown (typically top 2-3).'),
   reason: z
     .string()
-    .describe('The reason for suggesting or not suggesting to contact representatives.'),
-  suggestedCategories: z
-    .array(z.string())
-    .describe('The main spending categories for which contacting representatives is most relevant.'),
+    .describe('A brief explanation of why these categories were identified (e.g., based on highest percentages).'),
 });
 export type SuggestRepresentativesOutput = z.infer<typeof SuggestRepresentativesOutputSchema>;
 
@@ -49,32 +47,20 @@ const prompt = ai.definePrompt({
   name: 'suggestRepresentativesPrompt',
   input: {schema: SuggestRepresentativesInputSchema},
   output: {schema: SuggestRepresentativesOutputSchema},
-  // Updated prompt to handle the detailed structure and focus analysis
-  prompt: `You are an AI assistant helping users understand their detailed tax spending and connect with relevant representatives.
+  // Updated prompt to simply identify top 2-3 categories by percentage
+  prompt: `You are an AI assistant analyzing tax spending data.
 
-  Based on the user's detailed tax spending breakdown provided below, determine if they should be suggested to contact their representatives about federal spending priorities. Provide a concise reason for your determination.
+  Based on the user's detailed tax spending breakdown provided below, identify the top 2 or 3 main spending categories that account for the largest percentages of the total spending.
 
   Detailed Tax Spending Breakdown:
   {{#each taxSpending}}
   - Category: {{this.category}}, Percentage: {{this.percentage}}%
-    {{#if this.subItems}}
-      Sub-Items:
-      {{#each this.subItems}}
-      * {{this.description}}
-      {{/each}}
-    {{/if}}
   {{/each}}
 
-  Focus your analysis on the main categories and their overall percentages. Consider these factors when deciding whether to suggest contacting representatives:
-  - **High Spending Categories:** Are there categories representing a significant portion (e.g., >15-20%) of the total spending? High spending in areas like Defense, Health, or Interest on Debt might warrant attention.
-  - **Controversial/Debated Areas:** Does the spending include categories often subject to public debate (e.g., specific military programs, foreign aid, certain social programs)?
-  - **Potential for Influence:** Are there categories where citizen feedback might plausibly influence policy decisions (e.g., education funding, environmental protection, infrastructure projects)?
+  List only the names of these main categories in the 'topSpendingCategories' array.
+  Provide a very brief, neutral reason like "Analysis based on highest spending areas." in the 'reason' field.
 
-  While sub-item details are provided, base your primary decision on the main categories. Sub-items might add context but don't list them unless a specific sub-item is exceptionally noteworthy and directly influences the decision (which should be rare).
-
-  If you suggest contacting representatives, identify the **main spending categories** (e.g., "War and Weapons", "Health", "Education") that are most relevant for the user to discuss with their officials based on your analysis. Keep the list of suggested categories focused (typically 1-3).
-
-  Return your answer strictly in JSON format matching the output schema. Be concise in your reasoning.
+  Return your answer strictly in JSON format matching the output schema.
 `,
 });
 
@@ -85,17 +71,34 @@ const suggestRepresentativesFlow = ai.defineFlow(
     outputSchema: SuggestRepresentativesOutputSchema,
   },
   async input => {
+    // Manual fallback/simplification if AI needed:
+    // 1. Sort input.taxSpending by percentage descending.
+    // 2. Take the top 2-3 categories.
+    // 3. Return the simplified output structure.
+    // Example manual implementation (uncomment/adapt if removing AI):
+    /*
+    const sortedSpending = [...input.taxSpending].sort((a, b) => b.percentage - a.percentage);
+    const topCategories = sortedSpending.slice(0, 3).map(item => item.category);
+    return {
+        topSpendingCategories: topCategories,
+        reason: "Analysis based on highest spending percentages.",
+    };
+    */
+
+    // Continue using AI for now, but with the simplified prompt/output
     const {output} = await prompt(input);
     // Add defensive check for output existence
     if (!output) {
-        console.error("AI prompt failed to return an output.");
-        // Return a default 'do not suggest' response or throw an error
+        console.error("AI prompt failed to return an output. Using manual fallback.");
+        // Implement manual fallback logic here as described above
+        const sortedSpending = [...input.taxSpending].sort((a, b) => b.percentage - a.percentage);
+        const topCategories = sortedSpending.slice(0, 3).map(item => item.category);
         return {
-            shouldSuggestRepresentatives: false,
-            reason: "Could not analyze spending data.",
-            suggestedCategories: [],
+            topSpendingCategories: topCategories,
+            reason: "Analysis based on highest spending percentages (fallback).",
         };
     }
     return output;
   }
 );
+

@@ -16,9 +16,10 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Textarea } from "@/components/ui/textarea"; // Keep textarea import for potential future use
 import { generateRepresentativeEmail, type SelectedItem } from '@/services/tax-spending'; // Adjust path as needed
 import { Mail, Send, Settings2, X } from 'lucide-react';
+import { ScrollArea } from "@/components/ui/scroll-area"; // Import ScrollArea
 
 interface EmailCustomizationModalProps {
   isOpen: boolean;
@@ -72,6 +73,7 @@ export default function EmailCustomizationModal({
   );
   const [userName, setUserName] = useState('');
   const [userLocation, setUserLocation] = useState(''); // e.g., "City, State, Zip"
+  const formRef = React.useRef<HTMLFormElement>(null); // Ref for the form
 
   // Update itemReductions when selectedItems change externally (e.g., closing and reopening modal)
   React.useEffect(() => {
@@ -82,33 +84,44 @@ export default function EmailCustomizationModal({
       }, {} as { [key: string]: number })
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedItems]); // Only re-run if selectedItems array itself changes
-
+  }, [isOpen]); // Re-run when modal opens/closes to ensure defaults are set correctly
 
   const handleReductionChange = (itemId: string, value: number[]) => {
     setItemReductions(prev => ({ ...prev, [itemId]: value[0] }));
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    const emailDetails = generateRepresentativeEmail(
-      selectedItems.map(item => ({
-        ...item,
-        reductionLevel: itemReductions[item.id], // Add reduction level to each item
-      })),
-      aggressiveness,
-      userName,
-      userLocation
-    );
-    onSubmit(emailDetails);
+  // Correctly handle form submission triggered by the button click
+  const handleGenerateEmailClick = () => {
+    // Trigger form validation and submission
+    formRef.current?.requestSubmit();
   };
+
+  const handleFormSubmit = (event: React.FormEvent) => {
+     event.preventDefault(); // Prevent default form submission
+     if (!userName || !userLocation) {
+        // Optional: Add toast or validation message here if needed
+        return;
+     }
+     const emailDetails = generateRepresentativeEmail(
+       selectedItems.map(item => ({
+         ...item,
+         reductionLevel: itemReductions[item.id], // Add reduction level to each item
+       })),
+       aggressiveness,
+       userName,
+       userLocation
+     );
+     onSubmit(emailDetails);
+     onClose(); // Close modal after successful submission
+   };
 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[650px] max-h-[85vh] flex flex-col">
-        <DialogHeader className="pr-10"> {/* Add padding to avoid overlap with close button */}
-          <DialogTitle className="flex items-center gap-2 text-xl">
+      {/* Adjusted max-width and height, added flex column layout */}
+      <DialogContent className="sm:max-w-[90vw] md:max-w-[70vw] lg:max-w-[60vw] xl:max-w-[50vw] max-h-[90vh] flex flex-col p-0 rounded-lg">
+        <DialogHeader className="px-6 pt-5 pb-4 border-b border-border"> {/* Added border */}
+          <DialogTitle className="flex items-center gap-2 text-xl sm:text-2xl">
              <Settings2 className="h-5 w-5" /> Customize Your Email
           </DialogTitle>
           <DialogDescription>
@@ -116,93 +129,97 @@ export default function EmailCustomizationModal({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex-grow overflow-y-auto px-1 py-2 space-y-6 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"> {/* Make form scrollable */}
-            {/* Overall Tone Slider */}
-            <div className="space-y-3">
-                <Label htmlFor="aggressiveness" className="text-base font-medium">Overall Tone</Label>
-                <div className="flex items-center gap-4">
-                    <Slider
-                        id="aggressiveness"
-                        min={0}
-                        max={100}
-                        step={50} // Steps match the defined levels
-                        value={[aggressiveness]}
-                        onValueChange={(value) => setAggressiveness(value[0])}
-                        className="flex-grow"
-                    />
-                     <span className="text-sm font-medium text-muted-foreground w-24 text-right tabular-nums">
-                        {getLabel(aggressivenessLevels, aggressiveness)}
-                    </span>
-                </div>
-
-            </div>
-
-            {/* Per-Item Reduction Sliders */}
-             <div className="space-y-4 pt-4 border-t border-border/50">
-                 <Label className="text-base font-medium">Specific Requests per Item</Label>
-                 {selectedItems.map((item) => (
-                    <div key={item.id} className="space-y-2 ml-1">
-                        <Label htmlFor={`reduction-${item.id}`} className="text-sm text-muted-foreground">{item.description}</Label>
-                         <div className="flex items-center gap-4">
-                            <Slider
-                                id={`reduction-${item.id}`}
-                                min={0}
-                                max={100}
-                                step={50}
-                                value={[itemReductions[item.id] ?? 50]}
-                                onValueChange={(value) => handleReductionChange(item.id, value)}
-                                className="flex-grow"
-                             />
-                            <span className="text-sm font-medium text-muted-foreground w-24 text-right tabular-nums">
-                                {getLabel(reductionLevels, itemReductions[item.id] ?? 50)}
-                            </span>
-                        </div>
-                    </div>
-                 ))}
-            </div>
-
-            {/* User Info Inputs */}
-             <div className="space-y-4 pt-4 border-t border-border/50">
-                 <Label className="text-base font-medium">Your Information (Required by Officials)</Label>
-                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                     <div className="space-y-1.5">
-                        <Label htmlFor="userName" className="text-sm">Your Name</Label>
-                        <Input
-                            id="userName"
-                            value={userName}
-                            onChange={(e) => setUserName(e.target.value)}
-                            placeholder="e.g., Jane Doe"
-                            required
+        {/* Use ScrollArea for content */}
+         <ScrollArea className="flex-grow px-6 py-4">
+            <form ref={formRef} onSubmit={handleFormSubmit} className="space-y-6">
+                {/* Overall Tone Slider */}
+                <div className="space-y-3">
+                    <Label htmlFor="aggressiveness" className="text-base font-medium">Overall Tone</Label>
+                    <div className="flex items-center gap-4">
+                        <Slider
+                            id="aggressiveness"
+                            min={0}
+                            max={100}
+                            step={50} // Steps match the defined levels
+                            value={[aggressiveness]}
+                            onValueChange={(value) => setAggressiveness(value[0])}
+                            className="flex-grow"
                         />
-                     </div>
-                     <div className="space-y-1.5">
-                         <Label htmlFor="userLocation" className="text-sm">City, State, Zip Code</Label>
-                         <Input
-                            id="userLocation"
-                            value={userLocation}
-                            onChange={(e) => setUserLocation(e.target.value)}
-                            placeholder="e.g., Anytown, CA 90210"
-                            required
-                         />
-                     </div>
+                         <span className="text-sm font-medium text-muted-foreground w-24 text-right tabular-nums shrink-0"> {/* Prevent shrinking */}
+                            {getLabel(aggressivenessLevels, aggressiveness)}
+                        </span>
+                    </div>
+
                 </div>
-                 <p className="text-xs text-muted-foreground">This information is typically required for representatives to verify you are a constituent.</p>
-            </div>
-        </form>
+
+                {/* Per-Item Reduction Sliders */}
+                 <div className="space-y-4 pt-4 border-t border-border/50">
+                     <Label className="text-base font-medium">Specific Requests per Item</Label>
+                     {selectedItems.length === 0 ? (
+                         <p className="text-sm text-muted-foreground italic">No items selected.</p>
+                     ) : (
+                         selectedItems.map((item) => (
+                            <div key={item.id} className="space-y-2 ml-1">
+                                <Label htmlFor={`reduction-${item.id}`} className="text-sm text-muted-foreground">{item.description}</Label>
+                                 <div className="flex items-center gap-4">
+                                    <Slider
+                                        id={`reduction-${item.id}`}
+                                        min={0}
+                                        max={100}
+                                        step={50}
+                                        value={[itemReductions[item.id] ?? 50]}
+                                        onValueChange={(value) => handleReductionChange(item.id, value)}
+                                        className="flex-grow"
+                                     />
+                                    <span className="text-sm font-medium text-muted-foreground w-24 text-right tabular-nums shrink-0"> {/* Prevent shrinking */}
+                                        {getLabel(reductionLevels, itemReductions[item.id] ?? 50)}
+                                    </span>
+                                </div>
+                            </div>
+                         ))
+                     )}
+                </div>
+
+                {/* User Info Inputs */}
+                 <div className="space-y-4 pt-4 border-t border-border/50">
+                     <Label className="text-base font-medium">Your Information (Required by Officials)</Label>
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                         <div className="space-y-1.5">
+                            <Label htmlFor="userName" className="text-sm">Your Name</Label>
+                            <Input
+                                id="userName"
+                                value={userName}
+                                onChange={(e) => setUserName(e.target.value)}
+                                placeholder="e.g., Jane Doe"
+                                required
+                                className="text-base sm:text-sm" // Adjust text size
+                            />
+                         </div>
+                         <div className="space-y-1.5">
+                             <Label htmlFor="userLocation" className="text-sm">City, State, Zip Code</Label>
+                             <Input
+                                id="userLocation"
+                                value={userLocation}
+                                onChange={(e) => setUserLocation(e.target.value)}
+                                placeholder="e.g., Anytown, CA 90210"
+                                required
+                                className="text-base sm:text-sm" // Adjust text size
+                             />
+                         </div>
+                    </div>
+                     <p className="text-xs text-muted-foreground">This information is typically required for representatives to verify you are a constituent.</p>
+                </div>
+            </form>
+         </ScrollArea>
 
 
-        <DialogFooter className="mt-auto pt-4 border-t border-border/50"> {/* Ensure footer is at bottom */}
+        <DialogFooter className="px-6 pb-5 pt-4 border-t border-border"> {/* Added border */}
              <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-             <Button type="submit" onClick={handleSubmit} disabled={!userName || !userLocation}>
+             <Button type="button" onClick={handleGenerateEmailClick} disabled={!userName || !userLocation || selectedItems.length === 0}> {/* Ensure items are selected */}
                  <Send className="mr-2 h-4 w-4" /> Generate Email
             </Button>
         </DialogFooter>
-         {/* Explicit Close Button (optional, DialogClose inside DialogContent already exists) */}
-         {/* <DialogClose asChild>
-             <Button variant="ghost" size="icon" className="absolute right-4 top-4">
-                <X className="h-4 w-4" />
-             </Button>
-        </DialogClose> */}
+         {/* Explicit Close Button removed as default close button is sufficient */}
       </DialogContent>
     </Dialog>
   );

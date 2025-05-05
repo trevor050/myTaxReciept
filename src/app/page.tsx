@@ -15,8 +15,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import ThemeToggle from '@/components/ThemeToggle'; // Import ThemeToggle
 
 type AppStep = 'location' | 'tax' | 'dashboard';
+
+const AVERAGE_FEDERAL_TAX = 10000; // Updated average federal tax amount
 
 export default function Home() {
   const [step, setStep] = useState<AppStep>('location');
@@ -49,7 +52,7 @@ export default function Home() {
 
   const handleTaxAmountSubmit = async (amount: number | null) => { // Allow null for average case
      setIsLoading(true);
-    const finalAmount = amount ?? 68000; // Use median US income tax if null (update with better source if possible)
+    const finalAmount = amount ?? AVERAGE_FEDERAL_TAX; // Use updated average tax amount if null
     setTaxAmount(finalAmount);
 
     if (!location) {
@@ -70,17 +73,18 @@ export default function Home() {
       const spendingData = await getTaxSpending(location, finalAmount);
       setTaxSpending(spendingData);
 
-      // Fetch AI suggestion (optional, can remove if not needed for initial display)
+      // Fetch AI suggestion (Simplified - focusing on top categories)
       try {
          const suggestionResult = await suggestRepresentatives({ taxSpending: spendingData });
          setRepresentativeSuggestion(suggestionResult);
       } catch (aiError) {
           console.warn("AI suggestion failed:", aiError);
-          setRepresentativeSuggestion({ // Provide a default neutral state
-                shouldSuggestRepresentatives: false,
-                reason: "AI analysis unavailable.",
-                suggestedCategories: [],
-          });
+          // Provide a basic fallback if AI fails - maybe just list top 1-2 categories manually
+           const topCategories = spendingData.slice(0, 2).map(s => s.category);
+           setRepresentativeSuggestion({
+               topSpendingCategories: topCategories,
+               reason: "Analysis based on highest spending areas.",
+           });
       }
 
 
@@ -118,11 +122,11 @@ export default function Home() {
         };
         case 'tax': return {
             title: 'Estimate Your Contribution',
-            description: 'Enter your estimated federal income tax paid last year, or use the average.'
+            description: `Enter your estimated federal income tax paid last year, or use the U.S. average of $${AVERAGE_FEDERAL_TAX.toLocaleString()}.` // Updated description
         };
         case 'dashboard': return {
              title: 'Your Personalized Tax Receipt',
-             description: `See how your estimated ${taxAmount ? '$'+taxAmount.toLocaleString() : 'tax'} payment might be allocated.`
+             description: `See how your estimated ${taxAmount ? '$'+taxAmount.toLocaleString() : `average ($${AVERAGE_FEDERAL_TAX.toLocaleString()}) tax`} payment might be allocated.` // Updated description
         };
         default: return {
             title: 'WhereIsMyTaxMoneyGoing.org',
@@ -136,7 +140,8 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 md:p-10 bg-gradient-to-br from-background via-secondary/5 to-background">
-       <div className="w-full max-w-2xl mx-auto space-y-4"> {/* Adjusted max-width for onboarding */}
+       {/* Adjust max-width based on step for better responsiveness */}
+       <div className={`w-full ${step === 'dashboard' ? 'max-w-4xl' : 'max-w-2xl'} mx-auto space-y-4 transition-all duration-300 ease-in-out`}>
         {step !== 'location' && (
           <Button
             variant="ghost"
@@ -160,30 +165,33 @@ export default function Home() {
                   </CardDescription>
               </div>
            </CardHeader>
-          <CardContent className="p-6 sm:p-8 md:p-10 bg-background relative overflow-hidden min-h-[300px]"> {/* Set min-height */}
+          <CardContent className="p-6 sm:p-8 md:p-10 bg-background relative overflow-hidden min-h-[300px] sm:min-h-[350px]"> {/* Increased min-height slightly */}
              {/* Apply animations directly to the step components */}
              <div className={`${animationClass} duration-300`}>
                  {step === 'location' && <LocationStep onSubmit={handleLocationSubmit} />}
                  {step === 'tax' && <TaxAmountStep onSubmit={handleTaxAmountSubmit} isLoading={isLoading} />}
                  {step === 'dashboard' && (
                      isLoading || taxAmount === null || taxSpending.length === 0 ? (
-                         <div className="text-center p-10 text-muted-foreground">Loading your tax breakdown...</div>
+                         <div className="flex items-center justify-center h-full text-muted-foreground"> {/* Center loading */}
+                            <div className="text-center p-10">Loading your tax breakdown...</div>
+                         </div>
                      ) : (
-                         // Increase max-width specifically for the dashboard
-                         <div className="max-w-4xl mx-auto">
-                            <TaxBreakdownDashboard
-                                taxAmount={taxAmount}
-                                taxSpending={taxSpending}
-                                representativeSuggestion={representativeSuggestion}
-                            />
-                        </div>
+                         // No need for inner div with max-width here, handled by parent container
+                         <TaxBreakdownDashboard
+                            taxAmount={taxAmount}
+                            taxSpending={taxSpending}
+                            representativeSuggestion={representativeSuggestion}
+                        />
                      )
                  )}
              </div>
           </CardContent>
         </Card>
-        <footer className="mt-6 text-center text-muted-foreground/60 text-xs"> {/* Adjusted margin and opacity */}
+        <footer className="mt-6 text-center text-muted-foreground/60 text-xs px-4 sm:px-0 relative"> {/* Added padding for mobile */}
             Powered by Firebase & Google AI. Data is estimated and for informational purposes. Verify with official sources.
+            <div className="absolute right-0 bottom-0 sm:right-4"> {/* Position ThemeToggle */}
+                 <ThemeToggle />
+            </div>
         </footer>
        </div>
     </main>
