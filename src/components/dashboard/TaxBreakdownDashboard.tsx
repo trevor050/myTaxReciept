@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useState, useEffect } from 'react'; // Import useEffect
-import type { TaxSpending, TaxSpendingSubItem } from '@/services/tax-spending';
+import type { TaxSpending, TaxSpendingSubItem, SelectedItem } from '@/services/tax-spending'; // Import SelectedItem
 import { generateRepresentativeEmail } from '@/services/tax-spending';
 import type { SuggestRepresentativesOutput } from '@/ai/flows/suggest-representatives';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -85,10 +85,9 @@ const DefaultIcon = HelpCircle;
 
 
 // --- Custom Tooltip for Pie Chart ---
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({ active, payload, label, totalAmount }: any) => { // Added totalAmount prop
   if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    const totalAmount = data.totalAmount;
+    const data = payload[0].payload; // This now correctly accesses the data entry passed to the Pie component
     const spendingAmount = (data.percentage / 100) * totalAmount;
     const Icon = categoryIcons[data.category] || DefaultIcon;
 
@@ -111,6 +110,7 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
+
 // --- Custom Legend ---
 const CustomLegend = (props: any) => {
   const { payload } = props;
@@ -118,7 +118,7 @@ const CustomLegend = (props: any) => {
   return (
     <ul className="flex flex-wrap justify-center gap-x-3 gap-y-1.5 text-xs mt-4 list-none p-0">
       {payload.map((entry: any, index: number) => {
-          const percentage = entry.payload?.percentage;
+          const percentage = entry.payload?.percentage; // Access percentage from payload
           const Icon = categoryIcons[entry.value] || DefaultIcon;
           return (
             <li key={`item-${index}`} className="flex items-center space-x-1 cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
@@ -145,7 +145,7 @@ const SubItemTooltipContent = ({ subItem }: { subItem: TaxSpendingSubItem }) => 
           target="_blank"
           rel="noopener noreferrer"
           className="text-primary hover:underline flex items-center gap-1 text-xs font-medium"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()} // Prevent accordion toggle
         >
           Learn More <ExternalLink className="h-3 w-3" />
         </a>
@@ -161,7 +161,7 @@ export default function TaxBreakdownDashboard({
   representativeSuggestion,
 }: TaxBreakdownDashboardProps) {
 
-  const [selectedItems, setSelectedItems] = useState<Map<string, { id: string; description: string }>>(new Map());
+  const [selectedItems, setSelectedItems] = useState<Map<string, SelectedItem>>(new Map()); // Use SelectedItem type
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [clientDueDate, setClientDueDate] = useState<string | null>(null); // State for client-side date
 
@@ -192,7 +192,8 @@ export default function TaxBreakdownDashboard({
    const handleCheckboxChange = (checked: boolean | 'indeterminate', item: TaxSpendingSubItem) => {
         const newSelectedItems = new Map(selectedItems);
         if (checked === true) { // Explicitly check for true
-            newSelectedItems.set(item.id, { id: item.id, description: item.description });
+            // Initialize with default reduction level (e.g., 50 for 'Reduce')
+            newSelectedItems.set(item.id, { id: item.id, description: item.description, reductionLevel: 50 });
         } else {
             newSelectedItems.delete(item.id);
         }
@@ -211,6 +212,12 @@ export default function TaxBreakdownDashboard({
 
   // Use client-side date state
   const dueDateDisplay = clientDueDate || `April 15, ${new Date().getFullYear() + 1}`;
+
+  // Prepare data for the chart
+  const chartData = taxSpending.map(item => ({
+    category: item.category,
+    percentage: item.percentage,
+  }));
 
 
   return (
@@ -259,7 +266,7 @@ export default function TaxBreakdownDashboard({
               <ResponsiveContainer width="100%" height={320}> {/* Adjusted height */}
                 <PieChart margin={{ top: 5, right: 15, bottom: 5, left: 15 }}>
                   <Pie
-                    data={chartData}
+                    data={chartData} // Use prepared chartData
                     cx="50%"
                     cy="50%"
                     labelLine={false}
@@ -274,7 +281,7 @@ export default function TaxBreakdownDashboard({
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke={'hsl(var(--background))'} strokeWidth={1} /> // Consistent stroke
                     ))}
                   </Pie>
-                   <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--accent))', fillOpacity: 0.4 }} /> {/* Increased opacity */}
+                   <Tooltip content={<CustomTooltip totalAmount={taxAmount} />} cursor={{ fill: 'hsl(var(--accent))', fillOpacity: 0.4 }} /> {/* Pass totalAmount */}
                    <Legend content={<CustomLegend />} />
                 </PieChart>
               </ResponsiveContainer>

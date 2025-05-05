@@ -105,9 +105,9 @@ export default {
             from: { opacity: '1', transform: 'scale(1)' },
             to: { opacity: '0', transform: 'scale(0.95)' },
         },
-        'glow': { // Added
-            '0%, 100%': { boxShadow: "0 0 5px theme('colors.primary / 50%'), 0 0 10px theme('colors.primary / 30%')" },
-            '50%': { boxShadow: "0 0 15px theme('colors.primary / 60%'), 0 0 25px theme('colors.primary / 40%')" },
+        'glow': { // Use hsla with CSS variables for opacity
+            '0%, 100%': { boxShadow: "0 0 5px hsla(var(--primary) / 0.5), 0 0 10px hsla(var(--primary) / 0.3)" },
+            '50%': { boxShadow: "0 0 15px hsla(var(--primary) / 0.6), 0 0 25px hsla(var(--primary) / 0.4)" },
         },
       },
       animation: {
