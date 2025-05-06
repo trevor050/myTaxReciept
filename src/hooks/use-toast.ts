@@ -9,7 +9,8 @@ import type {
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+// Decrease duration: 5000ms / 1.35 ≈ 3700ms
+const TOAST_REMOVE_DELAY = 3700
 
 type ToasterToast = ToastProps & {
   id: string
@@ -163,6 +164,9 @@ function toast({ ...props }: Toast) {
       },
     },
   })
+
+  // Automatically dismiss after the delay
+  addToRemoveQueue(id); // Add this line
 
   return {
     id: id,
