@@ -10,16 +10,13 @@ import { DollarSign, Loader2, Zap, CornerDownLeft } from 'lucide-react'; // Adde
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-// Updated median federal tax amount based on provided data
-const MEDIAN_FEDERAL_TAX = 17766;
-
-
 interface TaxAmountStepProps {
   onSubmit: (amount: number | null) => void; // Allow null for average case
   isLoading: boolean;
+  medianTax: number; // Accept median tax as prop
 }
 
-export default function TaxAmountStep({ onSubmit, isLoading }: TaxAmountStepProps) {
+export default function TaxAmountStep({ onSubmit, isLoading, medianTax }: TaxAmountStepProps) {
   const [taxAmount, setTaxAmount] = useState('');
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -48,7 +45,7 @@ export default function TaxAmountStep({ onSubmit, isLoading }: TaxAmountStepProp
      return () => {
          window.removeEventListener('keydown', handleKeyDown);
      };
-   }, [taxAmount, onSubmit, toast]); // Add dependencies
+   }, [taxAmount, onSubmit, toast, medianTax]); // Add medianTax to dependencies
 
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -74,7 +71,7 @@ export default function TaxAmountStep({ onSubmit, isLoading }: TaxAmountStepProp
       onSubmit(null);
       toast({
          title: 'Using Median',
-         description: `Calculating breakdown based on the U.S. median federal tax of $${MEDIAN_FEDERAL_TAX.toLocaleString()}.`,
+          description: `Calculating breakdown based on the estimated median federal tax for your area: $${medianTax.toLocaleString()}.`, // Use prop
       });
    };
 
@@ -97,7 +94,7 @@ export default function TaxAmountStep({ onSubmit, isLoading }: TaxAmountStepProp
            <div className="relative">
              <DollarSign className={cn(
                 "absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/70 pointer-events-none transition-colors duration-200",
-                inputRef.current === document.activeElement && "text-primary" // Highlight icon on focus
+                 typeof document !== 'undefined' && inputRef.current === document.activeElement && "text-primary" // Highlight icon on focus (client only)
              )} />
               <Input
                 ref={inputRef}
@@ -116,7 +113,7 @@ export default function TaxAmountStep({ onSubmit, isLoading }: TaxAmountStepProp
                    Skip <CornerDownLeft className="h-3 w-3"/>
                 </div>
            </div>
-            <p className="text-xs text-muted-foreground pt-1 text-center">Enter your estimate or press <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-sm dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">Enter</kbd> to use the U.S. median.</p>
+            <p className="text-xs text-muted-foreground pt-1 text-center">Enter your estimate or press <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-sm dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">Enter</kbd> to use the estimated median for your area.</p>
         </div>
         <Button type="submit" className="w-full transition-all duration-200 ease-in-out hover:scale-[1.02]" size="lg" disabled={isLoading || !taxAmount}>
           {isLoading ? (
@@ -148,10 +145,10 @@ export default function TaxAmountStep({ onSubmit, isLoading }: TaxAmountStepProp
                 variant="outline" // Changed variant for better distinction
                 onClick={handleUseMedian}
                 disabled={isLoading}
-                className="transition-colors w-full sm:w-auto text-base border-primary/50 text-primary hover:bg-primary/5" // Adjusted styling
+                 className="transition-colors w-full sm:w-auto text-base border-primary/50 text-primary hover:bg-primary/5" // Adjusted styling
                 size="lg"
             >
-                <Zap className="mr-2 h-4 w-4" /> Use U.S. Median ($ {MEDIAN_FEDERAL_TAX.toLocaleString()})
+                <Zap className="mr-2 h-4 w-4" /> Use Area Median ($ {medianTax.toLocaleString()}) {/* Use prop */}
             </Button>
             {/* Removed redundant text */}
        </div>

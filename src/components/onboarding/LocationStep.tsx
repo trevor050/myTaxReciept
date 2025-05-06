@@ -13,7 +13,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 interface LocationStepProps {
-  onSubmit: (location: Location | null) => void; // Allow null for skipping
+  // Update onSubmit to accept optional zipCode
+  onSubmit: (location: Location | null, zipCode?: string) => void;
 }
 
 export default function LocationStep({ onSubmit }: LocationStepProps) {
@@ -25,12 +26,13 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setIsClient(true);
+    setIsClient(true); // Ensure this runs only on client
     const checkGeolocation = () => {
-        setGeolocationSupported(!!navigator.geolocation);
-        if (!navigator.geolocation) {
-           console.log("Geolocation is not supported by this browser.");
-        }
+      // Check navigator object existence before accessing geolocation
+      setGeolocationSupported(typeof navigator !== 'undefined' && !!navigator.geolocation);
+      if (typeof navigator === 'undefined' || !navigator.geolocation) {
+        console.log("Geolocation is not supported by this browser.");
+      }
     };
     checkGeolocation();
     // Focus input on mount for easier typing/skipping
@@ -38,31 +40,38 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
 
     // Add keydown listener for Enter key
     const handleKeyDown = (event: KeyboardEvent) => {
-       if (event.key === 'Enter') {
-           // If input has value, submit it manually
-           if (manualLocation.trim()) {
-               handleManualSubmit(event as unknown as React.FormEvent); // Cast event type
-           } else {
-               // If input is empty, skip (submit null)
-               onSubmit(null);
-               toast({
-                   title: 'Skipped Location',
-                   description: 'Using default location.',
-               });
-           }
-       }
+      if (event.key === 'Enter') {
+        // Prevent default form submission behavior if input is focused
+        if (document.activeElement === inputRef.current) {
+            event.preventDefault();
+             // If input has value, submit it manually
+             if (manualLocation.trim()) {
+                handleManualSubmit(event as unknown as React.FormEvent); // Cast event type
+             } else {
+                 // If input is empty, skip (submit null)
+                 onSubmit(null); // Pass null for location, no zip code
+                 toast({
+                     title: 'Skipped Location',
+                     description: 'Using default location.',
+                 });
+             }
+        }
+        // Allow Enter for button clicks elsewhere
+      }
     };
+
 
     window.addEventListener('keydown', handleKeyDown);
     return () => {
-        window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown);
     };
     // Add manualLocation to dependencies to re-evaluate Enter key press logic
   }, [manualLocation, onSubmit, toast]);
 
 
   const handleUseCurrentLocation = () => {
-    if (!geolocationSupported || typeof navigator === 'undefined' || !navigator.geolocation) return;
+    // Re-check geolocation support just in case
+    if (typeof navigator === 'undefined' || !navigator.geolocation) return;
 
     setIsLocating(true);
     navigator.geolocation.getCurrentPosition(
@@ -71,7 +80,7 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         };
-        onSubmit(location);
+        onSubmit(location); // No zip code when using current location
         setIsLocating(false);
         toast({
           title: 'Location Found',
@@ -93,9 +102,11 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
   const handleManualSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     const trimmedLocation = manualLocation.trim();
+    let zipCode: string | undefined = undefined;
+
     if (!trimmedLocation) {
        // Allow submitting empty input to trigger skip logic
-        onSubmit(null);
+        onSubmit(null); // Pass null location, no zip
          toast({
             title: 'Skipped Location',
             description: 'Using default location.',
@@ -103,8 +114,11 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
       return;
     }
 
-    // Basic Zip Code Check (Simple Example - Needs Improvement for real use)
-    if (!/^\d{5}(-\d{4})?$/.test(trimmedLocation) && !/^[a-zA-Z\s,]+$/.test(trimmedLocation)) {
+    // Basic Zip Code Check
+    const zipMatch = trimmedLocation.match(/^\d{5}/); // Match first 5 digits as potential zip
+    if (zipMatch) {
+        zipCode = zipMatch[0];
+    } else if (!/^[a-zA-Z\s,]+$/.test(trimmedLocation)) { // Check for City, State format otherwise
          toast({
             title: 'Invalid Format',
             description: 'Please enter a valid 5-digit Zip Code or City, State.',
@@ -118,7 +132,7 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
     // Very basic/dummy "geocoding" based on input - FOR DEMO ONLY
     let placeholderLat = 40.7128; // Default NYC
     let placeholderLng = -74.0060;
-    if (trimmedLocation.startsWith('9')) { // California-ish zip
+    if (zipCode && zipCode.startsWith('9')) { // California-ish zip
         placeholderLat = 34.0522;
         placeholderLng = -118.2437;
     } else if (trimmedLocation.toLowerCase().includes('chicago')) {
@@ -128,7 +142,7 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
     // Add more dummy cases or a simple lookup table if needed for demo
 
     const placeholderLocation: Location = { lat: placeholderLat, lng: placeholderLng };
-    onSubmit(placeholderLocation);
+    onSubmit(placeholderLocation, zipCode); // Pass placeholder location AND the extracted zip code
      toast({
         title: 'Location Set',
         description: `Using location approximation for: ${trimmedLocation}`,
@@ -170,7 +184,7 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
            <>
              <Button
                 onClick={handleUseCurrentLocation}
-                disabled={!geolocationSupported || isLocating}
+                 disabled={!geolocationSupported || isLocating} // Disable if not supported or locating
                 className="w-full transition-all duration-200 ease-in-out hover:scale-[1.02]"
                 variant="outline"
                 size="lg"
@@ -212,11 +226,11 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
       {/* Manual input form */}
       <form onSubmit={handleManualSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="location" className="sr-only">Location (Zip Code or City) or press Enter to skip</Label> {/* Updated label */}
+          <Label htmlFor="location" className="sr-only">Location (Zip Code or City, State) or press Enter to skip</Label>
           <div className="relative">
              <MapPin className={cn(
-                "absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/70 pointer-events-none transition-colors duration-200",
-                inputRef.current === document.activeElement && "text-primary" // Highlight icon on focus
+                 "absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/70 pointer-events-none transition-colors duration-200",
+                 typeof document !== 'undefined' && inputRef.current === document.activeElement && "text-primary" // Highlight icon on focus (client only)
              )} />
             <Input
               ref={inputRef}

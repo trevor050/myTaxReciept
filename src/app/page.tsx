@@ -4,24 +4,27 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import type { Location, TaxSpending } from '@/services/tax-spending';
-import { getTaxSpending } from '@/services/tax-spending';
+import { getTaxSpending } from '@/services/tax-spending'; // Removed getAverageTaxForState import
+import { guessStateFromZip, getAverageTaxForState } from '@/lib/zip-to-state'; // Added guessStateFromZip and getAverageTaxForState
 // Removed suggestRepresentatives import as it's no longer used
 
 import LocationStep from '@/components/onboarding/LocationStep';
 import TaxAmountStep from '@/components/onboarding/TaxAmountStep';
 import TaxBreakdownDashboard from '@/components/dashboard/TaxBreakdownDashboard';
+import FloatingEmailButton from '@/components/dashboard/FloatingEmailButton'; // Import the new component
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Mail } from 'lucide-react'; // Added Mail icon
+import { ArrowLeft } from 'lucide-react'; // Removed Mail icon, it's in FloatingEmailButton
 import { useToast } from '@/hooks/use-toast';
 import ThemeToggle from '@/components/ThemeToggle';
 
 type AppStep = 'location' | 'tax' | 'dashboard';
 
-// Updated median federal tax amount based on provided data
-const MEDIAN_FEDERAL_TAX = 17766;
+// National median federal tax amount
+const NATIONAL_MEDIAN_FEDERAL_TAX = 17766;
 // Default location (NYC) for skipping
 const DEFAULT_LOCATION: Location = { lat: 40.7128, lng: -74.0060 };
+const DEFAULT_STATE = 'NY'; // State abbreviation for default location
 
 
 export default function Home() {
@@ -38,6 +41,8 @@ export default function Home() {
   const [showEmailAction, setShowEmailAction] = useState(false);
   const [emailActionCount, setEmailActionCount] = useState(0);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [estimatedMedianTax, setEstimatedMedianTax] = useState<number>(NATIONAL_MEDIAN_FEDERAL_TAX);
+
 
   const navigateToStep = (nextStep: AppStep) => {
     const isGoingBack = (step === 'tax' && nextStep === 'location') || (step === 'dashboard' && nextStep === 'tax');
@@ -58,20 +63,27 @@ export default function Home() {
   };
 
 
-  const handleLocationSubmit = (loc: Location | null) => {
+  const handleLocationSubmit = (loc: Location | null, zipCode?: string) => {
     // Use default location if null (skipped)
     const finalLocation = loc ?? DEFAULT_LOCATION;
     setLocation(finalLocation);
+
+    // Guess state and update median tax estimate
+    const stateAbbr = zipCode ? guessStateFromZip(zipCode) : (loc ? null : DEFAULT_STATE); // Use default state if skipping
+    const medianForState = getAverageTaxForState(stateAbbr);
+    setEstimatedMedianTax(medianForState);
+
     toast({
         title: 'Location Set',
-        description: loc ? 'Using provided location.' : 'Using default location (New York Area).',
+        description: loc ? (zipCode ? `Using location for ${zipCode}.` : 'Using current location.') : `Using default location (New York Area). Estimated median tax for this area: $${medianForState.toLocaleString()}.`,
     });
     navigateToStep('tax');
   };
 
   const handleTaxAmountSubmit = async (amount: number | null) => {
      setIsLoading(true);
-    const finalAmount = amount ?? MEDIAN_FEDERAL_TAX; // Use updated median tax amount if null (skipped)
+     // Use the estimated median tax based on location/state if amount is null (skipped)
+    const finalAmount = amount ?? estimatedMedianTax;
     setTaxAmount(finalAmount);
 
     const currentLocation = location ?? DEFAULT_LOCATION; // Ensure location is set
@@ -99,6 +111,7 @@ export default function Home() {
   const handleBack = () => {
     if (step === 'tax') {
       setLocation(null); // Reset location when going back from tax
+      setEstimatedMedianTax(NATIONAL_MEDIAN_FEDERAL_TAX); // Reset median estimate
       navigateToStep('location');
     } else if (step === 'dashboard') {
        setTaxSpending([]);
@@ -121,11 +134,11 @@ export default function Home() {
         };
         case 'tax': return {
             title: 'Estimate Your Contribution',
-            description: `Enter your estimated federal income tax paid last year, or skip to use the U.S. median of $${MEDIAN_FEDERAL_TAX.toLocaleString()}.` // Updated description
+             description: `Enter your estimated federal income tax paid last year, or skip to use the estimated median for your area ($${estimatedMedianTax.toLocaleString()}).` // Updated description
         };
         case 'dashboard': return {
              title: 'Your Personalized Tax Receipt',
-             description: `See how your estimated ${taxAmount ? '$'+taxAmount.toLocaleString() : `median ($${MEDIAN_FEDERAL_TAX.toLocaleString()}) tax`} payment might be allocated.` // Updated description
+             description: `See how your estimated ${taxAmount ? '$'+taxAmount.toLocaleString() : `median ($${estimatedMedianTax.toLocaleString()}) tax`} payment might be allocated.` // Updated description
         };
         default: return {
             title: 'My Tax Receipt .org', // Update default title
@@ -159,10 +172,10 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 md:p-10 bg-gradient-to-br from-background via-secondary/5 to-background">
-       {/* Container for Back/Email buttons and Card */}
+       {/* Container for Back button and Card */}
        <div className={`w-full ${step === 'dashboard' ? 'max-w-4xl' : 'max-w-2xl'} mx-auto space-y-2 transition-all duration-300 ease-in-out`}>
-        {/* Flex container for Back and Email buttons */}
-        <div className="flex justify-between items-center min-h-[40px] px-1 sm:px-0"> {/* Ensure minimum height */}
+        {/* Flex container JUST for Back button */}
+        <div className="flex justify-start items-center min-h-[40px] px-1 sm:px-0"> {/* Ensure minimum height */}
             {step !== 'location' ? (
               <Button
                 variant="ghost"
@@ -174,21 +187,7 @@ export default function Home() {
                 <ArrowLeft className="mr-1.5 h-4 w-4" /> Back
               </Button>
             ) : <div />} {/* Placeholder to keep alignment */}
-
-            {/* Conditionally render Email Officials button */}
-            {(step === 'dashboard' && showEmailAction) && (
-                 <Button
-                    variant="outline" // Or choose another appropriate variant
-                    size="sm"
-                    onClick={handleOpenEmailModal}
-                    className="text-primary border-primary/50 hover:bg-primary/5 hover:text-primary transition-colors duration-200 self-center animate-fadeIn"
-                    aria-label={`Email officials about ${emailActionCount} item(s)`}
-                 >
-                   <Mail className="mr-1.5 h-4 w-4" /> Email Officials ({emailActionCount})
-                 </Button>
-             )}
-             {/* Render nothing if not on dashboard or nothing selected */}
-             {(step !== 'dashboard' || !showEmailAction) && <div />} {/* Placeholder for alignment */}
+             {/* The Email Officials button is now handled by FloatingEmailButton below */}
         </div>
 
         {/* Main Card */}
@@ -211,7 +210,7 @@ export default function Home() {
           <CardContent className="p-6 sm:p-8 md:p-10 bg-background relative overflow-hidden min-h-[300px] sm:min-h-[350px]">
              <div className={`${animationClass} duration-300`}>
                  {step === 'location' && <LocationStep onSubmit={handleLocationSubmit} />}
-                 {step === 'tax' && <TaxAmountStep onSubmit={handleTaxAmountSubmit} isLoading={isLoading} />}
+                 {step === 'tax' && <TaxAmountStep onSubmit={handleTaxAmountSubmit} isLoading={isLoading} medianTax={estimatedMedianTax} />}
                  {step === 'dashboard' && (
                      isLoading || taxAmount === null || taxSpending.length === 0 ? (
                          <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -237,7 +236,15 @@ export default function Home() {
             Powered by Firebase & Google AI (where applicable). Data is estimated and for informational purposes. Verify with official sources.
         </footer>
        </div>
+
+        {/* Floating Action Button - Rendered outside the main flow, positioned fixed */}
+       <FloatingEmailButton
+            isVisible={showEmailAction && step === 'dashboard'} // Only visible on dashboard when items selected
+            count={emailActionCount}
+            onClick={handleOpenEmailModal}
+       />
     </main>
   );
 }
+
 
