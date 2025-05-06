@@ -4,18 +4,18 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import type { TaxSpending, TaxSpendingSubItem, SelectedItem } from '@/services/tax-spending';
-import type { SuggestRepresentativesOutput } from '@/ai/flows/suggest-representatives'; // Keep type for prop definition, even if unused
+// Removed unused type import
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import EmailCustomizationModal from '@/components/dashboard/EmailCustomizationModal';
-import FloatingEmailButton from '@/components/dashboard/FloatingEmailButton'; // Import the new component
+// Removed FloatingEmailButton import
 
 import {
     ExternalLink,
     Info,
-    Mail,
+    Mail, // Kept Mail icon, potentially for button in parent
     Scale,
     HeartPulse,
     ShieldCheck,
@@ -48,13 +48,17 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
+// Removed useToast import as it's no longer used directly here
 import { Label } from '@/components/ui/label'; // Import Label
 
 interface TaxBreakdownDashboardProps {
   taxAmount: number;
   taxSpending: TaxSpending[];
-  representativeSuggestion: SuggestRepresentativesOutput | null; // Kept for type safety, but unused
+  // New props for handling email action state from parent
+  onEmailButtonStateChange: (show: boolean, count: number) => void;
+  isEmailModalOpen: boolean;
+  setIsEmailModalOpen: (open: boolean) => void;
+  // representativeSuggestion removed as it's unused
 }
 
 // Use CSS variables for colors defined in globals.css
@@ -151,7 +155,7 @@ const CustomLegend = (props: any) => {
 
 
 const SubItemTooltipContent = ({ subItem }: { subItem: TaxSpendingSubItem }) => (
-    <TooltipContent side="top" align="center" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn">
+    <TooltipContent side="top" align="center" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50"> {/* Added z-50 */}
       <p className="font-semibold mb-1.5 text-popover-foreground">{subItem.description}</p>
       {subItem.tooltipText && <p className="text-muted-foreground text-xs leading-relaxed mb-2">{subItem.tooltipText}</p>}
       {subItem.wikiLink && (
@@ -212,15 +216,17 @@ async function getFormattedNationalDebt(): Promise<string> {
 export default function TaxBreakdownDashboard({
   taxAmount,
   taxSpending,
-  representativeSuggestion, // Kept for prop type, but unused
+  onEmailButtonStateChange,
+  isEmailModalOpen,
+  setIsEmailModalOpen,
 }: TaxBreakdownDashboardProps) {
 
   const [selectedItems, setSelectedItems] = useState<Map<string, SelectedItem>>(new Map());
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // isModalOpen state is now managed by the parent
   const [clientDueDate, setClientDueDate] = useState<string | null>(null);
   const [nationalDebt, setNationalDebt] = useState<string>('fetching...');
   const [balanceBudgetChecked, setBalanceBudgetChecked] = useState(false);
-  const { toast } = useToast();
+  // toast is removed
 
    useEffect(() => {
     // These need to run only on the client after hydration
@@ -231,24 +237,19 @@ export default function TaxBreakdownDashboard({
     getFormattedNationalDebt().then(setNationalDebt);
   }, []); // Empty dependency array ensures this runs once on mount
 
-  const handleOpenModal = () => {
-     // Check if either items are selected OR the budget balance is checked
-     if (selectedItems.size > 0 || balanceBudgetChecked) {
-       setIsModalOpen(true);
-     } else {
-         toast({
-            title: "Nothing Selected",
-            description: "Please select items or check 'Prioritize Balancing the Budget' to include in your email.",
-            variant: "default",
-         });
-     }
-  };
+    // Effect to update parent component about selection changes
+    useEffect(() => {
+        const count = selectedItems.size + (balanceBudgetChecked ? 1 : 0);
+        onEmailButtonStateChange(count > 0, count);
+    }, [selectedItems, balanceBudgetChecked, onEmailButtonStateChange]);
 
+
+  // handleOpenModal is removed, parent handles opening via setIsEmailModalOpen
 
   const handleEmailSubmit = (emailDetails: { subject: string; body: string }) => {
     const mailtoLink = `mailto:?subject=${encodeURIComponent(emailDetails.subject)}&body=${encodeURIComponent(emailDetails.body)}`;
     window.open(mailtoLink, '_self');
-    setIsModalOpen(false); // Close modal after generating mailto link
+    setIsEmailModalOpen(false); // Close modal after generating mailto link
   };
 
 
@@ -262,10 +263,12 @@ export default function TaxBreakdownDashboard({
             newSelectedItems.delete(itemId);
         }
         setSelectedItems(newSelectedItems);
+        // State update will trigger the useEffect to notify parent
     };
 
     const handleBudgetCheckboxChange = (checked: boolean | 'indeterminate') => {
         setBalanceBudgetChecked(checked === true);
+         // State update will trigger the useEffect to notify parent
     }
 
 
@@ -278,15 +281,11 @@ export default function TaxBreakdownDashboard({
     percentage: item.percentage,
   }));
 
-  // Calculate if the FAB should be shown
-  const showFab = selectedItems.size > 0 || balanceBudgetChecked;
-  // Calculate the count for the FAB badge
-  const fabCount = selectedItems.size + (balanceBudgetChecked ? 1 : 0);
-
+  // showFab and fabCount calculations are removed, handled by parent
 
   return (
-    // Add relative positioning and padding-bottom to the container to prevent overlap with FAB
-    <div className="space-y-10 animate-fadeIn relative pb-20"> {/* Reduced padding-bottom as FAB is fixed */}
+    // Reduced padding-bottom as FAB is removed
+    <div className="space-y-10 animate-fadeIn relative pb-10">
         {/* --- Header --- */}
         <div className="text-center space-y-1 mb-10">
             {/* Keep only one main title */}
@@ -453,24 +452,20 @@ export default function TaxBreakdownDashboard({
             </CardContent>
         </Card>
 
-       {/* Floating Action Button (FAB) */}
-        <FloatingEmailButton
-            selectedCount={fabCount}
-            onClick={handleOpenModal}
-            show={showFab}
-        />
+        {/* Floating Action Button removed from here */}
 
         {/* Email Customization Modal */}
-        {/* Render the modal only when isModalOpen is true to handle mounting/unmounting */}
-        {isModalOpen && (
+        {/* Render the modal only when isEmailModalOpen is true to handle mounting/unmounting */}
+        {isEmailModalOpen && (
             <EmailCustomizationModal
                 selectedItems={Array.from(selectedItems.values())}
                 balanceBudgetChecked={balanceBudgetChecked}
                 onSubmit={handleEmailSubmit}
-                open={isModalOpen} // Pass open state
-                onOpenChange={setIsModalOpen} // Pass setter to allow closing from within modal
+                open={isEmailModalOpen} // Pass open state
+                onOpenChange={setIsEmailModalOpen} // Pass setter to allow closing from within modal
             />
         )}
     </div>
   );
 }
+
