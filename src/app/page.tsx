@@ -4,9 +4,8 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import type { Location, TaxSpending } from '@/services/tax-spending';
-import { getTaxSpending } from '@/services/tax-spending'; // Removed getAverageTaxForState import
+import { getTaxSpending } from '@/services/tax-spending';
 import { guessStateFromZip, getAverageTaxForState } from '@/lib/zip-to-state'; // Added guessStateFromZip and getAverageTaxForState
-// Removed suggestRepresentatives import as it's no longer used
 
 import LocationStep from '@/components/onboarding/LocationStep';
 import TaxAmountStep from '@/components/onboarding/TaxAmountStep';
@@ -14,7 +13,7 @@ import TaxBreakdownDashboard from '@/components/dashboard/TaxBreakdownDashboard'
 import FloatingEmailButton from '@/components/dashboard/FloatingEmailButton'; // Import the new component
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react'; // Removed Mail icon, it's in FloatingEmailButton
+import { ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ThemeToggle from '@/components/ThemeToggle';
 
@@ -40,6 +39,7 @@ export default function Home() {
   // State for controlling the email modal and button visibility/count
   const [showEmailAction, setShowEmailAction] = useState(false);
   const [emailActionCount, setEmailActionCount] = useState(0);
+  // State to control the EmailCustomizationModal's open/closed status
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [estimatedMedianTax, setEstimatedMedianTax] = useState<number>(NATIONAL_MEDIAN_FEDERAL_TAX);
 
@@ -48,10 +48,11 @@ export default function Home() {
     const isGoingBack = (step === 'tax' && nextStep === 'location') || (step === 'dashboard' && nextStep === 'tax');
     setAnimationClass(isGoingBack ? 'animate-slideOutUp' : 'animate-slideOutUp');
 
-    // Reset email button state when navigating away from dashboard
+    // Reset email button state and close modal when navigating away from dashboard
     if (step === 'dashboard' && nextStep !== 'dashboard') {
        setShowEmailAction(false);
        setEmailActionCount(0);
+       setIsEmailModalOpen(false); // Ensure modal closes
     }
 
 
@@ -149,16 +150,16 @@ export default function Home() {
 
   const { title, description } = getTitleAndDescription();
 
-  // Handler for changes in dashboard selection state
+  // Handler for changes in dashboard selection state (from TaxBreakdownDashboard)
   const handleEmailButtonStateChange = (show: boolean, count: number) => {
     setShowEmailAction(show);
     setEmailActionCount(count);
   };
 
-  // Handler to open the modal via the button in this component
+  // Handler to open the modal via the FloatingEmailButton
   const handleOpenEmailModal = () => {
      if (emailActionCount > 0) {
-        setIsEmailModalOpen(true);
+        setIsEmailModalOpen(true); // Set state to open the modal
      } else {
          // This case should ideally be prevented by the button not showing, but as a fallback:
           toast({
@@ -222,8 +223,8 @@ export default function Home() {
                             taxSpending={taxSpending}
                             // Pass email state and handlers
                             onEmailButtonStateChange={handleEmailButtonStateChange}
-                            isEmailModalOpen={isEmailModalOpen}
-                            setIsEmailModalOpen={setIsEmailModalOpen}
+                            isEmailModalOpen={isEmailModalOpen} // Pass the modal's open state
+                            setIsEmailModalOpen={setIsEmailModalOpen} // Pass the function to change the modal's state
                          />
                      )
                  )}
@@ -241,9 +242,10 @@ export default function Home() {
        <FloatingEmailButton
             isVisible={showEmailAction && step === 'dashboard'} // Only visible on dashboard when items selected
             count={emailActionCount}
-            onClick={handleOpenEmailModal}
+            onClick={handleOpenEmailModal} // Correct handler to open the modal
        />
     </main>
   );
 }
 
+    

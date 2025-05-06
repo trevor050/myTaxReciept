@@ -9,8 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import EmailCustomizationModal from '@/components/dashboard/EmailCustomizationModal';
-// Removed FloatingEmailButton import
+import EmailCustomizationModal from '@/components/dashboard/EmailCustomizationModal'; // Ensure correct import of the rebuilt modal
 
 import {
     ExternalLink,
@@ -119,18 +118,21 @@ const CustomLegend = (props: any) => {
 
   useEffect(() => {
     // Attempt to get the chart width for responsive legend items
-    const chartContainer = document.querySelector('.recharts-responsive-container');
-    if (chartContainer) {
-      setChartWidth(chartContainer.clientWidth);
-    }
-    // Basic resize listener - consider debouncing for performance
-    const handleResize = () => {
+    // Ensure this runs only client-side
+    if (typeof window !== 'undefined') {
+        const chartContainer = document.querySelector('.recharts-responsive-container');
         if (chartContainer) {
-            setChartWidth(chartContainer.clientWidth);
+        setChartWidth(chartContainer.clientWidth);
         }
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+        // Basic resize listener - consider debouncing for performance
+        const handleResize = () => {
+            if (chartContainer) {
+                setChartWidth(chartContainer.clientWidth);
+            }
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }
   }, []);
 
   // Determine max width based on chart width - adjust as needed
@@ -230,11 +232,13 @@ export default function TaxBreakdownDashboard({
 
    useEffect(() => {
     // These need to run only on the client after hydration
-    const currentYear = new Date().getFullYear();
-    const date = new Date(currentYear + 1, 3, 15).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    setClientDueDate(date);
+    if (typeof window !== 'undefined') {
+        const currentYear = new Date().getFullYear();
+        const date = new Date(currentYear + 1, 3, 15).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        setClientDueDate(date);
 
-    getFormattedNationalDebt().then(setNationalDebt);
+        getFormattedNationalDebt().then(setNationalDebt);
+    }
   }, []); // Empty dependency array ensures this runs once on mount
 
     // Effect to update parent component about selection changes
@@ -248,7 +252,10 @@ export default function TaxBreakdownDashboard({
 
   const handleEmailSubmit = (emailDetails: { subject: string; body: string }) => {
     const mailtoLink = `mailto:?subject=${encodeURIComponent(emailDetails.subject)}&body=${encodeURIComponent(emailDetails.body)}`;
-    window.open(mailtoLink, '_self');
+    // Ensure window operations happen only client-side
+    if (typeof window !== 'undefined') {
+        window.open(mailtoLink, '_self');
+    }
     setIsEmailModalOpen(false); // Close modal after generating mailto link
   };
 
@@ -273,8 +280,9 @@ export default function TaxBreakdownDashboard({
 
 
   // Use client-side date state
-  const currentYear = new Date().getFullYear(); // Get current year for display
-  const dueDateDisplay = clientDueDate || `April 15, ${currentYear + 1}`; // Use calculated due date
+   const currentYear = typeof window !== 'undefined' ? new Date().getFullYear() : null; // Get current year for display, client-side only
+   const dueDateDisplay = clientDueDate || (currentYear ? `April 15, ${currentYear + 1}` : 'April 15'); // Use calculated due date
+
 
   const chartData = taxSpending.map(item => ({
     category: item.category,
@@ -289,7 +297,7 @@ export default function TaxBreakdownDashboard({
         {/* --- Header --- */}
         <div className="text-center space-y-1 mb-10">
             {/* Keep only one main title */}
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">{currentYear} Federal Income Tax Receipt</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">{currentYear ? `${currentYear} ` : ''}Federal Income Tax Receipt</h1>
             <p className="text-lg text-muted-foreground">Based on your estimated <span className="font-semibold text-foreground">{formatCurrency(taxAmount)}</span> payment.</p>
             <p className="text-xs text-muted-foreground/70">Next Filing Due: {dueDateDisplay}</p>
          </div>
@@ -301,7 +309,7 @@ export default function TaxBreakdownDashboard({
             <AlertDescription className="text-sm text-foreground/90 space-y-1.5">
                 Understanding where your money goes is the first step. The next is action.
                 <span className="block">Your elected officials work for you. Let them know how you feel about these spending priorities. Select specific items below that concern you and use the button to draft a direct message.</span>
-                 <Button variant="link" className="p-0 h-auto ml-0 text-primary font-medium text-sm mt-1" onClick={() => window.open('https://www.usa.gov/elected-officials', '_blank', 'noopener,noreferrer')}>
+                 <Button variant="link" className="p-0 h-auto ml-0 text-primary font-medium text-sm mt-1" onClick={() => {if (typeof window !== 'undefined') window.open('https://www.usa.gov/elected-officials', '_blank', 'noopener,noreferrer')}}>
                     Find Your Officials <ExternalLink className="inline ml-1 h-3 w-3" />
                 </Button>
             </AlertDescription>
@@ -319,8 +327,8 @@ export default function TaxBreakdownDashboard({
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    outerRadius={window.innerWidth < 640 ? 80 : 100}
-                    innerRadius={window.innerWidth < 640 ? 50 : 65}
+                    outerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 80 : 100} // Conditional radius client-side
+                    innerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 50 : 65} // Conditional radius client-side
                     fill="#8884d8"
                     paddingAngle={1}
                     dataKey="percentage"
@@ -452,20 +460,20 @@ export default function TaxBreakdownDashboard({
             </CardContent>
         </Card>
 
-        {/* Floating Action Button removed from here */}
+        {/* Floating Action Button is now rendered by parent component */}
 
         {/* Email Customization Modal */}
-        {/* Render the modal only when isEmailModalOpen is true to handle mounting/unmounting */}
-        {isEmailModalOpen && (
-            <EmailCustomizationModal
-                selectedItems={Array.from(selectedItems.values())}
-                balanceBudgetChecked={balanceBudgetChecked}
-                onSubmit={handleEmailSubmit}
-                open={isEmailModalOpen} // Pass open state
-                onOpenChange={setIsEmailModalOpen} // Pass setter to allow closing from within modal
-            />
-        )}
+        {/* Use the rebuilt EmailCustomizationModal component */}
+        {/* The open state is controlled by the parent via isEmailModalOpen */}
+         <EmailCustomizationModal
+            selectedItems={Array.from(selectedItems.values())}
+            balanceBudgetChecked={balanceBudgetChecked}
+            onSubmit={handleEmailSubmit}
+            open={isEmailModalOpen} // Pass open state from parent
+            onOpenChange={setIsEmailModalOpen} // Pass setter to parent
+        />
     </div>
   );
 }
 
+    
