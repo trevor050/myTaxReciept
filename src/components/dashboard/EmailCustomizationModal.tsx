@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-// Use useLayoutEffect for measurements after paint
+// Use useLayoutEffect for window event listeners
 import { useState, useRef, useLayoutEffect, useCallback } from 'react';
 import {
   Dialog,
@@ -69,52 +69,52 @@ export default function EmailCustomizationModal({
 }: EmailCustomizationModalProps) {
 
   // --- Draggable State ---
-  // 🟢 1. sentinel null means “not positioned yet”
+  // 🟢 1. sentinel null means “not positioned yet” - rely on CSS centering initially
   const [position, setPosition] = useState<{x: number | null, y: number | null}>({ x: null, y: null });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartOffset, setDragStartOffset] = useState({ x: 0, y: 0 }); // Offset from top-left corner
   const modalRef = useRef<HTMLDivElement>(null); // Ref for the modal content
   const dragHandleRef = useRef<HTMLDivElement>(null); // Ref for the drag handle (header)
-  const isInitialOpen = useRef(true); // Track initial opening for centering
+  const isInitialPositionSet = useRef(false); // Track if absolute position has been set
 
-  // --- Center Modal on Open and Reset Position on Close ---
-  // 🟢 2. measure after first paint using useLayoutEffect
-  useLayoutEffect(() => {
-    if (isOpen && isInitialOpen.current && modalRef.current) {
-       // Calculate initial center position using reliable measurements
-        const { width, height } = modalRef.current.getBoundingClientRect(); // Use getBoundingClientRect for better accuracy
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-
-        // Center position relative to viewport
-        const initialX = (viewportWidth - width) / 2;
-        const initialY = (viewportHeight - height) / 2;
-
-        setPosition({ x: initialX, y: initialY });
-        isInitialOpen.current = false; // Mark initial centering done
-    } else if (!isOpen) {
-      isInitialOpen.current = true; // Reset for next open
-      setPosition({ x: null, y: null }); // Reset position state to use CSS centering again
-    }
-  }, [isOpen]); // Depend only on isOpen
+   // --- Reset Position on Close ---
+   useLayoutEffect(() => {
+     if (!isOpen) {
+       setPosition({ x: null, y: null }); // Reset position state to use CSS centering again next time
+       isInitialPositionSet.current = false; // Reset flag
+     }
+   }, [isOpen]);
 
 
   // --- Drag Handlers ---
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     // Check if the mousedown event originated within the drag handle
     if (modalRef.current && dragHandleRef.current?.contains(e.target as Node)) {
-        setIsDragging(true);
-        // Get the current position using getBoundingClientRect for accuracy
+      e.preventDefault(); // Prevent default text selection behavior
+
+      let currentX = position.x;
+      let currentY = position.y;
+
+      // 🟢 If this is the first drag, lock in the current visual position
+      if (currentX === null && modalRef.current) {
         const modalRect = modalRef.current.getBoundingClientRect();
-        setDragStartOffset({
-            // Calculate offset relative to the current actual position
-            x: e.clientX - modalRect.left,
-            y: e.clientY - modalRect.top,
-        });
-        document.body.style.userSelect = 'none'; // Prevent text selection during drag
-        e.preventDefault();
+        currentX = modalRect.left;
+        currentY = modalRect.top;
+        setPosition({ x: currentX, y: currentY }); // Set absolute position, killing CSS translate
+        isInitialPositionSet.current = true;
+      }
+
+      // Ensure currentX/Y are numbers before calculating offset
+      if (currentX !== null && currentY !== null) {
+          setIsDragging(true);
+          setDragStartOffset({
+            x: e.clientX - currentX,
+            y: e.clientY - currentY,
+          });
+          document.body.style.userSelect = 'none'; // Prevent text selection during drag
+      }
     }
-  }, []); // Removed position from dependency array as it's not needed here
+  }, [position]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging || !modalRef.current) return;
@@ -131,17 +131,16 @@ export default function EmailCustomizationModal({
     newX = Math.max(0, Math.min(newX, viewportWidth - modalRect.width));
     newY = Math.max(0, Math.min(newY, viewportHeight - modalRect.height));
 
-
     setPosition({ x: newX, y: newY });
 
-  }, [isDragging, dragStartOffset]); // Depend only on drag state and offset
+  }, [isDragging, dragStartOffset]);
 
   const handleMouseUp = useCallback(() => {
     if (isDragging) {
         setIsDragging(false);
         document.body.style.userSelect = ''; // Re-enable text selection
     }
-  }, [isDragging]); // Depend only on drag state
+  }, [isDragging]);
 
   // --- Attach/Detach Window Event Listeners ---
   useLayoutEffect(() => { // Use layout effect for mouse move/up listeners as well
@@ -230,7 +229,7 @@ export default function EmailCustomizationModal({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
        <DialogContent
          ref={modalRef} // Add ref to the DialogContent
-         // 🟢 3. only apply inline coords once we have them
+         // 🟢 Only apply inline coords once we have them (after first drag)
          style={
              position.x !== null
                ? { left: `${position.x}px`, top: `${position.y}px`, transform: "none" } // transform off when dragging
@@ -241,9 +240,9 @@ export default function EmailCustomizationModal({
             "fixed max-w-3xl w-[90vw] sm:w-full p-0 max-h-[85vh]",
             "flex flex-col",
             "z-50 border bg-background shadow-lg sm:rounded-lg",
-            // Animations (apply always)
+            // Animations (apply always) - these might cause the initial measurement issue if they scale the element
             "data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut",
-             // Conditional CSS Centering (apply only before position is set)
+             // 🟢 Conditional CSS Centering (apply only before position is set/first drag)
              position.x === null && "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
          )}
          // Prevent Radix default focus trapping from interfering with drag
@@ -271,7 +270,7 @@ export default function EmailCustomizationModal({
              // tabIndex={0}
          >
              {/* Content within header */}
-             <div className="flex justify-between items-center"> {/* Removed pointer-events-none to allow close button */}
+             <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2 pointer-events-none"> {/* Re-add pointer-events-none here for inner content */}
                     <GripVertical className="h-5 w-5 text-muted-foreground shrink-0"/> {/* Drag indicator */}
                     <div className="space-y-1">
@@ -286,7 +285,7 @@ export default function EmailCustomizationModal({
                 </div>
                 {/* Close Button - Ensure it's clickable */}
                 <DialogClose asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 z-20 relative"> {/* Removed pointer-events-auto as parent allows events now */}
+                    <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 z-20 relative">
                         <X className="h-4 w-4" />
                         <span className="sr-only">Close</span>
                     </Button>
@@ -418,5 +417,3 @@ export default function EmailCustomizationModal({
     </Dialog>
   );
 }
-
-    
