@@ -6,7 +6,7 @@ import * as React from 'react';
 import { useState, useEffect } from 'react';
 import type { TaxSpending, TaxSpendingSubItem, SelectedItem } from '@/services/tax-spending';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend } from 'recharts'; // Renamed Tooltip to avoid conflict
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, Sector } from 'recharts'; // Added Sector
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label'; // Import Label
@@ -36,9 +36,9 @@ import {
     AccordionTrigger,
 } from "@/components/ui/accordion"
 import {
-    Tooltip as ShadTooltip, // Keep ShadCN Tooltip as ShadTooltip
-    TooltipContent,
     TooltipProvider,
+    Tooltip, // Renamed ShadCN Tooltip to avoid conflict with RechartsTooltip
+    TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { cn } from '@/lib/utils';
@@ -151,51 +151,71 @@ const CustomPieTooltip = ({ active, payload, totalAmount, hourlyWage, displayMod
         </div>
     );
 
+    // On mobile, the perspective content is shown inside the main tooltip, no separate hover needed
     if (isMobile) {
         return (
-            <ShadTooltip open> {/* Force open on mobile for initial tap */}
-                <TooltipTrigger asChild>
-                    {content}
-                </TooltipTrigger>
-                <PerspectiveTooltipContent
-                    perspectiveList={perspectiveList}
-                    title={perspectiveTitle}
-                    isMobile={isMobile}
-                />
-            </ShadTooltip>
+            <div className="rounded-lg border bg-popover p-2 sm:p-2.5 text-popover-foreground shadow-lg animate-scaleIn text-[10px] sm:text-xs max-w-[200px] sm:max-w-[280px]">
+                 <div className="flex items-center justify-between mb-0.5 sm:mb-1 gap-1 sm:gap-2">
+                     <span className="font-medium flex items-center gap-1 sm:gap-1.5 truncate">
+                        <CategoryIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground shrink-0" />
+                        {data.category}
+                     </span>
+                    <span className="font-mono text-muted-foreground shrink-0">{data.percentage.toFixed(1)}%</span>
+                </div>
+                 <div className="font-semibold text-xs sm:text-sm md:text-base cursor-default text-left mb-1.5 sm:mb-2">
+                    {displayValue}
+                 </div>
+                {perspectiveList && perspectiveList.length > 0 && (
+                    <>
+                        <hr className="my-1.5 sm:my-2 border-border/50" />
+                        <p className="text-popover-foreground text-[10px] sm:text-xs font-semibold mb-1 sm:mb-1.5">{perspectiveTitle}</p>
+                        <ul className="space-y-1 sm:space-y-1.5 text-popover-foreground/90 max-h-32 sm:max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+                            {perspectiveList.map((item, index) => {
+                                const Icon = item.icon ? iconComponents[item.icon] || Info : Info;
+                                return (
+                                    <li key={index} className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px]">
+                                        <Icon className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground shrink-0"/>
+                                        <span>{item.description}{item.count > 1 ? ` (${item.count} times)` : ''}</span>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </>
+                )}
+            </div>
         );
     }
 
+    // Desktop hover tooltip
     return (
-        <ShadTooltip>
+        <Tooltip>
             <TooltipTrigger asChild>
                 {content}
             </TooltipTrigger>
             <PerspectiveTooltipContent
                 perspectiveList={perspectiveList}
                 title={perspectiveTitle}
-                isMobile={isMobile}
             />
-        </ShadTooltip>
+        </Tooltip>
     );
   }
   return null;
 };
 
-const PerspectiveTooltipContent = ({ perspectiveList, title, isMobile }: { perspectiveList: (CombinedPerspective | CombinedCurrencyPerspective)[] | null, title: string, isMobile?: boolean }) => {
+const PerspectiveTooltipContent = ({ perspectiveList, title }: { perspectiveList: (CombinedPerspective | CombinedCurrencyPerspective)[] | null, title: string}) => {
     if (!perspectiveList || perspectiveList.length === 0) {
         return null;
     }
 
     return (
-        <TooltipContent side="top" align="center" className={cn("max-w-[200px] sm:max-w-xs text-xs sm:text-sm bg-popover border shadow-xl p-3 sm:p-4 rounded-lg animate-scaleIn z-50", isMobile && "pointer-events-auto")}> {/* Adjusted padding and max-width for mobile, allow pointer events on mobile */}
-            <p className="text-popover-foreground text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2">{title}</p> {/* Adjusted font size and margin for mobile */}
-            <ul className="space-y-1 sm:space-y-1.5 text-popover-foreground/90 max-h-48 sm:max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"> {/* Adjusted max-height for mobile */}
+        <TooltipContent side="top" align="center" className="max-w-[200px] sm:max-w-xs text-xs sm:text-sm bg-popover border shadow-xl p-3 sm:p-4 rounded-lg animate-scaleIn z-50">
+            <p className="text-popover-foreground text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2">{title}</p>
+            <ul className="space-y-1 sm:space-y-1.5 text-popover-foreground/90 max-h-48 sm:max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
                 {perspectiveList.map((item, index) => {
                     const Icon = item.icon ? iconComponents[item.icon] || Info : Info;
                     return (
-                        <li key={index} className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs"> {/* Adjusted spacing and font size for mobile */}
-                            <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground shrink-0"/> {/* Adjusted icon size for mobile */}
+                        <li key={index} className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs">
+                            <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground shrink-0"/>
                             <span>{item.description}{item.count > 1 ? ` (${item.count} times)` : ''}</span>
                         </li>
                     );
@@ -205,20 +225,20 @@ const PerspectiveTooltipContent = ({ perspectiveList, title, isMobile }: { persp
     );
 };
 
-const ItemInfoTooltipContent = ({ subItem, isMobile }: { subItem: TaxSpendingSubItem, isMobile?: boolean }) => {
+const ItemInfoTooltipContent = ({ subItem }: { subItem: TaxSpendingSubItem }) => { // Removed isMobile as it's handled by TooltipProvider
     return (
-        <TooltipContent side="top" align="center" className={cn("max-w-[200px] sm:max-w-sm text-xs sm:text-sm bg-popover border shadow-xl p-2.5 sm:p-3 rounded-lg animate-scaleIn z-50", isMobile && "pointer-events-auto")}> {/* Adjusted padding and max-width for mobile, allow pointer events */}
-            <p className="font-semibold mb-1 sm:mb-1.5 text-popover-foreground">{subItem.description}</p> {/* Adjusted margin for mobile */}
-            {subItem.tooltipText && <p className="text-muted-foreground text-[10px] sm:text-xs leading-relaxed mb-1.5 sm:mb-2">{subItem.tooltipText}</p>} {/* Adjusted font size and margin for mobile */}
+        <TooltipContent side="top" align="center" className="max-w-[200px] sm:max-w-sm text-xs sm:text-sm bg-popover border shadow-xl p-2.5 sm:p-3 rounded-lg animate-scaleIn z-50">
+            <p className="font-semibold mb-1 sm:mb-1.5 text-popover-foreground">{subItem.description}</p>
+            {subItem.tooltipText && <p className="text-muted-foreground text-[10px] sm:text-xs leading-relaxed mb-1.5 sm:mb-2">{subItem.tooltipText}</p>}
             {subItem.wikiLink && (
                 <a
                 href={subItem.wikiLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary hover:underline flex items-center gap-1 text-[10px] sm:text-xs font-medium mt-1.5 sm:mt-2" // Adjusted font size and margin for mobile
-                onClick={(e) => e.stopPropagation()} // Prevent accordion close on link click
+                className="text-primary hover:underline flex items-center gap-1 text-[10px] sm:text-xs font-medium mt-1.5 sm:mt-2"
+                onClick={(e) => e.stopPropagation()}
                 >
-                Learn More <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> {/* Adjusted icon size for mobile */}
+                Learn More <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                 </a>
             )}
         </TooltipContent>
@@ -249,18 +269,18 @@ const CustomLegend = (props: any) => {
   }, []);
 
   if (!isClient) {
-      return null; // Or a placeholder/skeleton
+      return null;
   }
 
-  const maxItemWidth = chartWidth > 300 ? (chartWidth > 400 ? '150px' : '120px') : '80px'; // Adjusted for mobile
+  const maxItemWidth = chartWidth > 300 ? (chartWidth > 400 ? '150px' : '120px') : '80px';
 
   return (
-    <ul className="flex flex-wrap justify-center gap-x-2 sm:gap-x-3 gap-y-1 sm:gap-y-1.5 text-[10px] sm:text-xs mt-3 sm:mt-4 list-none p-0 max-w-full mx-auto"> {/* Adjusted spacing and font size for mobile */}
+    <ul className="flex flex-wrap justify-center gap-x-2 sm:gap-x-3 gap-y-1 sm:gap-y-1.5 text-[10px] sm:text-xs mt-3 sm:mt-4 list-none p-0 max-w-full mx-auto">
       {payload.map((entry: any, index: number) => {
           const percentage = entry.payload?.percentage;
           return (
             <li key={`item-${index}`} className="flex items-center space-x-1 cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
-              <span style={{ backgroundColor: entry.color }} className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full inline-block shrink-0"></span> {/* Adjusted size for mobile */}
+              <span style={{ backgroundColor: entry.color }} className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full inline-block shrink-0"></span>
               <span className="truncate" style={{ maxWidth: maxItemWidth }}>{entry.value}</span>
               {percentage != null && <span className="font-mono shrink-0">({percentage.toFixed(1)}%)</span>}
             </li>
@@ -342,31 +362,19 @@ export default function TaxBreakdownDashboard({
     const checkMobile = () => setIsMobileView(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
-
-  // State for pre-calculated perspectives for chart tooltips
-  const [chartPerspectiveData, setChartPerspectiveData] = useState<Record<string, PerspectiveData>>({});
-  // State for pre-calculated perspectives for accordion items
-  const [accordionPerspectiveData, setAccordionPerspectiveData] = useState<Record<string, PerspectiveData>>({});
-   // State for pre-calculated perspectives for total row
-  const [totalPerspectiveData, setTotalPerspectiveData] = useState<PerspectiveData | null>(null);
-
-
-   useEffect(() => {
+    // Ensure perspective data is calculated only on client after mount
     if (typeof window !== 'undefined') {
         const currentYear = new Date().getFullYear();
         const date = new Date(currentYear + 1, 3, 15).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
         setClientDueDate(date);
         getFormattedNationalDebt().then(setNationalDebt);
 
-        // Pre-calculate perspectives for chart and accordion items
         const newChartPerspectives: Record<string, PerspectiveData> = {};
         taxSpending.forEach(item => {
             const spendingAmount = (item.percentage / 100) * taxAmount;
             newChartPerspectives[item.category] = {
-                currency: generateCurrencyPerspectiveList(spendingAmount, isMobileView ? 3 : 5), // Fewer items on mobile for tooltip
+                currency: generateCurrencyPerspectiveList(spendingAmount, isMobileView ? 3 : 5),
                 time: hourlyWage ? generateCombinedPerspectiveList((spendingAmount / hourlyWage) * 60, isMobileView ? 3: 5) : null,
             };
         });
@@ -374,13 +382,11 @@ export default function TaxBreakdownDashboard({
 
         const newAccordionPerspectives: Record<string, PerspectiveData> = {};
         taxSpending.forEach(category => {
-            // Category level
             const categoryAmount = (category.percentage / 100) * taxAmount;
             newAccordionPerspectives[category.id || category.category] = {
                 currency: generateCurrencyPerspectiveList(categoryAmount),
                 time: hourlyWage ? generateCombinedPerspectiveList((categoryAmount / hourlyWage) * 60) : null,
             };
-            // Sub-item level
             category.subItems?.forEach(subItem => {
                 const subItemAmount = subItem.amountPerDollar * taxAmount;
                  newAccordionPerspectives[subItem.id] = {
@@ -391,14 +397,24 @@ export default function TaxBreakdownDashboard({
         });
         setAccordionPerspectiveData(newAccordionPerspectives);
 
-        // Pre-calculate for total row
         setTotalPerspectiveData({
             currency: generateCurrencyPerspectiveList(taxAmount),
             time: hourlyWage ? generateCombinedPerspectiveList((taxAmount / hourlyWage) * 60) : null,
         });
     }
+
+    return () => window.removeEventListener('resize', checkMobile);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taxAmount, hourlyWage, taxSpending, displayMode, isMobileView]); // Rerun if these change, including displayMode and isMobileView for perspective list length
+  }, [isClient, taxAmount, hourlyWage, taxSpending, displayMode, isMobileView]);
+
+
+  // State for pre-calculated perspectives for chart tooltips
+  const [chartPerspectiveData, setChartPerspectiveData] = useState<Record<string, PerspectiveData>>({});
+  // State for pre-calculated perspectives for accordion items
+  const [accordionPerspectiveData, setAccordionPerspectiveData] = useState<Record<string, PerspectiveData>>({});
+   // State for pre-calculated perspectives for total row
+  const [totalPerspectiveData, setTotalPerspectiveData] = useState<PerspectiveData | null>(null);
+
 
     useEffect(() => {
         const count = selectedItems.size + (balanceBudgetChecked ? 1 : 0);
@@ -420,7 +436,7 @@ export default function TaxBreakdownDashboard({
         setBalanceBudgetChecked(checked === true);
     }
 
-   const currentYear = typeof window !== 'undefined' ? new Date().getFullYear() : new Date().getFullYear(); // Fallback for server
+   const currentYear = isClient ? new Date().getFullYear() : new Date().getFullYear();
    const dueDateDisplay = clientDueDate || (currentYear ? `April 15, ${currentYear + 1}` : 'April 15');
 
   const chartData = taxSpending.map(item => ({
@@ -428,23 +444,26 @@ export default function TaxBreakdownDashboard({
     percentage: item.percentage,
   }));
 
-  const responsivePieHeight = isMobileView ? 260 : 320; // Smaller height on mobile to prevent clipping
-  const responsiveOuterRadius = isMobileView ? 65 : (isClient && window.innerWidth < 768 ? 80 : 100); // Smaller radius on mobile
-  const responsiveInnerRadius = isMobileView ? 35 : (isClient && window.innerWidth < 768 ? 50 : 65); // Smaller inner radius
+  const responsivePieHeight = isMobileView ? 260 : 320;
+  const responsiveOuterRadius = isMobileView ? 65 : (isClient && window.innerWidth < 768 ? 80 : 100);
+  const responsiveInnerRadius = isMobileView ? 35 : (isClient && window.innerWidth < 768 ? 50 : 65);
 
 
   return (
-    <TooltipProvider delayDuration={isMobileView ? 0 : 200}> {/* No delay on mobile for tap */}
-        <div className="space-y-6 sm:space-y-10 animate-fadeIn relative pb-10"> {/* Adjusted spacing for mobile */}
-            <div className="text-center space-y-0.5 sm:space-y-1 mb-4 sm:mb-6 relative"> {/* Adjusted spacing for mobile */}
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-foreground">{currentYear ? `${currentYear} ` : ''}Federal Income Tax Receipt</h1> {/* Adjusted font size for mobile */}
-                 <p className="text-base sm:text-lg text-muted-foreground">Based on your estimated <span className="font-semibold text-foreground">{formatCurrency(taxAmount)}</span> payment.</p> {/* Adjusted font size for mobile */}
+    <TooltipProvider delayDuration={isMobileView ? 0 : 200}>
+        <div className="space-y-6 sm:space-y-10 animate-fadeIn relative pb-10">
+             <div className="text-center space-y-0.5 sm:space-y-1 mb-4 sm:mb-6 relative">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-foreground">{currentYear ? `${currentYear} ` : ''}Federal Income Tax Receipt</h1>
+                 <p className="text-base sm:text-lg text-muted-foreground">Based on your estimated <span className="font-semibold text-foreground">{formatCurrency(taxAmount)}</span> payment.</p>
                 <p className="text-xs text-muted-foreground/70">Next Filing Due: {dueDateDisplay}</p>
 
                 {hourlyWage !== null && (
-                    <div className="absolute top-0 right-0 sm:relative sm:flex sm:justify-center sm:items-center sm:mt-2 md:mt-4 sm:space-x-2 pt-1 pr-1 sm:pt-0 sm:pr-0"> {/* Adjusted margin for mobile */}
-                        <Label htmlFor="display-mode-toggle" className="text-xs font-medium text-muted-foreground hidden sm:inline">View as:</Label>
-                        <div className="flex items-center space-x-1 sm:space-x-2 bg-muted p-0.5 sm:p-1 rounded-full"> {/* Adjusted padding and spacing for mobile */}
+                    <div className={cn(
+                        "mt-2 sm:mt-4 flex justify-center items-center",
+                        "sm:absolute sm:top-0 sm:right-0 sm:pt-1 sm:pr-1" // Desktop positioning
+                    )}>
+                        <Label htmlFor="display-mode-toggle" className="text-xs font-medium text-muted-foreground hidden sm:inline mr-2">View as:</Label>
+                        <div className="flex items-center space-x-1 sm:space-x-2 bg-muted p-0.5 sm:p-1 rounded-full">
                             <Button
                                 variant={displayMode === 'currency' ? 'default' : 'ghost'}
                                 size="sm"
@@ -452,7 +471,7 @@ export default function TaxBreakdownDashboard({
                                 className={cn("rounded-full px-2.5 sm:px-3 py-1 h-6 sm:h-7 text-[10px] sm:text-xs", displayMode === 'currency' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:bg-accent')}
                                 aria-pressed={displayMode === 'currency'}
                             >
-                                <DollarSign className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" /> Currency {/* Adjusted icon size and margin for mobile */}
+                                <DollarSign className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" /> Currency
                             </Button>
                             <Button
                                  variant={displayMode === 'time' ? 'default' : 'ghost'}
@@ -461,30 +480,30 @@ export default function TaxBreakdownDashboard({
                                  className={cn("rounded-full px-2.5 sm:px-3 py-1 h-6 sm:h-7 text-[10px] sm:text-xs", displayMode === 'time' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:bg-accent')}
                                  aria-pressed={displayMode === 'time'}
                             >
-                                <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" /> Time Worked {/* Adjusted icon size and margin for mobile */}
+                                <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" /> Time Worked
                             </Button>
                         </div>
                     </div>
                 )}
              </div>
 
-            <Alert className="mb-6 sm:mb-8 shadow-sm rounded-lg border border-primary/20 bg-primary/5 text-foreground animate-fadeIn delay-500 duration-3000"> {/* Adjusted margin for mobile */}
-                 <Megaphone className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 stroke-primary" /> {/* Adjusted icon size for mobile */}
-                <AlertTitle className="font-semibold text-primary text-sm sm:text-base">Make Your Voice Heard!</AlertTitle> {/* Adjusted font size for mobile */}
-                <AlertDescription className="text-xs sm:text-sm text-foreground/90 space-y-1 sm:space-y-1.5"> {/* Adjusted font size and spacing for mobile */}
+            <Alert className="mb-6 sm:mb-8 shadow-sm rounded-lg border border-primary/20 bg-primary/5 text-foreground animate-fadeIn delay-500 duration-3000">
+                 <Megaphone className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 stroke-primary" />
+                <AlertTitle className="font-semibold text-primary text-sm sm:text-base">Make Your Voice Heard!</AlertTitle>
+                <AlertDescription className="text-xs sm:text-sm text-foreground/90 space-y-1 sm:space-y-1.5">
                     Understanding where your money goes is the first step. The next is action.
                     <span className="block">Your elected officials work for you. Let them know how you feel about these spending priorities. Select specific items below that concern you and use the button to draft a direct message.</span>
                      <Button variant="link" className="p-0 h-auto ml-0 text-primary font-medium text-xs sm:text-sm mt-1" onClick={() => {if (typeof window !== 'undefined') window.open('https://www.usa.gov/elected-officials', '_blank', 'noopener,noreferrer')}}>
-                        Find Your Officials <ExternalLink className="inline ml-1 h-2.5 w-2.5 sm:h-3 sm:w-3" /> {/* Adjusted icon size for mobile */}
+                        Find Your Officials <ExternalLink className="inline ml-1 h-2.5 w-2.5 sm:h-3 sm:w-3" />
                     </Button>
                 </AlertDescription>
             </Alert>
 
-          <div className="mb-8 sm:mb-12"> {/* Adjusted margin for mobile */}
-             <h2 className="text-lg sm:text-xl font-semibold text-center mb-3 sm:mb-4">Spending Overview</h2> {/* Adjusted font size and margin for mobile */}
+          <div className="mb-8 sm:mb-12">
+             <h2 className="text-lg sm:text-xl font-semibold text-center mb-3 sm:mb-4">Spending Overview</h2>
 
                   <ResponsiveContainer width="100%" height={responsivePieHeight}>
-                    <PieChart margin={{ top: isMobileView ? 20 : 5, right: 5, bottom: 5, left: 5 }}> {/* Added top margin for mobile */}
+                    <PieChart margin={{ top: isMobileView ? 20 : 5, right: 5, bottom: 5, left: 5 }}>
                       <Pie
                         data={chartData}
                         cx="50%"
@@ -497,14 +516,13 @@ export default function TaxBreakdownDashboard({
                         dataKey="percentage"
                         nameKey="category"
                         activeIndex={activePieIndex ?? undefined}
-                        activeShape={({ cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value }) => ( // Custom active shape for better control
+                        activeShape={({ cx, cy, innerRadius: ir, outerRadius: or, startAngle, endAngle, fill }) => ( // Corrected activeShape destructuring
                             <g>
-                                <Cell fill={fill} strokeWidth={2} stroke="hsl(var(--background))" />
                                 <Sector
                                     cx={cx}
                                     cy={cy}
-                                    innerRadius={innerRadius}
-                                    outerRadius={outerRadius + (isMobileView ? 3 : 5)} // Slightly expand on active/hover
+                                    innerRadius={ir}
+                                    outerRadius={or + (isMobileView ? 3 : 5)}
                                     startAngle={startAngle}
                                     endAngle={endAngle}
                                     fill={fill}
@@ -517,7 +535,7 @@ export default function TaxBreakdownDashboard({
                         onMouseLeave={() => !isMobileView && setActivePieIndex(null)}
                         onClick={(_, index) => {
                             if (isMobileView) {
-                                setActivePieIndex(activePieIndex === index ? null : index); // Toggle active state on click for mobile
+                                setActivePieIndex(activePieIndex === index ? null : index);
                             }
                         }}
                       >
@@ -526,16 +544,17 @@ export default function TaxBreakdownDashboard({
                         ))}
                       </Pie>
                        <RechartsTooltip
-                         content={({ active, payload, label: tooltipLabel }) => {
-                            if ((active || (isMobileView && activePieIndex !== null && payload && payload[0]?.payload.category === chartData[activePieIndex]?.category)) && payload && payload.length) {
+                         content={({ active, payload }) => { // Simplified destructuring
+                            const currentPayload = payload && payload.length ? payload[0].payload : null;
+                            if ((active || (isMobileView && activePieIndex !== null && currentPayload?.category === chartData[activePieIndex]?.category)) && currentPayload) {
                                 return (
                                     <CustomPieTooltip
                                         active={active}
-                                        payload={payload}
+                                        payload={payload} // Pass the full payload
                                         totalAmount={taxAmount}
                                         hourlyWage={hourlyWage}
                                         displayMode={displayMode}
-                                        perspectiveData={chartPerspectiveData[tooltipLabel as string] || { currency: null, time: null }}
+                                        perspectiveData={chartPerspectiveData[currentPayload.category] || { currency: null, time: null }}
                                         isMobile={isMobileView}
                                     />
                                 );
@@ -543,20 +562,20 @@ export default function TaxBreakdownDashboard({
                             return null;
                          }}
                          cursor={{ fill: 'hsl(var(--accent))', fillOpacity: 0.4 }}
-                         wrapperStyle={{ zIndex: 100 }} // Ensure tooltip is above other elements
+                         wrapperStyle={{ zIndex: 100 }}
                         />
                        <Legend content={<CustomLegend />} wrapperStyle={{ maxWidth: '100%', overflow: 'hidden' }}/>
                     </PieChart>
                   </ResponsiveContainer>
-                 <p className="text-xs text-muted-foreground text-center mt-3 sm:mt-4 flex items-center justify-center gap-1 px-2"> {/* Adjusted margin for mobile */}
+                 <p className="text-xs text-muted-foreground text-center mt-3 sm:mt-4 flex items-center justify-center gap-1 px-2">
                     <Info className="h-3 w-3" /> {isMobileView ? "Tap segments" : "Hover over segments"} or values for details. Estimated data.
                  </p>
           </div>
 
            <Card className="shadow-lg border border-border/60 rounded-xl overflow-hidden bg-gradient-to-b from-card to-card/95">
-                <CardHeader className="px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5 border-b border-border/50"> {/* Adjusted padding for mobile */}
-                    <CardTitle className="text-base sm:text-lg md:text-xl font-semibold tracking-tight">Detailed Spending</CardTitle> {/* Adjusted font size for mobile */}
-                    <CardDescription className="text-muted-foreground text-[10px] sm:text-xs md:text-sm">Select items you believe need funding adjustments or prioritize balancing the budget.</CardDescription> {/* Adjusted font size for mobile */}
+                <CardHeader className="px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5 border-b border-border/50">
+                    <CardTitle className="text-base sm:text-lg md:text-xl font-semibold tracking-tight">Detailed Spending</CardTitle>
+                    <CardDescription className="text-muted-foreground text-[10px] sm:text-xs md:text-sm">Select items you believe need funding adjustments or prioritize balancing the budget.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
                      <Accordion type="multiple" className="w-full">
@@ -586,54 +605,53 @@ export default function TaxBreakdownDashboard({
 
                             return (
                                  <AccordionItem value={`item-${index}`} key={item.id || index} className="border-b border-border/40 last:border-b-0 group">
-                                    <AccordionTrigger className="hover:no-underline py-2.5 px-3 sm:py-3 sm:px-4 rounded-none hover:bg-accent/50 data-[state=open]:bg-accent/40 transition-colors duration-150 text-left"> {/* Adjusted padding for mobile */}
-                                         <div className="flex justify-between items-center w-full gap-1.5 sm:gap-2 md:gap-3"> {/* Adjusted spacing for mobile */}
-                                            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0"> {/* Adjusted spacing for mobile */}
-                                                <CategoryIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" /> {/* Adjusted icon size for mobile */}
-                                                <span className="font-medium text-xs sm:text-sm truncate flex-1">{item.category}</span> {/* Adjusted font size for mobile */}
+                                    <AccordionTrigger className="hover:no-underline py-2.5 px-3 sm:py-3 sm:px-4 rounded-none hover:bg-accent/50 data-[state=open]:bg-accent/40 transition-colors duration-150 text-left">
+                                         <div className="flex justify-between items-center w-full gap-1.5 sm:gap-2 md:gap-3">
+                                            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                                                <CategoryIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
+                                                <span className="font-medium text-xs sm:text-sm truncate flex-1">{item.category}</span>
                                             </div>
                                             <div className="text-right shrink-0 flex items-baseline gap-1 ml-auto">
-                                                <ShadTooltip open={isMobileView ? undefined : undefined}>
+                                                <Tooltip>
                                                     <TooltipTrigger asChild>
                                                         <span className="font-semibold font-mono text-xs sm:text-sm cursor-default">{categoryDisplayValue}</span>
                                                     </TooltipTrigger>
                                                      <PerspectiveTooltipContent
                                                         perspectiveList={categoryPerspectiveList}
                                                         title={categoryPerspectiveTitle}
-                                                        isMobile={isMobileView}
                                                     />
-                                                </ShadTooltip>
-                                                <span className="text-muted-foreground text-[10px] sm:text-xs font-mono hidden sm:inline">({item.percentage.toFixed(1)}%)</span> {/* Adjusted font size for mobile */}
+                                                </Tooltip>
+                                                <span className="text-muted-foreground text-[10px] sm:text-xs font-mono hidden sm:inline">({item.percentage.toFixed(1)}%)</span>
                                             </div>
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent
                                         className="bg-background/30 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up overflow-hidden"
                                     >
-                                        <div className="pl-6 pr-2 sm:pl-8 sm:pr-3 md:pl-10 md:pr-4 pt-2.5 pb-3 sm:pt-3 sm:pb-4 text-muted-foreground space-y-2 sm:space-y-2.5"> {/* Adjusted padding and spacing for mobile */}
+                                        <div className="pl-6 pr-2 sm:pl-8 sm:pr-3 md:pl-10 md:pr-4 pt-2.5 pb-3 sm:pt-3 sm:pb-4 text-muted-foreground space-y-2 sm:space-y-2.5">
                                          {isInterestOnDebt ? (
-                                             <Alert variant="destructive" className="bg-destructive/5 border-destructive/30 shadow-inner p-3 sm:p-4"> {/* Adjusted padding for mobile */}
-                                                  <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 stroke-destructive/80 mt-0.5 sm:mt-1" />  {/* Adjusted icon size and margin for mobile */}
-                                                  <AlertTitle className="text-destructive/95 font-semibold mb-1 text-sm sm:text-base">National Debt Burden: {nationalDebt}</AlertTitle> {/* Adjusted font size for mobile */}
-                                                 <AlertDescription className="text-xs sm:text-sm text-destructive/90 dark:text-destructive/80 leading-relaxed space-y-1.5 sm:space-y-2"> {/* Adjusted font size and spacing for mobile */}
+                                             <Alert variant="destructive" className="bg-destructive/5 border-destructive/30 shadow-inner p-3 sm:p-4">
+                                                  <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 stroke-destructive/80 mt-0.5 sm:mt-1" />
+                                                  <AlertTitle className="text-destructive/95 font-semibold mb-1 text-sm sm:text-base">National Debt Burden: {nationalDebt}</AlertTitle>
+                                                 <AlertDescription className="text-xs sm:text-sm text-destructive/90 dark:text-destructive/80 leading-relaxed space-y-1.5 sm:space-y-2">
                                                      <p>This staggering amount paid just on <strong className="font-medium">interest</strong> is a direct consequence of sustained government spending exceeding revenue—often driven by tax cuts favoring the wealthy, unfunded wars, and economic bailouts.</p>
                                                      <p>High interest payments <strong className="font-medium">divert critical funds</strong> from essential public services, infrastructure, education, and potential tax relief, raising serious questions about long-term fiscal stability and government accountability.</p>
-                                                     <div className="flex items-center space-x-1.5 sm:space-x-2 pt-2 sm:pt-3"> {/* Adjusted spacing and padding for mobile */}
+                                                     <div className="flex items-center space-x-1.5 sm:space-x-2 pt-2 sm:pt-3">
                                                           <Checkbox
                                                             id="balance-budget"
                                                             checked={balanceBudgetChecked}
                                                             onCheckedChange={handleBudgetCheckboxChange}
                                                             aria-label="Prioritize Balancing the Budget"
-                                                            className="rounded-[4px] border-destructive/70 data-[state=checked]:bg-destructive/80 data-[state=checked]:border-destructive/80 h-3.5 w-3.5 sm:h-4 sm:w-4" // Adjusted size for mobile
+                                                            className="rounded-[4px] border-destructive/70 data-[state=checked]:bg-destructive/80 data-[state=checked]:border-destructive/80 h-3.5 w-3.5 sm:h-4 sm:w-4"
                                                           />
-                                                         <Label htmlFor="balance-budget" className="text-[10px] sm:text-xs font-medium text-destructive/95 dark:text-destructive/85 cursor-pointer"> {/* Adjusted font size for mobile */}
+                                                         <Label htmlFor="balance-budget" className="text-[10px] sm:text-xs font-medium text-destructive/95 dark:text-destructive/85 cursor-pointer">
                                                             Prioritize Balancing the Budget & Reducing Debt
                                                          </Label>
                                                       </div>
                                                  </AlertDescription>
                                              </Alert>
                                          ) : hasSubItems ? (
-                                            <ul className="space-y-1.5 sm:space-y-2"> {/* Adjusted spacing for mobile */}
+                                            <ul className="space-y-1.5 sm:space-y-2">
                                                 {item.subItems!.map((subItem) => {
                                                     const subItemAmount = subItem.amountPerDollar * taxAmount;
                                                     const isSelected = selectedItems.has(subItem.id);
@@ -656,36 +674,36 @@ export default function TaxBreakdownDashboard({
                                                     }
 
                                                     return (
-                                                         <li key={subItem.id} className="flex justify-between items-center text-[10px] sm:text-xs gap-1.5 sm:gap-2 group/subitem"> {/* Adjusted font size and spacing for mobile */}
-                                                             <div className="flex items-center gap-1 sm:gap-1.5 flex-1 min-w-0"> {/* Adjusted spacing for mobile */}
+                                                         <li key={subItem.id} className="flex justify-between items-center text-[10px] sm:text-xs gap-1.5 sm:gap-2 group/subitem">
+                                                             <div className="flex items-center gap-1 sm:gap-1.5 flex-1 min-w-0">
                                                                 <Checkbox
                                                                    id={`subitem-${item.id}-${subItem.id}`}
                                                                    checked={isSelected}
                                                                    onCheckedChange={(checked) => handleCheckboxChange(checked, subItem)}
                                                                    aria-label={`Select ${subItem.description}`}
-                                                                   className="mt-0 shrink-0 rounded-[4px] h-3.5 w-3.5 sm:h-4 sm:w-4" // Adjusted size for mobile
+                                                                   className="mt-0 shrink-0 rounded-[4px] h-3.5 w-3.5 sm:h-4 sm:w-4"
                                                                 />
-                                                               <ShadTooltip open={isMobileView ? undefined : undefined}>
+                                                               <Tooltip>
                                                                     <TooltipTrigger asChild>
                                                                          <label
                                                                             htmlFor={`subitem-${item.id}-${subItem.id}`}
                                                                             className={cn(
-                                                                                "truncate cursor-pointer hover:text-foreground transition-colors flex items-center gap-0.5 sm:gap-1 flex-1", // Adjusted spacing for mobile
+                                                                                "truncate cursor-pointer hover:text-foreground transition-colors flex items-center gap-0.5 sm:gap-1 flex-1",
                                                                                 isSelected ? "text-foreground font-medium" : ""
                                                                             )}
                                                                          >
-                                                                         <span>{/* This span ensures single child for TooltipTrigger */}
+                                                                         <span>
                                                                             {subItem.description}
-                                                                            {(subItem.tooltipText || subItem.wikiLink) && <Info className="h-2.5 w-2.5 sm:h-3 sm:w-3 opacity-40 group-hover/subitem:opacity-100 transition-opacity shrink-0 inline-block ml-1"/>} {/* Adjusted icon size for mobile */}
+                                                                            {(subItem.tooltipText || subItem.wikiLink) && <Info className="h-2.5 w-2.5 sm:h-3 sm:w-3 opacity-40 group-hover/subitem:opacity-100 transition-opacity shrink-0 inline-block ml-1"/>}
                                                                          </span>
                                                                         </label>
                                                                     </TooltipTrigger>
                                                                     {(subItem.tooltipText || subItem.wikiLink) && (
-                                                                         <ItemInfoTooltipContent subItem={subItem} isMobile={isMobileView} />
+                                                                         <ItemInfoTooltipContent subItem={subItem} />
                                                                     )}
-                                                                </ShadTooltip>
+                                                                </Tooltip>
                                                              </div>
-                                                            <ShadTooltip open={isMobileView ? undefined : undefined}>
+                                                            <Tooltip>
                                                                 <TooltipTrigger asChild>
                                                                      <span className="font-medium font-mono text-foreground/80 whitespace-nowrap cursor-default">
                                                                         {subItemDisplayValue}
@@ -694,9 +712,8 @@ export default function TaxBreakdownDashboard({
                                                                  <PerspectiveTooltipContent
                                                                      perspectiveList={subItemPerspectiveList}
                                                                      title={subItemPerspectiveTitle}
-                                                                     isMobile={isMobileView}
                                                                  />
-                                                            </ShadTooltip>
+                                                            </Tooltip>
                                                         </li>
                                                     );
                                                 })}
@@ -710,11 +727,11 @@ export default function TaxBreakdownDashboard({
                             );
                         })}
                      </Accordion>
-                     <div className="flex justify-between items-center w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-4 border-t-2 border-primary/50 bg-primary/5"> {/* Adjusted padding for mobile */}
-                         <span className="font-bold text-xs sm:text-sm md:text-base text-primary tracking-tight">TOTAL ESTIMATED TAX</span> {/* Adjusted font size for mobile */}
-                          <ShadTooltip open={isMobileView ? undefined : undefined}>
+                     <div className="flex justify-between items-center w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-4 border-t-2 border-primary/50 bg-primary/5">
+                         <span className="font-bold text-xs sm:text-sm md:text-base text-primary tracking-tight">TOTAL ESTIMATED TAX</span>
+                          <Tooltip>
                              <TooltipTrigger asChild>
-                                 <span className="font-bold font-mono text-xs sm:text-sm md:text-base text-primary cursor-default"> {/* Adjusted font size for mobile */}
+                                 <span className="font-bold font-mono text-xs sm:text-sm md:text-base text-primary cursor-default">
                                    {displayMode === 'time' && hourlyWage && totalPerspectiveData?.time
                                        ? formatTime((taxAmount / hourlyWage) * 60)
                                        : formatCurrency(taxAmount)
@@ -732,9 +749,8 @@ export default function TaxBreakdownDashboard({
                                          ? 'In this total time, you could have:'
                                          : 'With this total amount, you could buy:'
                                  }
-                                 isMobile={isMobileView}
                              />
-                          </ShadTooltip>
+                          </Tooltip>
                      </div>
                 </CardContent>
             </Card>
