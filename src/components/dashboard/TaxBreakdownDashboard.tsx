@@ -6,7 +6,7 @@ import * as React from 'react';
 import { useState, useEffect } from 'react';
 import type { TaxSpending, TaxSpendingSubItem, SelectedItem } from '@/services/tax-spending';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend } from 'recharts'; // Renamed Tooltip to RechartsTooltip to avoid conflict
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label'; // Import Label
@@ -35,7 +35,7 @@ import {
     AccordionTrigger,
 } from "@/components/ui/accordion"
 import {
-    Tooltip as ShadTooltip,
+    Tooltip as ShadTooltip, // Keep ShadCN Tooltip as ShadTooltip
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
@@ -459,7 +459,7 @@ export default function TaxBreakdownDashboard({
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke={'hsl(var(--background))'} strokeWidth={1} />
                         ))}
                       </Pie>
-                       <Tooltip
+                       <RechartsTooltip
                          content={({ active, payload, label: tooltipLabel }) => { // `label` here is the category name from Recharts
                             if (active && payload && payload.length) {
                                 return (
@@ -527,7 +527,7 @@ export default function TaxBreakdownDashboard({
                                             <div className="text-right shrink-0 flex items-baseline gap-1 ml-auto">
                                                 <ShadTooltip>
                                                     <TooltipTrigger asChild>
-                                                        <span className="font-semibold font-mono text-xs sm:text-sm cursor-default">{categoryDisplayValue}</span> {/* Adjusted font size for mobile */}
+                                                        <span className="font-semibold font-mono text-xs sm:text-sm cursor-default">{categoryDisplayValue}</span>
                                                     </TooltipTrigger>
                                                      <PerspectiveTooltipContent
                                                         perspectiveList={categoryPerspectiveList}
@@ -605,8 +605,10 @@ export default function TaxBreakdownDashboard({
                                                                                 isSelected ? "text-foreground font-medium" : ""
                                                                             )}
                                                                          >
+                                                                         <span>{/* This span ensures single child for TooltipTrigger */}
                                                                             {subItem.description}
-                                                                            {(subItem.tooltipText || subItem.wikiLink) && <Info className="h-2.5 w-2.5 sm:h-3 sm:w-3 opacity-40 group-hover/subitem:opacity-100 transition-opacity shrink-0"/>} {/* Adjusted icon size for mobile */}
+                                                                            {(subItem.tooltipText || subItem.wikiLink) && <Info className="h-2.5 w-2.5 sm:h-3 sm:w-3 opacity-40 group-hover/subitem:opacity-100 transition-opacity shrink-0 inline-block ml-1"/>} {/* Adjusted icon size for mobile */}
+                                                                         </span>
                                                                         </label>
                                                                     </TooltipTrigger>
                                                                     {(subItem.tooltipText || subItem.wikiLink) && (
