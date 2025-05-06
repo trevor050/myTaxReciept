@@ -1,4 +1,3 @@
-
 /**
  * Represents a geographical location.
  */
@@ -255,192 +254,247 @@ export async function getTaxSpending(location: Location, taxAmount: number): Pro
   return detailedBreakdown;
 }
 
-/**
- * Represents a selected item for email generation, including desired funding level.
- */
+
+// ---------- shared types ---------------------------------------------------
 export interface SelectedItem {
   id: string;
   description: string;
-  fundingLevel: number; // -2: Slash Heavily, -1: Cut Significantly, 0: Improve Efficiency, 1: Fund, 2: Fund More
+  /**
+   * -2  Slash Heavily  | -1 Cut Significantly | 0 Improve Efficiency
+   *  1  Fund           |  2 Fund More
+   */
+  fundingLevel: -2 | -1 | 0 | 1 | 2;
 }
 
-// --- Helper Functions for Email Generation ---
+// ---------- helpers --------------------------------------------------------
 
-/** Gets the appropriate subject line based on aggressiveness and budget preference. */
-const getSubject = (aggressiveness: number, balanceBudgetPreference: boolean): string => {
-    if (aggressiveness >= 75) {
-        return "Urgent Demand: Re-evaluate Federal Spending Priorities Now";
-    } else if (aggressiveness >= 50 || balanceBudgetPreference) {
-        return "Serious Concern Regarding Federal Budget & Spending Allocations";
-    } else if (aggressiveness >= 25) {
-        return "Constituent Concerns About Federal Spending";
-    }
-    return "Regarding Federal Tax Spending Priorities"; // Kind/Default
+/** Map 0-100 slider to tone bucket 0-3 */
+function toneBucket(aggr: number): 0 | 1 | 2 | 3 {
+  return Math.min(3, Math.floor(aggr / 25)) as 0 | 1 | 2 | 3;
+}
+
+const SUBJECT: Record<0 | 1 | 2 | 3, string> = {
+  0: "A Thoughtful Request on Federal Budget Priorities",
+  1: "Concerns About Current Federal Spending",
+  2: "Urgent Action Needed on Federal Budget & Debt",
+  3: "Immediate Reform Demanded: Federal Spending Out of Control"
 };
 
-/** Gets the appropriate opening paragraph based on aggressiveness and location. */
-const getOpening = (aggressiveness: number, userLocation: string): string => {
-    const locationText = userLocation ? `in ${userLocation}` : '[Your Area]';
-    const openings = [
-        `I am writing as your constituent residing ${locationText} regarding the current allocation of our federal tax dollars. I expect our hard-earned money to be spent responsibly, effectively, and in alignment with the values and needs of the American people.`, // Kind
-        `I am writing to express my concern regarding the current allocation of our federal tax dollars. As a constituent residing ${locationText}, I believe it is crucial that our money is spent responsibly and effectively.`, // Concerned
-        `I am writing to convey my serious disapproval regarding the current allocation of federal funds. As a constituent residing ${locationText}, I insist that taxpayer money be spent responsibly and in alignment with the pressing needs of our communities.`, // Stern
-        `I am writing to express my outrage and demand immediate attention regarding the allocation of federal tax dollars. As a constituent residing ${locationText}, the current spending priorities are unacceptable and demonstrate a gross misuse of taxpayer funds.` // Angry
-    ];
-    return `Dear Representative,\n\n${openings[Math.floor(aggressiveness / 25)]}\n\n`;
+const OPENING: Record<0 | 1 | 2 | 3, (loc: string) => string> = {
+  0: loc => `I hope this message finds you well. I’m writing as a constituent from ${loc || '[your area]'} to share some thoughts on how our tax dollars are being allocated. I believe it's essential that these funds are used responsibly and reflect the priorities of the people they serve.`,
+  1: loc => `As your constituent in ${loc || '[your area]'}, I’m increasingly worried about how federal funds are distributed and would like to raise a few points for your consideration. The current spending patterns raise questions about efficiency and alignment with our community's needs.`,
+  2: loc => `I’m writing from ${loc || '[your area]'} to express serious dissatisfaction with the current federal budget priorities and to insist that they be re-evaluated immediately. It is imperative that taxpayer money is directed towards initiatives that genuinely benefit the public, not wasted on ineffective or bloated programs.`,
+  3: loc => `From ${loc || '[your area]'}, I am sounding the alarm: the present pattern of federal spending is unacceptable and must change without delay. The level of waste and misallocation demands immediate and decisive action from our elected officials.`
 };
 
-/** Gets the introductory phrase for the list of selected items. */
-const getItemListIntro = (aggressiveness: number): string => {
-    const intros = [
-        "After reviewing federal spending estimates, I would like to bring the following areas to your attention:", // Kind
-        "My review of federal spending estimates has raised concerns about the following areas:", // Concerned
-        "Based on my review of federal spending, I strongly believe the funding for the following areas requires significant changes:", // Stern
-        "My review of federal spending reveals grossly misplaced priorities and excessive expenditure in the following areas:" // Angry
-    ];
-    return intros[Math.floor(aggressiveness / 25)];
+const LIST_INTRO: Record<0 | 1 | 2 | 3, string> = {
+  0: "After reviewing estimates of federal spending, below are the areas I believe deserve a closer look and potential adjustment:",
+  1: "My examination of the federal budget breakdown reveals several items of particular concern which I believe require your attention:",
+  2: "Based on current spending levels, these specific line-items demand immediate correction and significant changes to their funding:",
+  3: "Here are some of the most egregious examples of misplaced priorities and wasteful spending that require your direct intervention:"
 };
 
-/** Gets the action phrase for a specific item based on its funding level and overall aggressiveness. */
-const getActionPhrase = (item: SelectedItem, aggressiveness: number): string => {
-    const phrases = {
-        '-2': [ // Slash Heavily
-            "funding must be drastically cut or eliminated entirely. This represents wasteful spending that diverts resources from essential needs.",
-            "funding needs to be drastically cut or eliminated. It's a clear example of wasteful spending.",
-            "funding requires immediate and drastic cuts, if not complete elimination. This spending is unjustifiable.",
-            "funding must be immediately slashed. This is unacceptable, wasteful spending."
-        ],
-        '-1': [ // Cut Significantly
-            "budget requires significant reduction. The current allocation appears excessive compared to its value or impact.",
-            "budget needs significant reduction. The current level seems disproportionate.",
-            "budget needs to be substantially trimmed. It is disproportionately large and resources could be better allocated.",
-            "budget must be significantly cut. Its current level is unjustifiable given other pressing needs."
-        ],
-        '0': [ // Improve Efficiency
-            "should be maintained, but I urge you to advocate for greater efficiency and oversight to ensure taxpayer dollars are used effectively.",
-            "funding level seems reasonable, but requires improved efficiency and strict oversight to prevent waste.",
-            "funding, while potentially necessary, demands rigorous oversight to eliminate waste and improve efficiency. Accountability is key.",
-            "funding requires stringent oversight to ensure taxpayer money isn't being squandered. Focus on efficiency and results."
-        ],
-        '1': [ // Fund
-            "is an important program that deserves continued support. Ensuring adequate funding is crucial for its success.",
-            "is a valuable program and its funding should be maintained to ensure it meets its objectives.",
-            "is a necessary program, and its funding should be protected and potentially increased modestly to enhance its impact.",
-            "funding must be maintained, as this program serves an important purpose."
-        ],
-        '2': [ // Fund More
-            "is a vital program that requires increased investment to meet its objectives and better serve the public.",
-            "is an essential program that would benefit significantly from increased investment.",
-            "is critically important and requires a substantial increase in funding to effectively fulfill its mission.",
-            "is critically underfunded and requires a significant increase in resources immediately to fulfill its vital mission."
-        ],
-        'default': "funding level needs careful review and justification."
-    };
-
-    const levelKey = String(item.fundingLevel) as keyof typeof phrases || 'default';
-    const phraseIndex = Math.min(Math.floor(aggressiveness / 25), phrases[levelKey].length - 1); // Ensure index is valid
-
-    return phrases[levelKey][phraseIndex];
+// action phrases indexed by fundingLevel + tone bucket
+const ACTION: Record<-2 | -1 | 0 | 1 | 2, [string, string, string, string]> = {
+  [-2]: [ // Slash Heavily
+    "funding for which should be dramatically reduced or potentially phased out entirely, as it seems to offer limited value compared to its cost.",
+    "which requires a steep reduction; continuing to fund it at current levels appears to be a misuse of taxpayer money.",
+    "which must be slashed; the current allocation is indefensible given other pressing needs and the potential for waste.",
+    "which must be eliminated. Continuing to fund this represents a betrayal of public trust and fiscal responsibility."
+  ],
+  [-1]: [ // Cut Significantly
+    "which could likely be cut back significantly without harming its core mission, freeing up resources for other priorities.",
+    "which requires a significant trim; the budget appears bloated compared to the outcomes it delivers.",
+    "which demands a sharp cut. Its current size seems disproportionate, and funds could be better allocated elsewhere.",
+    "which needs an aggressive cut. Taxpayers deserve better stewardship of their money than continuing this level of expenditure."
+  ],
+  [0]: [ // Improve Efficiency
+    "the funding level for which seems appropriate, but I urge you to advocate for much tighter oversight and efficiency measures to maximize its impact.",
+    "which can remain level, provided there are demonstrable improvements in efficiency and accountability in its operation.",
+    "which might stay flat, but only if every dollar is meticulously justified through strict auditing and performance metrics.",
+    "which may be justified, but only with rigorous, ongoing oversight to eliminate all potential waste and ensure it achieves its stated goals effectively."
+  ],
+  [1]: [ // Fund
+    "which deserves dependable support. Ensuring stable, adequate funding is essential for it to continue its important work.",
+    "which should receive modest and sustainable funding growth to better meet public needs and enhance its effectiveness.",
+    "which warrants a clear funding boost given its proven value and positive impact on our communities.",
+    "which requires a noticeable increase in funding so it can deliver crucial results at the scale needed."
+  ],
+  [2]: [ // Fund More
+    "which merits a substantial increase in investment. The potential returns and public benefits strongly justify the additional resources.",
+    "which needs robust new investment to unlock its full potential and significantly scale its positive impact.",
+    "which should be prioritized for major funding growth immediately to address critical needs and opportunities.",
+    "which demands urgent, considerable expansion. Anything less represents negligence and a failure to invest in our future."
+  ]
 };
 
-/** Gets a specific boilerplate reason for certain controversial items. (Expandable) */
-const getSpecificReason = (itemId: string, fundingLevel: number): string => {
-    const reasons: Record<string, string> = {
-        'israel_wars': "Supporting foreign conflicts draws critical resources away from pressing domestic priorities.",
-        'pentagon_contractors': "Lack of sufficient oversight can lead to significant waste and inefficiency in defense contracting.",
-        'usaid_climate': "Domestic environmental challenges should be prioritized before allocating significant funds to international climate aid.",
-        'nasa_spacex': "Using public funds to subsidize private space ventures warrants careful scrutiny regarding taxpayer value.",
-        'medicare_decrease': "While essential, Medicare's cost structure needs reform to ensure long-term sustainability and efficiency without compromising care.",
-        'medicare_increase': "Ensuring access to quality healthcare for seniors is vital and requires adequate, potentially increased, funding.",
-        'nih_increase': "Investing in biomedical research yields long-term health benefits and economic advantages for our nation.",
-        'cdc_increase': "A strong public health infrastructure is non-negotiable for national security and well-being; funding should reflect this.",
-        // Add more reasons...
-    };
-
-    let key = itemId;
-    if (itemId === 'medicare') key += fundingLevel < 0 ? '_decrease' : '_increase';
-    if (itemId === 'nih' && fundingLevel > 0) key += '_increase';
-    if (itemId === 'cdc' && fundingLevel > 0) key += '_increase';
-
-    return reasons[key] || "";
+const BUDGET_DEBT: Record<0 | 1 | 2 | 3, string> = {
+  0: "In addition to these specific items, I encourage Congress to keep our long-term national debt in mind and consistently work toward a balanced federal budget where feasible.",
+  1: "Furthermore, I urge you to pair any significant spending decisions with a credible and transparent plan for reducing the national debt, which remains a serious concern.",
+  2: "Fiscal discipline cannot wait any longer. Balancing the budget must become a central and urgent priority in every legislative discussion and decision.",
+  3: "The soaring national debt is an unsustainable burden on future generations. A concrete, aggressive debt-reduction plan is non-negotiable and must be implemented immediately."
 };
 
-/** Gets the paragraph advocating for budget balancing if selected. */
-const getBudgetParagraph = (aggressiveness: number): string => {
-    const phrases = [
-        "Additionally, I believe prioritizing fiscal responsibility and working towards a balanced federal budget should be a key consideration in all spending decisions. Addressing the national debt is crucial for our country's long-term economic health.", // Kind
-        "Furthermore, I am deeply concerned about the national debt. It is imperative that Congress prioritizes fiscal responsibility and takes meaningful steps towards balancing the budget. Continued deficit spending burdens future generations.", // Concerned
-        "Moreover, the staggering national debt demands immediate action. Balancing the federal budget must become a top priority, requiring difficult decisions about spending across the board. Fiscal recklessness must end.", // Stern
-        "The national debt is an existential threat fueled by decades of irresponsible spending. I demand you make balancing the budget and reducing the debt your absolute top fiscal priority, even if it requires politically difficult cuts across the board." // Angry
-    ];
-    return phrases[Math.floor(aggressiveness / 25)];
+const CALL_TO_ACTION: Record<0 | 1 | 2 | 3, (hasBudgetPref: boolean) => string> = {
+    0: (hasBudgetPref) => `Could you please share your perspective on the funding for these programs${hasBudgetPref ? ' and your approach to achieving greater fiscal responsibility' : ''}? I appreciate your service to our district/state and look forward to hearing your thoughts.`,
+    1: (hasBudgetPref) => `I ask that you outline the specific steps you plan to take to address these spending imbalances${hasBudgetPref ? ' and promote fiscal sustainability' : ''}. Keeping constituents informed on these matters is crucial.`,
+    2: (hasBudgetPref) => `I expect a detailed response describing the concrete actions you will champion to fix these misguided priorities${hasBudgetPref ? ' and aggressively curb the national debt' : ''}. Accountability on this is paramount.`,
+    3: (hasBudgetPref) => `I demand a prompt and specific action plan from your office detailing how you will fight to realign this irresponsible spending${hasBudgetPref ? ' and present a clear path to tackling the national debt' : ''}. Failure to act decisively is unacceptable.`
 };
 
-/** Gets the concluding call to action based on aggressiveness and budget preference. */
-const getCallToAction = (aggressiveness: number, balanceBudgetPreference: boolean): string => {
-    const budgetFocus = balanceBudgetPreference ? ' and your specific plans for achieving fiscal balance' : '';
-    const actions = [
-        `Could you please provide information on your position regarding the funding levels for these programs${budgetFocus}? Thank you for your time and attention to this important matter.`, // Kind
-        `I urge you to consider these concerns seriously and advocate for greater scrutiny of spending${budgetFocus}. Please share your stance on these issues and how you plan to ensure fiscal responsibility. I look forward to your response.`, // Concerned
-        `I expect you to take concrete action to address these spending concerns and champion fiscal discipline${budgetFocus}. Please outline the specific steps you will take to realign spending priorities and control the national debt. I await your detailed response.`, // Stern
-        `I demand you take immediate action to challenge this wasteful spending, advocate for the redirection of funds, and present a clear, actionable plan to tackle the national debt. Failure to act decisively is unacceptable. I expect a prompt and substantive response detailing your specific commitments.` // Angry
-    ];
-    return actions[Math.floor(aggressiveness / 25)];
+
+// Greatly expanded list of specific, brief rationales tied to item IDs.
+const SPECIFIC_REASONS: Record<string, string> = {
+  medicaid_cut: "While important, Medicaid costs need careful review to ensure sustainability without compromising essential care for the vulnerable.",
+  medicaid_increase: "Expanding Medicaid access improves health outcomes and economic stability for low-income families.",
+  medicare_cut: "Medicare's long-term solvency requires exploring efficiency improvements and cost-saving measures.",
+  medicare_increase: "Ensuring seniors have reliable access to quality healthcare through Medicare is a vital commitment.",
+  nih_cut: "NIH funding should be scrutinized to ensure research grants are awarded efficiently and target the most pressing health challenges.",
+  nih_increase: "Investing in NIH research fuels medical breakthroughs, improves public health, and drives economic growth in biotechnology.",
+  cdc_cut: "CDC operations need review for efficiency, but core functions like disease surveillance are essential.",
+  cdc_increase: "A robust CDC is critical for pandemic preparedness and protecting national health security.",
+  substance_mental_health_cut: "Funding for substance use programs should prioritize evidence-based treatments with proven effectiveness.",
+  substance_mental_health_increase: "Addressing the mental health and addiction crisis requires significantly more resources for treatment and prevention.",
+  pentagon_cut: "The vast Pentagon budget needs trimming, focusing on genuine defense needs over wasteful projects or excessive contractor profits.",
+  pentagon_increase: "Maintaining a strong national defense requires adequate funding for personnel, readiness, and modernization.",
+  pentagon_contractors_cut: "Defense contracting requires far greater transparency and stricter oversight to prevent widespread waste, fraud, and abuse.",
+  pentagon_personnel_cut: "Military personnel costs should be reviewed for efficiency while ensuring fair compensation and benefits for service members.",
+  pentagon_personnel_increase: "Attracting and retaining skilled military personnel requires competitive pay, benefits, and quality of life improvements.",
+  pentagon_top5_contractors_cut: "Over-reliance on a few large contractors stifles competition and inflates costs; their share needs reduction.",
+  nuclear_weapons_cut: "Maintaining an excessive nuclear arsenal is costly and arguably increases global instability; modernization should be limited.",
+  nuclear_weapons_increase: "Modernizing the nuclear deterrent is deemed necessary by some for national security in a complex world.",
+  foreign_military_aid_cut: "Foreign military aid often fuels conflicts and diverts resources from domestic needs; it should be sharply curtailed.",
+  foreign_military_aid_increase: "Strategic military aid can strengthen allies and support U.S. foreign policy objectives.",
+  israel_wars_cut: "Unconditional military aid to foreign nations, regardless of context, drains resources and can entangle the U.S. in conflicts.",
+  f35_cut: "The F-35 program has been plagued by cost overruns and performance issues, warranting significant funding cuts.",
+  pentagon_spacex_cut: "Public funds subsidizing established private space companies like SpaceX require stronger justification regarding taxpayer value.",
+  pentagon_dei_cut: "DEI initiatives within the military should be evaluated for effectiveness and cost, ensuring focus remains on core readiness.",
+  va_cut: "VA services need streamlining for efficiency, but cuts must not compromise care for those who served.",
+  va_increase: "Fulfilling our promise to veterans requires fully funding VA healthcare, benefits processing, and support services.",
+  pact_act_increase: "Addressing toxic exposure requires robust funding for the PACT Act to provide veterans the care they earned.",
+  tanf_cut: "TANF effectiveness needs review; funds should support pathways to self-sufficiency, not just temporary relief.",
+  tanf_increase: "Strengthening the social safety net requires adequate funding for TANF to support vulnerable families.",
+  child_tax_credit_cut: "The Child Tax Credit's structure should be reviewed for cost-effectiveness and targeting.",
+  child_tax_credit_increase: "Expanding the Child Tax Credit directly reduces child poverty and supports working families.",
+  refugee_assistance_cut: "Refugee resettlement costs should be managed efficiently, focusing on sustainable integration.",
+  refugee_assistance_increase: "Providing adequate support for refugee resettlement reflects American values and international obligations.",
+  liheap_increase: "LIHEAP is crucial for preventing energy shutoffs and ensuring vulnerable households can afford heating/cooling.",
+  nlrb_cut: "The NLRB's role and funding should be reviewed in the context of modern labor relations.",
+  nlrb_increase: "Protecting workers' rights requires a fully funded NLRB to investigate unfair labor practices.",
+  dept_education_cut: "The federal role in education should be focused and efficient, avoiding bureaucratic overreach.",
+  dept_education_increase: "Investing in education at all levels is crucial for national competitiveness and opportunity.",
+  college_aid_cut: "Federal college aid programs need reform to address rising tuition costs and loan burdens.",
+  college_aid_increase: "Expanding access to affordable higher education through grants and aid strengthens the workforce.",
+  k12_schools_cut: "Federal K-12 funding should supplement, not supplant, state/local responsibility, focusing on targeted needs.",
+  k12_schools_increase: "Supporting under-resourced K-12 schools, especially for disadvantaged students, is a critical federal role.",
+  cpb_cut: "Federal funding for public broadcasting faces scrutiny regarding necessity in a diverse media landscape.",
+  imls_cut: "Museum and library funding should be evaluated for impact, potentially shifting more responsibility locally.",
+  snap_cut: "SNAP efficiency and work requirements are areas for potential reform, while ensuring food security.",
+  snap_increase: "SNAP is a vital defense against hunger and food insecurity for millions of Americans.",
+  school_lunch_increase: "Ensuring children have access to nutritious meals at school improves health and academic performance.",
+  fsa_cut: "Farm subsidies need reform to reduce market distortions and target support effectively.",
+  wic_increase: "WIC provides crucial nutritional support for mothers and young children, improving long-term health.",
+  fdic_note: "FDIC funding, while essential for financial stability, operates largely outside direct appropriations.", // Special case
+  irs_cut: "IRS funding should focus on efficient tax administration and taxpayer service, not overly burdensome enforcement.",
+  irs_increase: "Adequate IRS funding is necessary to close the tax gap, ensure fairness, and improve taxpayer services.",
+  federal_courts_increase: "A well-functioning judiciary requires sufficient funding for courts, judges, and staff.",
+  public_defenders_increase: "Ensuring the constitutional right to counsel requires adequate funding for federal public defenders.",
+  usps_note: "The Postal Service primarily relies on its own revenue, but requires congressional oversight on reforms.", // Special case
+  cfpb_cut: "The CFPB's broad regulatory power and funding structure warrant ongoing scrutiny.",
+  mbda_increase: "Supporting minority-owned businesses through the MBDA helps address systemic economic disparities.",
+  fema_increase: "Increasing frequency and severity of disasters necessitate robust FEMA funding for response and recovery.",
+  fema_drf_increase: "The Disaster Relief Fund requires sufficient resources to meet the immediate needs following major disasters.",
+  hud_cut: "HUD programs need review for effectiveness in addressing housing affordability and homelessness.",
+  hud_increase: "Tackling the affordable housing crisis requires significant investment in HUD programs and rental assistance.",
+  head_start_increase: "Head Start provides critical early childhood education and support for disadvantaged children.",
+  public_housing_increase: "Investing in public housing maintenance and development is crucial for providing safe, affordable homes.",
+  epa_cut: "EPA regulations should be balanced, protecting the environment without unduly burdening the economy.",
+  epa_increase: "Addressing climate change and pollution requires a well-funded EPA to enforce environmental laws.",
+  forest_service_increase: "Increased funding for the Forest Service is needed for wildfire prevention, mitigation, and forest health.",
+  noaa_increase: "NOAA provides essential weather forecasting, climate monitoring, and oceanic research.",
+  renewable_energy_cut: "Government subsidies for mature renewable energy technologies should be phased out.",
+  renewable_energy_increase: "Accelerating the transition to clean energy requires strong investment in renewables and efficiency.",
+  nps_increase: "Maintaining our national parks requires adequate funding for infrastructure, conservation, and staffing.",
+  diplomacy_increase: "Robust funding for diplomacy and foreign service strengthens U.S. influence and avoids costly conflicts.",
+  usaid_cut: "USAID programs need better oversight to ensure effectiveness and alignment with U.S. interests.",
+  usaid_increase: "Foreign aid through USAID addresses global poverty, promotes stability, and fosters goodwill.",
+  usaid_climate_cut: "International climate aid should be balanced against domestic needs and focus on verifiable results.",
+  deportations_border_cut: "Focusing on border security should prioritize humane treatment and efficient processing, not just enforcement.",
+  deportations_border_increase: "Securing the border requires adequate resources for personnel, technology, and infrastructure.",
+  federal_prisons_cut: "Reforms are needed to reduce incarceration rates and associated costs, focusing on rehabilitation.",
+  highways_increase: "Modernizing crumbling highway infrastructure requires significant federal investment.",
+  public_transit_increase: "Expanding and improving public transit reduces congestion, lowers emissions, and increases accessibility.",
+  tsa_cut: "TSA efficiency and screening methods need continuous review to balance security and passenger convenience.",
+  faa_increase: "Ensuring aviation safety requires robust FAA funding for air traffic control modernization and oversight.",
+  amtrak_increase: "Investing in Amtrak and passenger rail offers a viable alternative to congested highways and air travel.",
+  nasa_increase: "NASA's exploration and scientific research inspire innovation and advance our understanding of the universe.",
+  nsf_increase: "Funding basic scientific research through the NSF is crucial for long-term technological advancement.",
+  nasa_spacex_cut: "Contracts with private space companies need rigorous oversight to ensure fair value for taxpayers.",
+  // Add default/fallback messages if needed
+  default_cut: "This area's funding warrants review for potential savings or reallocation.",
+  default_increase: "Increased investment in this area could yield significant public benefits.",
 };
 
 
 /**
  * Generates a draft email to representatives based on selected spending items and customization options.
+ * Uses the new, more detailed and natural-sounding generation logic.
  *
  * @param selectedItems An array of SelectedItem objects.
  * @param aggressiveness The overall tone (0-100 scale).
  * @param userName The user's name.
- * @param userLocation The user's location (City, State, Zip).
+ * @param userLocation The user's location (City, ST Zip).
  * @param balanceBudgetPreference Whether the user checked the 'Prioritize Balancing the Budget' box.
  * @returns An object containing the generated email subject and body.
  */
 export function generateRepresentativeEmail(
-    selectedItems: SelectedItem[],
-    aggressiveness: number,
-    userName: string,
-    userLocation: string,
-    balanceBudgetPreference: boolean
+  selectedItems: SelectedItem[],
+  aggressiveness: number,
+  userName: string,
+  userLocation: string,
+  balanceBudgetPreference: boolean
 ): { subject: string; body: string } {
 
-    const subject = getSubject(aggressiveness, balanceBudgetPreference);
-    const opening = getOpening(aggressiveness, userLocation);
+  const tone = toneBucket(aggressiveness);
+  const subject = SUBJECT[tone];
+  const opening = OPENING[tone](userLocation);
+  const itemListIntro = selectedItems.length > 0 ? LIST_INTRO[tone] : "";
 
-    let itemList = "";
-    if (selectedItems.length > 0) {
-        itemList = getItemListIntro(aggressiveness) + "\n\n";
-        itemList += selectedItems.map(item => {
-            const actionPhrase = getActionPhrase(item, aggressiveness);
-            const specificReason = getSpecificReason(item.id, item.fundingLevel);
-            return `*   **${item.description}:** ${actionPhrase}${specificReason ? ` ${specificReason}` : ''}`;
-        }).join('\n');
-        itemList += "\n\n";
+  const itemDetails = selectedItems.map(item => {
+    const actionPhrase = ACTION[item.fundingLevel][tone];
+    // Attempt to find a specific reason based on ID and funding level context
+    let reasonKey = item.id;
+    if (['medicaid', 'medicare', 'nih', 'cdc', 'pentagon', 'pentagon_personnel', 'nuclear_weapons', 'foreign_military_aid', 'israel_wars', 'f35', 'pentagon_spacex', 'pentagon_dei', 'va', 'tanf', 'child_tax_credit', 'refugee_assistance', 'nlrb', 'dept_education', 'college_aid', 'k12_schools', 'cpb', 'imls', 'snap', 'fsa', 'irs', 'public_defenders', 'cfpb', 'hud', 'epa', 'renewable_energy', 'usaid', 'usaid_climate', 'deportations_border', 'federal_prisons', 'tsa', 'nasa_spacex'].includes(item.id)) {
+        if (item.fundingLevel < 0) reasonKey += '_cut';
+        else if (item.fundingLevel > 0) reasonKey += '_increase';
+    } else if (['fdic', 'usps'].includes(item.id)) {
+         reasonKey += '_note'; // Special non-funding comment
     }
 
-    const budgetParagraph = balanceBudgetPreference ? getBudgetParagraph(aggressiveness) + "\n\n" : "";
+    const specificReason = SPECIFIC_REASONS[reasonKey] || (item.fundingLevel < 0 ? SPECIFIC_REASONS.default_cut : SPECIFIC_REASONS.default_increase) || ""; // Fallback reason
 
-    // Connecting statement logic can be refined or made simpler
-    let connectingStatement = "";
-    if (selectedItems.length > 0 || balanceBudgetPreference) {
-         const connectPhrases = [ // Simplified connection
-             "Responsible allocation of taxpayer money allows for better investment in programs that truly benefit our communities.",
-             "Ensuring our tax dollars are used efficiently and effectively must be a primary focus for Congress.",
-             "These spending patterns, combined with the national debt, require a serious re-evaluation of our national priorities.",
-             "This level of spending in certain areas, while neglecting others and ignoring the debt, is fiscally irresponsible and must be addressed."
-         ];
-         connectingStatement = connectPhrases[Math.floor(aggressiveness / 25)] + "\n\n";
-    }
+    // Combine description, action phrase, and specific reason smoothly
+    return `Regarding ${item.description}, I believe its funding ${actionPhrase}${specificReason ? ` ${specificReason}` : ''}`;
+  }).join(' '); // Join with spaces for a more paragraph-like flow
 
+  const budgetParagraph = balanceBudgetPreference ? `\n\n${BUDGET_DEBT[tone]}` : "";
 
-    const callToAction = getCallToAction(aggressiveness, balanceBudgetPreference);
+  const callToAction = `\n\n${CALL_TO_ACTION[tone](balanceBudgetPreference)}`;
 
-    const body = `${opening}${itemList}${budgetParagraph}${connectingStatement}${callToAction}\n\nSincerely,\n\n${userName || '[Your Name]'}\n${userLocation || '[Your City, State, Zip Code]'}`;
+  const salutation = "Sincerely,";
+  const signature = `${userName || '[Your Name]'}\n${userLocation || '[Your City, State, Zip Code]'}`;
 
-    return { subject, body };
+  // Assemble the body
+  let body = opening;
+  if (itemListIntro && itemDetails) {
+      body += `\n\n${itemListIntro}\n\n${itemDetails}`;
+  }
+  body += budgetParagraph;
+  body += callToAction;
+  body += `\n\n${salutation}\n\n${signature}`;
+
+  // Basic cleanup: ensure single newlines between paragraphs, remove leading/trailing whitespace
+  body = body.replace(/\n\n+/g, '\n\n').trim();
+
+  return { subject, body };
 }
-
-    
