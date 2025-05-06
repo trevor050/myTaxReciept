@@ -88,7 +88,7 @@ const CustomTooltip = ({ active, payload, label, totalAmount }: any) => {
     const Icon = categoryIcons[data.category] || DefaultIcon;
 
     return (
-        <div className="rounded-lg border bg-popover p-2.5 text-popover-foreground shadow-lg animate-fadeIn text-xs max-w-[150px] sm:max-w-[200px]">
+        <div className="rounded-lg border bg-popover p-2.5 text-popover-foreground shadow-lg animate-scaleIn text-xs max-w-[150px] sm:max-w-[200px]">
              <div className="flex items-center justify-between mb-1 gap-2">
                  <span className="font-medium flex items-center gap-1.5 truncate">
                     <Icon className="h-3 w-3 text-muted-foreground shrink-0" />
@@ -108,6 +108,27 @@ const CustomTooltip = ({ active, payload, label, totalAmount }: any) => {
 
 const CustomLegend = (props: any) => {
   const { payload } = props;
+  const [chartWidth, setChartWidth] = useState(0);
+
+  useEffect(() => {
+    // Attempt to get the chart width for responsive legend items
+    const chartContainer = document.querySelector('.recharts-responsive-container');
+    if (chartContainer) {
+      setChartWidth(chartContainer.clientWidth);
+    }
+    // Basic resize listener - consider debouncing for performance
+    const handleResize = () => {
+        if (chartContainer) {
+            setChartWidth(chartContainer.clientWidth);
+        }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Determine max width based on chart width - adjust as needed
+  const maxItemWidth = chartWidth > 400 ? '150px' : '100px';
+
 
   return (
     <ul className="flex flex-wrap justify-center gap-x-3 gap-y-1.5 text-xs mt-4 list-none p-0 max-w-full mx-auto">
@@ -116,7 +137,7 @@ const CustomLegend = (props: any) => {
           return (
             <li key={`item-${index}`} className="flex items-center space-x-1 cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
               <span style={{ backgroundColor: entry.color }} className="h-2 w-2 rounded-full inline-block shrink-0"></span>
-              <span className="truncate max-w-[100px] sm:max-w-[150px]">{entry.value}</span>
+              <span className="truncate" style={{ maxWidth: maxItemWidth }}>{entry.value}</span>
               {percentage != null && <span className="font-mono shrink-0">({percentage.toFixed(1)}%)</span>}
             </li>
           );
@@ -136,7 +157,7 @@ const SubItemTooltipContent = ({ subItem }: { subItem: TaxSpendingSubItem }) => 
           target="_blank"
           rel="noopener noreferrer"
           className="text-primary hover:underline flex items-center gap-1 text-xs font-medium"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()} // Prevent accordion closing
         >
           Learn More <ExternalLink className="h-3 w-3" />
         </a>
@@ -158,8 +179,8 @@ export default function TaxBreakdownDashboard({
 
    useEffect(() => {
     const currentYear = new Date().getFullYear();
-    // Updated date format based on user feedback example
-    const date = new Date(currentYear + 1, 3, 15).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }); // April 15th of next year
+    // Use consistent date format
+    const date = new Date(currentYear + 1, 3, 15).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     setClientDueDate(date);
   }, []);
 
@@ -177,7 +198,6 @@ export default function TaxBreakdownDashboard({
 
   const handleEmailSubmit = (emailDetails: { subject: string; body: string }) => {
     const mailtoLink = `mailto:?subject=${encodeURIComponent(emailDetails.subject)}&body=${encodeURIComponent(emailDetails.body)}`;
-    // Use window.open for potentially better compatibility than window.location.href
     window.open(mailtoLink, '_self');
     setIsModalOpen(false);
   };
@@ -185,10 +205,11 @@ export default function TaxBreakdownDashboard({
 
    const handleCheckboxChange = (checked: boolean | 'indeterminate', item: TaxSpendingSubItem) => {
         const newSelectedItems = new Map(selectedItems);
+        const itemId = `${item.id}`; // Ensure key is string
         if (checked === true) {
-            newSelectedItems.set(item.id, { id: item.id, description: item.description, reductionLevel: 50 });
+            newSelectedItems.set(itemId, { id: itemId, description: item.description, reductionLevel: 50 });
         } else {
-            newSelectedItems.delete(item.id);
+            newSelectedItems.delete(itemId);
         }
         setSelectedItems(newSelectedItems);
     };
@@ -217,15 +238,15 @@ export default function TaxBreakdownDashboard({
     <div className="space-y-10 animate-fadeIn relative pb-28 sm:pb-24">
         {/* --- Header --- */}
         <div className="text-center space-y-1 mb-10">
-            {/* Combine titles for clarity */}
+            {/* Keep only one main title */}
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">{currentYear} Federal Income Tax Receipt</h1>
             <p className="text-lg text-muted-foreground">Based on your estimated <span className="font-semibold text-foreground">{formatCurrency(taxAmount)}</span> payment.</p>
             <p className="text-xs text-muted-foreground/70">Next Filing Due: {dueDateDisplay}</p>
          </div>
 
        {/* --- Direct Activism Plea --- */}
-        <Alert className="mb-8 shadow-sm rounded-lg border border-primary/20 bg-primary/5 text-foreground animate-fadeIn delay-500">
-             <Megaphone className="h-5 w-5 mt-0.5 stroke-primary" /> {/* Changed Icon */}
+        <Alert className="mb-8 shadow-sm rounded-lg border border-primary/20 bg-primary/5 text-foreground animate-fadeIn delay-500 duration-3000"> {/* Extended duration */}
+             <Megaphone className="h-5 w-5 mt-0.5 stroke-primary" />
             <AlertTitle className="font-semibold text-primary">Make Your Voice Heard!</AlertTitle>
             <AlertDescription className="text-sm text-foreground/90 space-y-1.5">
                 Understanding where your money goes is the first step. The next is action.
@@ -305,9 +326,10 @@ export default function TaxBreakdownDashboard({
                                     <div className="pl-8 pr-3 sm:pl-10 sm:pr-4 pt-3 pb-4 text-muted-foreground space-y-2.5">
                                      {isInterestOnDebt && (
                                          <blockquote className="text-xs bg-secondary/40 p-3 rounded-md border border-border/40 text-foreground/75 shadow-inner flex gap-2 items-start">
+                                             {/* Use TrendingDown icon only once */}
                                              <TrendingDown className="h-4 w-4 shrink-0 mt-0.5 text-destructive/80" />
                                              {/* Removed italics, updated text */}
-                                             <span className="not-italic">This significant portion reflects the cost of servicing the national debt, a direct consequence of sustained government spending exceeding revenue collection. Decades of deficit spending, underfunded programs, and fluctuating interest rates contribute to this substantial burden. High interest payments divert critical funds from essential public services, infrastructure projects, education systems, and potential tax relief, raising serious questions about long-term fiscal stability and the accountability of our government's financial management.</span>
+                                             <span className="leading-relaxed">This significant portion reflects the cost of servicing the national debt, a direct consequence of sustained government spending exceeding revenue collection. Decades of deficit spending, underfunded programs, and fluctuating interest rates contribute to this substantial burden. High interest payments divert critical funds from essential public services, infrastructure projects, education systems, and potential tax relief, raising serious questions about long-term fiscal stability and the accountability of our government's financial management.</span>
                                          </blockquote>
                                      )}
                                     {hasSubItems ? (
@@ -323,7 +345,7 @@ export default function TaxBreakdownDashboard({
                                                                checked={isSelected}
                                                                onCheckedChange={(checked) => handleCheckboxChange(checked, subItem)}
                                                                aria-label={`Select ${subItem.description}`}
-                                                               className="mt-0 shrink-0"
+                                                               className="mt-0 shrink-0 rounded-[4px]" // Slightly rounder checkbox
                                                             />
                                                            <ShadTooltip>
                                                                 <TooltipTrigger asChild>
@@ -364,25 +386,29 @@ export default function TaxBreakdownDashboard({
             </CardContent>
         </Card>
 
-        {/* Floating Action Button - Centered */}
-        {selectedItems.size > 0 && (
-            <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 animate-slideInUp transition-all duration-300 ease-out">
-                <Button
-                    size="lg"
-                    className={cn(
-                        "shadow-2xl rounded-full text-sm sm:text-base px-5 py-3 sm:px-6 sm:py-3",
-                        "bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700", // Light mode gradient
-                        "dark:bg-gradient-to-r dark:from-primary dark:to-purple-700 dark:hover:from-primary/90 dark:hover:to-purple-800", // Dark mode gradient (Purple only)
-                        "text-primary-foreground animate-glow flex items-center gap-2 ring-2 ring-primary/30 ring-offset-2 ring-offset-background"
-                    )}
-                    onClick={handleOpenModal}
-                    aria-label={`Email your representative about ${selectedItems.size} selected item(s)`}
-                 >
-                    <Mail className="h-4 w-4 sm:h-5 sm:w-5"/>
-                    Email Officials ({selectedItems.size})
-                </Button>
-            </div>
-        )}
+        {/* Floating Action Button - Fixed Centered Bottom */}
+        <div className={cn(
+            "fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 transition-opacity duration-300 ease-out",
+            selectedItems.size > 0 ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        )}>
+            <Button
+                size="lg"
+                className={cn(
+                    "shadow-2xl rounded-full text-sm sm:text-base px-5 py-3 sm:px-6 sm:py-3",
+                    "bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700", // Light mode gradient remains Teal
+                    "dark:bg-gradient-to-r dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800", // Dark mode gradient corrected to purple only
+                    "text-primary-foreground animate-glow flex items-center gap-2 ring-2 ring-primary/30 ring-offset-2 ring-offset-background",
+                    "transition-transform hover:scale-105 active:scale-95" // Add hover/active transforms
+                )}
+                onClick={handleOpenModal}
+                aria-label={`Email your representative about ${selectedItems.size} selected item(s)`}
+                // Disable button if no items selected (redundant with opacity but safe)
+                disabled={selectedItems.size === 0}
+             >
+                <Mail className="h-4 w-4 sm:h-5 sm:w-5"/>
+                Email Officials ({selectedItems.size})
+            </Button>
+        </div>
 
 
         {/* Email Customization Modal */}

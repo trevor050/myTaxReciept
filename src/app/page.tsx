@@ -2,11 +2,11 @@
 'use client';
 
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Location, TaxSpending } from '@/services/tax-spending';
 import { getTaxSpending } from '@/services/tax-spending';
 import type { SuggestRepresentativesOutput } from '@/ai/flows/suggest-representatives';
-import { suggestRepresentatives } from '@/ai/flows/suggest-representatives';
+// Removed suggestRepresentatives import as it's no longer used
 
 import LocationStep from '@/components/onboarding/LocationStep';
 import TaxAmountStep from '@/components/onboarding/TaxAmountStep';
@@ -19,8 +19,11 @@ import ThemeToggle from '@/components/ThemeToggle';
 
 type AppStep = 'location' | 'tax' | 'dashboard';
 
-// Updated median federal tax amount based on user feedback
+// Updated median federal tax amount based on provided data
 const MEDIAN_FEDERAL_TAX = 17766;
+// Default location (NYC) for skipping
+const DEFAULT_LOCATION: Location = { lat: 40.7128, lng: -74.0060 };
+
 
 export default function Home() {
   const [step, setStep] = useState<AppStep>('location');
@@ -28,8 +31,7 @@ export default function Home() {
   const [location, setLocation] = useState<Location | null>(null);
   const [taxAmount, setTaxAmount] = useState<number | null>(null);
   const [taxSpending, setTaxSpending] = useState<TaxSpending[]>([]);
-  const [representativeSuggestion, setRepresentativeSuggestion] =
-    useState<SuggestRepresentativesOutput | null>(null); // Keep for potential future use or remove if AI is fully deprecated
+  // representativeSuggestion is removed as AI call is removed
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const [animationClass, setAnimationClass] = useState('animate-slideInUp');
@@ -46,38 +48,34 @@ export default function Home() {
   };
 
 
-  const handleLocationSubmit = (loc: Location) => {
-    setLocation(loc);
-    // Note: User suggested using location for regional tax data,
-    // but implementation requires a data source/API. Sticking to median for now.
+  const handleLocationSubmit = (loc: Location | null) => {
+    // Use default location if null (skipped)
+    const finalLocation = loc ?? DEFAULT_LOCATION;
+    setLocation(finalLocation);
+    // Note: Regional tax calculation based on zip is complex locally.
+    // Sticking to national median regardless of location for now.
+    toast({
+        title: 'Location Set',
+        description: loc ? 'Using provided location.' : 'Using default location (New York Area).',
+    });
     navigateToStep('tax');
   };
 
   const handleTaxAmountSubmit = async (amount: number | null) => {
      setIsLoading(true);
-    const finalAmount = amount ?? MEDIAN_FEDERAL_TAX; // Use updated median tax amount
+    const finalAmount = amount ?? MEDIAN_FEDERAL_TAX; // Use updated median tax amount if null (skipped)
     setTaxAmount(finalAmount);
 
-    if (!location) {
-      toast({
-        title: 'Error',
-        description: 'Location not set. Please go back and set your location.',
-        variant: 'destructive',
-      });
-      setIsLoading(false);
-      navigateToStep('location');
-      return;
-    }
+    const currentLocation = location ?? DEFAULT_LOCATION; // Ensure location is set
 
     try {
       // Simulate loading time for smoother transition
       await new Promise(resolve => setTimeout(resolve, 400));
 
-      const spendingData = await getTaxSpending(location, finalAmount);
+      const spendingData = await getTaxSpending(currentLocation, finalAmount);
       setTaxSpending(spendingData);
 
-      // Removed AI suggestion call - simple activism prompt will be shown directly in dashboard
-      setRepresentativeSuggestion(null); // Explicitly set to null
+      // AI suggestion removed previously
 
       navigateToStep('dashboard');
     } catch (error) {
@@ -87,6 +85,8 @@ export default function Home() {
         description: 'Failed to fetch tax data. Please try again.',
         variant: 'destructive',
       });
+      // Optionally navigate back or allow retry
+      // navigateToStep('tax');
     } finally {
       setIsLoading(false);
     }
@@ -94,11 +94,11 @@ export default function Home() {
 
   const handleBack = () => {
     if (step === 'tax') {
+      setLocation(null); // Reset location when going back from tax
       navigateToStep('location');
     } else if (step === 'dashboard') {
        setTaxSpending([]);
-       setRepresentativeSuggestion(null);
-       // Reset tax amount when going back from dashboard to allow re-entry or using average
+       // Reset tax amount when going back from dashboard to allow re-entry or using median
        setTaxAmount(null);
       navigateToStep('tax');
     }
@@ -109,18 +109,18 @@ export default function Home() {
     switch (step) {
         case 'location': return {
             title: 'Find Your Tax Breakdown',
-            description: 'Start by telling us where you are for relevant data.'
+            description: 'Enter your location (e.g., zip code) or skip to use a default.'
         };
         case 'tax': return {
             title: 'Estimate Your Contribution',
-            description: `Enter your estimated federal income tax paid last year, or use the U.S. median of $${MEDIAN_FEDERAL_TAX.toLocaleString()}.` // Updated description
+            description: `Enter your estimated federal income tax paid last year, or skip to use the U.S. median of $${MEDIAN_FEDERAL_TAX.toLocaleString()}.` // Updated description
         };
         case 'dashboard': return {
              title: 'Your Personalized Tax Receipt',
              description: `See how your estimated ${taxAmount ? '$'+taxAmount.toLocaleString() : `median ($${MEDIAN_FEDERAL_TAX.toLocaleString()}) tax`} payment might be allocated.` // Updated description
         };
         default: return {
-            title: 'WhereIsMyTaxMoneyGoing.org',
+            title: 'My Tax Receipt .org', // Update default title
             description: 'Understand your federal tax spending & take action.'
         };
     }
@@ -188,4 +188,3 @@ export default function Home() {
     </main>
   );
 }
-

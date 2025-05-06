@@ -9,8 +9,8 @@ import { ThemeProvider } from "@/components/ThemeProvider"; // Import ThemeProvi
 const geistSansVariable = GeistSans.variable;
 
 export const metadata: Metadata = {
-  title: 'WhereIsMyTaxMoneyGoing.org', // Update title
-  description: 'Understand where your tax money goes and connect with representatives.', // Update description
+  title: 'My Tax Receipt .org', // Update title
+  description: 'Understand where your federal tax money goes and connect with representatives.', // Update description
 };
 
 export default function RootLayout({
@@ -19,7 +19,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning> {/* Add suppressHydrationWarning */}
+    // Remove extra whitespace between tags
+    <html lang="en" suppressHydrationWarning>
       {/* Apply font variable and antialiased class */}
       <body className={`${geistSansVariable} font-sans antialiased`}>
          <ThemeProvider

@@ -102,7 +102,11 @@ export default function EmailCustomizationModal({
   const handleFormSubmit = (event: React.FormEvent) => {
      event.preventDefault();
      if (!userName || !userLocation) {
-        // Consider adding a toast message here for better UX
+        toast({ // Use toast for feedback
+           title: "Missing Information",
+           description: "Please enter your name and location to generate the email.",
+           variant: "destructive",
+        });
         return;
      }
      const emailDetails = generateRepresentativeEmail(
@@ -118,21 +122,35 @@ export default function EmailCustomizationModal({
      onClose(); // Close modal after successful submission
    };
 
+  // Need to import useToast hook
+  const { toast } = React.useContext(ToastContext); // Assuming ToastContext is set up globally or provided higher up
+
+  // Or if not using Context:
+  // import { useToast } from '@/hooks/use-toast';
+  // const { toast } = useToast();
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      {/* Removed flex centering; Dialog primitive handles positioning */}
-      <DialogContent className="sm:max-w-[90vw] md:max-w-[70vw] lg:max-w-[60vw] xl:max-w-[50vw] max-h-[90vh] flex flex-col p-0 rounded-lg">
-        <DialogHeader className="px-6 pt-5 pb-4 border-b border-border w-full"> {/* Ensure header spans width */}
+      <DialogContent className="sm:max-w-[90vw] md:max-w-[70vw] lg:max-w-[60vw] xl:max-w-[50vw] max-h-[90vh] flex flex-col p-0 rounded-lg overflow-hidden border-border/70 shadow-2xl"> {/* Use overflow-hidden on DialogContent */}
+        <DialogHeader className="px-6 pt-5 pb-4 border-b border-border/50 flex-shrink-0"> {/* Ensure header doesn't grow */}
           <DialogTitle className="flex items-center gap-2 text-xl sm:text-2xl">
              <Settings2 className="h-5 w-5" /> Customize Your Email
           </DialogTitle>
           <DialogDescription>
             Adjust the tone and specific requests for your message to your representative.
           </DialogDescription>
+           {/* Manual close button for robustness */}
+           <DialogClose asChild>
+             <Button variant="ghost" size="icon" className="absolute top-3 right-3 text-muted-foreground hover:text-foreground">
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+             </Button>
+           </DialogClose>
         </DialogHeader>
 
-        <ScrollArea className="flex-grow px-6 py-4 w-full"> {/* Ensure scroll area spans width */}
+        {/* Scroll area for the main content */}
+        <ScrollArea className="flex-grow px-6 py-4 w-full overflow-y-auto">
             <form ref={formRef} onSubmit={handleFormSubmit} className="space-y-6">
                 {/* Overall Tone Slider */}
                 <div className="space-y-3">
@@ -215,7 +233,7 @@ export default function EmailCustomizationModal({
          </ScrollArea>
 
 
-        <DialogFooter className="px-6 pb-5 pt-4 border-t border-border w-full"> {/* Ensure footer spans width */}
+        <DialogFooter className="px-6 pb-5 pt-4 border-t border-border/50 flex-shrink-0"> {/* Ensure footer doesn't grow */}
              <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
              <Button type="button" onClick={handleGenerateEmailClick} disabled={!userName || !userLocation || selectedItems.length === 0}>
                  <Send className="mr-2 h-4 w-4" /> Generate Email
@@ -225,3 +243,6 @@ export default function EmailCustomizationModal({
     </Dialog>
   );
 }
+
+// Helper Context (if not already globally available)
+const ToastContext = React.createContext<{ toast: Function }>({ toast: () => {} });

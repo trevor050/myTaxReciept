@@ -39,7 +39,15 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut sm:rounded-lg", // Updated animation
+        // Base styles for centering and layout
+        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%]", // Keep default centering
+        // Styling
+        "gap-4 border bg-background p-6 shadow-lg",
+        // Animation
+        "duration-200 data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut",
+        // Responsive rounding
+        "sm:rounded-lg",
+        // Combine all classes
         className
       )}
       {...props}
@@ -60,6 +68,7 @@ const DialogHeader = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
+      // Ensure header doesn't cause centering issues; focus on content
       "flex flex-col space-y-1.5 text-center sm:text-left",
       className
     )}
@@ -74,6 +83,7 @@ const DialogFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
+      // Ensure footer doesn't cause centering issues
       "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
       className
     )}
@@ -121,4 +131,3 @@ export {
   DialogTitle,
   DialogDescription,
 }
-
