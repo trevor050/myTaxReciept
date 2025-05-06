@@ -9,12 +9,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import EmailCustomizationModal from '@/components/dashboard/EmailCustomizationModal'; // Ensure correct import of the rebuilt modal
+// Removed import for EmailCustomizationModal
 
 import {
     ExternalLink,
     Info,
-    Mail, // Kept Mail icon, potentially for button in parent
     Scale,
     HeartPulse,
     ShieldCheck,
@@ -47,7 +46,6 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { cn } from '@/lib/utils';
-// Removed useToast import as it's no longer used directly here
 import { Label } from '@/components/ui/label'; // Import Label
 
 interface TaxBreakdownDashboardProps {
@@ -55,9 +53,7 @@ interface TaxBreakdownDashboardProps {
   taxSpending: TaxSpending[];
   // New props for handling email action state from parent
   onEmailButtonStateChange: (show: boolean, count: number) => void;
-  isEmailModalOpen: boolean;
-  setIsEmailModalOpen: (open: boolean) => void;
-  // representativeSuggestion removed as it's unused
+  // Removed modal state props: isEmailModalOpen, setIsEmailModalOpen
 }
 
 // Use CSS variables for colors defined in globals.css
@@ -219,16 +215,13 @@ export default function TaxBreakdownDashboard({
   taxAmount,
   taxSpending,
   onEmailButtonStateChange,
-  isEmailModalOpen,
-  setIsEmailModalOpen,
+  // Removed modal state props
 }: TaxBreakdownDashboardProps) {
 
   const [selectedItems, setSelectedItems] = useState<Map<string, SelectedItem>>(new Map());
-  // isModalOpen state is now managed by the parent
   const [clientDueDate, setClientDueDate] = useState<string | null>(null);
   const [nationalDebt, setNationalDebt] = useState<string>('fetching...');
   const [balanceBudgetChecked, setBalanceBudgetChecked] = useState(false);
-  // toast is removed
 
    useEffect(() => {
     // These need to run only on the client after hydration
@@ -247,18 +240,7 @@ export default function TaxBreakdownDashboard({
         onEmailButtonStateChange(count > 0, count);
     }, [selectedItems, balanceBudgetChecked, onEmailButtonStateChange]);
 
-
-  // handleOpenModal is removed, parent handles opening via setIsEmailModalOpen
-
-  const handleEmailSubmit = (emailDetails: { subject: string; body: string }) => {
-    const mailtoLink = `mailto:?subject=${encodeURIComponent(emailDetails.subject)}&body=${encodeURIComponent(emailDetails.body)}`;
-    // Ensure window operations happen only client-side
-    if (typeof window !== 'undefined') {
-        window.open(mailtoLink, '_self');
-    }
-    setIsEmailModalOpen(false); // Close modal after generating mailto link
-  };
-
+   // Removed handleEmailSubmit function as modal is removed
 
    const handleCheckboxChange = (checked: boolean | 'indeterminate', item: TaxSpendingSubItem) => {
         const newSelectedItems = new Map(selectedItems);
@@ -289,21 +271,17 @@ export default function TaxBreakdownDashboard({
     percentage: item.percentage,
   }));
 
-  // showFab and fabCount calculations are removed, handled by parent
-
   return (
-    // Reduced padding-bottom as FAB is removed
     <div className="space-y-10 animate-fadeIn relative pb-10">
         {/* --- Header --- */}
         <div className="text-center space-y-1 mb-10">
-            {/* Keep only one main title */}
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">{currentYear ? `${currentYear} ` : ''}Federal Income Tax Receipt</h1>
             <p className="text-lg text-muted-foreground">Based on your estimated <span className="font-semibold text-foreground">{formatCurrency(taxAmount)}</span> payment.</p>
             <p className="text-xs text-muted-foreground/70">Next Filing Due: {dueDateDisplay}</p>
          </div>
 
        {/* --- Direct Activism Plea --- */}
-        <Alert className="mb-8 shadow-sm rounded-lg border border-primary/20 bg-primary/5 text-foreground animate-fadeIn delay-500 duration-3000"> {/* Extended duration */}
+        <Alert className="mb-8 shadow-sm rounded-lg border border-primary/20 bg-primary/5 text-foreground animate-fadeIn delay-500 duration-3000">
              <Megaphone className="h-5 w-5 mt-0.5 stroke-primary" />
             <AlertTitle className="font-semibold text-primary">Make Your Voice Heard!</AlertTitle>
             <AlertDescription className="text-sm text-foreground/90 space-y-1.5">
@@ -385,14 +363,11 @@ export default function TaxBreakdownDashboard({
                                      {isInterestOnDebt ? (
                                          <blockquote className="text-xs bg-secondary/40 p-3 rounded-md border border-border/40 text-foreground/75 shadow-inner flex flex-col gap-2 items-start">
                                              <div className="flex items-start gap-2">
-                                                 {/* Use TrendingDown icon */}
                                                  <TrendingDown className="h-4 w-4 shrink-0 mt-0.5 text-destructive/80" />
-                                                 {/* Use regular text, not italicized */}
                                                  <span className="leading-relaxed">
                                                     This significant portion reflects the cost of servicing the national debt, {nationalDebt}. This debt is a direct consequence of sustained government spending exceeding revenue collection. Decades of deficit spending (often driven by tax cuts for the wealthy and corporations, unfunded wars, and economic bailouts) contribute to this substantial burden. High interest payments divert critical funds from essential public services, infrastructure projects, education systems, and potential tax relief, raising serious questions about long-term fiscal stability and the accountability of our government's financial management.
                                                 </span>
                                              </div>
-                                             {/* Add Budget Balance Checkbox here */}
                                              <div className="flex items-center space-x-2 pl-6 pt-2">
                                                  <Checkbox
                                                     id="balance-budget"
@@ -460,20 +435,7 @@ export default function TaxBreakdownDashboard({
             </CardContent>
         </Card>
 
-        {/* Floating Action Button is now rendered by parent component */}
-
-        {/* Email Customization Modal */}
-        {/* Use the rebuilt EmailCustomizationModal component */}
-        {/* The open state is controlled by the parent via isEmailModalOpen */}
-         <EmailCustomizationModal
-            selectedItems={Array.from(selectedItems.values())}
-            balanceBudgetChecked={balanceBudgetChecked}
-            onSubmit={handleEmailSubmit}
-            open={isEmailModalOpen} // Pass open state from parent
-            onOpenChange={setIsEmailModalOpen} // Pass setter to parent
-        />
+        {/* Removed Email Customization Modal rendering */}
     </div>
   );
 }
-
-    

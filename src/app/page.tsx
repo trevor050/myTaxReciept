@@ -36,11 +36,10 @@ export default function Home() {
   const { toast } = useToast();
   const [animationClass, setAnimationClass] = useState('animate-slideInUp');
 
-  // State for controlling the email modal and button visibility/count
+  // State for controlling the email button visibility/count
   const [showEmailAction, setShowEmailAction] = useState(false);
   const [emailActionCount, setEmailActionCount] = useState(0);
-  // State to control the EmailCustomizationModal's open/closed status
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  // Removed state related to email modal open status
   const [estimatedMedianTax, setEstimatedMedianTax] = useState<number>(NATIONAL_MEDIAN_FEDERAL_TAX);
 
 
@@ -48,11 +47,11 @@ export default function Home() {
     const isGoingBack = (step === 'tax' && nextStep === 'location') || (step === 'dashboard' && nextStep === 'tax');
     setAnimationClass(isGoingBack ? 'animate-slideOutUp' : 'animate-slideOutUp');
 
-    // Reset email button state and close modal when navigating away from dashboard
+    // Reset email button state when navigating away from dashboard
     if (step === 'dashboard' && nextStep !== 'dashboard') {
        setShowEmailAction(false);
        setEmailActionCount(0);
-       setIsEmailModalOpen(false); // Ensure modal closes
+       // Removed resetting modal state
     }
 
 
@@ -121,7 +120,7 @@ export default function Home() {
        // Reset email action state
        setShowEmailAction(false);
        setEmailActionCount(0);
-       setIsEmailModalOpen(false); // Close modal if open
+       // Removed resetting modal state
       navigateToStep('tax');
     }
   };
@@ -156,18 +155,15 @@ export default function Home() {
     setEmailActionCount(count);
   };
 
-  // Handler to open the modal via the FloatingEmailButton
+  // Handler for the FloatingEmailButton click - now does nothing
   const handleOpenEmailModal = () => {
-     if (emailActionCount > 0) {
-        setIsEmailModalOpen(true); // Set state to open the modal
-     } else {
-         // This case should ideally be prevented by the button not showing, but as a fallback:
-          toast({
-            title: "Nothing Selected",
-            description: "Please select items or check 'Prioritize Balancing the Budget' to include in your email.",
-            variant: "default",
-         });
-     }
+     console.log("Email Officials button clicked (modal removed).");
+     // No action needed as the modal is removed
+     // You could add a toast message here if desired:
+     // toast({
+     //   title: "Feature Under Construction",
+     //   description: "Email customization is temporarily disabled.",
+     // });
   };
 
 
@@ -188,7 +184,6 @@ export default function Home() {
                 <ArrowLeft className="mr-1.5 h-4 w-4" /> Back
               </Button>
             ) : <div />} {/* Placeholder to keep alignment */}
-             {/* The Email Officials button is now handled by FloatingEmailButton below */}
         </div>
 
         {/* Main Card */}
@@ -221,10 +216,7 @@ export default function Home() {
                          <TaxBreakdownDashboard
                             taxAmount={taxAmount}
                             taxSpending={taxSpending}
-                            // Pass email state and handlers
                             onEmailButtonStateChange={handleEmailButtonStateChange}
-                            isEmailModalOpen={isEmailModalOpen} // Pass the modal's open state
-                            setIsEmailModalOpen={setIsEmailModalOpen} // Pass the function to change the modal's state
                          />
                      )
                  )}
@@ -242,10 +234,8 @@ export default function Home() {
        <FloatingEmailButton
             isVisible={showEmailAction && step === 'dashboard'} // Only visible on dashboard when items selected
             count={emailActionCount}
-            onClick={handleOpenEmailModal} // Correct handler to open the modal
+            onClick={handleOpenEmailModal} // Button click now does nothing
        />
     </main>
   );
 }
-
-    
