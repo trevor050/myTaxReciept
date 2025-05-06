@@ -2,7 +2,8 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useRef, useEffect, useCallback } from 'react';
+// Use useLayoutEffect for measurements after paint
+import { useState, useRef, useLayoutEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -68,7 +69,8 @@ export default function EmailCustomizationModal({
 }: EmailCustomizationModalProps) {
 
   // --- Draggable State ---
-  const [position, setPosition] = useState({ x: 0, y: 0 }); // Initial position: center (will be set on open)
+  // 🟢 1. sentinel null means “not positioned yet”
+  const [position, setPosition] = useState<{x: number | null, y: number | null}>({ x: null, y: null });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartOffset, setDragStartOffset] = useState({ x: 0, y: 0 }); // Offset from top-left corner
   const modalRef = useRef<HTMLDivElement>(null); // Ref for the modal content
@@ -76,82 +78,99 @@ export default function EmailCustomizationModal({
   const isInitialOpen = useRef(true); // Track initial opening for centering
 
   // --- Center Modal on Open and Reset Position on Close ---
-  useEffect(() => {
+  // 🟢 2. measure after first paint using useLayoutEffect
+  useLayoutEffect(() => {
     if (isOpen && isInitialOpen.current && modalRef.current) {
-       // Calculate initial center position
-        const modalWidth = modalRef.current.offsetWidth;
-        const modalHeight = modalRef.current.offsetHeight;
+       // Calculate initial center position using reliable measurements
+        const { width, height } = modalRef.current.getBoundingClientRect(); // Use getBoundingClientRect for better accuracy
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
 
         // Center position relative to viewport
-        const initialX = (viewportWidth - modalWidth) / 2;
-        const initialY = (viewportHeight - modalHeight) / 2;
+        const initialX = (viewportWidth - width) / 2;
+        const initialY = (viewportHeight - height) / 2;
 
         setPosition({ x: initialX, y: initialY });
         isInitialOpen.current = false; // Mark initial centering done
     } else if (!isOpen) {
       isInitialOpen.current = true; // Reset for next open
-      // Optionally reset position if desired when closed
-       // setPosition({ x: 0, y: 0 }); // Reset to top-left if needed
+      setPosition({ x: null, y: null }); // Reset position state to use CSS centering again
     }
-  }, [isOpen]);
+  }, [isOpen]); // Depend only on isOpen
 
 
   // --- Drag Handlers ---
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    // Check if the mousedown event originated within the drag handle
     if (modalRef.current && dragHandleRef.current?.contains(e.target as Node)) {
         setIsDragging(true);
+        // Get the current position using getBoundingClientRect for accuracy
         const modalRect = modalRef.current.getBoundingClientRect();
         setDragStartOffset({
+            // Calculate offset relative to the current actual position
             x: e.clientX - modalRect.left,
             y: e.clientY - modalRect.top,
         });
-        e.preventDefault(); // Prevent text selection
+        document.body.style.userSelect = 'none'; // Prevent text selection during drag
+        e.preventDefault();
     }
-  }, []);
+  }, []); // Removed position from dependency array as it's not needed here
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging || !modalRef.current) return;
 
     // Calculate new top-left position based on mouse movement and initial offset
-    const newX = e.clientX - dragStartOffset.x;
-    const newY = e.clientY - dragStartOffset.y;
+    let newX = e.clientX - dragStartOffset.x;
+    let newY = e.clientY - dragStartOffset.y;
+
+    // Basic boundary collision detection (optional but recommended)
+    const modalRect = modalRef.current.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    newX = Math.max(0, Math.min(newX, viewportWidth - modalRect.width));
+    newY = Math.max(0, Math.min(newY, viewportHeight - modalRect.height));
+
 
     setPosition({ x: newX, y: newY });
 
-  }, [isDragging, dragStartOffset]);
+  }, [isDragging, dragStartOffset]); // Depend only on drag state and offset
 
   const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
-    // Remove global styles if needed, e.g., body cursor
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
-  }, []);
+    if (isDragging) {
+        setIsDragging(false);
+        document.body.style.userSelect = ''; // Re-enable text selection
+    }
+  }, [isDragging]); // Depend only on drag state
 
   // --- Attach/Detach Window Event Listeners ---
-  useEffect(() => {
+  useLayoutEffect(() => { // Use layout effect for mouse move/up listeners as well
     if (isDragging) {
-        document.body.style.cursor = 'grabbing'; // Indicate dragging globally
-        document.body.style.userSelect = 'none'; // Prevent text selection
+        document.body.style.cursor = 'grabbing';
         window.addEventListener('mousemove', handleMouseMove);
         window.addEventListener('mouseup', handleMouseUp);
+        // Add touch event listeners for mobile drag support (optional)
+        // window.addEventListener('touchmove', handleTouchMove);
+        // window.addEventListener('touchend', handleTouchEnd);
     } else {
-        document.body.style.cursor = ''; // Reset cursor
-        document.body.style.userSelect = ''; // Re-enable selection
+        document.body.style.cursor = '';
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
+        // window.removeEventListener('touchmove', handleTouchMove);
+        // window.removeEventListener('touchend', handleTouchEnd);
     }
 
     // Cleanup function
     return () => {
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
-        // Ensure styles are cleaned up on unmount
+        // window.removeEventListener('touchmove', handleTouchMove);
+        // window.removeEventListener('touchend', handleTouchEnd);
+        // Ensure styles are cleaned up
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
     };
-  }, [isDragging, handleMouseMove, handleMouseUp]);
+  }, [isDragging, handleMouseMove, handleMouseUp]); // Re-run when drag state changes
 
 
   const handleFundingLevelChange = (itemId: string, value: number[]) => {
@@ -211,29 +230,33 @@ export default function EmailCustomizationModal({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
        <DialogContent
          ref={modalRef} // Add ref to the DialogContent
-         style={{
-           // Apply position via top/left for fixed positioning
-           left: `${position.x}px`,
-           top: `${position.y}px`,
-           transform: 'none', // Reset any transform if previously used
-           // Center initially via Tailwind if position is 0,0 (before drag)
-           // This is overridden by style once position changes
-         }}
+         // 🟢 3. only apply inline coords once we have them
+         style={
+             position.x !== null
+               ? { left: `${position.x}px`, top: `${position.y}px`, transform: "none" } // transform off when dragging
+               : undefined // Let CSS handle centering initially
+         }
          className={cn(
-            "max-w-3xl w-[90vw] sm:w-full p-0 max-h-[85vh]",
+             // Base Styles (apply always)
+            "fixed max-w-3xl w-[90vw] sm:w-full p-0 max-h-[85vh]",
             "flex flex-col",
-            "fixed", // Ensure fixed positioning
-            // Apply centering classes by default, position state overrides via style prop
-             !isDragging && position.x === 0 && position.y === 0 && isInitialOpen.current ? "left-[50%] top-[50%] -translate-x-1/2 -translate-y-1/2" : "",
-             // Animations using keyframes defined in globals.css
-             "data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut",
-            "z-50 border bg-background shadow-lg sm:rounded-lg"
+            "z-50 border bg-background shadow-lg sm:rounded-lg",
+            // Animations (apply always)
+            "data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut",
+             // Conditional CSS Centering (apply only before position is set)
+             position.x === null && "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
          )}
          // Prevent Radix default focus trapping from interfering with drag
          onInteractOutside={(e) => {
             if (isDragging) {
               e.preventDefault(); // Prevent closing modal while dragging outside
             }
+          }}
+          onOpenAutoFocus={(e) => {
+              // Prevent Radix from focusing the first input automatically, which can interfere with initial measurement
+              e.preventDefault();
+              // Optionally focus the drag handle or another non-input element if desired
+              // dragHandleRef.current?.focus();
           }}
        >
          {/* Custom Header - Drag Handle */}
@@ -244,23 +267,26 @@ export default function EmailCustomizationModal({
                 "px-6 py-4 border-b bg-card/95 sticky top-0 z-10 shrink-0 rounded-t-lg", // Added rounded-t-lg
                 isDragging ? "cursor-grabbing" : "cursor-move" // Change cursor on drag
             )}
+             // Make the header focusable for accessibility if needed, but ensure it doesn't trap focus unintendedly
+             // tabIndex={0}
          >
-             <div className="flex justify-between items-center pointer-events-none"> {/* Disable pointer events on inner content */}
-                <div className="flex items-center gap-2">
+             {/* Content within header */}
+             <div className="flex justify-between items-center"> {/* Removed pointer-events-none to allow close button */}
+                <div className="flex items-center gap-2 pointer-events-none"> {/* Re-add pointer-events-none here for inner content */}
                     <GripVertical className="h-5 w-5 text-muted-foreground shrink-0"/> {/* Drag indicator */}
                     <div className="space-y-1">
-                        <DialogTitle className="text-xl sm:text-2xl font-semibold flex items-center gap-2">
+                        <DialogTitle id="email-customization-title" className="text-xl sm:text-2xl font-semibold flex items-center gap-2">
                             <Mail className="h-5 w-5 text-primary" />
                             Customize Your Email
                         </DialogTitle>
-                        <DialogDescription className="text-sm text-muted-foreground">
+                        <DialogDescription id="email-customization-description" className="text-sm text-muted-foreground">
                             Adjust the tone and desired funding changes for your message.
                         </DialogDescription>
                     </div>
                 </div>
-                {/* Keep the close button inside the header but outside the drag handle trigger area logic if needed */}
+                {/* Close Button - Ensure it's clickable */}
                 <DialogClose asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 pointer-events-auto z-20 relative"> {/* Ensure close button is clickable */}
+                    <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 z-20 relative"> {/* Removed pointer-events-auto as parent allows events now */}
                         <X className="h-4 w-4" />
                         <span className="sr-only">Close</span>
                     </Button>
@@ -393,3 +419,4 @@ export default function EmailCustomizationModal({
   );
 }
 
+    
