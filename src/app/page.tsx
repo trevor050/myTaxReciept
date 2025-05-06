@@ -14,6 +14,11 @@ import HourlyWageStep from '@/components/onboarding/HourlyWageStep'; // Import t
 import TaxBreakdownDashboard from '@/components/dashboard/TaxBreakdownDashboard';
 import FloatingEmailButton from '@/components/dashboard/FloatingEmailButton';
 import EmailCustomizationModal from '@/components/dashboard/EmailCustomizationModal'; // Import the modal
+import ResourceSuggestionsModal from '@/components/dashboard/ResourceSuggestionsModal'; // Import the new modal
+import type { SuggestedResource } from '@/services/resource-suggestions'; // Import suggestion type
+import { suggestResources } from '@/services/resource-suggestions'; // Import suggestion service
+
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -54,9 +59,14 @@ export default function Home() {
   const [aggressiveness, setAggressiveness] = useState<number>(50); // Default 50
   const [itemFundingLevels, setItemFundingLevels] = useState<Map<string, number>>(new Map());
   const [userName, setUserName] = useState('');
-  const [userLocation, setUserLocation] = useState('');
+  const [userLocationText, setUserLocationText] = useState(''); // Renamed from userLocation to avoid conflict
 
   const [estimatedMedianTax, setEstimatedMedianTax] = useState<number>(NATIONAL_MEDIAN_FEDERAL_TAX);
+
+  // State for resource suggestions modal and data
+  const [suggestedResources, setSuggestedResources] = useState<SuggestedResource[]>([]);
+  const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
+  const [isSuggestingResources, setIsSuggestingResources] = useState(false);
 
 
   // Update itemFundingLevels based on selectedEmailItems whenever it changes
@@ -91,7 +101,9 @@ export default function Home() {
        setAggressiveness(50);
        setItemFundingLevels(new Map());
        setUserName('');
-       setUserLocation('');
+       setUserLocationText('');
+       setSuggestedResources([]); // Clear suggestions
+       setIsResourceModalOpen(false); // Ensure resource modal is closed
     }
      if (step === 'hourlyWage' && isGoingBack) {
         setTaxAmount(null); // Reset tax amount when going back from wage to allow re-entry/median
@@ -224,7 +236,7 @@ export default function Home() {
         setAggressiveness(50);
         // itemFundingLevels will be cleared by the useEffect watching selectedEmailItems
         setUserName('');
-        setUserLocation('');
+        setUserLocationText('');
      }
   };
 
@@ -238,6 +250,43 @@ export default function Home() {
        ])
      ));
      setIsEmailModalOpen(true);
+  };
+
+  // Function to handle fetching and showing resource suggestions
+  const handleShowResourceSuggestions = async () => {
+    if (selectedEmailItems.size === 0 && !balanceBudgetChecked) {
+        toast({
+            title: "No Concerns Selected",
+            description: "Please select some spending items or the 'Balance Budget' option to get relevant suggestions.",
+            variant: "default"
+        });
+        return;
+    }
+
+    setIsSuggestingResources(true);
+    try {
+        const itemsArray = Array.from(selectedEmailItems.values());
+        const suggestions = await suggestResources(itemsArray, aggressiveness, balanceBudgetChecked);
+        setSuggestedResources(suggestions);
+        if (suggestions.length > 0) {
+            setIsResourceModalOpen(true);
+        } else {
+            toast({
+                title: "No Specific Suggestions Found",
+                description: "We couldn't find specific organizations for your exact combination of concerns. Consider broadening your search or contacting your representatives directly.",
+                variant: "default"
+            });
+        }
+    } catch (error) {
+        console.error("Error fetching resource suggestions:", error);
+        toast({
+            title: "Suggestion Error",
+            description: "Could not fetch resource suggestions at this time. Please try again later.",
+            variant: "destructive",
+        });
+    } finally {
+        setIsSuggestingResources(false);
+    }
   };
 
 
@@ -302,7 +351,7 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="mt-4 sm:mt-6 text-center text-muted-foreground/60 text-[10px] sm:text-xs px-2 sm:px-4 md:px-0 relative pb-16 sm:pb-6"> {/* Adjusted font size and padding for mobile */}
-            Powered by Firebase & Google AI (where applicable). Data is estimated and for informational purposes. Verify with official sources.
+             Powered by publicly available data and community resources. Data is estimated and for informational purposes. Verify with official sources.
         </footer>
        </div>
 
@@ -316,7 +365,13 @@ export default function Home() {
         {/* Email Customization Modal */}
        <EmailCustomizationModal
             isOpen={isEmailModalOpen}
-            onOpenChange={setIsEmailModalOpen}
+            onOpenChange={(isOpen) => {
+                setIsEmailModalOpen(isOpen);
+                // If modal is closing AND items were selected or budget checked, offer suggestions
+                if (!isOpen && (selectedEmailItems.size > 0 || balanceBudgetChecked)) {
+                    handleShowResourceSuggestions();
+                }
+            }}
             selectedItems={selectedEmailItems} // Pass the stored selected items
             balanceBudgetChecked={balanceBudgetChecked} // Pass budget preference
             taxAmount={taxAmount ?? estimatedMedianTax} // Pass tax amount for context
@@ -327,8 +382,16 @@ export default function Home() {
             setItemFundingLevels={setItemFundingLevels}
             userName={userName}
             setUserName={setUserName}
-            userLocation={userLocation}
-            setUserLocation={setUserLocation}
+            userLocation={userLocationText}
+            setUserLocation={setUserLocationText}
+        />
+
+        {/* Resource Suggestions Modal */}
+        <ResourceSuggestionsModal
+            isOpen={isResourceModalOpen}
+            onOpenChange={setIsResourceModalOpen}
+            suggestedResources={suggestedResources}
+            isLoading={isSuggestingResources}
         />
     </main>
   );
