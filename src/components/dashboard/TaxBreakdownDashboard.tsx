@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -8,6 +7,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch'; // Import Switch
+import { Label } from '@/components/ui/label'; // Import Label
 
 import {
     ExternalLink,
@@ -30,6 +31,8 @@ import {
     Megaphone, // Icon for activism plea
     CheckSquare, // Icon for budget balance checkbox
     AlertTriangle, // Use for warning/emphasis on debt
+    Clock, // Icon for time toggle
+    DollarSign, // Icon for currency toggle
 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -45,10 +48,11 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { cn } from '@/lib/utils';
-import { Label } from '@/components/ui/label'; // Import Label
+import { getTimePerspectiveText } from '@/lib/time-perspective'; // Import time perspective function
 
 interface TaxBreakdownDashboardProps {
   taxAmount: number;
+  hourlyWage: number | null; // Added hourly wage prop
   taxSpending: TaxSpending[];
   // Consolidated callback prop
   onSelectionChange: (
@@ -86,25 +90,48 @@ const categoryIcons: { [key: string]: React.ElementType } = {
 const DefaultIcon = HelpCircle;
 
 
-const CustomTooltip = ({ active, payload, label, totalAmount }: any) => {
+const CustomTooltip = ({ active, payload, label, totalAmount, hourlyWage, displayMode }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     const spendingAmount = (data.percentage / 100) * totalAmount;
     const Icon = categoryIcons[data.category] || DefaultIcon;
 
+    let displayValue: string;
+    let timeTooltipText: string | null = null;
+
+    if (displayMode === 'time' && hourlyWage) {
+        const hoursWorked = spendingAmount / hourlyWage;
+        displayValue = formatTime(hoursWorked * 60); // Convert hours to minutes for formatting
+        timeTooltipText = getTimePerspectiveText(hoursWorked * 60); // Get perspective text
+    } else {
+        displayValue = formatCurrency(spendingAmount);
+    }
+
     return (
-        <div className="rounded-lg border bg-popover p-2.5 text-popover-foreground shadow-lg animate-scaleIn text-xs max-w-[150px] sm:max-w-[200px]">
-             <div className="flex items-center justify-between mb-1 gap-2">
-                 <span className="font-medium flex items-center gap-1.5 truncate">
-                    <Icon className="h-3 w-3 text-muted-foreground shrink-0" />
-                    {data.category}
-                 </span>
-                <span className="font-mono text-muted-foreground shrink-0">{data.percentage.toFixed(1)}%</span>
-            </div>
-            <div className="font-semibold text-sm">
-                {formatCurrency(spendingAmount)} {/* Use helper function */}
-            </div>
-        </div>
+        <TooltipProvider delayDuration={100}>
+            <ShadTooltip>
+                <TooltipTrigger asChild>
+                    <div className="rounded-lg border bg-popover p-2.5 text-popover-foreground shadow-lg animate-scaleIn text-xs max-w-[150px] sm:max-w-[200px]">
+                         <div className="flex items-center justify-between mb-1 gap-2">
+                             <span className="font-medium flex items-center gap-1.5 truncate">
+                                <Icon className="h-3 w-3 text-muted-foreground shrink-0" />
+                                {data.category}
+                             </span>
+                            <span className="font-mono text-muted-foreground shrink-0">{data.percentage.toFixed(1)}%</span>
+                        </div>
+                        <div className="font-semibold text-sm">
+                            {displayValue} {/* Display currency or time */}
+                        </div>
+                    </div>
+                 </TooltipTrigger>
+                 {/* Show time perspective tooltip only in time mode */}
+                 {displayMode === 'time' && timeTooltipText && (
+                    <TooltipContent side="top" align="center" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50">
+                        <p className="text-muted-foreground text-xs leading-relaxed">{timeTooltipText}</p>
+                    </TooltipContent>
+                 )}
+            </ShadTooltip>
+        </TooltipProvider>
     );
   }
   return null;
@@ -121,7 +148,7 @@ const CustomLegend = (props: any) => {
     if (typeof window !== 'undefined') {
         const chartContainer = document.querySelector('.recharts-responsive-container');
         if (chartContainer) {
-        setChartWidth(chartContainer.clientWidth);
+            setChartWidth(chartContainer.clientWidth);
         }
         // Basic resize listener - consider debouncing for performance
         const handleResize = () => {
@@ -155,32 +182,70 @@ const CustomLegend = (props: any) => {
 };
 
 
-const SubItemTooltipContent = ({ subItem }: { subItem: TaxSpendingSubItem }) => (
-    <TooltipContent side="top" align="center" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50"> {/* Added z-50 */}
-      <p className="font-semibold mb-1.5 text-popover-foreground">{subItem.description}</p>
-      {subItem.tooltipText && <p className="text-muted-foreground text-xs leading-relaxed mb-2">{subItem.tooltipText}</p>}
-      {subItem.wikiLink && (
-        <a
-          href={subItem.wikiLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary hover:underline flex items-center gap-1 text-xs font-medium"
-          onClick={(e) => e.stopPropagation()} // Prevent accordion closing
-        >
-          Learn More <ExternalLink className="h-3 w-3" />
-        </a>
-      )}
-    </TooltipContent>
-);
+const SubItemTooltipContent = ({ subItem, amount, hourlyWage, displayMode }: { subItem: TaxSpendingSubItem, amount: number, hourlyWage: number | null, displayMode: 'currency' | 'time' }) => {
+    let timeTooltipText: string | null = null;
+    if(displayMode === 'time' && hourlyWage) {
+        const hoursWorked = amount / hourlyWage;
+        timeTooltipText = getTimePerspectiveText(hoursWorked * 60);
+    }
+
+    return (
+        <TooltipContent side="top" align="center" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50"> {/* Added z-50 */}
+            <p className="font-semibold mb-1.5 text-popover-foreground">{subItem.description}</p>
+            {subItem.tooltipText && <p className="text-muted-foreground text-xs leading-relaxed mb-2">{subItem.tooltipText}</p>}
+            {timeTooltipText && (
+                 <p className="text-primary text-xs italic border-t pt-2 mt-2">{timeTooltipText}</p>
+            )}
+            {subItem.wikiLink && (
+                <a
+                href={subItem.wikiLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline flex items-center gap-1 text-xs font-medium mt-2"
+                onClick={(e) => e.stopPropagation()} // Prevent accordion closing
+                >
+                Learn More <ExternalLink className="h-3 w-3" />
+                </a>
+            )}
+        </TooltipContent>
+    );
+}
+
 
 // Helper function to format currency
-const formatCurrency = (amount: number | null | undefined) => {
+const formatCurrency = (amount: number | null | undefined): string => {
      if (typeof amount !== 'number' || isNaN(amount)) {
       return '$--.--';
     }
     // Use standard currency formatting
     return '$' + amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+
+// Helper function to format time (minutes to hours/minutes)
+const formatTime = (totalMinutes: number | null | undefined): string => {
+    if (typeof totalMinutes !== 'number' || isNaN(totalMinutes) || totalMinutes < 0) {
+        return '--h --m';
+    }
+    if (totalMinutes < 1) {
+        return '< 1 min';
+    }
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = Math.round(totalMinutes % 60);
+
+    let result = '';
+    if (hours > 0) {
+        result += `${hours}h`;
+    }
+    if (minutes > 0) {
+        if (hours > 0) result += ' ';
+        result += `${minutes}m`;
+    }
+     if (hours === 0 && minutes === 0 && totalMinutes > 0) { // Handle cases between 0 and 1 minute
+        return '< 1 min';
+    }
+    return result.trim();
+}
+
 
 
 // Helper function to fetch and format national debt
@@ -216,6 +281,7 @@ async function getFormattedNationalDebt(): Promise<string> {
 
 export default function TaxBreakdownDashboard({
   taxAmount,
+  hourlyWage, // Use the hourly wage prop
   taxSpending,
   onSelectionChange, // Use the consolidated prop
 }: TaxBreakdownDashboardProps) {
@@ -224,6 +290,7 @@ export default function TaxBreakdownDashboard({
   const [clientDueDate, setClientDueDate] = useState<string | null>(null);
   const [nationalDebt, setNationalDebt] = useState<string>('fetching...');
   const [balanceBudgetChecked, setBalanceBudgetChecked] = useState(false);
+  const [displayMode, setDisplayMode] = useState<'currency' | 'time'>('currency'); // State for display mode
 
    useEffect(() => {
     // These need to run only on the client after hydration
@@ -248,7 +315,7 @@ export default function TaxBreakdownDashboard({
         const itemId = `${item.id}`; // Ensure key is string
         if (checked === true) {
             // Add default funding level (e.g., 0: Improve Efficiency) when selected
-            newSelectedItems.set(itemId, { id: itemId, description: item.description, fundingLevel: 0 });
+            newSelectedItems.set(itemId, { id: itemId, description: item.description, fundingLevel: 0, category: item.category }); // Include category
         } else {
             newSelectedItems.delete(itemId);
         }
@@ -272,14 +339,47 @@ export default function TaxBreakdownDashboard({
     percentage: item.percentage,
   }));
 
+   const handleDisplayModeToggle = (checked: boolean) => {
+      setDisplayMode(checked ? 'time' : 'currency');
+   };
+
+
   return (
     <div className="space-y-10 animate-fadeIn relative pb-10">
         {/* --- Header --- */}
-        <div className="text-center space-y-1 mb-10">
+        <div className="text-center space-y-1 mb-6 relative"> {/* Reduced mb */}
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">{currentYear ? `${currentYear} ` : ''}Federal Income Tax Receipt</h1>
-            <p className="text-lg text-muted-foreground">Based on your estimated <span className="font-semibold text-foreground">{formatCurrency(taxAmount)}</span> payment.</p>
+             <p className="text-lg text-muted-foreground">Based on your estimated <span className="font-semibold text-foreground">{formatCurrency(taxAmount)}</span> payment.</p>
             <p className="text-xs text-muted-foreground/70">Next Filing Due: {dueDateDisplay}</p>
+
+             {/* --- Display Mode Toggle (only if wage provided) --- */}
+            {hourlyWage !== null && (
+                <div className="absolute top-0 right-0 sm:relative sm:flex sm:justify-center sm:items-center sm:mt-4 sm:space-x-2 pt-1 pr-1 sm:pt-0 sm:pr-0">
+                    <Label htmlFor="display-mode-toggle" className="text-xs font-medium text-muted-foreground hidden sm:inline">View as:</Label>
+                    <div className="flex items-center space-x-2 bg-muted p-1 rounded-full">
+                        <Button
+                            variant={displayMode === 'currency' ? 'default' : 'ghost'}
+                            size="sm"
+                            onClick={() => setDisplayMode('currency')}
+                            className={cn("rounded-full px-3 py-1 h-7 text-xs", displayMode === 'currency' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:bg-accent')}
+                            aria-pressed={displayMode === 'currency'}
+                        >
+                            <DollarSign className="h-3 w-3 mr-1" /> Currency
+                        </Button>
+                        <Button
+                             variant={displayMode === 'time' ? 'default' : 'ghost'}
+                             size="sm"
+                             onClick={() => setDisplayMode('time')}
+                             className={cn("rounded-full px-3 py-1 h-7 text-xs", displayMode === 'time' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:bg-accent')}
+                             aria-pressed={displayMode === 'time'}
+                        >
+                            <Clock className="h-3 w-3 mr-1" /> Time Worked
+                        </Button>
+                    </div>
+                </div>
+            )}
          </div>
+
 
        {/* --- Direct Activism Plea --- */}
         <Alert className="mb-8 shadow-sm rounded-lg border border-primary/20 bg-primary/5 text-foreground animate-fadeIn delay-500 duration-3000">
@@ -317,7 +417,7 @@ export default function TaxBreakdownDashboard({
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke={'hsl(var(--background))'} strokeWidth={1} />
                     ))}
                   </Pie>
-                   <Tooltip content={<CustomTooltip totalAmount={taxAmount} />} cursor={{ fill: 'hsl(var(--accent))', fillOpacity: 0.4 }} />
+                   <Tooltip content={<CustomTooltip totalAmount={taxAmount} hourlyWage={hourlyWage} displayMode={displayMode} />} cursor={{ fill: 'hsl(var(--accent))', fillOpacity: 0.4 }} />
                    <Legend content={<CustomLegend />} wrapperStyle={{ maxWidth: '100%', overflow: 'hidden' }}/>
                 </PieChart>
               </ResponsiveContainer>
@@ -343,6 +443,14 @@ export default function TaxBreakdownDashboard({
                         const isInterestOnDebt = item.category === 'Interest on Debt';
                         const hasSubItems = item.subItems && item.subItems.length > 0;
 
+                        let categoryDisplayValue: string;
+                        if (displayMode === 'time' && hourlyWage) {
+                            const hoursWorked = categoryAmount / hourlyWage;
+                            categoryDisplayValue = formatTime(hoursWorked * 60);
+                        } else {
+                            categoryDisplayValue = formatCurrency(categoryAmount);
+                        }
+
                         return (
                              <AccordionItem value={`item-${index}`} key={item.id || index} className="border-b border-border/40 last:border-b-0 group">
                                 <AccordionTrigger className="hover:no-underline py-3 px-3 sm:px-4 rounded-none hover:bg-accent/50 data-[state=open]:bg-accent/40 transition-colors duration-150 text-left">
@@ -352,7 +460,7 @@ export default function TaxBreakdownDashboard({
                                             <span className="font-medium text-sm truncate flex-1">{item.category}</span>
                                         </div>
                                         <div className="text-right shrink-0 flex items-baseline gap-1 ml-auto">
-                                            <span className="font-semibold font-mono text-sm">{formatCurrency(categoryAmount)}</span>
+                                            <span className="font-semibold font-mono text-sm">{categoryDisplayValue}</span>
                                             <span className="text-muted-foreground text-xs font-mono hidden sm:inline">({item.percentage.toFixed(1)}%)</span>
                                         </div>
                                     </div>
@@ -387,6 +495,18 @@ export default function TaxBreakdownDashboard({
                                             {item.subItems!.map((subItem) => {
                                                 const subItemAmount = subItem.amountPerDollar * taxAmount;
                                                 const isSelected = selectedItems.has(subItem.id);
+
+                                                let subItemDisplayValue: string;
+                                                 let subItemTimeTooltipText: string | null = null;
+                                                if (displayMode === 'time' && hourlyWage) {
+                                                    const hoursWorked = subItemAmount / hourlyWage;
+                                                    subItemDisplayValue = formatTime(hoursWorked * 60);
+                                                    subItemTimeTooltipText = getTimePerspectiveText(hoursWorked * 60); // Get time perspective for subitem
+                                                } else {
+                                                    subItemDisplayValue = formatCurrency(subItemAmount);
+                                                }
+
+
                                                 return (
                                                      <li key={subItem.id} className="flex justify-between items-center text-xs gap-2 group/subitem">
                                                          <div className="flex items-center gap-1.5 flex-1 min-w-0">
@@ -407,13 +527,22 @@ export default function TaxBreakdownDashboard({
                                                                         )}
                                                                      >
                                                                         {subItem.description}
-                                                                        {(subItem.tooltipText || subItem.wikiLink) && <Info className="h-3 w-3 opacity-40 group-hover/subitem:opacity-100 transition-opacity shrink-0"/>}
+                                                                        {/* Show info icon if tooltip exists OR if time perspective text exists */}
+                                                                        {(subItem.tooltipText || subItem.wikiLink || subItemTimeTooltipText) && <Info className="h-3 w-3 opacity-40 group-hover/subitem:opacity-100 transition-opacity shrink-0"/>}
                                                                     </label>
                                                                 </TooltipTrigger>
-                                                                {(subItem.tooltipText || subItem.wikiLink) && <SubItemTooltipContent subItem={subItem} />}
+                                                                {/* Pass necessary props to SubItemTooltipContent */}
+                                                                {(subItem.tooltipText || subItem.wikiLink || subItemTimeTooltipText) && (
+                                                                     <SubItemTooltipContent
+                                                                         subItem={subItem}
+                                                                         amount={subItemAmount}
+                                                                         hourlyWage={hourlyWage}
+                                                                         displayMode={displayMode}
+                                                                     />
+                                                                )}
                                                             </ShadTooltip>
                                                          </div>
-                                                        <span className="font-medium font-mono text-foreground/80 whitespace-nowrap">{formatCurrency(subItemAmount)}</span>
+                                                        <span className="font-medium font-mono text-foreground/80 whitespace-nowrap">{subItemDisplayValue}</span>
                                                     </li>
                                                 );
                                             })}
@@ -431,7 +560,12 @@ export default function TaxBreakdownDashboard({
                  {/* --- Total Row --- */}
                  <div className="flex justify-between items-center w-full px-3 sm:px-4 py-3 sm:py-4 border-t-2 border-primary/50 bg-primary/5">
                      <span className="font-bold text-sm sm:text-base text-primary tracking-tight">TOTAL ESTIMATED TAX</span>
-                     <span className="font-bold font-mono text-sm sm:text-base text-primary">{formatCurrency(taxAmount)}</span>
+                     <span className="font-bold font-mono text-sm sm:text-base text-primary">
+                       {displayMode === 'time' && hourlyWage
+                           ? formatTime((taxAmount / hourlyWage) * 60)
+                           : formatCurrency(taxAmount)
+                       }
+                     </span>
                  </div>
             </CardContent>
         </Card>
@@ -439,5 +573,3 @@ export default function TaxBreakdownDashboard({
     </div>
   );
 }
-
-    

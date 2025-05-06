@@ -1,9 +1,9 @@
 /**
- * @fileOverview Service for fetching mock tax spending data.
- * Email generation logic has been moved to src/services/email/*.ts.
+ * @fileOverview Service for fetching mock tax spending data and generating email content.
  */
 
 import { generateRepresentativeEmailContent } from './email/generator'; // Import the generation logic
+import type { FundingLevel, SelectedItem as EmailSelectedItem } from './email/types'; // Import types from email modules
 
 // ---------- interfaces -----------------------------------------------------
 /**
@@ -80,16 +80,11 @@ export interface TaxSpending {
 
 /**
  * Represents an item selected by the user for the email, including their desired funding change.
+ * Extends the type from email/types to ensure consistency.
  */
-export interface SelectedItem {
-  id: string;
-  description: string;
-  category: string; // Keep category field
-  /**
-   * -2: Slash Heavily | -1: Cut Significantly | 0: Improve Efficiency
-   *  1: Fund | 2: Fund More
-   */
-  fundingLevel: -2 | -1 | 0 | 1 | 2;
+export interface SelectedItem extends EmailSelectedItem {
+  // Inherits id, description, fundingLevel from EmailSelectedItem
+  category: string; // Explicitly include category here for dashboard usage
 }
 
 

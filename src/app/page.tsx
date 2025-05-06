@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -10,6 +9,7 @@ import { mapFundingLevelToSlider } from '@/lib/funding-utils'; // Import the map
 
 import LocationStep from '@/components/onboarding/LocationStep';
 import TaxAmountStep from '@/components/onboarding/TaxAmountStep';
+import HourlyWageStep from '@/components/onboarding/HourlyWageStep'; // Import the new step
 import TaxBreakdownDashboard from '@/components/dashboard/TaxBreakdownDashboard';
 import FloatingEmailButton from '@/components/dashboard/FloatingEmailButton';
 import EmailCustomizationModal from '@/components/dashboard/EmailCustomizationModal'; // Import the modal
@@ -19,7 +19,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ThemeToggle from '@/components/ThemeToggle';
 
-type AppStep = 'location' | 'tax' | 'dashboard';
+type AppStep = 'location' | 'tax' | 'hourlyWage' | 'dashboard'; // Added 'hourlyWage'
 
 // National median federal tax amount
 const NATIONAL_MEDIAN_FEDERAL_TAX = 17766;
@@ -33,6 +33,7 @@ export default function Home() {
   const [prevStep, setPrevStep] = useState<AppStep | null>(null);
   const [location, setLocation] = useState<Location | null>(null);
   const [taxAmount, setTaxAmount] = useState<number | null>(null);
+  const [hourlyWage, setHourlyWage] = useState<number | null>(null); // State for hourly wage
   const [taxSpending, setTaxSpending] = useState<TaxSpending[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -71,10 +72,14 @@ export default function Home() {
 
 
   const navigateToStep = (nextStep: AppStep) => {
-    const isGoingBack = (step === 'tax' && nextStep === 'location') || (step === 'dashboard' && nextStep === 'tax');
+    const stepOrder: AppStep[] = ['location', 'tax', 'hourlyWage', 'dashboard'];
+    const currentStepIndex = stepOrder.indexOf(step);
+    const nextStepIndex = stepOrder.indexOf(nextStep);
+    const isGoingBack = nextStepIndex < currentStepIndex;
+
     setAnimationClass(isGoingBack ? 'animate-slideOutUp' : 'animate-slideOutUp');
 
-    // Reset state when navigating BACK from dashboard
+    // Reset state when navigating BACK from dashboard or wage step
     if (step === 'dashboard' && nextStep !== 'dashboard') {
        setShowEmailAction(false);
        setEmailActionCount(0);
@@ -87,6 +92,14 @@ export default function Home() {
        setUserName('');
        setUserLocation('');
     }
+     if (step === 'hourlyWage' && isGoingBack) {
+        setTaxAmount(null); // Reset tax amount when going back from wage to allow re-entry/median
+        setHourlyWage(null); // Reset wage
+     }
+     if (step === 'tax' && isGoingBack) {
+         setLocation(null); // Reset location
+         setEstimatedMedianTax(NATIONAL_MEDIAN_FEDERAL_TAX); // Reset median
+     }
 
 
     setTimeout(() => {
@@ -114,56 +127,55 @@ export default function Home() {
     navigateToStep('tax');
   };
 
-  const handleTaxAmountSubmit = async (amount: number | null) => {
-     setIsLoading(true);
+  const handleTaxAmountSubmit = (amount: number | null) => {
      // Use the estimated median tax based on location/state if amount is null (skipped)
     const finalAmount = amount ?? estimatedMedianTax;
     setTaxAmount(finalAmount);
-
-    const currentLocation = location ?? DEFAULT_LOCATION; // Ensure location is set
-
-    try {
-      // Simulate loading time for smoother transition
-      await new Promise(resolve => setTimeout(resolve, 400));
-
-      const spendingData = await getTaxSpending(currentLocation, finalAmount);
-      setTaxSpending(spendingData);
-
-      navigateToStep('dashboard');
-    } catch (error) {
-      console.error('Error fetching tax spending:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch tax data. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    navigateToStep('hourlyWage'); // Go to hourly wage step next
   };
 
+   const handleHourlyWageSubmit = async (wage: number | null) => {
+     setIsLoading(true);
+     setHourlyWage(wage); // Set the wage (can be null if skipped)
+
+     // Ensure taxAmount and location are set (using defaults/estimates if needed)
+     const finalTaxAmount = taxAmount ?? estimatedMedianTax;
+     const currentLocation = location ?? DEFAULT_LOCATION;
+
+     toast({
+          title: wage ? 'Hourly Wage Set' : 'Hourly Wage Skipped',
+          description: wage ? `Calculating breakdown based on $${wage.toFixed(2)}/hour.` : 'Time perspective feature will be disabled.',
+     });
+
+     try {
+       // Simulate loading time
+       await new Promise(resolve => setTimeout(resolve, 400));
+
+       const spendingData = await getTaxSpending(currentLocation, finalTaxAmount);
+       setTaxSpending(spendingData);
+
+       navigateToStep('dashboard');
+     } catch (error) {
+       console.error('Error fetching tax spending:', error);
+       toast({
+         title: 'Error',
+         description: 'Failed to fetch tax data. Please try again.',
+         variant: 'destructive',
+       });
+     } finally {
+       setIsLoading(false);
+     }
+   };
+
+
   const handleBack = () => {
-    if (step === 'tax') {
-      setLocation(null); // Reset location when going back from tax
-      setEstimatedMedianTax(NATIONAL_MEDIAN_FEDERAL_TAX); // Reset median estimate
-      navigateToStep('location');
-    } else if (step === 'dashboard') {
-       setTaxSpending([]);
-       // Reset tax amount when going back from dashboard to allow re-entry or using median
-       setTaxAmount(null);
-       // Reset email action state and modal state
-       setShowEmailAction(false);
-       setEmailActionCount(0);
-       setSelectedEmailItems(new Map()); // Clear selected items
-       setBalanceBudgetChecked(false); // Reset budget preference
-       setIsEmailModalOpen(false); // Ensure modal is closed
-        // Reset modal customization state
-       setAggressiveness(50);
-       setItemFundingLevels(new Map());
-       setUserName('');
-       setUserLocation('');
-      navigateToStep('tax');
-    }
+     if (step === 'tax') {
+       navigateToStep('location');
+     } else if (step === 'hourlyWage') {
+       navigateToStep('tax');
+     } else if (step === 'dashboard') {
+       navigateToStep('hourlyWage'); // Go back to hourly wage step first
+     }
   };
 
 
@@ -177,6 +189,10 @@ export default function Home() {
             title: 'Estimate Your Contribution',
              description: `Enter your estimated federal income tax paid last year, or skip to use the estimated median for your area ($${estimatedMedianTax.toLocaleString()}).` // Updated description
         };
+         case 'hourlyWage': return { // Added description for new step
+            title: 'Time Perspective (Optional)',
+            description: 'Enter your approximate hourly wage to see spending in terms of work time, or skip.'
+         };
         case 'dashboard': return {
              title: 'Your Personalized Tax Receipt',
              description: `See how your estimated ${taxAmount ? '$'+taxAmount.toLocaleString() : `median ($${estimatedMedianTax.toLocaleString()}) tax`} payment might be allocated.` // Updated description
@@ -264,6 +280,7 @@ export default function Home() {
              <div className={`${animationClass} duration-300`}>
                  {step === 'location' && <LocationStep onSubmit={handleLocationSubmit} />}
                  {step === 'tax' && <TaxAmountStep onSubmit={handleTaxAmountSubmit} isLoading={isLoading} medianTax={estimatedMedianTax} />}
+                 {step === 'hourlyWage' && <HourlyWageStep onSubmit={handleHourlyWageSubmit} isLoading={isLoading} />}
                  {step === 'dashboard' && (
                      isLoading || taxAmount === null || taxSpending.length === 0 ? (
                          <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -272,6 +289,7 @@ export default function Home() {
                      ) : (
                          <TaxBreakdownDashboard
                             taxAmount={taxAmount}
+                            hourlyWage={hourlyWage} // Pass hourly wage
                             taxSpending={taxSpending}
                             onSelectionChange={handleDashboardSelectionChange} // Pass new handler
                          />
