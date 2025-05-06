@@ -451,17 +451,23 @@ export default function TaxBreakdownDashboard({
 
   return (
     <TooltipProvider delayDuration={isMobileView ? 0 : 200}>
-        <div className="space-y-6 sm:space-y-10 animate-fadeIn relative pb-10"> {/* Adjusted spacing for mobile */}
-             <div className="text-center space-y-0.5 sm:space-y-1 mb-4 sm:mb-6 relative"> {/* Adjusted spacing for mobile */}
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-foreground">{currentYear ? `${currentYear} ` : ''}Federal Income Tax Receipt</h1> {/* Adjusted font size for mobile */}
-                 <p className="text-base sm:text-lg text-muted-foreground">Based on your estimated <span className="font-semibold text-foreground">{formatCurrency(taxAmount)}</span> payment.</p> {/* Adjusted font size for mobile */}
-                <p className="text-xs text-muted-foreground/70">Next Filing Due: {dueDateDisplay}</p>
+        <div className="space-y-6 sm:space-y-10 animate-fadeIn relative pb-10">
+            {/* Header: Title, Subtitle, and Toggle Button */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-4">
+                 {/* Left side: Title and Subtitle */}
+                <div className="text-center sm:text-left space-y-0.5 sm:space-y-1">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-foreground">
+                        {currentYear ? `${currentYear} ` : ''}Federal Income Tax Receipt
+                    </h1>
+                    <p className="text-base sm:text-lg text-muted-foreground">
+                        Based on your estimated <span className="font-semibold text-foreground">{formatCurrency(taxAmount)}</span> payment.
+                    </p>
+                    <p className="text-xs text-muted-foreground/70">Next Filing Due: {dueDateDisplay}</p>
+                </div>
 
+                {/* Right side: Currency/Time Toggle Button */}
                 {hourlyWage !== null && (
-                    <div className={cn(
-                        "mt-6 sm:mt-4 flex justify-center items-center", // Increased top margin for mobile to mt-6
-                        "sm:absolute sm:top-0 sm:right-0 sm:pt-1 sm:pr-1" // Desktop positioning
-                    )}>
+                    <div className="flex justify-center sm:justify-end items-center shrink-0">
                         <Label htmlFor="display-mode-toggle" className="text-xs font-medium text-muted-foreground hidden sm:inline mr-2">View as:</Label>
                         <div className="flex items-center space-x-1 sm:space-x-2 bg-muted p-0.5 sm:p-1 rounded-full">
                             <Button
@@ -485,7 +491,8 @@ export default function TaxBreakdownDashboard({
                         </div>
                     </div>
                 )}
-             </div>
+            </div>
+
 
             <Alert className="mb-6 sm:mb-8 shadow-sm rounded-lg border border-primary/20 bg-primary/5 text-foreground animate-fadeIn delay-500 duration-3000">
                  <Megaphone className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 stroke-primary" />
@@ -758,6 +765,7 @@ export default function TaxBreakdownDashboard({
     </TooltipProvider>
   );
 }
+
 
 
 
