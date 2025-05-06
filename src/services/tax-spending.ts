@@ -1,3 +1,4 @@
+
 /**
  * @fileOverview Service for fetching mock tax spending data and generating representative emails.
  * Includes refined email generation logic for improved natural language flow and detail.
@@ -272,1003 +273,1225 @@ export async function getTaxSpending(_location: Location, _taxAmount: number): P
 
 
 // ---------- email generation logic -----------------------------------------
+// emailGenerator.ts refactored and enhanced
+// --------------------------------------------------
 
-// --- Tone Mapping ---
-type ToneLevel = 0 | 1 | 2 | 3; // 0: Polite -> 3: Angry
+// ---------- shared types (copied) ------------------------------------------
+// interface SelectedItem { id: string; description: string; fundingLevel: -2 | -1 | 0 | 1 | 2; }
 
-/** Maps aggressiveness slider (0-100) to a discrete tone level (0-3). */
-function mapAggressivenessToTone(agg: number): ToneLevel {
-  if (agg <= 15) return 0; // Polite
-  if (agg <= 40) return 1; // Concerned
-  if (agg <= 75) return 2; // Stern
-  return 3; // Angry
+// ---------- helpers (copied and enhanced) ----------------------------------
+
+/** Map 0-100 slider to tone bucket 0-3 */
+function toneBucket(aggr: number): 0 | 1 | 2 | 3 {
+    // Adjusted thresholds for finer control
+    if (aggr <= 15) return 0; // Kind/Polite (0-15)
+    if (aggr <= 40) return 1; // Concerned (16-40)
+    if (aggr <= 75) return 2; // Stern/Demanding (41-75)
+    return 3;                 // Angry/Forceful (76-100)
 }
 
-// --- Template Snippets (Indexed by ToneLevel) ---
-
-const SUBJECTS: Record<ToneLevel, string> = {
-  0: "Thoughts on Federal Budget Priorities",
-  1: "Concerns Regarding Federal Spending Allocations",
-  2: "Urgent: Reevaluation of Federal Budget Priorities Needed",
-  3: "Demand for Immediate Action on Federal Spending and Debt",
-};
-
-const OPENINGS: Record<ToneLevel, (loc: string) => string> = {
-  0: loc => `I hope this message finds you well. As a constituent from ${loc || '[Your Area]'}, I am writing to share my perspective on how our federal tax dollars are currently being allocated. I believe it's vital that these funds reflect the priorities of the people and are used effectively.`,
-  1: loc => `I am writing to you today as a concerned constituent from ${loc || '[Your Area]'} regarding current federal spending patterns. Examining the allocation of funds raises questions about efficiency and alignment with our community's needs and values.`,
-  2: loc => `As your constituent in ${loc || '[Your Area]'}, I must express my strong dissatisfaction with the current direction of federal spending. It is imperative that these priorities undergo immediate reevaluation to ensure taxpayer money benefits the public, rather than being lost to inefficiency.`,
-  3: loc => `I am writing from ${loc || '[Your Area]'} to demand immediate and decisive action regarding the federal budget. The current pattern of spending, marked by waste and misplaced priorities, is unacceptable and requires your urgent intervention.`,
-};
-
-const INTROS_TO_ITEMS: Record<ToneLevel, string> = {
-  0: "After reviewing estimates of federal spending, I wanted to highlight a few areas that I believe warrant closer examination and potential adjustments:",
-  1: "My analysis of the budget breakdown reveals several specific items that cause me concern and which I urge you to address:",
-  2: "Based on current spending levels, the following programs demand significant correction and reassessment of their funding:",
-  3: "Below are some of the most concerning examples of what I see as misguided priorities and wasteful spending requiring your direct action:",
-};
-
-// --- Detailed Item-Specific Rationales (Indexed by item.id + fundingLevel) ---
-// Provides context and justification for the requested funding change.
-
-type FundingAction = 'cut' | 'review' | 'fund'; // Simplified actions for reason mapping
-
-function getFundingAction(level: SelectedItem['fundingLevel']): FundingAction {
-    if (level < 0) return 'cut';
-    if (level > 0) return 'fund';
-    return 'review'; // Level 0: Improve Efficiency
-}
-
-// Keys: `${item.id}_${FundingAction}` (e.g., 'medicaid_cut', 'nih_fund', 'pentagon_review')
-const SPECIFIC_RATIONALES: Record<string, string[]> = {
-    // --- Health ---
-    medicaid_cut: [
-        "While Medicaid provides a crucial safety net, its rising costs necessitate a careful review to ensure long-term sustainability and efficiency without compromising essential care for vulnerable populations.",
-        "Exploring ways to improve efficiency and reduce administrative overhead within Medicaid could free up resources while maintaining the quality of care for recipients.",
-        "Ensuring that Medicaid funds are directed towards the most effective treatments and preventative care measures should be a priority in managing its budget.",
-    ],
-    medicaid_fund: [
-        "Expanding Medicaid access is a proven way to improve health outcomes, reduce uncompensated care costs, and increase economic stability for low-income families.",
-        "Adequate funding for Medicaid ensures that vulnerable populations, including children, seniors, and individuals with disabilities, receive necessary medical care.",
-        "Investing in Medicaid strengthens community health and provides a critical safety net, particularly during economic downturns or public health crises.",
-    ],
-    medicaid_review: [
-        "Medicaid's effectiveness could be enhanced by implementing stricter oversight to prevent fraud and abuse, ensuring funds directly benefit recipients.",
-        "Continuously evaluating Medicaid's delivery models and payment structures is important to maximize the value derived from taxpayer investment in the program.",
-        "Focusing on preventative care and care coordination within Medicaid could lead to better health outcomes and potentially lower long-term costs.",
-    ],
-    medicare_cut: [
-        "Given Medicare's long-term fiscal challenges, exploring options for greater efficiency, negotiating lower drug prices, and reducing administrative waste is essential.",
-        "Reforms aimed at improving the cost-effectiveness of Medicare are needed to ensure its solvency for future generations of seniors.",
-        "Careful consideration should be given to Medicare spending to prevent unnecessary procedures or excessive payments, ensuring taxpayer dollars are used wisely.",
-    ],
-    medicare_fund: [
-        "Ensuring seniors have reliable access to comprehensive and affordable healthcare through Medicare is a fundamental commitment we must uphold.",
-        "Strengthening Medicare, potentially by adding dental, vision, or hearing coverage, would significantly improve the quality of life for millions of older Americans.",
-        "Adequate funding for Medicare is vital for the health and financial security of seniors and individuals with disabilities who rely on the program.",
-    ],
-    medicare_review: [
-        "Implementing measures to combat fraud, waste, and abuse within Medicare is crucial for preserving the program's integrity and resources.",
-        "Ongoing evaluation of Medicare's payment systems and benefit structure is needed to ensure it remains efficient and responsive to seniors' healthcare needs.",
-        "Promoting value-based care models within Medicare could incentivize higher quality care and better health outcomes at a more sustainable cost.",
-    ],
-    nih_cut: [
-        "While biomedical research is important, NIH funding should be carefully scrutinized to ensure grants target the most pressing health challenges and avoid duplication.",
-        "Prioritizing NIH resources towards research with the highest potential for tangible public health benefits could improve the return on investment.",
-        "Ensuring efficiency in NIH grant administration and minimizing overhead costs is important for maximizing the research impact of taxpayer dollars.",
-    ],
-    nih_fund: [
-        "Investing robustly in the National Institutes of Health fuels groundbreaking medical discoveries, improves public health, drives economic growth in biotechnology, and maintains U.S. leadership in science.",
-        "Increased NIH funding is essential for tackling complex diseases like cancer, Alzheimer's, and infectious diseases, leading to longer, healthier lives.",
-        "Supporting basic and translational research through the NIH provides the foundation for future medical innovations and treatments.",
-    ],
-    nih_review: [
-        "NIH grant review processes should be continuously refined to ensure fairness, transparency, and the funding of high-impact research.",
-        "Improving data sharing and collaboration fostered by the NIH can accelerate scientific progress and prevent redundant research efforts.",
-        "Focusing NIH resources on addressing health disparities and promoting health equity should be a key consideration in funding decisions.",
-    ],
-     cdc_cut: [
-        "The CDC's budget should be reviewed to ensure resources are focused on core public health functions like disease surveillance and outbreak response, minimizing administrative bloat.",
-        "Evaluating the effectiveness and necessity of all CDC programs is important to ensure taxpayer dollars are used efficiently for demonstrable public health outcomes.",
-        "Streamlining CDC operations and improving coordination with state and local health departments could enhance efficiency.",
-    ],
-    cdc_fund: [
-        "A well-funded CDC is absolutely critical for national health security, pandemic preparedness, and responding effectively to emerging public health threats.",
-        "Investing in the CDC's data modernization, laboratory capacity, and public health workforce strengthens our ability to prevent and control diseases.",
-        "Supporting the CDC's global health initiatives helps detect and contain outbreaks abroad before they reach U.S. shores.",
-    ],
-    cdc_review: [
-        "Ensuring the CDC provides clear, timely, and science-based guidance during public health emergencies requires robust oversight and accountability.",
-        "Improving the CDC's communication strategies and transparency can build public trust and enhance the effectiveness of public health recommendations.",
-        "The CDC's role should focus on its core mission of disease control and prevention, avoiding mission creep into areas better handled by other agencies.",
-    ],
-    substance_mental_health_cut: [
-        "Funding for substance use and mental health programs must prioritize evidence-based treatments and recovery support services with proven effectiveness.",
-        "Careful evaluation is needed to ensure federal mental health funds are not duplicative of state or private efforts and are achieving measurable results.",
-        "Resources should be targeted towards programs demonstrating success in reducing overdoses, improving access to care, and supporting long-term recovery.",
-    ],
-    substance_mental_health_fund: [
-        "Addressing the nation's escalating mental health and addiction crisis requires a significant increase in resources for prevention, treatment, and recovery support.",
-        "Expanding access to affordable mental healthcare and substance use disorder treatment, particularly in underserved communities, is a critical public health need.",
-        "Investing in the mental health workforce, integrating mental and physical healthcare, and supporting crisis response systems are essential steps.",
-    ],
-    substance_mental_health_review: [
-        "Improving coordination between various federal, state, and local agencies involved in mental health and substance use is key to effective service delivery.",
-        "Ensuring parity in insurance coverage for mental health and substance use treatment is crucial for equitable access to care.",
-        "Evaluating the effectiveness of different treatment modalities and recovery programs is necessary to optimize the use of public funds.",
-    ],
-    // --- War and Weapons ---
-    pentagon_cut: [
-        "The vast Pentagon budget requires significant scrutiny and reduction, focusing resources on genuine national defense needs rather than wasteful projects or excessive contractor profits.",
-        "A critical audit of Pentagon spending is long overdue to identify inefficiencies, redundant programs, and opportunities for substantial savings without compromising security.",
-        "Shifting funds away from costly, unproven weapons systems towards personnel readiness, maintenance, and emerging threats could strengthen defense more effectively.",
-    ],
-    pentagon_fund: [
-        "Maintaining a strong and ready national defense in an increasingly complex global landscape requires adequate and predictable funding for personnel, training, and modernization.",
-        "Investing in advanced military capabilities and technological superiority is necessary to deter potential adversaries and protect U.S. interests.",
-        "Ensuring our service members have the best equipment, training, and support is essential for mission success and national security.",
-    ],
-    pentagon_review: [
-        "Rigorous oversight of Pentagon spending is needed to ensure accountability, prevent waste, fraud, and abuse, and guarantee taxpayer dollars are used effectively.",
-        "The Pentagon's acquisition processes require reform to control costs, speed up delivery of critical capabilities, and improve contractor performance.",
-        "Regularly reassessing strategic priorities and force structure is necessary to ensure the military is optimized for current and future threats, not legacy systems.",
-    ],
-    pentagon_contractors_cut: [
-        "The reliance on private defense contractors often leads to inflated costs, lack of transparency, and potential conflicts of interest; stricter oversight and reduced outsourcing are needed.",
-        "Billions could be saved by reducing the Pentagon's dependence on expensive contractors and bringing more functions back in-house where appropriate.",
-        "Requiring greater competition, fixed-price contracts where feasible, and robust auditing of defense contractors is essential to protect taxpayer interests.",
-    ],
-    // No pentagon_contractors_fund rationale - generally focus is on reduction/review
-    pentagon_contractors_review: [
-        "Transparency in defense contracting must be significantly improved, including detailed reporting on contract performance, costs, and deliverables.",
-        "Implementing stronger mechanisms to prevent waste, fraud, and abuse in defense contracting is crucial for responsible stewardship of public funds.",
-        "Evaluating the cost-effectiveness of outsourcing specific military functions versus performing them with uniformed personnel or government civilians is necessary.",
-    ],
-    pentagon_personnel_cut: [
-        "While fair compensation is vital, reviewing military personnel costs for efficiencies in areas like healthcare administration, basing, and non-essential benefits is prudent.",
-        "Optimizing force structure and reducing unnecessary overhead within the military personnel system could yield savings.",
-        "Careful management of personnel costs is necessary, but must be balanced against the need to maintain readiness and support service members and their families.",
-    ],
-    pentagon_personnel_fund: [
-        "Attracting and retaining highly skilled and dedicated military personnel requires competitive pay, comprehensive benefits, quality housing, and robust family support programs.",
-        "Investing in the well-being, training, and readiness of our service members is paramount to maintaining an effective all-volunteer force.",
-        "Ensuring adequate funding for military personnel accounts is crucial for morale, retention, and overall national security.",
-    ],
-    pentagon_personnel_review: [
-        "Regular reviews of military compensation and benefits packages are needed to ensure they remain competitive and meet the needs of modern service members.",
-        "Improving access to quality healthcare, mental health services, and childcare for military families requires ongoing attention and adequate resources.",
-        "Streamlining personnel management processes and reducing administrative burdens can improve efficiency and allow service members to focus on their core missions.",
-    ],
-    pentagon_top5_contractors_cut: [ // Similar to general contractors_cut
-        "The heavy concentration of Pentagon contracts among a few large corporations stifles innovation, inflates prices, and warrants action to promote greater competition.",
-        "Reducing the share of contracts going to the top 5 defense firms could encourage a more diverse and cost-effective industrial base.",
-        "Increased scrutiny is needed on contracts awarded to the largest defense firms to ensure taxpayers are receiving fair value.",
-    ],
-    pentagon_top5_contractors_review: [ // Similar to general contractors_review
-        "The relationship between the Pentagon and its largest contractors requires close oversight to prevent undue influence and ensure accountability.",
-        "Evaluating the long-term strategic implications of relying heavily on a small number of dominant defense contractors is important.",
-        "Promoting opportunities for smaller and non-traditional defense companies can foster innovation and potentially lower costs.",
-    ],
-    nuclear_weapons_cut: [
-        "Maintaining and modernizing a vast nuclear arsenal is incredibly expensive and arguably increases global risks; funding should be scaled back to focus on essential deterrence.",
-        "Exploring arms control agreements and reducing reliance on nuclear weapons could yield significant savings and enhance global security.",
-        "Questioning the need for certain costly nuclear modernization programs, like the Sentinel ICBM, is necessary for fiscal responsibility.",
-    ],
-    nuclear_weapons_fund: [ // Often framed as 'modernization'
-        "Modernizing the U.S. nuclear deterrent (triad) is viewed by proponents as essential for maintaining strategic stability and deterring potential adversaries.",
-        "Ensuring the safety, security, and reliability of the existing nuclear stockpile requires ongoing investment and modernization efforts.",
-        "Funding for nuclear non-proliferation programs, managed alongside arsenal upkeep, is also a critical component of national security.",
-    ],
-    nuclear_weapons_review: [
-        "The long-term costs and strategic justifications for all nuclear modernization programs require rigorous, transparent review by Congress.",
-        "Ensuring robust command, control, and safety measures for the nuclear arsenal necessitates continuous oversight and investment.",
-        "Balancing investments in nuclear deterrence with conventional forces and emerging technologies is a critical strategic consideration.",
-    ],
-    foreign_military_aid_cut: [
-        "U.S. foreign military aid often fuels conflicts, props up undemocratic regimes, and diverts vast resources from pressing domestic needs; it should be sharply curtailed or eliminated.",
-        "Providing weapons and military funding abroad can entangle the U.S. in foreign disputes and provoke unintended consequences.",
-        "Reallocating funds from foreign military aid to diplomacy, development assistance, or domestic programs would be a better use of taxpayer money.",
-    ],
-    foreign_military_aid_fund: [
-        "Strategic foreign military aid can strengthen key allies, enhance regional stability, improve interoperability with U.S. forces, and support U.S. foreign policy objectives.",
-        "Providing security assistance helps partner nations defend themselves, counter terrorism, and participate in international peacekeeping efforts.",
-        "Military aid can be a tool to build relationships and advance U.S. interests in critical regions.",
-    ],
-    foreign_military_aid_review: [
-        "All foreign military aid should be subject to strict conditions regarding human rights, democratic governance, and accountability.",
-        "The effectiveness and strategic rationale for each military aid package require continuous evaluation by Congress and the State Department.",
-        "Transparency regarding the specific types of aid provided, its intended use, and its actual impact is essential.",
-    ],
-    israel_wars_cut: [ // More specific version of foreign_military_aid_cut
-        "Unconditional and extensive military aid to specific nations, like Israel, drains U.S. resources, potentially enables controversial actions, and limits diplomatic flexibility.",
-        "The level of military funding provided to Israel warrants scrutiny, especially when compared to domestic needs or aid provided elsewhere.",
-        "Conditioning military aid on compliance with international law and U.S. policy objectives should be standard practice.",
-    ],
-     israel_wars_fund: [ // More specific version of foreign_military_aid_fund
-        "Supporting Israel's security through military aid is viewed by proponents as a key pillar of U.S. policy in the Middle East, ensuring a strategic partner's qualitative military edge.",
-        "Funding for systems like Iron Dome and joint military exercises enhances Israeli defense capabilities against regional threats.",
-        "Security assistance to Israel is often framed as mutually beneficial, supporting U.S. defense innovation and intelligence sharing.",
-    ],
-     israel_wars_review: [ // More specific version of foreign_military_aid_review
-        "The impact of U.S. military aid to Israel on regional stability and the Israeli-Palestinian conflict requires ongoing, critical assessment.",
-        "Transparency regarding the specific uses of U.S. military aid by Israel and its compliance with U.S. law is essential.",
-        "Balancing the security partnership with Israel against broader U.S. interests and values in the region is a complex diplomatic challenge.",
-    ],
-    f35_cut: [
-        "The F-35 program, the most expensive weapons system in history, has been plagued by staggering cost overruns, delays, and persistent performance issues, warranting significant funding cuts.",
-        "Reducing the total number of F-35s procured could save billions and allow investment in more cost-effective or strategically relevant capabilities.",
-        "Continuing to pour money into the F-35 program without addressing its fundamental affordability and reliability problems is fiscally irresponsible.",
-    ],
-    // No f35_fund rationale - focus is generally on cost/performance criticism
-     f35_review: [
-        "Ongoing, rigorous testing and evaluation of the F-35's performance, maintenance costs, and combat effectiveness are crucial.",
-        "Holding Lockheed Martin accountable for meeting cost and performance targets for the F-35 program is essential.",
-        "Exploring alternatives or complementary aircraft to fulfill certain mission requirements might be more cost-effective than relying solely on the F-35.",
-    ],
-    pentagon_spacex_cut: [ // Combines contractor + specific company criticism
-        "Public funds awarded through Pentagon contracts to highly profitable private space companies like SpaceX require stronger justification regarding unique capabilities and taxpayer value.",
-        "Ensuring fair competition in national security space launches and avoiding over-reliance on a single provider is important.",
-        "The necessity of subsidizing established commercial space ventures with defense contracts should be carefully evaluated.",
-    ],
-    pentagon_spacex_review: [ // Focus on oversight
-        "Contracts awarded to SpaceX and other commercial space providers need robust oversight to ensure performance, cost control, and national security requirements are met.",
-        "Transparency regarding the terms and value of Pentagon contracts with commercial space companies is necessary.",
-        "Assessing the long-term strategy for utilizing commercial partners for national security space missions is important.",
-    ],
-    pentagon_dei_cut: [
-        "Funding for Diversity, Equity, and Inclusion (DEI) initiatives within the Pentagon should be evaluated for effectiveness, ensuring they contribute demonstrably to military readiness and cohesion without becoming divisive or overly bureaucratic.",
-        "Resources allocated to DEI programs must be justified based on clear objectives and measurable outcomes related to mission effectiveness.",
-        "Ensuring DEI efforts focus on equal opportunity and meritocracy, rather than quotas or identity politics, is crucial for maintaining military standards.",
-    ],
-    pentagon_dei_fund: [ // Often framed as enhancing readiness
-        "DEI initiatives, when properly implemented, can enhance military readiness by attracting talent from all segments of society, fostering teamwork, and ensuring fair treatment for all service members.",
-        "Promoting an inclusive environment where all qualified individuals can serve and succeed strengthens the Armed Forces.",
-        "Addressing issues of discrimination or bias within the military through well-designed DEI programs contributes to unit cohesion and effectiveness.",
-    ],
-    pentagon_dei_review: [
-        "The specific goals, metrics, and costs associated with Pentagon DEI programs require clear definition and congressional oversight.",
-        "Ensuring DEI training and initiatives are evidence-based and genuinely contribute to a more effective and cohesive military force is paramount.",
-        "Balancing DEI goals with the military's primary mission of national defense requires careful consideration.",
-    ],
-    // --- Veterans ---
-    va_cut: [
-        "While supporting veterans is paramount, the VA system needs continuous efforts to improve efficiency, reduce bureaucracy, and streamline service delivery without compromising quality of care.",
-        "Exploring ways to modernize VA operations, improve IT systems, and reduce administrative overhead could allow resources to be more directly focused on veteran care.",
-        "Ensuring accountability within the VA and eliminating wasteful spending are necessary to maximize the effectiveness of funds allocated to veteran services.",
-    ],
-    va_fund: [
-        "Fulfilling our nation's solemn promise to veterans requires robust and sustained funding for VA healthcare, mental health services, disability claims processing, and transition assistance.",
-        "Investing in the VA healthcare system, including expanding access points and reducing wait times, is crucial for meeting the complex needs of veterans.",
-        "Adequate funding for VA benefits, educational programs like the GI Bill, and housing assistance helps veterans thrive after their service.",
-    ],
-    va_review: [
-        "Improving the timeliness and accuracy of VA disability claims processing remains a critical area requiring ongoing oversight and reform.",
-        "Enhancing mental healthcare access and suicide prevention programs for veterans must be a top priority for the VA.",
-        "Ensuring seamless coordination between the VA and the Department of Defense for transitioning service members needs continuous improvement.",
-    ],
-    pact_act_fund: [ // PACT Act focus is generally on funding/implementation
-        "Fully funding and effectively implementing the PACT Act is essential to provide veterans exposed to burn pits, Agent Orange, and other toxins the healthcare and benefits they have earned.",
-        "Ensuring the VA has the resources needed to process PACT Act claims efficiently and provide specialized care for toxic exposure-related conditions is critical.",
-        "Outreach efforts to inform eligible veterans about PACT Act benefits require adequate support.",
-    ],
-    pact_act_review: [
-        "Monitoring the VA's progress in implementing the PACT Act, including claims processing times and access to care for related conditions, is vital.",
-        "Continued research into the long-term health effects of toxic exposures during military service is necessary to inform VA care and policies.",
-        "Ensuring healthcare providers both within and outside the VA are knowledgeable about toxic exposure issues is important for accurate diagnosis and treatment.",
-    ],
-     // --- Unemployment and Labor ---
-    tanf_cut: [
-        "TANF's effectiveness in promoting long-term self-sufficiency needs rigorous evaluation; funding should prioritize programs with proven results in moving families out of poverty.",
-        "Ensuring TANF work requirements are meaningful and supported by adequate job training and childcare resources is crucial for the program's goals.",
-        "Reducing state flexibility in using TANF funds for purposes unrelated to direct cash assistance or work support could improve its focus.",
-    ],
-    tanf_fund: [
-        "Strengthening the social safety net requires adequate funding for TANF to provide a meaningful level of temporary support for vulnerable families facing hardship.",
-        "Investing in TANF-funded job training, education, and supportive services can help parents secure stable employment and improve family well-being.",
-        "Adjusting TANF benefit levels, which have eroded significantly over time due to inflation, is necessary to provide meaningful assistance.",
-    ],
-    tanf_review: [
-        "Evaluating the impact of TANF time limits and sanctions on families and children is important.",
-        "Improving data collection and reporting on TANF outcomes is needed to assess program effectiveness.",
-        "Ensuring TANF programs are responsive to the needs of diverse families, including those facing significant barriers to employment, requires careful design.",
-    ],
-    child_tax_credit_cut: [
-        "The structure and cost of the Child Tax Credit (CTC) should be reviewed to ensure it is targeted effectively towards low- and middle-income families and is fiscally sustainable.",
-        "Exploring modifications to the CTC, such as strengthening work requirements or adjusting income phase-outs, could be considered.",
-        "Balancing the poverty-reducing impact of the CTC against its overall cost to the federal budget requires careful analysis.",
-    ],
-    child_tax_credit_fund: [ // Focus on expansion/permanence
-        "Expanding the Child Tax Credit, particularly making the full credit available to the lowest-income families, is one of the most effective tools for reducing child poverty.",
-        "Making recent expansions of the CTC permanent would provide stability for working families and significantly improve child well-being.",
-        "The CTC provides crucial financial support to help families cover the rising costs of raising children, boosting local economies.",
-    ],
-    child_tax_credit_review: [
-        "Simplifying the process for eligible families to claim the Child Tax Credit is important, particularly for those who may not file taxes regularly.",
-        "Evaluating the impact of the CTC on parental employment and family economic decisions is relevant for policy design.",
-        "Ensuring the CTC interacts effectively with other safety net programs is necessary for a cohesive support system.",
-    ],
-    refugee_assistance_cut: [
-        "While providing refuge is important, the costs associated with resettlement should be managed efficiently, focusing on rapid self-sufficiency and integration.",
-        "Ensuring adequate screening and security measures are in place alongside resettlement programs is paramount.",
-        "Balancing humanitarian commitments with the fiscal capacity and integration challenges requires careful planning.",
-    ],
-    refugee_assistance_fund: [
-        "Providing adequate resources for refugee resettlement reflects American humanitarian values and fulfills international obligations.",
-        "Investing in effective integration programs, including language training, job assistance, and community support, helps refugees become self-sufficient contributors.",
-        "Supporting refugee assistance programs demonstrates U.S. leadership and compassion on the global stage.",
-    ],
-    refugee_assistance_review: [
-        "Improving coordination between federal agencies, resettlement organizations, and local communities is key to successful refugee integration.",
-        "Evaluating the long-term outcomes of refugees resettled in the U.S. can inform program improvements.",
-        "Ensuring resettlement programs are adequately resourced to handle fluctuating arrival numbers and diverse needs is important.",
-    ],
-    liheap_cut: [
-        "LIHEAP funding should be targeted to the most vulnerable households facing genuine energy crises, with strong verification processes.",
-        "Exploring ways to encourage energy efficiency improvements alongside bill assistance could provide more sustainable solutions.",
-        "Ensuring LIHEAP funds supplement, rather than replace, individual responsibility for energy costs requires careful program design.",
-    ],
-    liheap_fund: [
-        "The Low Income Home Energy Assistance Program (LIHEAP) is crucial for preventing dangerous energy shutoffs and ensuring vulnerable households, including seniors and families with children, can afford heating in winter and cooling in summer.",
-        "Adequate funding for LIHEAP provides a vital safety net against energy poverty and improves health outcomes.",
-        "Supporting LIHEAP weatherization programs helps low-income households reduce their energy consumption and costs permanently.",
-    ],
-    liheap_review: [
-        "Streamlining the LIHEAP application process can improve access for eligible households.",
-        "Ensuring equitable distribution of LIHEAP funds based on need and climate variations is important.",
-        "Coordinating LIHEAP with other utility assistance programs and energy efficiency initiatives can maximize impact.",
-    ],
-    nlrb_cut: [
-        "The role and actions of the National Labor Relations Board (NLRB) sometimes face criticism regarding fairness and impact on business; its funding and authority warrant review.",
-        "Ensuring the NLRB applies labor laws impartially and efficiently is key to its legitimacy.",
-        "Evaluating whether the NLRB's structure and processes are suited to the modern economy could be beneficial.",
-    ],
-    nlrb_fund: [
-        "Protecting workers' fundamental rights to organize, bargain collectively, and address unfair labor practices requires a fully funded and staffed NLRB.",
-        "Adequate resources allow the NLRB to investigate charges promptly, conduct fair elections, and remedy violations of labor law.",
-        "A strong NLRB is essential for maintaining a balance of power between employers and employees and promoting stable labor relations.",
-    ],
-    nlrb_review: [
-        "Improving the speed and efficiency of NLRB case processing is important for both workers and employers.",
-        "Ensuring NLRB decisions are well-reasoned and consistent with legal precedent enhances predictability.",
-        "Adapting NLRB rules and procedures to address challenges in the modern workforce, such as the gig economy, is an ongoing task.",
-    ],
-     // --- Education ---
-    dept_education_cut: [
-        "The federal role in education should be limited and efficient, avoiding bureaucratic overreach and respecting state and local control over schools.",
-        "Consolidating duplicative programs within the Department of Education could yield savings and improve focus.",
-        "Evaluating the effectiveness of federal education mandates and grant programs is necessary to ensure they achieve desired outcomes without excessive burden.",
-    ],
-    dept_education_fund: [
-        "Investing in education at all levels—from early childhood to higher education and workforce training—is crucial for individual opportunity, economic growth, and national competitiveness.",
-        "The Department of Education plays a vital role in promoting equity, ensuring civil rights in schools, supporting research, and providing financial aid.",
-        "Adequate federal funding is necessary to support key education initiatives, particularly for disadvantaged students and underserved communities.",
-    ],
-    dept_education_review: [
-        "Simplifying federal grant applications and reducing administrative burdens on schools and colleges can free up resources for teaching and learning.",
-        "Improving data collection and transparency regarding the outcomes of federal education programs is essential for accountability.",
-        "Ensuring the Department of Education effectively enforces civil rights laws and protects students from discrimination requires consistent oversight.",
-    ],
-    college_aid_cut: [
-        "Federal college aid programs need significant reform to address the root causes of soaring tuition costs and burdensome student loan debt, rather than just subsidizing the current system.",
-        "Exploring ways to simplify the federal student aid system and better target grants and loans based on need and potential for success is warranted.",
-        "Holding colleges and universities more accountable for student outcomes and controlling administrative costs should be linked to federal aid eligibility.",
-    ],
-    college_aid_fund: [
-        "Expanding access to affordable higher education through increased funding for Pell Grants, work-study programs, and potentially tuition-free community college strengthens the workforce and promotes social mobility.",
-        "Reducing the burden of student loan debt through measures like income-driven repayment plans or targeted forgiveness supports economic security.",
-        "Simplifying the FAFSA application process makes it easier for students, particularly those from low-income backgrounds, to access available aid.",
-    ],
-    college_aid_review: [
-        "The complex system of federal student loans requires ongoing review regarding interest rates, repayment options, and servicing practices.",
-        "Evaluating the effectiveness of different types of college aid (grants vs. loans vs. work-study) in promoting access and completion is important.",
-        "Ensuring federal aid programs support quality educational institutions and protect students from predatory practices requires strong oversight.",
-    ],
-    k12_schools_cut: [
-        "Federal K-12 funding should primarily supplement, not supplant, state and local responsibility for education, focusing on truly necessary national priorities.",
-        "Reducing federal mandates and returning more control over education policy and funding decisions to states and local districts could improve responsiveness.",
-        "Consolidating overlapping federal K-12 grant programs could increase efficiency and reduce administrative overhead.",
-    ],
-    k12_schools_fund: [
-        "Targeted federal funding for K-12 schools is crucial for supporting under-resourced districts, students with disabilities (IDEA), English language learners, and children from low-income families (Title I).",
-        "Investing in programs that support teacher recruitment and retention, school infrastructure, and access to technology can improve educational quality.",
-        "Federal support plays a key role in promoting educational equity and ensuring all students have the opportunity to succeed.",
-    ],
-    k12_schools_review: [
-        "Ensuring federal K-12 funds are used effectively to improve student outcomes, particularly for disadvantaged groups, requires strong accountability measures.",
-        "Evaluating the impact of federal education laws and regulations on local school districts is important.",
-        "Promoting innovation and evidence-based practices in K-12 education should be a focus of federal support.",
-    ],
-    cpb_cut: [
-        "In today's diverse media landscape with countless private options, federal funding for the Corporation for Public Broadcasting (CPB), which supports PBS and NPR, faces scrutiny regarding its necessity.",
-        "Questions about political bias in public broadcasting content sometimes lead to calls for reducing or eliminating federal subsidies.",
-        "Phasing out federal support for CPB could encourage public broadcasters to rely more on private donations and corporate sponsorships.",
-    ],
-    cpb_fund: [ // Focus on public service mission
-        "The Corporation for Public Broadcasting provides essential funding for high-quality educational programming, objective news coverage, and cultural content accessible to all Americans, regardless of location or income.",
-        "Public broadcasting serves underserved communities and provides a vital non-commercial alternative to private media.",
-        "Federal support ensures the independence and nationwide reach of public radio and television stations.",
-    ],
-    cpb_review: [
-        "Ensuring CPB funding distribution is fair, transparent, and supports diverse programming requires ongoing oversight.",
-        "Evaluating the mechanisms for maintaining editorial independence and objectivity within public broadcasting is important.",
-        "Assessing the role of public broadcasting in the digital age and its adaptation to new media platforms is relevant.",
-    ],
-    imls_cut: [
-        "While libraries and museums are valuable community assets, federal funding through the Institute of Museum and Library Services (IMLS) could potentially be reduced, shifting more responsibility to state, local, and private sources.",
-        "Prioritizing IMLS grants towards programs with the broadest impact or those serving the most underserved communities might be necessary.",
-        "Evaluating the specific outcomes achieved through IMLS funding is important for demonstrating taxpayer value.",
-    ],
-    imls_fund: [
-        "The Institute of Museum and Library Services provides crucial federal support for the nation's libraries and museums, enabling them to offer vital educational resources, digital access, and community programs.",
-        "IMLS funding helps libraries bridge the digital divide and supports museums in preserving cultural heritage and providing lifelong learning opportunities.",
-        "Federal support through IMLS leverages state and local funding, strengthening these essential community institutions.",
-    ],
-    imls_review: [
-        "Ensuring IMLS grant programs are accessible to libraries and museums of all sizes and types, including those in rural and underserved areas.",
-        "Focusing IMLS initiatives on key national priorities like digital literacy, workforce development, and civic engagement.",
-        "Improving data collection on the impact of IMLS-funded programs enhances accountability.",
-    ],
-    // --- Food and Agriculture ---
-    snap_cut: [
-        "Reforming SNAP (food stamps) to strengthen work requirements, improve program integrity, and reduce dependency could lead to savings while still providing a safety net.",
-        "Ensuring SNAP benefits are used for nutritious food items and exploring ways to limit unhealthy purchases warrants consideration.",
-        "Tightening eligibility criteria or adjusting benefit levels for SNAP requires careful balancing of fiscal concerns and food security needs.",
-    ],
-    snap_fund: [
-        "SNAP is the nation's most effective anti-hunger program, providing vital food assistance to millions of low-income families, seniors, and individuals with disabilities, and should be fully funded.",
-        "Strengthening SNAP benefits can reduce food insecurity, improve health outcomes, and stimulate local economies.",
-        "Maintaining broad eligibility and adequate benefit levels for SNAP is crucial, especially during economic downturns.",
-    ],
-    snap_review: [
-        "Simplifying the SNAP application and recertification process can reduce administrative burdens and improve access for eligible households.",
-        "Improving SNAP Employment & Training programs to better connect recipients with sustainable employment opportunities.",
-        "Ensuring SNAP benefit levels adequately reflect the actual cost of a nutritious diet in different parts of the country.",
-    ],
-     school_lunch_cut: [
-        "Reviewing the nutritional standards and administrative costs of the National School Lunch Program could identify potential efficiencies.",
-        "Ensuring school meal programs target assistance effectively to low-income students while managing overall program costs.",
-        "Exploring partnerships or alternative models for providing nutritious meals in schools might yield savings.",
-    ],
-    school_lunch_fund: [
-        "Expanding access to free and reduced-price school meals ensures that all children have the nutrition they need to learn and thrive, regardless of their family's income.",
-        "Investing in universal free school meals could reduce stigma, improve administrative efficiency, and boost student health and academic performance.",
-        "Supporting programs that increase the use of fresh, locally sourced foods in school meals enhances nutritional quality.",
-    ],
-    school_lunch_review: [
-        "Improving the nutritional quality and appeal of school meals to increase student participation and reduce food waste.",
-        "Streamlining the application process for free and reduced-price meals.",
-        "Ensuring adequate funding and flexibility for schools to meet updated nutritional standards.",
-    ],
-    fsa_cut: [
-        "Reforming farm subsidies administered by the Farm Service Agency (FSA) is needed to reduce market distortions, limit payments to large agricultural corporations, and better target support to small and beginning farmers.",
-        "Phasing out certain commodity support programs or disaster payments that encourage risky farming practices could save taxpayer money.",
-        "Shifting FSA resources away from traditional subsidies towards conservation programs and rural development could offer better long-term value.",
-    ],
-    fsa_fund: [
-        "The Farm Service Agency provides crucial support for farmers and ranchers, including access to credit, disaster assistance, and conservation programs, ensuring a stable food supply and supporting rural economies.",
-        "Adequate funding for FSA loan programs helps beginning farmers and those from underserved groups access capital.",
-        "Investing in FSA conservation programs protects natural resources like soil and water while supporting farm income.",
-    ],
-    fsa_review: [
-        "Improving the accessibility and responsiveness of FSA programs, particularly for small, mid-sized, and minority farmers.",
-        "Ensuring FSA disaster assistance programs are timely and effective in helping producers recover from natural disasters.",
-        "Evaluating the effectiveness of commodity support programs versus conservation incentives in achieving desired agricultural outcomes.",
-    ],
-    wic_cut: [
-        "While WIC is valuable, reviewing its administrative costs and ensuring efficient delivery of benefits could optimize resource use.",
-        "Targeting WIC benefits effectively to those most nutritionally at risk requires ongoing evaluation.",
-        "Coordinating WIC services with other maternal and child health programs might reduce duplication.",
-    ],
-    wic_fund: [
-        "The Women, Infants, and Children (WIC) program provides critical nutritional support, breastfeeding promotion, and healthcare referrals for low-income pregnant women, new mothers, and young children, demonstrably improving health outcomes.",
-        "Fully funding WIC ensures that all eligible participants can receive benefits, reducing infant mortality, improving birth weights, and supporting healthy child development.",
-        "Investing in WIC is a cost-effective way to improve long-term health and reduce future healthcare expenditures.",
-    ],
-    wic_review: [
-        "Modernizing WIC food packages to align with current dietary guidelines and participant preferences.",
-        "Improving the WIC shopping experience, potentially through enhanced electronic benefit transfer (EBT) systems.",
-        "Strengthening WIC's role in providing nutrition education and breastfeeding support.",
-    ],
-    // --- Government Operations ---
-    fdic_note: [ // FDIC is funded by bank premiums, not direct taxes
-        "While the FDIC plays a crucial role in financial stability, it's important to note its operations are primarily funded by insurance premiums assessed on banks, not direct taxpayer appropriations.",
-        "Oversight of the FDIC focuses on ensuring it effectively manages the deposit insurance fund and regulates banks appropriately.",
-        "Maintaining public confidence in the banking system relies on the FDIC's independence and financial strength.",
-    ],
-    irs_cut: [
-        "IRS funding should prioritize efficient tax administration and helpful taxpayer service, avoiding overly burdensome enforcement tactics or audits targeting low-income individuals.",
-        "Concerns about IRS overreach or political bias sometimes lead to calls for budget constraints or stricter limitations on its activities.",
-        "Investing in simplifying the tax code itself could be a more effective way to improve compliance than simply increasing IRS enforcement budgets.",
-    ],
-    irs_fund: [
-        "Adequate IRS funding is essential to close the 'tax gap' (the difference between taxes owed and taxes paid), ensure fairness in the tax system, combat tax evasion by wealthy individuals and corporations, and improve taxpayer services.",
-        "Investing in IRS modernization, including updated IT systems and better taxpayer support tools, can improve efficiency and compliance.",
-        "Every dollar invested in effective IRS enforcement, particularly targeting high-income non-compliance, yields significant returns in revenue.",
-    ],
-    irs_review: [
-        "Ensuring the IRS uses its resources fairly and focuses enforcement efforts appropriately requires strong congressional oversight.",
-        "Improving IRS taxpayer service, including phone support and online tools, should be a key priority.",
-        "Protecting taxpayer rights and ensuring due process during audits and collections is fundamental.",
-    ],
-    federal_courts_cut: [
-        "Reviewing federal court operations for efficiencies in case management, administrative costs, and courthouse security could yield savings.",
-        "Exploring alternatives to traditional litigation, such as mediation or arbitration, might reduce court caseloads.",
-        "Careful budgeting is necessary, but must not compromise the judiciary's ability to administer justice fairly and impartially.",
-    ],
-    federal_courts_fund: [
-        "A well-functioning and independent federal judiciary requires sufficient funding for judgeships, court staff, courthouse security, and technology to handle caseloads effectively and administer justice without undue delay.",
-        "Investing in the federal courts ensures access to justice and upholds the rule of law.",
-        "Adequate resources are needed to protect judges and court personnel and maintain secure facilities.",
-    ],
-    federal_courts_review: [
-        "Addressing judicial vacancies and ensuring the timely appointment of judges is crucial for reducing case backlogs.",
-        "Improving access to the courts for low-income individuals and promoting pro bono services.",
-        "Modernizing court technology and electronic filing systems enhances efficiency and public access.",
-    ],
-    public_defenders_cut: [ // Generally, focus is on underfunding, but review is possible
-        "Ensuring federal public defender offices operate efficiently and manage resources effectively is important.",
-        "Evaluating caseloads and resource allocation across different federal districts might reveal opportunities for optimization.",
-    ],
-    public_defenders_fund: [
-        "Ensuring the constitutional right to counsel guaranteed by the Sixth Amendment requires adequate funding for federal public defenders and court-appointed attorneys.",
-        "Underfunded public defender systems lead to excessive caseloads, compromising the quality of representation for indigent defendants.",
-        "Investing in public defense helps ensure fairness in the justice system and prevent wrongful convictions.",
-    ],
-    public_defenders_review: [
-        "Addressing high caseloads and ensuring public defenders have adequate resources for investigations and expert witnesses.",
-        "Promoting pay parity between public defenders and prosecutors to attract and retain qualified attorneys.",
-        "Evaluating the effectiveness of different models for providing indigent defense in federal court.",
-    ],
-     usps_note: [ // USPS is largely self-funded but faces financial challenges/mandates
-        "While the Postal Service primarily operates on revenue from postage and services, its financial health is impacted by congressional mandates, such as pre-funding retiree health benefits, which warrant review.",
-        "Reforms aimed at modernizing USPS operations, adjusting service standards, and allowing diversification of revenue streams are subjects of ongoing debate.",
-        "Ensuring the Postal Service can fulfill its universal service obligation sustainably requires careful consideration of its business model and regulatory environment.",
-    ],
-    cfpb_cut: [
-        "The broad regulatory authority and unique funding structure of the Consumer Financial Protection Bureau (CFPB) warrant ongoing scrutiny regarding accountability and potential economic impact.",
-        "Concerns about CFPB regulations being overly burdensome on financial institutions sometimes lead to calls for limiting its power or budget.",
-        "Ensuring the CFPB focuses on clear instances of consumer harm and avoids regulatory overreach requires congressional oversight.",
-    ],
-    cfpb_fund: [
-        "The CFPB plays a vital role in protecting consumers from predatory financial practices in areas like mortgages, credit cards, and student loans, requiring adequate resources to fulfill its mission.",
-        "Strong enforcement actions by the CFPB return billions of dollars to harmed consumers and deter misconduct by financial companies.",
-        "Funding for CFPB's consumer education initiatives helps empower individuals to make informed financial decisions.",
-    ],
-    cfpb_review: [
-        "Ensuring the CFPB's rulemaking process is transparent, data-driven, and considers potential economic impacts.",
-        "Improving coordination between the CFPB and other federal and state financial regulators.",
-        "Evaluating the effectiveness of CFPB enforcement actions and educational programs in protecting consumers.",
-    ],
-    mbda_cut: [
-        "Evaluating the effectiveness and necessity of the Minority Business Development Agency (MBDA) compared to broader small business support programs is warranted.",
-        "Ensuring MBDA programs deliver measurable results in promoting minority business growth and competitiveness.",
-        "Consolidating business development programs could potentially increase efficiency.",
-    ],
-    mbda_fund: [
-        "The Minority Business Development Agency plays a unique role in addressing systemic barriers and promoting the growth of minority-owned businesses, contributing to a more equitable economy.",
-        "Investing in MBDA programs helps create jobs, build wealth in underserved communities, and foster innovation.",
-        "Expanding MBDA's reach and resources can help close the persistent racial wealth gap.",
-    ],
-    mbda_review: [
-        "Improving access to capital and federal contracting opportunities for minority-owned businesses should be a key focus for MBDA.",
-        "Strengthening partnerships between MBDA, other federal agencies, and private sector organizations.",
-        "Enhancing data collection on the performance and challenges of minority-owned businesses to inform MBDA strategies.",
-    ],
-     usich_cut: [ // Funding is very small, focus is usually on coordination/effectiveness
-        "Evaluating the effectiveness of the Interagency Council on Homelessness (USICH) in coordinating federal efforts and achieving reductions in homelessness.",
-        "Ensuring USICH's role complements, rather than duplicates, the work of primary agencies like HUD.",
-    ],
-    usich_fund: [
-        "The USICH plays a crucial role in coordinating the efforts of 19 federal agencies to prevent and end homelessness, requiring adequate resources to facilitate collaboration and implement national strategies.",
-        "Supporting USICH helps ensure a more unified and effective federal response to the complex issue of homelessness.",
-        "Investing in USICH's capacity to promote evidence-based practices and data sharing across agencies.",
-    ],
-    usich_review: [
-        "Strengthening USICH's authority and resources to hold federal agencies accountable for implementing homelessness strategies.",
-        "Improving coordination between federal efforts and state/local homelessness response systems.",
-        "Focusing USICH efforts on proven solutions like Housing First.",
-    ],
-    // --- Housing and Community ---
-    fema_cut: [
-        "FEMA's disaster response efforts require review for efficiency, particularly regarding administrative costs, contracting practices, and the speed of aid delivery.",
-        "Ensuring FEMA funds prioritize immediate life-saving needs and essential recovery efforts, while minimizing potential fraud or misuse.",
-        "Balancing federal disaster aid with the need for state/local preparedness and mitigation investments.",
-    ],
-    fema_fund: [
-        "Given the increasing frequency and severity of natural disasters, robust funding for FEMA is essential for effective response, recovery, and mitigation efforts nationwide.",
-        "Investing in FEMA's capacity to provide timely assistance to disaster survivors and communities is critical.",
-        "Supporting FEMA's pre-disaster mitigation programs helps reduce the long-term costs and impacts of disasters.",
-    ],
-    fema_review: [
-        "Improving the speed, simplicity, and accessibility of FEMA's individual assistance programs for disaster survivors.",
-        "Strengthening FEMA's coordination with state, local, tribal, and territorial governments during disaster response.",
-        "Ensuring FEMA's recovery and mitigation programs promote resilience and address climate change impacts.",
-    ],
-     fema_drf_cut: [ // Specific fund within FEMA
-        "Oversight is needed to ensure the Disaster Relief Fund (DRF) is managed efficiently and that spending aligns with authorized purposes.",
-        "Preventing wasteful spending or delays in obligation of DRF funds requires careful management.",
-        "Balancing the need for a healthy DRF balance against overall federal budget constraints.",
-    ],
-    fema_drf_fund: [
-        "Maintaining a sufficiently funded Disaster Relief Fund is crucial for ensuring FEMA can respond immediately and effectively to major disasters without requiring emergency supplemental appropriations.",
-        "Predictable and adequate funding for the DRF provides stability for disaster response planning.",
-        "Replenishing the DRF proactively ensures resources are available when the next disaster strikes.",
-    ],
-    fema_drf_review: [
-        "Improving transparency regarding DRF spending and obligations.",
-        "Ensuring DRF funding formulas and allocation processes are equitable and based on actual disaster needs.",
-        "Evaluating the long-term solvency of the DRF given increasing disaster costs.",
-    ],
-    hud_cut: [
-        "Many HUD programs require review for effectiveness in truly addressing the affordable housing crisis and reducing homelessness; streamlining bureaucracy is needed.",
-        "Evaluating the cost-effectiveness of different HUD programs (e.g., vouchers vs. public housing development) is important.",
-        "Reducing burdensome regulations associated with HUD funding could potentially spur more private sector housing development.",
-    ],
-    hud_fund: [
-        "Tackling the nation's severe affordable housing crisis requires significant investment in HUD programs, including rental assistance (like Section 8 vouchers), public housing revitalization, and community development block grants.",
-        "Expanding HUD resources is essential for reducing homelessness, promoting housing stability, and creating pathways to opportunity.",
-        "Investing in affordable housing development and preservation through HUD programs stimulates local economies and addresses critical infrastructure needs.",
-    ],
-    hud_review: [
-        "Improving the efficiency and effectiveness of HUD's rental assistance programs to serve more eligible families.",
-        "Addressing the large capital backlog in public housing requires sustained investment and innovative solutions.",
-        "Ensuring HUD programs effectively promote fair housing, reduce segregation, and expand opportunities in underserved communities.",
-    ],
-    head_start_cut: [
-        "Head Start programs should be rigorously evaluated for long-term impact on child outcomes to ensure taxpayer investment yields results.",
-        "Improving quality standards and accountability across all Head Start centers is necessary.",
-        "Ensuring Head Start funding complements, rather than duplicates, state-funded pre-K programs.",
-    ],
-    head_start_fund: [
-        "Head Start provides critical comprehensive early childhood education, health, nutrition, and family support services to low-income children, demonstrably improving school readiness and long-term outcomes.",
-        "Expanding access to high-quality Head Start programs, particularly Early Head Start for infants and toddlers, is a vital investment in our nation's future.",
-        "Adequate funding allows Head Start programs to maintain small class sizes, employ qualified staff, and provide comprehensive services.",
-    ],
-    head_start_review: [
-        "Strengthening Head Start performance standards and ensuring consistent quality across all programs.",
-        "Improving coordination between Head Start and K-12 school systems to support smooth transitions for children.",
-        "Enhancing support for Head Start staff, including professional development and adequate compensation.",
-    ],
-    public_housing_cut: [
-        "The traditional public housing model faces challenges; exploring alternative affordable housing strategies and improving management efficiency is needed.",
-        "Addressing safety concerns and improving living conditions in existing public housing requires significant investment but also better oversight.",
-        "Shifting towards housing vouchers (tenant-based rental assistance) is sometimes proposed as a more cost-effective alternative.",
-    ],
-    public_housing_fund: [
-        "Addressing the significant capital repair backlog in the nation's public housing stock is crucial for providing safe and decent living conditions for low-income residents.",
-        "Investing in the preservation and modernization of public housing ensures this vital affordable housing resource remains available.",
-        "Funding is needed to support resident services and improve management practices in public housing authorities.",
-    ],
-    public_housing_review: [
-        "Implementing effective strategies to address crime and improve safety in public housing developments.",
-        "Promoting resident involvement and empowerment in public housing management.",
-        "Exploring mixed-finance models and partnerships to revitalize public housing communities.",
-    ],
-    // --- Energy and Environment ---
-    epa_cut: [
-        "EPA regulations should be carefully crafted to achieve environmental goals without imposing excessive burdens on businesses and the economy; streamlining permitting processes is needed.",
-        "Evaluating the cost-effectiveness of specific EPA regulations and prioritizing actions with the greatest environmental benefit.",
-        "Ensuring the EPA relies on sound science and transparent data in its regulatory decisions.",
-    ],
-    epa_fund: [
-        "Addressing critical environmental challenges like climate change, air and water pollution, and hazardous waste cleanup requires a well-funded and effective Environmental Protection Agency (EPA).",
-        "Investing in EPA enforcement ensures that environmental laws are upheld and polluters are held accountable.",
-        "Supporting EPA's scientific research provides the foundation for sound environmental policy and regulation.",
-    ],
-    epa_review: [
-        "Improving the timeliness and efficiency of EPA's permitting and regulatory review processes.",
-        "Ensuring EPA regulations are updated to reflect the best available science and technology.",
-        "Strengthening EPA's capacity to address environmental justice issues and protect vulnerable communities disproportionately affected by pollution.",
-    ],
-     forest_service_cut: [
-        "Reviewing Forest Service operations for efficiencies, particularly in timber management and administrative overhead.",
-        "Balancing environmental protection with economic uses of national forests, such as logging and grazing, requires careful management.",
-        "Prioritizing Forest Service resources towards the most critical wildfire prevention and ecosystem restoration needs.",
-    ],
-    forest_service_fund: [
-        "Increased funding for the U.S. Forest Service is urgently needed to address the escalating wildfire crisis through hazardous fuels reduction, forest restoration, and supporting wildland firefighters.",
-        "Investing in the health and resilience of our national forests is crucial for protecting watersheds, biodiversity, and recreational opportunities.",
-        "Adequate resources allow the Forest Service to manage national forests sustainably for multiple uses.",
-    ],
-    forest_service_review: [
-        "Improving the pace and scale of hazardous fuels treatments to reduce wildfire risk.",
-        "Strengthening partnerships between the Forest Service, state agencies, and local communities for wildfire response and forest management.",
-        "Ensuring adequate compensation, benefits, and mental health support for federal wildland firefighters.",
-    ],
-    noaa_cut: [
-        "Evaluating NOAA programs for potential duplication with other agencies or the private sector.",
-        "Prioritizing NOAA resources towards core functions like weather forecasting, fisheries management, and climate monitoring.",
-        "Ensuring efficiency in NOAA's satellite programs and research vessel operations.",
-    ],
-    noaa_fund: [
-        "The National Oceanic and Atmospheric Administration (NOAA) provides essential services, including life-saving weather forecasts and warnings, climate data, fisheries management, and coastal resilience efforts, requiring robust funding.",
-        "Investing in NOAA's weather prediction capabilities, including advanced modeling and observation systems, protects lives and property.",
-        "Supporting NOAA's research on oceans, climate change, and atmospheric science is critical for understanding and addressing environmental challenges.",
-    ],
-    noaa_review: [
-        "Improving the accuracy and lead time of NOAA weather forecasts and warnings.",
-        "Enhancing NOAA's role in supporting coastal communities adapting to sea-level rise and extreme weather.",
-        "Ensuring sustainable management of U.S. fisheries based on the best available science from NOAA.",
-    ],
-    renewable_energy_cut: [
-        "Government subsidies for mature renewable energy technologies like solar and wind should be phased out to allow market forces to drive deployment.",
-        "Focusing federal energy R&D on breakthrough technologies rather than subsidizing existing ones.",
-        "Evaluating the cost-effectiveness and necessity of specific Department of Energy efficiency and renewable energy programs.",
-    ],
-    renewable_energy_fund: [
-        "Accelerating the transition to a clean energy economy requires significant federal investment in energy efficiency improvements and the research, development, and deployment of renewable energy technologies.",
-        "Supporting renewable energy programs creates jobs, reduces greenhouse gas emissions, enhances energy security, and lowers energy costs for consumers.",
-        "Investing in grid modernization is crucial to accommodate higher levels of renewable energy generation.",
-    ],
-    renewable_energy_review: [
-        "Ensuring federal renewable energy programs effectively drive innovation and cost reductions.",
-        "Improving permitting processes for renewable energy projects and transmission lines.",
-        "Targeting investments towards next-generation renewable technologies and energy storage solutions.",
-    ],
-    nps_cut: [
-        "While National Parks are treasures, reviewing National Park Service (NPS) operations for efficiencies and exploring increased reliance on visitor fees or private partnerships could be considered.",
-        "Prioritizing NPS resources towards addressing the deferred maintenance backlog and core preservation needs.",
-        "Balancing visitor access with resource protection requires careful management.",
-    ],
-    nps_fund: [
-        "Protecting America's natural and cultural heritage requires adequate funding for the National Park Service to manage parks, address the significant deferred maintenance backlog, support educational programs, and ensure visitor safety.",
-        "Investing in our National Parks preserves these invaluable resources for future generations and supports local tourism economies.",
-        "Providing sufficient resources for NPS staff, including rangers and maintenance workers, is essential for park operations.",
-    ],
-    nps_review: [
-        "Developing sustainable solutions to address the billions of dollars in deferred maintenance across the National Park system.",
-        "Managing increasing visitor numbers to prevent overcrowding and resource damage.",
-        "Enhancing interpretation and education programs to connect diverse audiences with park resources.",
-    ],
-    // --- International Affairs ---
-    diplomacy_cut: [
-        "Reviewing State Department operations for efficiencies, consolidating diplomatic posts where appropriate, and ensuring resources align with core foreign policy objectives.",
-        "Evaluating the necessity and cost-effectiveness of all diplomatic programs and initiatives.",
-        "Balancing investments in diplomacy with other foreign policy tools like defense and development aid.",
-    ],
-    diplomacy_fund: [
-        "Robust funding for diplomacy and the Foreign Service strengthens U.S. influence, promotes peace and stability, advances economic interests, and often avoids the need for costlier military interventions.",
-        "Investing in our diplomatic corps, embassies, and consulates provides the front line for engaging with the world and protecting American citizens abroad.",
-        "Supporting public diplomacy programs enhances mutual understanding and counters disinformation.",
-    ],
-    diplomacy_review: [
-        "Ensuring the State Department has the personnel, training, and resources needed to address complex global challenges.",
-        "Modernizing diplomatic tools and communication strategies for the 21st century.",
-        "Strengthening coordination between the State Department and other foreign affairs agencies like USAID and the Department of Defense.",
-    ],
-     usaid_cut: [
-        "USAID programs require rigorous oversight and evaluation to ensure effectiveness, accountability, and alignment with U.S. strategic interests, avoiding waste or projects with limited impact.",
-        "Focusing foreign aid on countries and sectors where it can demonstrably achieve sustainable development outcomes.",
-        "Reducing administrative overhead within USAID and improving coordination with other donors.",
-    ],
-    usaid_fund: [
-        "U.S. foreign aid administered by USAID addresses global poverty, promotes health and education, supports democratic governance, provides humanitarian assistance, and fosters long-term stability, advancing both American values and interests.",
-        "Investing in global development through USAID can prevent conflicts, mitigate pandemics, and create new economic partners for the U.S.",
-        "Adequate funding allows USAID to respond effectively to humanitarian crises and support long-term development goals.",
-    ],
-    usaid_review: [
-        "Improving the measurement and reporting of USAID program outcomes to demonstrate impact and ensure accountability.",
-        "Strengthening local partnerships and building capacity within recipient countries for sustainable development.",
-        "Ensuring USAID programs are designed and implemented with transparency and strong safeguards against corruption.",
-    ],
-     usaid_climate_cut: [ // Specific USAID area
-        "International climate aid provided through USAID should be carefully evaluated for effectiveness, ensuring funds contribute to verifiable emissions reductions or adaptation measures, and balanced against domestic needs.",
-        "Prioritizing climate finance towards projects with the greatest impact and leveraging private sector investment.",
-        "Ensuring transparency and accountability in how U.S. climate aid is used by recipient countries.",
-    ],
-    usaid_climate_fund: [
-        "Addressing the global climate crisis requires U.S. leadership and investment, including supporting developing nations through USAID to transition to clean energy, protect forests, and adapt to climate impacts.",
-        "International climate finance helps mitigate global emissions that affect the U.S. and fosters diplomatic cooperation.",
-        "Investing in climate adaptation abroad can reduce instability and migration pressures driven by climate change.",
-    ],
-    usaid_climate_review: [
-        "Ensuring U.S. climate aid aligns with broader development goals and supports sustainable economic growth.",
-        "Improving coordination of climate finance across different U.S. government agencies.",
-        "Developing robust monitoring, reporting, and verification (MRV) systems for international climate projects.",
-    ],
-    // --- Law Enforcement ---
-    deportations_border_cut: [
-        "Focusing border security resources on humane and efficient processing of asylum seekers, utilizing technology effectively, and addressing the root causes of migration may be more effective and less costly than solely emphasizing enforcement and deportations.",
-        "Reviewing the cost and effectiveness of large-scale detention and deportation operations by ICE and CBP.",
-        "Prioritizing enforcement actions based on public safety risks rather than broad sweeps.",
-    ],
-    deportations_border_fund: [
-        "Securing the nation's borders requires adequate resources for Customs and Border Protection (CBP) personnel, technology (like surveillance systems), and infrastructure to manage migration flows and prevent illegal crossings.",
-        "Funding for Immigration and Customs Enforcement (ICE) is needed for interior enforcement, investigating transnational crime, and managing detention and removal proceedings.",
-        "Investing in border security helps maintain national sovereignty and control migration.",
-    ],
-    deportations_border_review: [
-        "Ensuring humane treatment and due process for individuals encountered at the border or subject to immigration enforcement.",
-        "Improving efficiency and reducing backlogs in immigration courts and asylum processing.",
-        "Enhancing coordination between CBP, ICE, and other agencies involved in border management and immigration.",
-    ],
-    federal_prisons_cut: [
-        "Exploring criminal justice reforms aimed at reducing incarceration rates for non-violent offenses, expanding alternatives to imprisonment, and improving rehabilitation programs could significantly lower the high cost of the federal prison system.",
-        "Addressing overcrowding and improving conditions within federal prisons requires attention, but should be paired with efforts to reduce the overall prison population.",
-        "Evaluating the effectiveness of different correctional programs in reducing recidivism.",
-    ],
-    federal_prisons_fund: [
-        "Maintaining safe, secure, and humane federal prisons requires adequate funding for staffing (correctional officers), facility maintenance, inmate healthcare, and essential rehabilitation programs.",
-        "Investing in education, job training, and substance abuse treatment programs within prisons can help reduce recidivism upon release.",
-        "Addressing understaffing and ensuring the safety of both inmates and correctional officers is a critical need.",
-    ],
-    federal_prisons_review: [
-        "Implementing evidence-based practices to reduce violence and improve safety within federal prisons.",
-        "Enhancing oversight of healthcare services provided to federal inmates.",
-        "Improving reentry programs to support successful transitions back into the community after incarceration.",
-    ],
-    // --- Transportation ---
-    highways_cut: [
-        "Federal highway funding should prioritize maintenance and repair of existing infrastructure over costly new highway expansion projects, which can induce more driving.",
-        "Ensuring states use federal highway funds efficiently and exploring innovative financing mechanisms.",
-        "Balancing highway investments with support for other transportation modes like public transit and rail.",
-    ],
-    highways_fund: [
-        "Modernizing America's aging highway and bridge infrastructure requires significant federal investment to ensure safety, reduce congestion, and support economic activity.",
-        "Providing predictable federal funding allows states to undertake large-scale transportation projects.",
-        "Investing in highway improvements enhances freight movement and connects communities.",
-    ],
-    highways_review: [
-        "Prioritizing projects that improve safety, reduce bottlenecks, and enhance resilience to climate change.",
-        "Streamlining environmental review and permitting processes for critical infrastructure projects.",
-        "Incorporating technology and 'smart highway' concepts to improve traffic flow and safety.",
-    ],
-     public_transit_cut: [
-        "Federal public transit funding should prioritize systems with high ridership and demonstrated efficiency, encouraging local and state governments to bear a larger share of operating costs.",
-        "Evaluating the cost-effectiveness of specific transit projects, particularly expensive new rail lines.",
-        "Ensuring transit agencies operate efficiently and manage resources effectively.",
-    ],
-    public_transit_fund: [
-        "Investing in expanding and improving public transit systems reduces traffic congestion, lowers transportation emissions, increases accessibility for non-drivers, and supports equitable economic development.",
-        "Adequate federal funding helps transit agencies maintain safe and reliable service, upgrade aging infrastructure, and transition to cleaner fleets (e.g., electric buses).",
-        "Supporting public transit provides affordable transportation options for millions of Americans.",
-    ],
-    public_transit_review: [
-        "Improving service frequency, reliability, and coverage to attract more riders.",
-        "Integrating public transit with other transportation modes like biking and walking.",
-        "Ensuring transit systems are accessible to people with disabilities.",
-    ],
-    tsa_cut: [
-        "Reviewing TSA screening procedures for efficiency and effectiveness, potentially adopting more risk-based approaches to reduce wait times and passenger inconvenience without compromising security.",
-        "Evaluating the cost-effectiveness of specific TSA technologies and programs.",
-        "Ensuring appropriate staffing levels and minimizing administrative overhead within the TSA.",
-    ],
-    tsa_fund: [
-        "Maintaining aviation security requires adequate funding for the Transportation Security Administration (TSA) to staff checkpoints, operate screening technology, and address evolving threats.",
-        "Investing in advanced screening technologies can enhance security effectiveness and potentially improve efficiency.",
-        "Providing competitive pay and training for TSA officers is important for retention and performance.",
-    ],
-    tsa_review: [
-        "Balancing rigorous security screening with passenger facilitation and privacy concerns.",
-        "Continuously adapting security protocols to counter new and emerging threats.",
-        "Improving communication and coordination between TSA, airports, and airlines.",
-    ],
-    faa_cut: [
-        "Ensuring the Federal Aviation Administration (FAA) operates efficiently, particularly in areas like air traffic control modernization (NextGen) and regulatory processes.",
-        "Evaluating the necessity of all FAA programs and prioritizing resources towards core safety functions.",
-        "Streamlining aircraft certification processes while maintaining rigorous safety standards.",
-    ],
-    faa_fund: [
-        "Ensuring the safety and efficiency of the U.S. airspace requires robust funding for the Federal Aviation Administration (FAA) to oversee airlines, manage air traffic control, certify aircraft, and invest in infrastructure modernization.",
-        "Adequate FAA resources are critical for maintaining the safety record of American aviation.",
-        "Investing in NextGen air traffic control modernization enhances capacity, reduces delays, and improves fuel efficiency.",
-    ],
-    faa_review: [
-        "Addressing air traffic controller staffing shortages and improving training programs.",
-        "Accelerating the implementation of NextGen technologies.",
-        "Enhancing oversight of aircraft manufacturing and maintenance.",
-    ],
-     amtrak_cut: [
-        "Amtrak's reliance on federal subsidies warrants scrutiny regarding its operational efficiency, route profitability, and long-term financial sustainability.",
-        "Focusing federal rail investments on corridors with high potential ridership and economic benefit.",
-        "Exploring increased private sector involvement or competition in passenger rail.",
-    ],
-    amtrak_fund: [
-        "Investing in Amtrak and intercity passenger rail offers a crucial alternative to congested highways and airports, reduces transportation emissions, and connects communities across the country.",
-        "Adequate federal funding allows Amtrak to upgrade aging infrastructure (especially on the Northeast Corridor), modernize its fleet, and expand service to underserved areas.",
-        "Supporting passenger rail is part of building a balanced and sustainable national transportation system.",
-    ],
-    amtrak_review: [
-        "Improving Amtrak's on-time performance, customer service, and financial management.",
-        "Developing a long-term strategic plan for expanding and modernizing the national passenger rail network.",
-        "Ensuring fair access for Amtrak trains on tracks owned by freight railroads.",
-    ],
-    // --- Science ---
-    nasa_cut: [
-        "NASA's budget requires careful prioritization, potentially focusing resources on core scientific missions and exploration goals with the highest potential return, while scrutinizing costs of large flagship programs.",
-        "Evaluating the balance between human spaceflight programs and robotic missions or earth science research.",
-        "Encouraging greater efficiency and cost control in NASA's project management.",
-    ],
-    nasa_fund: [
-        "Investing in NASA fuels scientific discovery, drives technological innovation with broad economic benefits, inspires the next generation of scientists and engineers, and maintains U.S. leadership in space exploration.",
-        "Funding for NASA missions—from Mars rovers and the James Webb Space Telescope to Earth observation satellites—expands human knowledge and benefits life on Earth.",
-        "Supporting NASA's Artemis program aims to return humans to the Moon and eventually send them to Mars.",
-    ],
-    nasa_review: [
-        "Ensuring NASA maintains a balanced portfolio of programs across science, aeronautics, and human exploration.",
-        "Managing the costs and schedules of large, complex missions like Artemis and Mars Sample Return.",
-        "Strengthening partnerships between NASA, international space agencies, and the commercial space industry.",
-    ],
-    nsf_cut: [
-        "While basic research is vital, ensuring National Science Foundation (NSF) grants are awarded efficiently and target truly fundamental, high-impact research requires oversight.",
-        "Evaluating the balance of NSF funding across different scientific disciplines.",
-        "Minimizing administrative overhead associated with NSF grant processes.",
-    ],
-    nsf_fund: [
-        "The National Science Foundation provides essential funding for fundamental research and education across all fields of science and engineering (outside medicine), driving innovation, economic competitiveness, and training the future STEM workforce.",
-        "Investing in basic science through the NSF yields unpredictable but often transformative discoveries.",
-        "Supporting NSF programs that broaden participation in science and engineering strengthens the nation's talent pool.",
-    ],
-    nsf_review: [
-        "Maintaining the integrity and effectiveness of NSF's merit review process for grant proposals.",
-        "Enhancing NSF's role in translating basic research discoveries into practical applications.",
-        "Supporting STEM education initiatives from K-12 through graduate school.",
-    ],
-     nasa_spacex_cut: [ // Similar to Pentagon_SpaceX, but NASA context
-        "NASA's reliance on commercial partners like SpaceX for cargo and crew transport needs careful oversight to ensure cost-effectiveness, safety, and fair value for taxpayers compared to traditional government-run programs.",
-        "Promoting competition among commercial space providers is crucial for controlling costs.",
-        "Evaluating the long-term strategy for utilizing public-private partnerships in space exploration.",
-    ],
-    nasa_spacex_review: [
-        "Ensuring rigorous safety standards and mission assurance processes for commercial crew and cargo missions contracted by NASA.",
-        "Transparency regarding the costs and performance of NASA's commercial spaceflight contracts.",
-        "Balancing investments in commercial partnerships with NASA's internal capabilities and long-term exploration goals.",
-    ],
-    // Default fallbacks
-    default_cut: ["This program's funding level warrants review for potential savings or reallocation to higher priorities.", "Efficiency improvements or budget reductions should be considered for this area."],
-    default_fund: ["Increased investment in this area could yield significant public benefits and address important needs.", "Adequate funding for this program is necessary for it to achieve its objectives effectively."],
-    default_review: ["This program requires closer oversight to ensure it operates efficiently and achieves its intended goals.", "Evaluating the effectiveness and impact of this program is important for accountability."],
-};
-
-
-// --- Sentence Construction Logic ---
-
-// Selects a random phrasing from an array
+/** Selects a random phrasing from an array */
 function randomChoice<T>(arr: T[]): T {
+    if (!arr || arr.length === 0) return '' as T; // Guard against empty arrays
     return arr[Math.floor(Math.random() * arr.length)];
 }
 
-// Generates the core sentence about a specific item.
-function generateItemSentence(item: SelectedItem, tone: ToneLevel): string {
+// --- Core Email Content Templates ---
+
+// SUBJECT Lines (Refined for impact and clarity)
+const SUBJECT: Record<0 | 1 | 2 | 3, string> = {
+    0: "A Constituent's Perspective on Federal Budget Priorities",
+    1: "Concerns Regarding Specific Federal Spending Allocations",
+    2: "Urgent Request: Reevaluate Federal Budget Priorities and Debt",
+    3: "Demand for Immediate Action: Federal Spending & Fiscal Responsibility",
+};
+
+// OPENING Paragraphs (More varied phrasing, stronger tone progression)
+const OPENING: Record<0 | 1 | 2 | 3, (loc: string) => string> = {
+    0: loc => `I hope this message finds you well. As a concerned constituent residing in ${loc || '[Your Area]'}, I am writing to respectfully share my perspective on the current allocation of federal tax dollars. I believe thoughtful discussion about these priorities is essential for effective governance.`,
+    1: loc => `I am writing to you today as a constituent from ${loc || '[Your Area]'} with growing concerns about federal spending patterns. Analyzing how our tax money is distributed raises important questions about efficiency, necessity, and alignment with our community's values.`,
+    2: loc => `Representing constituents like myself in ${loc || '[Your Area]'}, I must register my strong dissatisfaction with the current trajectory of federal spending. It is imperative that these priorities undergo immediate and serious reevaluation to ensure taxpayer money serves the public good effectively.`,
+    3: loc => `From ${loc || '[Your Area]'}, I am compelled to demand immediate and decisive action regarding the federal budget. The current pattern of spending, marked by questionable priorities and apparent waste, is fiscally irresponsible and requires your urgent intervention.`,
+};
+
+// INTRODUCTIONS to the list of items (Smoother transitions)
+const LIST_INTRO: Record<0 | 1 | 2 | 3, string> = {
+    0: "After reviewing estimates of how federal funds are spent, I wanted to highlight a few areas that I believe warrant closer examination:",
+    1: "My analysis of the budget breakdown reveals several specific items that cause me significant concern and which I urge you to address:",
+    2: "Based on current spending levels, the following programs stand out as demanding significant reassessment and potential correction:",
+    3: "Below are some of the most glaring examples of what I perceive as misguided priorities and wasteful spending requiring your direct action:",
+};
+
+// ACTION Phrases (indexed by fundingLevel + tone bucket) - Refined and expanded
+// Provides the core verb/action describing the desired change.
+const ACTION: Record<-2 | -1 | 0 | 1 | 2, [string, string, string, string]> = {
+    [-2]: [ // Slash Heavily
+        "should be considered for significant reduction or phasing out",
+        "requires a substantial cut; its current funding level seems excessive",
+        "must be drastically scaled back; this expenditure is difficult to justify",
+        "must be eliminated or fundamentally reformed; this spending is unacceptable",
+    ],
+    [-1]: [ // Cut Significantly
+        "funding could likely be reduced without compromising essential functions",
+        "should undergo significant cuts; there are clear opportunities for savings",
+        "demands a sharp reduction to better align with fiscal responsibility",
+        "needs an aggressive cut; taxpayers expect more prudent use of funds",
+    ],
+    [0]: [ // Improve Efficiency / Maintain with Oversight
+        "funding should be maintained, but with a strong emphasis on improving efficiency and accountability",
+        "could continue at current levels, provided there's rigorous oversight to maximize its effectiveness",
+        "might remain level, but only if waste is eliminated and performance metrics are met",
+        "funding is questionable, but acceptable only with strict audits and proven results",
+    ],
+    [1]: [ // Fund / Modest Increase
+        "deserves stable and perhaps modestly increased funding to ensure it can meet its objectives",
+        "should receive reliable support, potentially with a moderate increase to enhance its impact",
+        "warrants a noticeable funding boost to strengthen its capabilities and reach",
+        "requires a clear increase in resources to adequately address important public needs",
+    ],
+    [2]: [ // Fund More / Substantial Increase
+        "merits a substantial increase in funding; the potential benefits are significant",
+        "needs robust new investment to expand its positive impact and capabilities",
+        "should be prioritized for major funding growth to address critical challenges",
+        "demands urgent and considerable expansion; underfunding this area is shortsighted",
+    ]
+};
+
+// RATIONALE Snippets (indexed by item.id + fundingLevel) - GREATLY EXPANDED & Diversified
+// Provides *specific, varied* justifications for the chosen action on that item.
+// Aim for 2-4 distinct options per item/action combination.
+
+type FundingActionRationale = 'cut' | 'review' | 'fund'; // For mapping levels to rationale types
+
+function getFundingActionRationale(level: SelectedItem['fundingLevel']): FundingActionRationale {
+    if (level < 0) return 'cut';
+    if (level > 0) return 'fund';
+    return 'review'; // Level 0 maps to review/efficiency rationales
+}
+
+// Keys: `${item.id}_${FundingActionRationale}` (e.g., 'medicaid_cut', 'nih_fund', 'pentagon_review')
+const SPECIFIC_RATIONALES: Record<string, string[]> = {
+    // --- Health ---
+    medicaid_cut: [
+        "Exploring reforms to enhance Medicaid's long-term fiscal sustainability is crucial, even while preserving essential care.",
+        "Targeting Medicaid resources more effectively towards core health services could improve efficiency.",
+        "While a vital safety net, Medicaid's growth necessitates exploring ways to control costs responsibly.",
+        "Ensuring state and federal Medicaid funds are used with maximum efficiency should be a constant goal.",
+    ],
+    medicaid_fund: [
+        "Expanding Medicaid eligibility remains a powerful tool for improving health outcomes and economic security for vulnerable families.",
+        "Robust Medicaid funding is essential for covering low-income children, seniors, and individuals with disabilities.",
+        "Investing adequately in Medicaid strengthens community health infrastructure and reduces uncompensated care costs.",
+        "Ensuring fair reimbursement rates within Medicaid helps maintain access to providers for recipients.",
+    ],
+    medicaid_review: [
+        "Implementing stronger measures to prevent fraud, waste, and abuse within Medicaid protects taxpayer dollars.",
+        "Continuously evaluating Medicaid delivery models for efficiency and effectiveness is key to responsible stewardship.",
+        "Focusing Medicaid resources on high-value care and preventative services can lead to better long-term health outcomes.",
+        "Streamlining Medicaid administration could reduce overhead and direct more funds to patient care.",
+    ],
+    medicare_cut: [
+        "Addressing Medicare's long-term solvency requires exploring options like negotiating drug prices and reducing administrative waste.",
+        "Implementing reforms to improve Medicare's cost-effectiveness is vital for its future.",
+        "Careful scrutiny of Medicare spending can prevent unnecessary procedures and ensure value for taxpayers.",
+        "Promoting efficiency within the Medicare system is necessary given demographic pressures.",
+    ],
+    medicare_fund: [
+        "Guaranteeing reliable and comprehensive healthcare for seniors through a strong Medicare program is a fundamental commitment.",
+        "Strengthening Medicare, potentially by adding benefits like dental or vision coverage, improves seniors' quality of life.",
+        "Adequate Medicare funding is critical for the health and financial security of millions of older Americans and those with disabilities.",
+        "Ensuring Medicare can negotiate prescription drug prices effectively would lower costs for both beneficiaries and the government.",
+    ],
+    medicare_review: [
+        "Combating fraud and abuse within the Medicare system must remain a top priority.",
+        "Ongoing evaluation of Medicare payment systems is needed to incentivize high-quality, efficient care.",
+        "Promoting value-based care models within Medicare can lead to better outcomes at a sustainable cost.",
+        "Simplifying Medicare enrollment and navigation would benefit beneficiaries.",
+    ],
+    nih_cut: [
+        "While vital, NIH funding should prioritize research with the highest potential for broad public health impact.",
+        "Ensuring NIH grants avoid duplication and target truly innovative science is important for fiscal prudence.",
+        "Streamlining NIH grant administration could maximize the research impact of taxpayer dollars.",
+        "Balancing NIH funding with other national priorities requires careful consideration.",
+    ],
+    nih_fund: [
+        "Investing boldly in the National Institutes of Health accelerates medical breakthroughs and maintains U.S. leadership in biomedical science.",
+        "Increased NIH funding is essential for tackling devastating diseases and improving human health across the lifespan.",
+        "Supporting basic science research through the NIH provides the crucial foundation for future cures and treatments.",
+        "NIH funding drives innovation, creates high-tech jobs, and yields significant long-term economic benefits.",
+    ],
+    nih_review: [
+        "Refining the NIH grant review process ensures fairness and supports the most promising research endeavors.",
+        "Fostering greater collaboration and data sharing facilitated by the NIH can speed up scientific progress.",
+        "Directing NIH resources towards addressing health disparities is a critical aspect of promoting health equity.",
+        "Ensuring transparency and accountability in how NIH funds are utilized.",
+    ],
+    cdc_cut: [
+        "Focusing CDC resources tightly on core functions like disease surveillance and emergency response is essential.",
+        "Evaluating the effectiveness of all CDC programs ensures taxpayer money yields tangible public health benefits.",
+        "Streamlining CDC operations and reducing administrative overhead could enhance its efficiency.",
+        "Ensuring CDC activities do not overlap unnecessarily with state or local health departments.",
+    ],
+    cdc_fund: [
+        "A fully funded CDC is paramount for national security, pandemic preparedness, and effective public health protection.",
+        "Investing in the CDC's data systems, labs, and workforce strengthens our ability to prevent and control disease outbreaks.",
+        "Supporting the CDC's global health security efforts helps contain threats before they reach the U.S.",
+        "Adequate CDC funding ensures timely and reliable public health guidance.",
+    ],
+    cdc_review: [
+        "Improving the clarity and timeliness of CDC guidance during public health emergencies builds trust.",
+        "Enhancing CDC communication strategies and transparency is vital for public health effectiveness.",
+        "Ensuring the CDC maintains scientific integrity and avoids politicization is crucial.",
+        "Strengthening partnerships between the CDC and state/local health agencies improves coordination.",
+    ],
+    substance_mental_health_cut: [
+        "Funding for mental health and substance use programs must prioritize evidence-based treatments with proven outcomes.",
+        "Careful evaluation is needed to avoid duplication between federal, state, and private mental health initiatives.",
+        "Targeting resources towards programs demonstrably reducing overdoses and supporting long-term recovery.",
+        "Ensuring fiscal accountability within substance use and mental health grant programs.",
+    ],
+    substance_mental_health_fund: [
+        "Addressing the nation's mental health and addiction crises requires significantly increased investment in prevention, treatment, and recovery.",
+        "Expanding access to affordable mental healthcare and substance use disorder services, especially in underserved areas.",
+        "Investing in the behavioral health workforce and integrating mental/physical care are critical steps.",
+        "Supporting crisis response systems (like the 988 hotline) requires adequate federal resources.",
+    ],
+    substance_mental_health_review: [
+        "Improving coordination among agencies involved in mental health and substance use is key to effective service delivery.",
+        "Enforcing mental health parity laws ensures equitable insurance coverage.",
+        "Evaluating the effectiveness of different treatment models helps optimize the use of public funds.",
+        "Reducing stigma associated with seeking mental health or substance use treatment requires ongoing effort.",
+    ],
+    // --- War and Weapons ---
+    pentagon_cut: [
+        "The immense Pentagon budget demands significant reduction, focusing on genuine defense needs over wasteful projects.",
+        "A thorough audit of Pentagon spending is essential to identify inefficiencies and save taxpayer dollars.",
+        "Shifting funds from unproven weapons systems towards readiness and personnel could strengthen defense more effectively.",
+        "Reducing the Pentagon's budget would free up critical resources for pressing domestic needs.",
+    ],
+    pentagon_fund: [ // Often framed as 'modernization' or 'readiness'
+        "Maintaining a strong national defense in a complex world requires sufficient funding for personnel, training, and modernization.",
+        "Investing in advanced military capabilities is necessary to deter adversaries and protect U.S. interests.",
+        "Ensuring our troops have the best equipment and support is vital for mission success.",
+        "Predictable defense funding enhances strategic planning and readiness.",
+    ],
+    pentagon_review: [
+        "Rigorous oversight of Pentagon spending is crucial to prevent waste, fraud, and abuse.",
+        "Reforming the Pentagon's acquisition process is needed to control costs and deliver capabilities faster.",
+        "Regularly reassessing strategic priorities ensures the military is optimized for current threats, not past ones.",
+        "Improving transparency and accountability in all defense spending is paramount.",
+    ],
+    pentagon_contractors_cut: [
+        "Over-reliance on expensive defense contractors inflates costs and requires stricter oversight and reduced outsourcing.",
+        "Billions could be saved by bringing more functions currently performed by contractors back in-house.",
+        "Requiring more competition and fixed-price contracts for defense services protects taxpayer interests.",
+        "The revolving door between the Pentagon and defense contractors warrants scrutiny and reform.",
+    ],
+    pentagon_contractors_review: [
+        "Enhancing transparency in defense contracting, including performance and cost data, is essential.",
+        "Implementing stronger mechanisms to prevent waste and fraud in defense contracts.",
+        "Evaluating the cost-effectiveness of outsourcing versus using government personnel for specific functions.",
+        "Ensuring contractor performance meets rigorous standards and provides value for money.",
+    ],
+    pentagon_personnel_cut: [
+        "While supporting troops is vital, reviewing personnel costs for efficiencies in areas like healthcare administration or redundant basing.",
+        "Optimizing military force structure could potentially yield savings in personnel costs.",
+        "Balancing personnel compensation with investments in training and equipment requires careful management.",
+    ],
+    pentagon_personnel_fund: [
+        "Attracting and retaining skilled military personnel necessitates competitive pay, benefits, and quality family support.",
+        "Investing in the well-being and readiness of service members is crucial for an effective all-volunteer force.",
+        "Adequate funding for military personnel accounts directly impacts morale, retention, and national security.",
+        "Ensuring high-quality healthcare and housing for military members and their families is a necessary cost.",
+    ],
+    pentagon_personnel_review: [
+        "Regularly reviewing military compensation packages to ensure competitiveness.",
+        "Improving access to quality healthcare, mental health services, and childcare for military families.",
+        "Streamlining personnel management processes to reduce administrative burdens.",
+        "Focusing on programs that genuinely support service member well-being and readiness.",
+    ],
+    pentagon_top5_contractors_cut: [ // Specific focus on largest contractors
+        "The heavy concentration of defense contracts among a few large firms warrants action to promote greater competition.",
+        "Reducing the share of contracts flowing to the top 5 defense corporations could foster a more diverse industrial base.",
+        "Increased scrutiny is needed on contracts awarded to the largest defense firms to ensure taxpayers receive fair value.",
+        "Breaking up the excessive influence of the largest defense contractors on policy and spending.",
+    ],
+    pentagon_top5_contractors_review: [
+        "The relationship between the Pentagon and its largest contractors needs close oversight to prevent undue influence.",
+        "Evaluating the strategic risks of relying heavily on a small number of dominant defense firms.",
+        "Promoting opportunities for smaller, innovative companies in the defense sector.",
+        "Ensuring mergers among large defense contractors do not further reduce competition.",
+    ],
+    nuclear_weapons_cut: [
+        "The exorbitant cost of maintaining and modernizing a vast nuclear arsenal should be sharply curtailed.",
+        "Reducing reliance on nuclear weapons and pursuing arms control could save billions and enhance global security.",
+        "Questioning the necessity of specific, costly nuclear modernization programs like the Sentinel ICBM.",
+        "Shifting resources from nuclear weapons to conventional deterrence or pressing domestic needs.",
+    ],
+    nuclear_weapons_fund: [ // Often framed as 'modernization' or 'deterrence'
+        "Proponents argue modernizing the nuclear triad is essential for strategic deterrence.",
+        "Ensuring the safety, security, and reliability of the existing nuclear stockpile requires ongoing investment.",
+        "Maintaining a credible nuclear deterrent is seen by some as vital in a world with nuclear-armed adversaries.",
+    ],
+    nuclear_weapons_review: [
+        "The long-term costs and strategic rationale for all nuclear modernization programs require rigorous congressional review.",
+        "Ensuring robust command, control, and safety measures for the nuclear arsenal necessitates continuous oversight.",
+        "Balancing investments in nuclear deterrence with conventional forces and diplomacy.",
+        "Pursuing arms control negotiations to reduce nuclear risks globally.",
+    ],
+    foreign_military_aid_cut: [
+        "U.S. foreign military aid often fuels conflicts and diverts resources from domestic needs; it should be sharply reduced.",
+        "Providing weapons abroad can entangle the U.S. in foreign disputes with unintended consequences.",
+        "Reallocating funds from foreign military aid to diplomacy or development assistance would be wiser.",
+        "Conditioning all military aid strictly on human rights and accountability.",
+    ],
+    foreign_military_aid_fund: [ // Often framed as 'strategic interest'
+        "Strategic foreign military aid can strengthen key allies and enhance regional stability.",
+        "Security assistance helps partner nations defend themselves and counter shared threats like terrorism.",
+        "Military aid can be a tool to build relationships and advance U.S. interests abroad.",
+    ],
+    foreign_military_aid_review: [
+        "All foreign military aid must be subject to strict conditions regarding human rights and democratic governance.",
+        "The effectiveness and strategic rationale for each military aid package require constant evaluation.",
+        "Transparency regarding the specific uses and impacts of U.S. military aid is essential.",
+        "Balancing military aid with diplomatic and economic tools in foreign policy.",
+    ],
+    israel_wars_cut: [ // More specific version of foreign_military_aid_cut
+        "Unconditional military aid to specific nations, like Israel, drains U.S. resources and can enable controversial actions.",
+        "The level of military funding provided to Israel warrants scrutiny compared to domestic needs.",
+        "Conditioning military aid to Israel on compliance with international law and U.S. policy goals.",
+        "Reassessing the strategic benefits versus the costs and risks of extensive military aid to Israel.",
+    ],
+     israel_wars_fund: [ // Specific version of foreign_military_aid_fund
+        "Proponents view supporting Israel's security through military aid as a key U.S. policy pillar in the Middle East.",
+        "Funding for systems like Iron Dome enhances Israeli defense against regional threats.",
+        "Security assistance to Israel is often framed as mutually beneficial for intelligence sharing and defense innovation.",
+    ],
+     israel_wars_review: [
+        "The impact of U.S. military aid to Israel on regional stability and the Israeli-Palestinian conflict requires critical assessment.",
+        "Transparency regarding the specific uses of U.S. military aid by Israel is crucial.",
+        "Balancing the security partnership with Israel against broader U.S. interests and values in the region.",
+        "Ensuring U.S.-provided weapons are used in accordance with international law.",
+    ],
+    f35_cut: [
+        "The F-35 program's staggering cost overruns and persistent performance issues warrant significant funding cuts.",
+        "Reducing the total number of F-35s procured could save billions for other priorities.",
+        "Continuing massive funding for the F-35 without addressing affordability and reliability is fiscally irresponsible.",
+        "Exploring more cost-effective aircraft alternatives for certain mission sets.",
+    ],
+    f35_review: [
+        "Rigorous, independent testing of the F-35's performance, maintenance costs, and combat effectiveness is crucial.",
+        "Holding Lockheed Martin accountable for meeting F-35 cost and performance targets.",
+        "Ensuring the F-35 program delivers the promised capabilities at an acceptable cost.",
+        "Considering the long-term sustainment costs of the F-35 fleet.",
+    ],
+    pentagon_spacex_cut: [ // Similar to NASA_SpaceX_cut, but DoD focus
+        "Pentagon contracts with profitable private space companies like SpaceX need stronger justification regarding unique value.",
+        "Ensuring fair competition in national security space launches, avoiding over-reliance on one provider.",
+        "Questioning the need to subsidize established commercial space ventures with defense contracts.",
+        "Demanding greater transparency on the cost and terms of Pentagon-SpaceX contracts.",
+    ],
+    pentagon_spacex_review: [
+        "Contracts awarded to SpaceX require robust oversight for performance, cost control, and security.",
+        "Transparency regarding the terms and value of Pentagon contracts with commercial space companies.",
+        "Assessing the long-term strategy for utilizing commercial partners for national security space missions.",
+        "Ensuring competition is maintained in the national security launch market.",
+    ],
+    pentagon_dei_cut: [
+        "Funding for Pentagon DEI initiatives should be evaluated for effectiveness, ensuring demonstrable contribution to readiness.",
+        "Resources allocated to DEI programs must be justified based on clear objectives and outcomes.",
+        "Ensuring DEI efforts focus on equal opportunity and merit, not divisive identity politics.",
+        "Preventing DEI programs from becoming overly bureaucratic or detracting from core mission focus.",
+    ],
+    pentagon_dei_fund: [ // Often framed as enhancing readiness/talent pool
+        "Well-implemented DEI initiatives can enhance military readiness by attracting diverse talent and fostering teamwork.",
+        "Promoting an inclusive environment strengthens the Armed Forces by ensuring fair treatment for all.",
+        "Addressing discrimination or bias through DEI programs contributes to unit cohesion.",
+    ],
+    pentagon_dei_review: [
+        "The goals, metrics, and costs of Pentagon DEI programs require clear definition and congressional oversight.",
+        "Ensuring DEI training is evidence-based and genuinely contributes to a more effective military.",
+        "Balancing DEI goals with the military's primary mission of national defense.",
+        "Guaranteeing DEI initiatives uphold principles of meritocracy and equal opportunity.",
+    ],
+    // --- Veterans ---
+    va_cut: [
+        "While supporting veterans, the VA system needs continuous efforts to improve efficiency and reduce bureaucracy.",
+        "Modernizing VA operations and IT systems could allow resources to focus more directly on veteran care.",
+        "Ensuring accountability and eliminating wasteful spending within the VA maximizes fund effectiveness.",
+        "Streamlining VA service delivery without compromising quality of care.",
+    ],
+    va_fund: [
+        "Fulfilling our nation's promise to veterans requires robust funding for VA healthcare, mental health, and benefits.",
+        "Investing in the VA system, including expanding access and reducing wait times, meets veterans' complex needs.",
+        "Adequate funding for VA benefits like the GI Bill and housing assistance helps veterans thrive.",
+        "Supporting VA research contributes to advancements in veteran healthcare.",
+    ],
+    va_review: [
+        "Improving the timeliness and accuracy of VA disability claims processing remains critical.",
+        "Enhancing mental healthcare access and suicide prevention programs for veterans must be a top VA priority.",
+        "Ensuring seamless coordination between the VA and DoD for transitioning service members.",
+        "Modernizing VA facilities and infrastructure to provide state-of-the-art care.",
+    ],
+    pact_act_fund: [ // PACT Act focus is generally on funding/implementation
+        "Fully funding and effectively implementing the PACT Act is essential for veterans exposed to toxins.",
+        "Ensuring the VA has resources to process PACT Act claims efficiently and provide specialized care.",
+        "Outreach efforts to inform eligible veterans about PACT Act benefits require adequate support.",
+        "Investing in research on toxic exposure health effects, funded through the PACT Act.",
+    ],
+    pact_act_review: [
+        "Monitoring the VA's progress in implementing the PACT Act, including claims processing and access to care.",
+        "Continued research into the long-term health effects of military toxic exposures.",
+        "Ensuring healthcare providers are knowledgeable about toxic exposure issues.",
+        "Streamlining the process for veterans to access PACT Act benefits.",
+    ],
+    // --- Unemployment and Labor ---
+    tanf_cut: [
+        "TANF's effectiveness needs rigorous evaluation; funding should prioritize programs proven to move families out of poverty.",
+        "Ensuring TANF work requirements are meaningful and supported by adequate job training.",
+        "Reducing state flexibility to use TANF funds for unrelated purposes could improve focus.",
+        "Evaluating whether TANF benefit levels create disincentives to work.",
+    ],
+    tanf_fund: [
+        "Strengthening the safety net requires adequate TANF funding for vulnerable families facing hardship.",
+        "Investing in TANF-funded job training and supportive services helps parents secure stable employment.",
+        "Adjusting TANF benefit levels for inflation is necessary to provide meaningful assistance.",
+        "Supporting TANF programs that address barriers to employment like childcare and transportation.",
+    ],
+    tanf_review: [
+        "Evaluating the impact of TANF time limits and sanctions on family well-being.",
+        "Improving data collection on TANF outcomes to assess program effectiveness.",
+        "Ensuring TANF programs are responsive to the needs of diverse families.",
+        "Strengthening TANF's role in poverty reduction and promoting economic mobility.",
+    ],
+    child_tax_credit_cut: [
+        "The Child Tax Credit (CTC) structure should be reviewed for fiscal sustainability and effective targeting.",
+        "Exploring modifications to the CTC, like strengthening work requirements or adjusting income limits.",
+        "Balancing the CTC's poverty reduction impact against its overall cost.",
+        "Considering whether CTC expansion contributes significantly to inflation.",
+    ],
+    child_tax_credit_fund: [ // Focus on expansion/permanence
+        "Expanding the Child Tax Credit, especially for the lowest-income families, effectively reduces child poverty.",
+        "Making recent CTC expansions permanent provides stability for working families.",
+        "The CTC helps families cover rising costs, boosting local economies.",
+        "Simplifying CTC claiming processes ensures eligible families receive the benefit.",
+    ],
+    child_tax_credit_review: [
+        "Simplifying the process for eligible families to claim the CTC.",
+        "Evaluating the CTC's impact on parental employment and family economic decisions.",
+        "Ensuring the CTC interacts effectively with other safety net programs.",
+        "Assessing the administrative costs versus the benefits delivered by the CTC.",
+    ],
+    refugee_assistance_cut: [
+        "Refugee resettlement costs should be managed efficiently, focusing on rapid self-sufficiency.",
+        "Ensuring adequate security screening alongside resettlement programs.",
+        "Balancing humanitarian commitments with fiscal capacity and integration challenges.",
+        "Exploring ways to increase private sponsorship or community support for refugees.",
+    ],
+    refugee_assistance_fund: [
+        "Providing adequate resources for refugee resettlement reflects American humanitarian values.",
+        "Investing in effective integration programs helps refugees become self-sufficient contributors.",
+        "Supporting refugee assistance demonstrates U.S. leadership and compassion.",
+        "Ensuring resettlement agencies have the resources to meet refugees' initial needs.",
+    ],
+    refugee_assistance_review: [
+        "Improving coordination between federal agencies, resettlement organizations, and local communities.",
+        "Evaluating the long-term outcomes of refugees resettled in the U.S.",
+        "Ensuring resettlement programs are adequately resourced to handle fluctuating arrivals.",
+        "Streamlining the process for refugees to obtain work authorization.",
+    ],
+    liheap_cut: [
+        "LIHEAP funding should target the most vulnerable households, with strong verification.",
+        "Encouraging energy efficiency alongside bill assistance provides more sustainable solutions.",
+        "Ensuring LIHEAP funds supplement, not replace, individual responsibility.",
+        "Reviewing LIHEAP administrative costs for potential savings.",
+    ],
+    liheap_fund: [
+        "LIHEAP is crucial for preventing dangerous energy shutoffs for vulnerable households.",
+        "Adequate LIHEAP funding provides a vital safety net against energy poverty.",
+        "Supporting LIHEAP weatherization programs helps low-income households reduce energy costs permanently.",
+        "Increased LIHEAP funding is needed due to rising energy prices.",
+    ],
+    liheap_review: [
+        "Streamlining the LIHEAP application process improves access for eligible households.",
+        "Ensuring equitable distribution of LIHEAP funds based on need and climate.",
+        "Coordinating LIHEAP with other utility assistance and efficiency programs maximizes impact.",
+        "Evaluating the effectiveness of LIHEAP in preventing energy crises.",
+    ],
+    nlrb_cut: [
+        "The NLRB's actions sometimes face criticism regarding fairness; its funding and authority warrant review.",
+        "Ensuring the NLRB applies labor laws impartially and efficiently.",
+        "Evaluating whether the NLRB's structure is suited to the modern economy.",
+        "Questioning the necessity of certain NLRB enforcement actions.",
+    ],
+    nlrb_fund: [
+        "Protecting workers' rights to organize and bargain collectively requires a fully funded NLRB.",
+        "Adequate resources allow the NLRB to investigate charges promptly and remedy violations.",
+        "A strong NLRB is essential for maintaining a balance between employers and employees.",
+        "Funding the NLRB ensures fair labor practices are upheld.",
+    ],
+    nlrb_review: [
+        "Improving the speed and efficiency of NLRB case processing.",
+        "Ensuring NLRB decisions are consistent and well-reasoned.",
+        "Adapting NLRB rules to address challenges in the modern workforce (e.g., gig economy).",
+        "Maintaining the NLRB's independence and impartiality.",
+    ],
+    // --- Education ---
+    dept_education_cut: [
+        "The federal role in education should be limited, avoiding bureaucratic overreach and respecting local control.",
+        "Consolidating duplicative programs within the Department of Education could yield savings.",
+        "Evaluating the effectiveness of federal education mandates is necessary.",
+        "Reducing the administrative burden associated with federal education grants.",
+    ],
+    dept_education_fund: [
+        "Investing in education at all levels is crucial for opportunity and economic growth.",
+        "The Department of Education plays a vital role in promoting equity and ensuring civil rights in schools.",
+        "Adequate federal funding is necessary to support key education initiatives, especially for disadvantaged students.",
+        "Supporting research and innovation in education through federal grants.",
+    ],
+    dept_education_review: [
+        "Simplifying federal grant applications for schools and colleges.",
+        "Improving data collection on the outcomes of federal education programs.",
+        "Ensuring effective enforcement of civil rights laws in education.",
+        "Strengthening the Department's oversight of federal student aid programs.",
+    ],
+    college_aid_cut: [
+        "Federal college aid programs need reform to address soaring tuition costs, not just subsidize them.",
+        "Exploring ways to simplify federal student aid and better target it based on need.",
+        "Holding colleges more accountable for student outcomes and controlling administrative costs.",
+        "Questioning the effectiveness of current student loan programs and seeking alternatives.",
+    ],
+    college_aid_fund: [
+        "Expanding access to affordable higher education requires increased funding for Pell Grants and work-study.",
+        "Reducing the burden of student loan debt supports economic security and mobility.",
+        "Simplifying the FAFSA application makes it easier for students to access aid.",
+        "Investing in programs that support college completion, not just enrollment.",
+    ],
+    college_aid_review: [
+        "Reviewing student loan interest rates, repayment options, and servicing practices.",
+        "Evaluating the effectiveness of different types of college aid.",
+        "Ensuring federal aid programs support quality institutions and protect students.",
+        "Strengthening oversight of for-profit colleges receiving federal aid.",
+    ],
+    k12_schools_cut: [
+        "Federal K-12 funding should primarily supplement state/local efforts, focusing on national priorities.",
+        "Reducing federal mandates and returning control over education policy to states and districts.",
+        "Consolidating overlapping federal K-12 grant programs could increase efficiency.",
+        "Evaluating the actual impact of federal K-12 spending on student achievement.",
+    ],
+    k12_schools_fund: [
+        "Targeted federal funding for K-12 schools is crucial for supporting under-resourced districts and vulnerable students (IDEA, Title I).",
+        "Investing in programs supporting teachers, school infrastructure, and technology improves educational quality.",
+        "Federal support plays a key role in promoting educational equity.",
+        "Funding programs that address learning loss and support student mental health.",
+    ],
+    k12_schools_review: [
+        "Ensuring federal K-12 funds effectively improve outcomes, especially for disadvantaged groups.",
+        "Evaluating the impact of federal education laws on local school districts.",
+        "Promoting innovation and evidence-based practices in K-12 education.",
+        "Strengthening support for students with disabilities and English language learners.",
+    ],
+    cpb_cut: [
+        "In today's diverse media landscape, federal funding for the Corporation for Public Broadcasting faces scrutiny.",
+        "Questions about political bias sometimes lead to calls for reducing CPB subsidies.",
+        "Phasing out federal support could encourage public broadcasters to rely more on private donations.",
+        "Evaluating the necessity of CPB funding compared to other pressing needs.",
+    ],
+    cpb_fund: [ // Focus on public service mission
+        "CPB provides essential funding for quality educational programming and objective news accessible to all.",
+        "Public broadcasting serves underserved communities and offers a vital non-commercial alternative.",
+        "Federal support ensures the independence and reach of public radio and television.",
+        "CPB funding supports local stations that provide valuable community services.",
+    ],
+    cpb_review: [
+        "Ensuring CPB funding distribution is fair, transparent, and supports diverse programming.",
+        "Evaluating mechanisms for maintaining editorial independence in public broadcasting.",
+        "Assessing public broadcasting's role and adaptation in the digital age.",
+        "Strengthening oversight of how CPB funds are used by local stations.",
+    ],
+    imls_cut: [
+        "While libraries/museums are valuable, federal IMLS funding could potentially be reduced, shifting responsibility elsewhere.",
+        "Prioritizing IMLS grants towards programs with the broadest impact or serving the most underserved.",
+        "Evaluating the specific outcomes achieved through IMLS funding.",
+        "Considering whether IMLS functions could be absorbed by other agencies.",
+    ],
+    imls_fund: [
+        "IMLS provides crucial federal support for libraries and museums, enabling vital educational resources and community programs.",
+        "IMLS funding helps libraries bridge the digital divide and supports museums in preserving cultural heritage.",
+        "Federal support through IMLS leverages state/local funding, strengthening these community institutions.",
+        "IMLS grants support innovation and adaptation in library and museum services.",
+    ],
+    imls_review: [
+        "Ensuring IMLS grants are accessible to institutions of all sizes, including rural/underserved areas.",
+        "Focusing IMLS initiatives on key priorities like digital literacy and workforce development.",
+        "Improving data collection on the impact of IMLS-funded programs.",
+        "Strengthening IMLS's role in promoting information access and lifelong learning.",
+    ],
+    // --- Food and Agriculture ---
+    snap_cut: [
+        "Reforming SNAP (food stamps) to strengthen work requirements and improve program integrity could lead to savings.",
+        "Ensuring SNAP benefits are used for nutritious food items warrants consideration.",
+        "Tightening SNAP eligibility requires balancing fiscal concerns and food security.",
+        "Reducing SNAP fraud and abuse through better verification methods.",
+    ],
+    snap_fund: [
+        "SNAP is the nation's most effective anti-hunger program and should be fully funded.",
+        "Strengthening SNAP benefits reduces food insecurity and improves health outcomes.",
+        "Maintaining broad SNAP eligibility is crucial, especially during economic downturns.",
+        "SNAP benefits provide significant economic stimulus to local communities.",
+    ],
+    snap_review: [
+        "Simplifying the SNAP application process improves access for eligible households.",
+        "Improving SNAP Employment & Training programs to connect recipients with jobs.",
+        "Ensuring SNAP benefit levels reflect the actual cost of a nutritious diet.",
+        "Using technology to make SNAP benefits easier to access and use.",
+    ],
+    school_lunch_cut: [
+        "Reviewing nutritional standards and administrative costs of the School Lunch Program for efficiencies.",
+        "Ensuring school meal programs target assistance effectively to low-income students.",
+        "Exploring partnerships or alternative models for providing nutritious school meals.",
+        "Balancing meal quality with program cost requires careful management.",
+    ],
+    school_lunch_fund: [
+        "Expanding access to free school meals ensures children have the nutrition needed to learn.",
+        "Investing in universal free school meals reduces stigma and improves student health.",
+        "Supporting programs using fresh, locally sourced foods in school meals enhances quality.",
+        "Adequate funding allows schools to meet nutritional standards and cover rising food costs.",
+    ],
+    school_lunch_review: [
+        "Improving the nutritional quality and appeal of school meals to increase participation.",
+        "Streamlining the application process for free/reduced-price meals.",
+        "Ensuring adequate funding for schools to meet updated nutritional standards.",
+        "Reducing food waste within school meal programs.",
+    ],
+    fsa_cut: [
+        "Reforming farm subsidies administered by the Farm Service Agency (FSA) is needed to reduce market distortions.",
+        "Limiting FSA payments to large agricultural corporations and better targeting support to small farmers.",
+        "Phasing out certain commodity support programs could save taxpayer money.",
+        "Shifting FSA resources from subsidies towards conservation programs.",
+    ],
+    fsa_fund: [
+        "The FSA provides crucial support for farmers, including credit, disaster aid, and conservation programs.",
+        "Adequate funding for FSA loan programs helps beginning and underserved farmers access capital.",
+        "Investing in FSA conservation programs protects natural resources.",
+        "FSA programs help ensure a stable food supply and support rural economies.",
+    ],
+    fsa_review: [
+        "Improving the accessibility of FSA programs for small, mid-sized, and minority farmers.",
+        "Ensuring FSA disaster assistance is timely and effective.",
+        "Evaluating the effectiveness of commodity support versus conservation incentives.",
+        "Modernizing FSA technology and service delivery.",
+    ],
+    wic_cut: [
+        "While valuable, reviewing WIC's administrative costs for efficiency is prudent.",
+        "Targeting WIC benefits effectively to those most nutritionally at risk.",
+        "Coordinating WIC services with other maternal/child health programs to reduce duplication.",
+        "Ensuring WIC food packages offer the best nutritional value for cost.",
+    ],
+    wic_fund: [
+        "WIC provides critical nutritional support for low-income pregnant women, mothers, and young children, improving health outcomes.",
+        "Fully funding WIC ensures all eligible participants receive benefits, reducing infant mortality and supporting healthy development.",
+        "Investing in WIC is a cost-effective way to improve long-term health.",
+        "WIC's nutrition education and breastfeeding support components are highly valuable.",
+    ],
+    wic_review: [
+        "Modernizing WIC food packages to align with current dietary guidelines.",
+        "Improving the WIC shopping experience through enhanced EBT systems.",
+        "Strengthening WIC's role in providing nutrition education and healthcare referrals.",
+        "Increasing WIC participation rates among eligible populations.",
+    ],
+    // --- Government Operations ---
+    fdic_review: [ // FDIC is funded by bank premiums, not direct taxes - focus on oversight/effectiveness
+        "Ensuring the FDIC effectively manages the deposit insurance fund and regulates banks.",
+        "Maintaining public confidence requires demonstrating the FDIC's independence and financial strength.",
+        "Evaluating the adequacy of FDIC resources to handle potential bank failures.",
+        "Assessing the FDIC's role in addressing emerging risks in the financial system.",
+    ],
+    irs_cut: [
+        "IRS funding should prioritize efficient tax administration and taxpayer service, avoiding burdensome enforcement.",
+        "Concerns about IRS overreach sometimes lead to calls for budget constraints.",
+        "Simplifying the tax code itself could be more effective than just increasing IRS enforcement.",
+        "Ensuring IRS resources are used fairly and not politically motivated.",
+    ],
+    irs_fund: [
+        "Adequate IRS funding is essential to close the 'tax gap' and ensure fairness.",
+        "Investing in IRS modernization improves efficiency and taxpayer service.",
+        "Effective IRS enforcement targeting high-income non-compliance yields significant revenue returns.",
+        "Providing the IRS resources to combat sophisticated tax evasion schemes.",
+    ],
+    irs_review: [
+        "Ensuring the IRS uses its resources fairly requires strong congressional oversight.",
+        "Improving IRS taxpayer service, including phone support and online tools.",
+        "Protecting taxpayer rights and ensuring due process during audits.",
+        "Focusing IRS enforcement efforts on areas with the highest rates of non-compliance.",
+    ],
+    federal_courts_cut: [
+        "Reviewing federal court operations for efficiencies in case management and administration.",
+        "Exploring alternatives to litigation might reduce court caseloads.",
+        "Careful budgeting is necessary, but must not compromise the judiciary's ability to function.",
+    ],
+    federal_courts_fund: [
+        "A well-functioning judiciary requires sufficient funding for judgeships, staff, security, and technology.",
+        "Investing in the federal courts ensures access to justice and upholds the rule of law.",
+        "Adequate resources are needed to protect judges and maintain secure facilities.",
+        "Funding technology upgrades enhances court efficiency and public access.",
+    ],
+    federal_courts_review: [
+        "Addressing judicial vacancies to reduce case backlogs.",
+        "Improving access to the courts for low-income individuals.",
+        "Modernizing court technology and electronic filing systems.",
+        "Ensuring the judiciary remains independent and impartial.",
+    ],
+    public_defenders_fund: [ // Focus is almost always on underfunding
+        "Ensuring the constitutional right to counsel requires adequate funding for federal public defenders.",
+        "Underfunded public defense systems compromise the quality of representation.",
+        "Investing in public defense ensures fairness in the justice system.",
+        "Addressing high caseloads requires increased resources for public defenders.",
+    ],
+    public_defenders_review: [
+        "Addressing high caseloads and ensuring defenders have resources for investigations.",
+        "Promoting pay parity between public defenders and prosecutors.",
+        "Evaluating models for providing indigent defense in federal court.",
+        "Supporting training and professional development for public defenders.",
+    ],
+    usps_review: [ // USPS is largely self-funded but faces mandates/challenges - focus on reform/oversight
+        "Reviewing congressional mandates, like retiree health pre-funding, that impact USPS finances.",
+        "Supporting USPS modernization efforts and adjustments to service standards.",
+        "Allowing USPS diversification of revenue streams warrants consideration.",
+        "Ensuring the Postal Service can fulfill its universal service obligation sustainably.",
+    ],
+    cfpb_cut: [
+        "The CFPB's broad authority and funding structure warrant scrutiny regarding accountability.",
+        "Concerns about CFPB regulations being overly burdensome on financial institutions.",
+        "Ensuring the CFPB focuses on clear consumer harm, avoiding regulatory overreach.",
+        "Limiting the CFPB's power or budget is sometimes proposed.",
+    ],
+    cfpb_fund: [
+        "The CFPB plays a vital role in protecting consumers from predatory financial practices.",
+        "Strong CFPB enforcement returns billions to harmed consumers and deters misconduct.",
+        "Funding CFPB's consumer education helps empower individuals financially.",
+        "Adequate resources allow the CFPB to supervise financial institutions effectively.",
+    ],
+    cfpb_review: [
+        "Ensuring the CFPB's rulemaking process is transparent and data-driven.",
+        "Improving coordination between the CFPB and other financial regulators.",
+        "Evaluating the effectiveness of CFPB enforcement and education programs.",
+        "Maintaining the CFPB's independence to protect consumers.",
+    ],
+    mbda_cut: [
+        "Evaluating the MBDA's effectiveness compared to broader small business support programs.",
+        "Ensuring MBDA programs deliver measurable results in promoting minority business growth.",
+        "Consolidating business development programs could potentially increase efficiency.",
+    ],
+    mbda_fund: [
+        "The MBDA plays a unique role in addressing systemic barriers for minority-owned businesses.",
+        "Investing in MBDA programs helps create jobs and build wealth in underserved communities.",
+        "Expanding MBDA's reach can help close the persistent racial wealth gap.",
+        "Supporting MBDA strengthens the overall economy through diversity.",
+    ],
+    mbda_review: [
+        "Improving access to capital and federal contracting for minority-owned businesses via MBDA.",
+        "Strengthening partnerships between MBDA and other agencies/private sector.",
+        "Enhancing data collection on minority-owned businesses to inform MBDA strategies.",
+        "Ensuring MBDA programs are effectively targeted and managed.",
+    ],
+    usich_review: [ // Funding is very small - focus on effectiveness/coordination
+        "Evaluating USICH's effectiveness in coordinating federal efforts to end homelessness.",
+        "Ensuring USICH's role complements, rather than duplicates, HUD's work.",
+        "Strengthening USICH's ability to promote evidence-based practices like Housing First.",
+        "Improving coordination between federal efforts and state/local homelessness systems.",
+    ],
+    // --- Housing and Community ---
+    fema_cut: [
+        "FEMA's disaster response requires review for efficiency in administration and aid delivery.",
+        "Ensuring FEMA funds prioritize immediate life-saving needs while minimizing fraud.",
+        "Balancing federal disaster aid with state/local preparedness efforts.",
+        "Scrutinizing FEMA contracting practices for cost-effectiveness.",
+    ],
+    fema_fund: [
+        "Increasing disaster frequency requires robust FEMA funding for response, recovery, and mitigation.",
+        "Investing in FEMA's capacity provides timely assistance to disaster survivors.",
+        "Supporting FEMA's pre-disaster mitigation programs reduces long-term costs.",
+        "Ensuring FEMA has the resources to handle large-scale disasters effectively.",
+    ],
+    fema_review: [
+        "Improving the speed and accessibility of FEMA's individual assistance programs.",
+        "Strengthening FEMA's coordination with state, local, and tribal governments.",
+        "Ensuring FEMA programs promote resilience and address climate impacts.",
+        "Increasing transparency in FEMA spending and decision-making.",
+    ],
+    fema_drf_fund: [ // Specific fund within FEMA - focus is usually on adequate balance
+        "Maintaining a sufficiently funded Disaster Relief Fund (DRF) is crucial for immediate disaster response.",
+        "Predictable and adequate DRF funding provides stability for disaster planning.",
+        "Replenishing the DRF proactively ensures resources are available when needed.",
+        "Ensuring the DRF can cover the costs of increasingly frequent and severe disasters.",
+    ],
+    fema_drf_review: [
+        "Improving transparency regarding DRF spending and obligations.",
+        "Ensuring DRF funding formulas are equitable and based on actual disaster needs.",
+        "Evaluating the long-term solvency of the DRF given rising disaster costs.",
+        "Streamlining processes for accessing DRF funds for recovery projects.",
+    ],
+    hud_cut: [
+        "HUD programs need review for effectiveness in addressing the affordable housing crisis.",
+        "Streamlining HUD bureaucracy and reducing burdensome regulations.",
+        "Evaluating the cost-effectiveness of different HUD programs (vouchers vs. development).",
+        "Encouraging more private sector involvement in affordable housing.",
+    ],
+    hud_fund: [
+        "Tackling the affordable housing crisis requires significant investment in HUD programs like rental assistance.",
+        "Expanding HUD resources is essential for reducing homelessness and promoting housing stability.",
+        "Investing in affordable housing development through HUD stimulates local economies.",
+        "Funding HUD programs that support community development and fair housing.",
+    ],
+    hud_review: [
+        "Improving the efficiency of HUD's rental assistance programs to serve more families.",
+        "Addressing the large capital backlog in public housing requires sustained investment.",
+        "Ensuring HUD programs effectively promote fair housing and reduce segregation.",
+        "Strengthening HUD oversight of grantees and program performance.",
+    ],
+    head_start_cut: [
+        "Head Start programs should be rigorously evaluated for long-term impact.",
+        "Improving quality standards and accountability across all Head Start centers.",
+        "Ensuring Head Start funding complements, not duplicates, state pre-K programs.",
+        "Focusing Head Start resources on the most effective interventions.",
+    ],
+    head_start_fund: [
+        "Head Start provides critical comprehensive early childhood services, improving school readiness.",
+        "Expanding access to high-quality Head Start, especially Early Head Start, is vital.",
+        "Adequate funding allows Head Start to maintain quality standards and comprehensive services.",
+        "Head Start demonstrably improves long-term outcomes for low-income children.",
+    ],
+    head_start_review: [
+        "Strengthening Head Start performance standards and ensuring consistent quality.",
+        "Improving coordination between Head Start and K-12 school systems.",
+        "Enhancing support for Head Start staff, including pay and professional development.",
+        "Focusing Head Start on evidence-based practices in early childhood education.",
+    ],
+    public_housing_cut: [
+        "The traditional public housing model faces challenges; exploring alternatives is needed.",
+        "Improving management efficiency and safety in existing public housing.",
+        "Shifting towards housing vouchers is sometimes proposed as more cost-effective.",
+        "Addressing the root causes of issues within public housing developments.",
+    ],
+    public_housing_fund: [
+        "Addressing the significant capital repair backlog in public housing is crucial for resident safety.",
+        "Investing in the preservation and modernization of public housing keeps it available.",
+        "Funding is needed to support resident services and improve management.",
+        "Public housing provides deeply affordable homes for very low-income households.",
+    ],
+    public_housing_review: [
+        "Implementing effective strategies to address crime and improve safety.",
+        "Promoting resident involvement and empowerment in management.",
+        "Exploring mixed-finance models to revitalize public housing communities.",
+        "Ensuring public housing is well-maintained and provides decent living conditions.",
+    ],
+    // --- Energy and Environment ---
+    epa_cut: [
+        "EPA regulations should balance environmental goals with economic burdens.",
+        "Streamlining EPA permitting processes is needed.",
+        "Evaluating the cost-effectiveness of specific EPA regulations.",
+        "Ensuring the EPA relies on sound science and transparent data.",
+    ],
+    epa_fund: [
+        "Addressing critical environmental challenges requires a well-funded EPA.",
+        "Investing in EPA enforcement ensures environmental laws are upheld.",
+        "Supporting EPA's scientific research provides the basis for sound policy.",
+        "Funding EPA programs that protect air and water quality is essential for public health.",
+    ],
+    epa_review: [
+        "Improving the timeliness of EPA's permitting and regulatory reviews.",
+        "Ensuring EPA regulations reflect the best available science.",
+        "Strengthening EPA's capacity to address environmental justice issues.",
+        "Enhancing EPA transparency and public participation in rulemaking.",
+    ],
+    forest_service_cut: [
+        "Reviewing Forest Service operations for efficiencies in timber management and administration.",
+        "Balancing environmental protection with economic uses of national forests.",
+        "Prioritizing Forest Service resources towards critical wildfire prevention.",
+        "Ensuring cost-effectiveness in Forest Service land management activities.",
+    ],
+    forest_service_fund: [
+        "Increased Forest Service funding is needed to address the escalating wildfire crisis.",
+        "Investing in the health of national forests protects watersheds and biodiversity.",
+        "Adequate resources allow sustainable management of national forests.",
+        "Supporting federal wildland firefighters with better pay and resources.",
+    ],
+    forest_service_review: [
+        "Improving the pace and scale of hazardous fuels treatments.",
+        "Strengthening partnerships for wildfire response and forest management.",
+        "Ensuring adequate compensation and support for wildland firefighters.",
+        "Using the best available science to guide forest restoration efforts.",
+    ],
+    noaa_cut: [
+        "Evaluating NOAA programs for potential duplication with other agencies.",
+        "Prioritizing NOAA resources towards core functions like weather forecasting.",
+        "Ensuring efficiency in NOAA's satellite and research vessel operations.",
+        "Considering whether certain NOAA functions could be handled by the private sector.",
+    ],
+    noaa_fund: [
+        "NOAA provides essential services like weather forecasts, climate data, and fisheries management.",
+        "Investing in NOAA's weather prediction capabilities protects lives and property.",
+        "Supporting NOAA's research on oceans and climate is critical.",
+        "Funding NOAA helps ensure sustainable management of marine resources.",
+    ],
+    noaa_review: [
+        "Improving the accuracy and lead time of NOAA weather forecasts.",
+        "Enhancing NOAA's role in supporting coastal resilience.",
+        "Ensuring sustainable fisheries management based on NOAA science.",
+        "Modernizing NOAA's observation systems (satellites, buoys).",
+    ],
+    renewable_energy_cut: [
+        "Government subsidies for mature renewable energy technologies should be phased out.",
+        "Focusing federal energy R&D on breakthrough technologies, not subsidizing existing ones.",
+        "Evaluating the cost-effectiveness of specific DOE renewable energy programs.",
+        "Allowing market forces to drive renewable energy deployment.",
+    ],
+    renewable_energy_fund: [
+        "Accelerating the clean energy transition requires federal investment in renewables and efficiency.",
+        "Supporting renewable energy programs creates jobs and reduces emissions.",
+        "Investing in grid modernization is crucial for integrating more renewables.",
+        "Funding research into next-generation renewable technologies and storage.",
+    ],
+    renewable_energy_review: [
+        "Ensuring federal renewable energy programs effectively drive innovation.",
+        "Improving permitting processes for renewable energy projects.",
+        "Targeting investments towards advanced renewable technologies.",
+        "Analyzing the grid impacts of increasing renewable energy penetration.",
+    ],
+    nps_cut: [
+        "Reviewing National Park Service (NPS) operations for efficiencies.",
+        "Exploring increased reliance on visitor fees or private partnerships for NPS.",
+        "Prioritizing NPS resources towards deferred maintenance and core preservation.",
+        "Balancing visitor access with resource protection requires careful budget choices.",
+    ],
+    nps_fund: [
+        "Protecting America's natural heritage requires adequate NPS funding to manage parks.",
+        "Addressing the significant deferred maintenance backlog in National Parks.",
+        "Investing in our National Parks preserves resources and supports local economies.",
+        "Providing sufficient resources for NPS staff (rangers, maintenance).",
+    ],
+    nps_review: [
+        "Developing sustainable solutions for the NPS deferred maintenance backlog.",
+        "Managing increasing visitor numbers to prevent resource damage.",
+        "Enhancing interpretation and education programs in parks.",
+        "Improving infrastructure within National Parks.",
+    ],
+    // --- International Affairs ---
+    diplomacy_cut: [
+        "Reviewing State Department operations for efficiencies and consolidating posts.",
+        "Evaluating the necessity and cost-effectiveness of all diplomatic programs.",
+        "Balancing investments in diplomacy with defense and development aid.",
+        "Ensuring diplomatic resources align with core foreign policy objectives.",
+    ],
+    diplomacy_fund: [
+        "Robust funding for diplomacy strengthens U.S. influence and promotes peace.",
+        "Investing in our diplomatic corps provides the front line for global engagement.",
+        "Supporting public diplomacy enhances mutual understanding.",
+        "Effective diplomacy can often avoid the need for costlier military interventions.",
+    ],
+    diplomacy_review: [
+        "Ensuring the State Department has resources to address complex global challenges.",
+        "Modernizing diplomatic tools and communication strategies.",
+        "Strengthening coordination between the State Department and other foreign affairs agencies.",
+        "Supporting the professional development and security of Foreign Service officers.",
+    ],
+    usaid_cut: [
+        "USAID programs require rigorous oversight for effectiveness and accountability.",
+        "Focusing foreign aid on countries and sectors where it can achieve sustainable outcomes.",
+        "Reducing administrative overhead within USAID.",
+        "Ensuring foreign aid aligns clearly with U.S. strategic interests.",
+    ],
+    usaid_fund: [
+        "U.S. foreign aid via USAID addresses global poverty, promotes health, and supports democracy.",
+        "Investing in global development prevents conflicts and creates economic partners.",
+        "Adequate USAID funding allows effective response to humanitarian crises.",
+        "Supporting USAID advances both American values and interests abroad.",
+    ],
+    usaid_review: [
+        "Improving measurement and reporting of USAID program outcomes.",
+        "Strengthening local partnerships for sustainable development.",
+        "Ensuring USAID programs have strong safeguards against corruption.",
+        "Adapting USAID strategies to address emerging global challenges.",
+    ],
+    usaid_climate_cut: [ // Specific USAID area
+        "International climate aid needs careful evaluation for effectiveness and verification.",
+        "Prioritizing climate finance towards projects with the greatest impact.",
+        "Ensuring transparency in how U.S. climate aid is used.",
+        "Balancing international climate aid against pressing domestic needs.",
+    ],
+    usaid_climate_fund: [
+        "Addressing the global climate crisis requires U.S. leadership, including supporting developing nations via USAID.",
+        "International climate finance helps mitigate global emissions and fosters cooperation.",
+        "Investing in climate adaptation abroad can reduce instability and migration.",
+        "Supporting clean energy transitions in developing countries benefits global climate goals.",
+    ],
+    usaid_climate_review: [
+        "Ensuring U.S. climate aid aligns with broader development goals.",
+        "Improving coordination of climate finance across U.S. agencies.",
+        "Developing robust monitoring and verification for international climate projects.",
+        "Leveraging private sector investment for global climate solutions.",
+    ],
+    // --- Law Enforcement ---
+    deportations_border_cut: [
+        "Focusing border resources on humane processing and addressing root causes of migration may be more effective.",
+        "Reviewing the cost and effectiveness of large-scale detention and deportation.",
+        "Prioritizing enforcement actions based on public safety risks.",
+        "Investing in technology and infrastructure at ports of entry for efficient processing.",
+    ],
+    deportations_border_fund: [
+        "Securing borders requires adequate resources for CBP personnel, technology, and infrastructure.",
+        "Funding for ICE is needed for interior enforcement and managing removal proceedings.",
+        "Investing in border security helps maintain national sovereignty.",
+        "Providing resources to combat smuggling and trafficking at the border.",
+    ],
+    deportations_border_review: [
+        "Ensuring humane treatment and due process in immigration enforcement.",
+        "Improving efficiency in immigration courts and asylum processing.",
+        "Enhancing coordination between CBP, ICE, and other agencies.",
+        "Utilizing technology effectively for border surveillance and management.",
+    ],
+    federal_prisons_cut: [
+        "Exploring criminal justice reforms to reduce incarceration rates for non-violent offenses.",
+        "Expanding alternatives to imprisonment could lower costs.",
+        "Improving rehabilitation programs to reduce recidivism.",
+        "Addressing overcrowding through sentencing reform or other measures.",
+    ],
+    federal_prisons_fund: [
+        "Maintaining safe and humane federal prisons requires funding for staffing, maintenance, and healthcare.",
+        "Investing in education and job training programs within prisons reduces recidivism.",
+        "Addressing understaffing ensures safety for inmates and correctional officers.",
+        "Providing adequate mental health and substance abuse treatment in prisons.",
+    ],
+    federal_prisons_review: [
+        "Implementing evidence-based practices to reduce violence in prisons.",
+        "Enhancing oversight of healthcare services for federal inmates.",
+        "Improving reentry programs to support successful community transitions.",
+        "Evaluating the effectiveness of different correctional programs.",
+    ],
+    // --- Transportation ---
+    highways_cut: [
+        "Federal highway funding should prioritize maintenance over costly new expansion.",
+        "Ensuring states use federal highway funds efficiently.",
+        "Balancing highway investments with support for transit and rail.",
+        "Exploring innovative financing mechanisms for highways.",
+    ],
+    highways_fund: [
+        "Modernizing America's aging highway infrastructure requires significant federal investment.",
+        "Predictable federal funding allows states to undertake large transportation projects.",
+        "Investing in highway improvements enhances safety, reduces congestion, and supports freight movement.",
+        "Upgrading bridges and roads is critical for economic activity.",
+    ],
+    highways_review: [
+        "Prioritizing projects that improve safety and reduce bottlenecks.",
+        "Streamlining environmental review for critical infrastructure projects.",
+        "Incorporating technology to improve traffic flow and safety.",
+        "Ensuring highway projects are resilient to climate change impacts.",
+    ],
+    public_transit_cut: [
+        "Federal transit funding should prioritize systems with high ridership and efficiency.",
+        "Encouraging local/state governments to bear a larger share of transit operating costs.",
+        "Evaluating the cost-effectiveness of specific large transit projects.",
+        "Ensuring transit agencies operate efficiently.",
+    ],
+    public_transit_fund: [
+        "Investing in public transit reduces congestion, lowers emissions, and increases accessibility.",
+        "Adequate federal funding helps transit agencies maintain safe service and upgrade infrastructure.",
+        "Supporting transit provides affordable transportation options.",
+        "Funding the transition to cleaner transit fleets (electric buses).",
+    ],
+    public_transit_review: [
+        "Improving transit service frequency, reliability, and coverage.",
+        "Integrating transit with other modes like biking and walking.",
+        "Ensuring transit systems are accessible to people with disabilities.",
+        "Using technology to improve the rider experience (real-time info, payments).",
+    ],
+    tsa_cut: [
+        "Reviewing TSA screening procedures for efficiency, potentially using more risk-based approaches.",
+        "Evaluating the cost-effectiveness of specific TSA technologies.",
+        "Ensuring appropriate staffing levels and minimizing administrative overhead.",
+        "Comparing TSA performance and cost against international counterparts.",
+    ],
+    tsa_fund: [
+        "Maintaining aviation security requires adequate TSA funding for staffing and technology.",
+        "Investing in advanced screening technologies enhances security effectiveness.",
+        "Providing competitive pay and training for TSA officers improves performance.",
+        "Adapting TSA protocols to address evolving security threats.",
+    ],
+    tsa_review: [
+        "Balancing rigorous security screening with passenger facilitation.",
+        "Continuously adapting security protocols to counter new threats.",
+        "Improving communication between TSA, airports, and airlines.",
+        "Evaluating the effectiveness of different screening methods.",
+    ],
+    faa_cut: [
+        "Ensuring the FAA operates efficiently, especially in air traffic control modernization.",
+        "Evaluating the necessity of all FAA programs, prioritizing core safety functions.",
+        "Streamlining aircraft certification while maintaining rigorous safety standards.",
+        "Reducing bureaucratic delays within the FAA.",
+    ],
+    faa_fund: [
+        "Ensuring airspace safety requires robust FAA funding for oversight and air traffic control.",
+        "Adequate FAA resources are critical for maintaining aviation safety.",
+        "Investing in NextGen air traffic control modernization enhances efficiency.",
+        "Funding FAA oversight of aircraft manufacturing and maintenance.",
+    ],
+    faa_review: [
+        "Addressing air traffic controller staffing shortages.",
+        "Accelerating the implementation of NextGen technologies.",
+        "Enhancing oversight of aircraft manufacturing processes.",
+        "Improving coordination between the FAA and international aviation authorities.",
+    ],
+    amtrak_cut: [
+        "Amtrak's reliance on federal subsidies warrants scrutiny regarding operational efficiency.",
+        "Focusing federal rail investments on corridors with high potential ridership.",
+        "Exploring increased private sector involvement in passenger rail.",
+        "Demanding greater financial accountability from Amtrak.",
+    ],
+    amtrak_fund: [
+        "Investing in Amtrak offers an alternative to congested highways and airports.",
+        "Adequate funding allows Amtrak to upgrade infrastructure and modernize its fleet.",
+        "Supporting passenger rail connects communities and reduces emissions.",
+        "Expanding Amtrak service to underserved areas.",
+    ],
+    amtrak_review: [
+        "Improving Amtrak's on-time performance and customer service.",
+        "Developing a long-term strategic plan for national passenger rail.",
+        "Ensuring fair access for Amtrak trains on freight railroad tracks.",
+        "Evaluating the economic and environmental benefits of specific Amtrak routes.",
+    ],
+    // --- Science ---
+    nasa_cut: [
+        "NASA's budget requires careful prioritization, potentially focusing on core science missions.",
+        "Evaluating the balance between human spaceflight and robotic missions.",
+        "Encouraging greater efficiency in NASA project management.",
+        "Scrutinizing the costs of large flagship programs like Artemis.",
+    ],
+    nasa_fund: [
+        "Investing in NASA fuels scientific discovery and technological innovation.",
+        "Funding NASA missions expands human knowledge and benefits life on Earth.",
+        "Supporting NASA maintains U.S. leadership in space exploration.",
+        "NASA programs inspire the next generation of scientists and engineers.",
+    ],
+    nasa_review: [
+        "Ensuring NASA maintains a balanced portfolio across science, aeronautics, and exploration.",
+        "Managing the costs and schedules of large, complex missions.",
+        "Strengthening partnerships between NASA and the commercial space industry.",
+        "Prioritizing NASA missions based on scientific merit and national goals.",
+    ],
+    nsf_cut: [
+        "Ensuring NSF grants target truly fundamental, high-impact research.",
+        "Evaluating the balance of NSF funding across scientific disciplines.",
+        "Minimizing administrative overhead associated with NSF grants.",
+        "Prioritizing NSF funding based on national needs and scientific opportunity.",
+    ],
+    nsf_fund: [
+        "The NSF provides essential funding for fundamental research across science and engineering.",
+        "Investing in basic science through the NSF drives innovation and economic competitiveness.",
+        "Supporting NSF programs broadens participation in STEM fields.",
+        "NSF funding trains the future scientific and technical workforce.",
+    ],
+    nsf_review: [
+        "Maintaining the integrity of NSF's merit review process.",
+        "Enhancing NSF's role in translating basic research into applications.",
+        "Supporting STEM education initiatives from K-12 through graduate school.",
+        "Ensuring NSF investments align with long-term national interests.",
+    ],
+    nasa_spacex_cut: [ // Similar to Pentagon_SpaceX, but NASA context
+        "NASA's reliance on commercial partners like SpaceX needs oversight for cost-effectiveness and safety.",
+        "Promoting competition among commercial space providers controls costs.",
+        "Evaluating the long-term strategy for public-private partnerships in space.",
+        "Ensuring taxpayer value in NASA's commercial contracts.",
+    ],
+    nasa_spacex_review: [
+        "Ensuring rigorous safety standards for commercial crew and cargo missions.",
+        "Transparency regarding costs and performance of NASA's commercial contracts.",
+        "Balancing investments in commercial partnerships with NASA's internal capabilities.",
+        "Defining clear roles and responsibilities between NASA and commercial partners.",
+    ],
+    // --- Generic Fallbacks (Least specific) ---
+    default_cut: [
+        "This program's current funding level appears disproportionately high compared to its apparent benefits.",
+        "Resources allocated here might be better utilized if redirected towards more pressing needs.",
+        "A reduction in funding for this area should be seriously considered during budget negotiations.",
+    ],
+    default_fund: [
+        "Adequate investment in this area is likely necessary for it to achieve its stated mission effectively.",
+        "Increased resources could potentially unlock greater public benefit from this program.",
+        "Ensuring this program has sufficient funding seems prudent based on its objectives.",
+    ],
+    default_review: [
+        "Closer examination of this program's operations is warranted to ensure efficiency.",
+        "Regular oversight is needed to confirm this program is delivering value for taxpayer money.",
+        "An evaluation of this program's effectiveness and impact would be beneficial.",
+    ],
+};
+
+
+// Paragraph about BUDGET/DEBT (More forceful tone progression)
+const BUDGET_DEBT: Record<0 | 1 | 2 | 3, string> = {
+    0: "Additionally, while addressing specific programs, I hope Congress will also maintain a focus on long-term fiscal responsibility and work towards a sustainable budget path.",
+    1: "Beyond these specific items, I strongly urge you to prioritize measures that lead to greater fiscal sustainability and begin addressing our growing national debt.",
+    2: "Furthermore, addressing the national debt cannot be postponed. Fiscal discipline must be central to every spending decision Congress makes, starting now.",
+    3: "Critically, the soaring national debt is an existential threat to our economic future. A concrete, aggressive debt-reduction plan is not optional—it is an absolute necessity.",
+};
+
+// CALL TO ACTION (More direct and demanding at higher tones)
+const CALL_TO_ACTION: Record<0 | 1 | 2 | 3, string> = {
+    0: "Could you please share your perspective on how these specific funding issues might be addressed in upcoming budget discussions? I appreciate your time and service.",
+    1: "I request that you outline the steps you intend to take to address these spending concerns and promote greater fiscal responsibility. Keeping constituents informed is important.",
+    2: "I expect a detailed response outlining the concrete actions you will champion to correct these spending priorities and aggressively tackle the national debt. Accountability is essential.",
+    3: "I demand a prompt and specific action plan from your office detailing how you will fight to realign this irresponsible spending and put our nation on a sustainable fiscal path. Failure to act is unacceptable.",
+};
+
+
+// --- Sentence Construction Logic (Refined) ---
+
+/** Generates the core sentence block about a specific item, combining action and rationale. */
+function generateItemSentence(item: SelectedItem, tone: 0 | 1 | 2 | 3): string {
     const fundingLevel = item.fundingLevel;
-    const action = getFundingAction(fundingLevel);
-    const reasonKey = `${item.id}_${action}`;
+    const actionRationaleType = getFundingActionRationale(fundingLevel);
 
-    // 1. Get the basic action phrase based on level and tone
-    let baseActionPhrase = '';
-    if (fundingLevel === -2) baseActionPhrase = randomChoice([ACTION[-2][tone], "requires drastic cuts or elimination."]);
-    else if (fundingLevel === -1) baseActionPhrase = randomChoice([ACTION[-1][tone], "should be significantly scaled back."]);
-    else if (fundingLevel === 0) baseActionPhrase = randomChoice([ACTION[0][tone], "funding could remain, but only with much stricter efficiency measures."]);
-    else if (fundingLevel === 1) baseActionPhrase = randomChoice([ACTION[1][tone], "deserves reliable, perhaps increased, funding."]);
-    else if (fundingLevel === 2) baseActionPhrase = randomChoice([ACTION[2][tone], "must receive a substantial boost in resources."]);
+    // 1. Get the base action phrase for the funding level and tone.
+    const baseActionPhrase = ACTION[fundingLevel][tone];
 
-    // 2. Get a specific rationale, falling back to default
-    const rationaleOptions = SPECIFIC_RATIONALES[reasonKey] || SPECIFIC_RATIONALES[`default_${action}`] || [""];
+    // 2. Get *multiple* rationale options, falling back to defaults.
+    const rationaleKey = `${item.id}_${actionRationaleType}`;
+    const rationaleOptions = SPECIFIC_RATIONALES[rationaleKey] || SPECIFIC_RATIONALES[`default_${actionRationaleType}`] || [];
+
+    // 3. Select a specific rationale.
     const specificRationale = randomChoice(rationaleOptions);
 
-    // 3. Combine description, action, and reason into a flowing sentence
-    // Vary sentence structure based on tone and presence of rationale
-    let sentence = `Regarding ${item.description}, I believe its funding ${baseActionPhrase}`;
+    // 4. Construct the sentence - vary structure slightly for flow.
+    // Start with the item description.
+    let sentence = `Regarding funding for ${item.description}, my view is that it ${baseActionPhrase}`;
 
+    // Append the rationale if available, choosing connector based on tone.
     if (specificRationale) {
-        // Integrate reason smoothly
-        const connectors = tone < 2 ? [" As", " Indeed,", " Specifically,", " For instance,"] : [" Because", " Clearly,", " Simply put,"];
-        const connector = randomChoice(connectors);
-        // Adjust connector capitalization/punctuation based on preceding phrase
-        if (sentence.endsWith('.')) {
-             sentence += `${connector.trim()} ${specificRationale.charAt(0).toLowerCase() + specificRationale.slice(1)}`;
-        } else {
-             sentence += `;${connector.toLowerCase()} ${specificRationale.charAt(0).toLowerCase() + specificRationale.slice(1)}`;
+        const politeConnectors = [", as ", ", because ", ". Specifically, ", ". For instance, "];
+        const firmConnectors = ["; ", ". Clearly, ", ". Simply put, ", ". This is because "];
+        const connector = randomChoice(tone < 2 ? politeConnectors : firmConnectors);
+
+        // Adjust capitalization and punctuation based on the connector.
+        if (connector.startsWith('.')) {
+            sentence += `${connector}${specificRationale.charAt(0).toUpperCase() + specificRationale.slice(1)}`;
+        } else if (connector.startsWith(';')) {
+             sentence += `${connector}${specificRationale.charAt(0).toLowerCase() + specificRationale.slice(1)}`;
+        }
+         else { // Starts with ", " or similar
+            sentence += `${connector}${specificRationale.charAt(0).toLowerCase() + specificRationale.slice(1)}`;
         }
     }
 
-     // Ensure sentence ends with punctuation.
-    if (!sentence.endsWith('.') && !sentence.endsWith('!') && !sentence.endsWith('?')) {
+    // Ensure the sentence ends properly.
+    if (!/[.!?]$/.test(sentence)) {
         sentence += '.';
     }
 
     return sentence;
 }
 
+// --- Main Email Generation Function (Enhanced) ---
 
 /**
  * Generates a draft email to representatives based on selected spending items and customization options.
@@ -1282,61 +1505,60 @@ function generateItemSentence(item: SelectedItem, tone: ToneLevel): string {
  * @returns An object containing the generated email subject and body.
  */
 export function generateRepresentativeEmail(
-  selectedItems: SelectedItem[],
-  aggressiveness: number,
-  userName: string,
-  userLocation: string,
-  balanceBudgetPreference: boolean
+    selectedItems: SelectedItem[],
+    aggressiveness: number,
+    userName: string,
+    userLocation: string,
+    balanceBudgetPreference: boolean
 ): { subject: string; body: string } {
 
-  const tone = mapAggressivenessToTone(aggressiveness);
-  const subject = SUBJECTS[tone];
-  const opening = OPENINGS[tone](userLocation || '[Your City, ST]'); // Add fallback for location
-  const introToList = selectedItems.length > 0 ? `\n\n${INTROS_TO_ITEMS[tone]}\n` : "";
+    const tone = toneBucket(aggressiveness);
+    const subject = SUBJECT[tone];
+    const opening = OPENING[tone](userLocation || '[Your City, ST Zip]'); // Added fallback
 
-  // Generate sentences for each item and combine into a paragraph block
-  const itemSentences = selectedItems.map(item => generateItemSentence(item, tone));
-  // Join with spaces for a paragraph feel, but maybe add bullet points for longer lists?
-  // For now, join with space. Consider adding list formatting if > 3-4 items.
-  const itemDetailsParagraph = itemSentences.join(' ');
+    // Build the list of items paragraph block
+    let itemsBlock = "";
+    if (selectedItems.length > 0) {
+        itemsBlock += `\n\n${LIST_INTRO[tone]}\n\n`;
+        const itemSentences = selectedItems.map(item => generateItemSentence(item, tone));
+        // Join sentences into a single paragraph, attempting smoother flow.
+        itemsBlock += itemSentences.join(' '); // Join with space for paragraph feel
+    }
 
-  const budgetParagraph = balanceBudgetPreference ? `\n\n${BUDGET_DEBT[tone]}` : "";
+    // Add the budget/debt paragraph if selected
+    const budgetParagraph = balanceBudgetPreference ? `\n\n${BUDGET_DEBT[tone]}` : "";
 
-  // Refine call to action based on whether items or only budget preference was selected
-  let callToActionText = '';
-  if (selectedItems.length > 0 && balanceBudgetPreference) {
-      callToActionText = CALL_TO_ACTION[tone].replace('these issues', 'these specific items and the broader issue of fiscal responsibility').replace('these spending imbalances', 'these specific spending concerns and promote overall fiscal sustainability');
-  } else if (selectedItems.length > 0) {
-       callToActionText = CALL_TO_ACTION[tone].replace(' and the broader issue of fiscal responsibility', '').replace(' and promote overall fiscal sustainability', '');
-  } else if (balanceBudgetPreference) {
-       // If only budget preference is checked, tailor the call to action
-       callToActionText = {
-            0: "Could you please share your perspective on achieving greater fiscal responsibility in the federal budget? I appreciate your service.",
-            1: "I ask that you outline the specific steps you plan to take to promote fiscal sustainability. Keeping constituents informed on this crucial matter is important.",
-            2: "I expect a detailed response describing the concrete actions you will champion to aggressively curb the national debt. Accountability on fiscal discipline is paramount.",
-            3: "I demand a prompt and specific action plan from your office detailing how you will fight for fiscal responsibility and present a clear path to tackling the national debt. Failure to act decisively is unacceptable."
-       }[tone];
-  } else {
-      // Fallback if somehow called with no selections (shouldn't happen via UI)
-      callToActionText = "I look forward to hearing your general thoughts on the federal budget.";
-  }
-  const callToAction = `\n\n${callToActionText}`;
+    // Construct the Call to Action - adjust based on selections
+    let callToActionText = CALL_TO_ACTION[tone]; // Start with the default for the tone
+    if (selectedItems.length === 0 && balanceBudgetPreference) {
+        // If ONLY budget preference is checked, use a tailored CTA focused solely on debt/budget
+        callToActionText = {
+            0: "Could you please share your specific plans for promoting greater fiscal responsibility and addressing the national debt? Thank you for your attention to this vital matter.",
+            1: "I strongly urge you to outline the concrete steps you will take towards achieving fiscal sustainability and reducing the national debt. Accountability on this issue is paramount.",
+            2: "I expect a detailed and actionable plan from your office describing how you will aggressively curb the national debt and champion fiscal discipline. Please respond promptly.",
+            3: "I demand immediate and specific proposals from you on tackling the national debt and restoring fiscal responsibility. Vague promises are insufficient; concrete action is required."
+        }[tone];
+    } else if (selectedItems.length > 0 && !balanceBudgetPreference) {
+        // If items selected but NOT budget preference, slightly adjust default CTA if needed (often fine as is)
+        // Example: remove debt part if not relevant
+        callToActionText = callToActionText.replace(/ and (curb|tackle|address) the( national)? debt/gi, '');
+    } else if (selectedItems.length === 0 && !balanceBudgetPreference) {
+        // Fallback if somehow called with no selections at all
+        callToActionText = "I would appreciate hearing your general thoughts on the current federal budget priorities.";
+    }
+    const callToAction = `\n\n${callToActionText}`;
 
+    // Standard closing
+    const salutation = "\n\nSincerely,";
+    const signature = `\n\n${userName || '[Your Name]'}\n${userLocation || '[Your City, State, Zip Code]'}`;
 
-  const salutation = "Sincerely,";
-  const signature = `${userName || '[Your Name]'}\n${userLocation || '[Your City, State, Zip Code]'}`;
+    // Assemble the full body
+    let body = opening + itemsBlock + budgetParagraph + callToAction + salutation + signature;
 
-  // Assemble the body
-  let body = opening;
-  if (introToList && itemDetailsParagraph) {
-      body += introToList + itemDetailsParagraph;
-  }
-  body += budgetParagraph;
-  body += callToAction;
-  body += `\n\n${salutation}\n\n${signature}`;
+    // Final cleanup: ensure consistent paragraph spacing, trim whitespace
+    body = body.replace(/\n\n+/g, '\n\n').trim();
 
-  // Basic cleanup: ensure single newlines between paragraphs, trim whitespace
-  body = body.replace(/\n\n+/g, '\n\n').trim();
-
-  return { subject, body };
+    return { subject, body };
 }
+
+    
