@@ -29,6 +29,7 @@ import {
     HelpCircle,
     Megaphone, // Icon for activism plea
     CheckSquare, // Icon for budget balance checkbox
+    AlertTriangle, // Use for warning/emphasis on debt
 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -361,26 +362,26 @@ export default function TaxBreakdownDashboard({
                                 >
                                     <div className="pl-8 pr-3 sm:pl-10 sm:pr-4 pt-3 pb-4 text-muted-foreground space-y-2.5">
                                      {isInterestOnDebt ? (
-                                         <blockquote className="text-xs bg-secondary/40 p-3 rounded-md border border-border/40 text-foreground/75 shadow-inner flex flex-col gap-2 items-start">
-                                             <div className="flex items-start gap-2">
-                                                 <TrendingDown className="h-4 w-4 shrink-0 mt-0.5 text-destructive/80" />
-                                                 <span className="leading-relaxed">
-                                                    This significant portion reflects the cost of servicing the national debt, {nationalDebt}. This debt is a direct consequence of sustained government spending exceeding revenue collection. Decades of deficit spending (often driven by tax cuts for the wealthy and corporations, unfunded wars, and economic bailouts) contribute to this substantial burden. High interest payments divert critical funds from essential public services, infrastructure projects, education systems, and potential tax relief, raising serious questions about long-term fiscal stability and the accountability of our government's financial management.
-                                                </span>
-                                             </div>
-                                             <div className="flex items-center space-x-2 pl-6 pt-2">
-                                                 <Checkbox
-                                                    id="balance-budget"
-                                                    checked={balanceBudgetChecked}
-                                                    onCheckedChange={handleBudgetCheckboxChange}
-                                                    aria-label="Prioritize Balancing the Budget"
-                                                    className="rounded-[4px]"
-                                                 />
-                                                <Label htmlFor="balance-budget" className="text-xs font-medium text-foreground/90 cursor-pointer">
-                                                   Prioritize Balancing the Budget
-                                                </Label>
-                                             </div>
-                                         </blockquote>
+                                         <Alert variant="destructive" className="bg-destructive/5 border-destructive/30 shadow-inner">
+                                              <AlertTriangle className="h-5 w-5 stroke-destructive/80 mt-1" />
+                                              <AlertTitle className="text-destructive/95 font-semibold mb-1">National Debt Burden: {nationalDebt}</AlertTitle>
+                                             <AlertDescription className="text-sm text-destructive/90 dark:text-destructive/80 leading-relaxed space-y-2">
+                                                 <p>This staggering amount paid just on <strong className="font-medium">interest</strong> is a direct consequence of sustained government spending exceeding revenue—often driven by tax cuts favoring the wealthy, unfunded wars, and economic bailouts.</p>
+                                                 <p>High interest payments <strong className="font-medium">divert critical funds</strong> from essential public services, infrastructure, education, and potential tax relief, raising serious questions about long-term fiscal stability and government accountability.</p>
+                                                 <div className="flex items-center space-x-2 pt-3">
+                                                      <Checkbox
+                                                        id="balance-budget"
+                                                        checked={balanceBudgetChecked}
+                                                        onCheckedChange={handleBudgetCheckboxChange}
+                                                        aria-label="Prioritize Balancing the Budget"
+                                                        className="rounded-[4px] border-destructive/70 data-[state=checked]:bg-destructive/80 data-[state=checked]:border-destructive/80"
+                                                      />
+                                                     <Label htmlFor="balance-budget" className="text-xs font-medium text-destructive/95 dark:text-destructive/85 cursor-pointer">
+                                                        Prioritize Balancing the Budget & Reducing Debt
+                                                     </Label>
+                                                  </div>
+                                             </AlertDescription>
+                                         </Alert>
                                      ) : hasSubItems ? (
                                         <ul className="space-y-2">
                                             {item.subItems!.map((subItem) => {
@@ -438,3 +439,5 @@ export default function TaxBreakdownDashboard({
     </div>
   );
 }
+
+    
