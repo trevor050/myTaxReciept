@@ -9,7 +9,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import EmailCustomizationModal from '@/components/dashboard/EmailCustomizationModal'; // Updated import name
+import EmailCustomizationModal from '@/components/dashboard/EmailCustomizationModal';
+import FloatingEmailButton from '@/components/dashboard/FloatingEmailButton'; // Import the new component
 
 import {
     ExternalLink,
@@ -67,7 +68,7 @@ const COLORS = [
 const categoryIcons: { [key: string]: React.ElementType } = {
     'Health': HeartPulse,
     'War and Weapons': Crosshair,
-    'Interest on Debt': TrendingDown,
+    'Interest on Debt': TrendingDown, // Use TrendingDown for Debt
     'Veterans': ShieldCheck,
     'Unemployment and Labor': Briefcase,
     'Education': GraduationCap,
@@ -222,15 +223,13 @@ export default function TaxBreakdownDashboard({
   const { toast } = useToast();
 
    useEffect(() => {
+    // These need to run only on the client after hydration
     const currentYear = new Date().getFullYear();
-    // Use consistent date format
     const date = new Date(currentYear + 1, 3, 15).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     setClientDueDate(date);
 
-    // Fetch national debt on component mount
     getFormattedNationalDebt().then(setNationalDebt);
-
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, []); // Empty dependency array ensures this runs once on mount
 
   const handleOpenModal = () => {
      // Check if either items are selected OR the budget balance is checked
@@ -279,12 +278,15 @@ export default function TaxBreakdownDashboard({
     percentage: item.percentage,
   }));
 
+  // Calculate if the FAB should be shown
   const showFab = selectedItems.size > 0 || balanceBudgetChecked;
+  // Calculate the count for the FAB badge
+  const fabCount = selectedItems.size + (balanceBudgetChecked ? 1 : 0);
 
 
   return (
     // Add relative positioning and padding-bottom to the container to prevent overlap with FAB
-    <div className="space-y-10 animate-fadeIn relative pb-28 sm:pb-24"> {/* Increased padding-bottom */}
+    <div className="space-y-10 animate-fadeIn relative pb-20"> {/* Reduced padding-bottom as FAB is fixed */}
         {/* --- Header --- */}
         <div className="text-center space-y-1 mb-10">
             {/* Keep only one main title */}
@@ -376,7 +378,9 @@ export default function TaxBreakdownDashboard({
                                      {isInterestOnDebt ? (
                                          <blockquote className="text-xs bg-secondary/40 p-3 rounded-md border border-border/40 text-foreground/75 shadow-inner flex flex-col gap-2 items-start">
                                              <div className="flex items-start gap-2">
+                                                 {/* Removed the second icon, kept TrendingDown */}
                                                  <TrendingDown className="h-4 w-4 shrink-0 mt-0.5 text-destructive/80" />
+                                                 {/* Use regular text, not italicized */}
                                                  <span className="leading-relaxed">
                                                     This significant portion reflects the cost of servicing the national debt, {nationalDebt}. This debt is a direct consequence of sustained government spending exceeding revenue collection. Decades of deficit spending (often driven by tax cuts for the wealthy and corporations, unfunded wars, and economic bailouts) contribute to this substantial burden. High interest payments divert critical funds from essential public services, infrastructure projects, education systems, and potential tax relief, raising serious questions about long-term fiscal stability and the accountability of our government's financial management.
                                                 </span>
@@ -450,29 +454,11 @@ export default function TaxBreakdownDashboard({
         </Card>
 
        {/* Floating Action Button (FAB) */}
-        <div
-          className={cn(
-            "fixed bottom-6 right-6 z-50 transition-all duration-300 ease-out transform",
-            showFab ? "scale-100 opacity-100" : "scale-95 opacity-0 pointer-events-none"
-          )}
-        >
-          <Button
-            size="lg" // Use large size for better visibility
-            className={cn(
-                "shadow-2xl rounded-full text-sm sm:text-base px-5 py-3 sm:px-6 sm:py-3", // Standard FAB styling
-                "bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700", // Light mode gradient
-                "dark:bg-gradient-to-r dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800", // Dark mode gradient
-                "text-primary-foreground animate-glow flex items-center gap-2 ring-2 ring-primary/30 ring-offset-2 ring-offset-background",
-                "transition-transform hover:scale-105 active:scale-95" // Hover/active effects
-            )}
+        <FloatingEmailButton
+            selectedCount={fabCount}
             onClick={handleOpenModal}
-            aria-label={`Email your representative about ${selectedItems.size + (balanceBudgetChecked ? 1 : 0)} item(s)`}
-          >
-            <Mail className="h-4 w-4 sm:h-5 sm:w-5" />
-            Email Officials ({selectedItems.size + (balanceBudgetChecked ? 1 : 0)})
-          </Button>
-        </div>
-
+            show={showFab}
+        />
 
         {/* Email Customization Modal */}
         {/* Render the modal only when isModalOpen is true to handle mounting/unmounting */}
