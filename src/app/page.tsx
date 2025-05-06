@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -241,42 +242,42 @@ export default function Home() {
 
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 md:p-10 bg-gradient-to-br from-background via-secondary/5 to-background relative"> {/* Added relative positioning */}
+    <main className="flex min-h-screen flex-col items-center justify-center p-2 sm:p-4 md:p-8 bg-gradient-to-br from-background via-secondary/5 to-background relative"> {/* Adjusted padding for mobile */}
        {/* Container for Back button and Card */}
-       <div className={`w-full ${step === 'dashboard' ? 'max-w-4xl' : 'max-w-2xl'} mx-auto space-y-2 transition-all duration-300 ease-in-out z-10`}> {/* Ensure content is above potential fixed footer/button */}
+       <div className={`w-full ${step === 'dashboard' ? 'max-w-full md:max-w-4xl' : 'max-w-full md:max-w-2xl'} mx-auto space-y-1 sm:space-y-2 transition-all duration-300 ease-in-out z-10`}> {/* Adjusted max-width for mobile */}
         {/* Flex container JUST for Back button */}
-        <div className="flex justify-start items-center min-h-[40px] px-1 sm:px-0"> {/* Ensure minimum height */}
+        <div className="flex justify-start items-center min-h-[36px] sm:min-h-[40px] px-1 sm:px-0"> {/* Ensure minimum height */}
             {step !== 'location' ? (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleBack}
-                className="text-muted-foreground hover:text-foreground transition-colors duration-200 self-center opacity-80 hover:opacity-100"
+                className="text-muted-foreground hover:text-foreground transition-colors duration-200 self-center opacity-80 hover:opacity-100 text-xs sm:text-sm"
                 aria-label="Go back"
               >
-                <ArrowLeft className="mr-1.5 h-4 w-4" /> Back
+                <ArrowLeft className="mr-1 sm:mr-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" /> Back
               </Button>
             ) : <div />} {/* Placeholder to keep alignment */}
         </div>
 
         {/* Main Card */}
-        <Card className="w-full shadow-xl rounded-xl border border-border/50 overflow-hidden bg-card">
+        <Card className="w-full shadow-xl rounded-lg sm:rounded-xl border border-border/50 overflow-hidden bg-card"> {/* Adjusted rounding for mobile */}
            {/* Add relative positioning for ThemeToggle placement */}
-           <CardHeader className="bg-card/95 border-b border-border/50 px-6 py-5 sm:px-8 sm:py-6 relative">
+           <CardHeader className="bg-card/95 border-b border-border/50 px-4 py-3 sm:px-6 sm:py-5 md:px-8 md:py-6 relative"> {/* Adjusted padding for mobile */}
              {/* Add ThemeToggle to the top right corner */}
-             <div className="absolute top-4 right-4 sm:top-5 sm:right-6 z-10">
+             <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10"> {/* Adjusted position for mobile */}
                 <ThemeToggle />
              </div>
-             <div key={`header-${step}`} className="animate-fadeIn duration-400 pr-10"> {/* Add padding-right to avoid overlap */}
-                  <CardTitle className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
+             <div key={`header-${step}`} className="animate-fadeIn duration-400 pr-8 sm:pr-10"> {/* Add padding-right to avoid overlap */}
+                  <CardTitle className="text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight text-foreground"> {/* Adjusted font size for mobile */}
                      {title}
                   </CardTitle>
-                  <CardDescription className="text-muted-foreground mt-1.5 text-sm sm:text-base">
+                  <CardDescription className="text-muted-foreground mt-1 sm:mt-1.5 text-xs sm:text-sm md:text-base"> {/* Adjusted font size for mobile */}
                     {description}
                   </CardDescription>
               </div>
            </CardHeader>
-          <CardContent className="p-6 sm:p-8 md:p-10 bg-background relative overflow-hidden min-h-[300px] sm:min-h-[350px]">
+          <CardContent className="p-4 sm:p-6 md:p-10 bg-background relative overflow-hidden min-h-[280px] sm:min-h-[300px] md:min-h-[350px]"> {/* Adjusted padding and min-height for mobile */}
              <div className={`${animationClass} duration-300`}>
                  {step === 'location' && <LocationStep onSubmit={handleLocationSubmit} />}
                  {step === 'tax' && <TaxAmountStep onSubmit={handleTaxAmountSubmit} isLoading={isLoading} medianTax={estimatedMedianTax} />}
@@ -284,7 +285,7 @@ export default function Home() {
                  {step === 'dashboard' && (
                      isLoading || taxAmount === null || taxSpending.length === 0 ? (
                          <div className="flex items-center justify-center h-full text-muted-foreground">
-                            <div className="text-center p-10">Loading your tax breakdown...</div>
+                            <div className="text-center p-6 sm:p-10">Loading your tax breakdown...</div> {/* Adjusted padding for mobile */}
                          </div>
                      ) : (
                          <TaxBreakdownDashboard
@@ -300,7 +301,7 @@ export default function Home() {
         </Card>
 
         {/* Footer */}
-        <footer className="mt-6 text-center text-muted-foreground/60 text-xs px-4 sm:px-0 relative pb-16 sm:pb-6"> {/* Add padding-bottom to avoid FAB overlap */}
+        <footer className="mt-4 sm:mt-6 text-center text-muted-foreground/60 text-[10px] sm:text-xs px-2 sm:px-4 md:px-0 relative pb-16 sm:pb-6"> {/* Adjusted font size and padding for mobile */}
             Powered by Firebase & Google AI (where applicable). Data is estimated and for informational purposes. Verify with official sources.
         </footer>
        </div>
@@ -332,3 +333,4 @@ export default function Home() {
     </main>
   );
 }
+

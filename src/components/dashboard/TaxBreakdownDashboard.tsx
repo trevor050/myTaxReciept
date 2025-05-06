@@ -1,3 +1,4 @@
+
 // src/components/dashboard/TaxBreakdownDashboard.tsx
 'use client';
 
@@ -11,18 +12,17 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label'; // Import Label
 
 // --- Import ALL potentially used Lucide icons ---
-// Consider dynamic imports if bundle size becomes an issue
 import {
     ExternalLink, Info, Scale, HeartPulse, ShieldCheck, Briefcase, GraduationCap, Wheat,
     Building, Atom, Globe, Landmark, Sprout, Train, TrendingDown, Crosshair, HelpCircle,
     Megaphone, CheckSquare, AlertTriangle, Clock, DollarSign, Wind, Smile, Music2, Music,
     Coffee, Mail, Newspaper, Footprints, Podcast, BookOpen, SprayCan, Tv, Puzzle, EggFried,
     ShoppingCart, Dumbbell, NotebookPen, Utensils, Users, Tractor, WashingMachine, Dice5,
-    Cookie, Film, Clapperboard, HandHeart, Hammer, Trophy, ChefHat, Car, Map as MapIcon, // Renamed Map to MapIcon
+    Cookie, Film, Clapperboard, HandHeart, Hammer, Trophy, ChefHat, Car, Map as MapIcon,
     Presentation, Plane, Sparkles, PlaneTakeoff, Navigation, Wrench, Youtube, Building2, MapPinned,
     BrainCircuit, Luggage, CalendarDays, HelpingHand, MountainSnow, ClipboardCheck,
-    PaintRoller, PenTool, Move, Languages, Gamepad2, Trees, ShoppingBasket, Flower2, // Added new icons
-    GlassWater, Package, Bus, Croissant, Beer, Ticket, Truck, Martini, Grape, Shirt, Backpack, Headphones, Tent, Tablet, Theater, Bike, Watch, Home, Laptop, Smartphone, ShoppingBag, CircleDot, Pizza, Sandwich, Bed, PersonStanding, Armchair, Fish, Phone, // Currency Icons - Removed Burger, Golf, UserTie | Added Armchair, Fish, Phone
+    PaintRoller, PenTool, Move, Languages, Gamepad2, Trees, ShoppingBasket, Flower2,
+    GlassWater, Package, Bus, Croissant, Beer, Ticket, Truck, Martini, Grape, Shirt, Backpack, Headphones, Tent, Tablet, Theater, Bike, Watch, Home, Laptop, Smartphone, ShoppingBag, CircleDot, Pizza, Sandwich, Bed, PersonStanding, Armchair, Fish, Phone,
     type LucideIcon
 } from 'lucide-react';
 // --- End Lucide Icon Imports ---
@@ -41,12 +41,12 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { cn } from '@/lib/utils';
-import { generateCombinedPerspectiveList, type CombinedPerspective } from '@/lib/time-perspective'; 
-import { generateCurrencyPerspectiveList, type CombinedCurrencyPerspective } from '@/lib/currency-perspective'; 
+import { generateCombinedPerspectiveList, type CombinedPerspective } from '@/lib/time-perspective';
+import { generateCurrencyPerspectiveList, type CombinedCurrencyPerspective } from '@/lib/currency-perspective';
 
 interface TaxBreakdownDashboardProps {
   taxAmount: number;
-  hourlyWage: number | null; 
+  hourlyWage: number | null;
   taxSpending: TaxSpending[];
   onSelectionChange: (
     showButton: boolean,
@@ -68,18 +68,18 @@ const iconComponents: { [key: string]: LucideIcon } = {
     // Time Icons
     Wind, Smile, Music2, Music, Coffee, Mail, Newspaper, Footprints, Podcast, BookOpen, SprayCan,
     Tv, Puzzle, EggFried, ShoppingCart, Dumbbell, NotebookPen, Utensils, Users, Tractor, WashingMachine,
-    Dice5, Cookie, Film, Clapperboard, HandHeart, Hammer, Trophy, ChefHat, Car, Map: MapIcon, 
+    Dice5, Cookie, Film, Clapperboard, HandHeart, Hammer, Trophy, ChefHat, Car, Map: MapIcon,
     Presentation, Plane, Sparkles, PlaneTakeoff, Navigation, Wrench, Youtube, Building2, MapPinned, BrainCircuit,
     Luggage, CalendarDays, HelpingHand, MountainSnow, ClipboardCheck, PaintRoller, PenTool,
-    Move, Languages, Gamepad2, Trees, ShoppingBasket, Flower2, Pizza, Sandwich, Bike, Phone, Fish, // Added Phone, Fish
+    Move, Languages, Gamepad2, Trees, ShoppingBasket, Flower2, Pizza, Sandwich, Bike, Phone, Fish,
 
     // Currency Icons
-    GlassWater, Package, Bus, Croissant, Beer, Ticket, Truck, Martini, Grape, Shirt, Backpack, Headphones, Tent, Tablet, Theater, Watch, Home, Laptop, Smartphone, ShoppingBag, CircleDot, Bed, PersonStanding, Armchair, // Added Armchair
+    GlassWater, Package, Bus, Croissant, Beer, Ticket, Truck, Martini, Grape, Shirt, Backpack, Headphones, Tent, Tablet, Theater, Watch, Home, Laptop, Smartphone, ShoppingBag, CircleDot, Bed, PersonStanding, Armchair,
 
     // Explicitly map Burger usage to Utensils
-    Burger: Utensils, 
+    Burger: Utensils,
     // Map Golf usage to CircleDot
-    Golf: CircleDot, 
+    Golf: CircleDot,
     // Map UserTie usage to PersonStanding (placeholder)
     UserTie: PersonStanding,
 
@@ -122,17 +122,17 @@ const CustomPieTooltip = ({ active, payload, totalAmount, hourlyWage, displayMod
     }
 
     return (
-        <div className="rounded-lg border bg-popover p-2.5 text-popover-foreground shadow-lg animate-scaleIn text-xs max-w-[180px] sm:max-w-[220px]">
-             <div className="flex items-center justify-between mb-1 gap-2">
-                 <span className="font-medium flex items-center gap-1.5 truncate">
-                    <CategoryIcon className="h-3 w-3 text-muted-foreground shrink-0" />
+        <div className="rounded-lg border bg-popover p-2 sm:p-2.5 text-popover-foreground shadow-lg animate-scaleIn text-[10px] sm:text-xs max-w-[160px] sm:max-w-[220px]"> {/* Adjusted padding and font size for mobile */}
+             <div className="flex items-center justify-between mb-0.5 sm:mb-1 gap-1 sm:gap-2"> {/* Adjusted spacing for mobile */}
+                 <span className="font-medium flex items-center gap-1 sm:gap-1.5 truncate">
+                    <CategoryIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground shrink-0" /> {/* Adjusted icon size for mobile */}
                     {data.category}
                  </span>
                 <span className="font-mono text-muted-foreground shrink-0">{data.percentage.toFixed(1)}%</span>
             </div>
              <ShadTooltip>
                 <TooltipTrigger asChild>
-                     <div className="font-semibold text-sm sm:text-base cursor-default text-left">
+                     <div className="font-semibold text-xs sm:text-sm md:text-base cursor-default text-left"> {/* Adjusted font size for mobile */}
                         {displayValue}
                      </div>
                 </TooltipTrigger>
@@ -153,14 +153,14 @@ const PerspectiveTooltipContent = ({ perspectiveList, title }: { perspectiveList
     }
 
     return (
-        <TooltipContent side="top" align="center" className="max-w-xs text-sm bg-popover border shadow-xl p-4 rounded-lg animate-scaleIn z-50">
-            <p className="text-popover-foreground text-sm font-semibold mb-2">{title}</p>
-            <ul className="space-y-1.5 text-popover-foreground/90 max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+        <TooltipContent side="top" align="center" className="max-w-[200px] sm:max-w-xs text-xs sm:text-sm bg-popover border shadow-xl p-3 sm:p-4 rounded-lg animate-scaleIn z-50"> {/* Adjusted padding and max-width for mobile */}
+            <p className="text-popover-foreground text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2">{title}</p> {/* Adjusted font size and margin for mobile */}
+            <ul className="space-y-1 sm:space-y-1.5 text-popover-foreground/90 max-h-48 sm:max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"> {/* Adjusted max-height for mobile */}
                 {perspectiveList.map((item, index) => {
                     const Icon = item.icon ? iconComponents[item.icon] || Info : Info;
                     return (
-                        <li key={index} className="flex items-center gap-2 text-xs">
-                            <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0"/>
+                        <li key={index} className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs"> {/* Adjusted spacing and font size for mobile */}
+                            <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground shrink-0"/> {/* Adjusted icon size for mobile */}
                             <span>{item.description}{item.count > 1 ? ` (${item.count} times)` : ''}</span>
                         </li>
                     );
@@ -172,18 +172,18 @@ const PerspectiveTooltipContent = ({ perspectiveList, title }: { perspectiveList
 
 const ItemInfoTooltipContent = ({ subItem }: { subItem: TaxSpendingSubItem }) => {
     return (
-        <TooltipContent side="top" align="center" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50">
-            <p className="font-semibold mb-1.5 text-popover-foreground">{subItem.description}</p>
-            {subItem.tooltipText && <p className="text-muted-foreground text-xs leading-relaxed mb-2">{subItem.tooltipText}</p>}
+        <TooltipContent side="top" align="center" className="max-w-[200px] sm:max-w-sm text-xs sm:text-sm bg-popover border shadow-xl p-2.5 sm:p-3 rounded-lg animate-scaleIn z-50"> {/* Adjusted padding and max-width for mobile */}
+            <p className="font-semibold mb-1 sm:mb-1.5 text-popover-foreground">{subItem.description}</p> {/* Adjusted margin for mobile */}
+            {subItem.tooltipText && <p className="text-muted-foreground text-[10px] sm:text-xs leading-relaxed mb-1.5 sm:mb-2">{subItem.tooltipText}</p>} {/* Adjusted font size and margin for mobile */}
             {subItem.wikiLink && (
                 <a
                 href={subItem.wikiLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary hover:underline flex items-center gap-1 text-xs font-medium mt-2"
-                onClick={(e) => e.stopPropagation()} 
+                className="text-primary hover:underline flex items-center gap-1 text-[10px] sm:text-xs font-medium mt-1.5 sm:mt-2" // Adjusted font size and margin for mobile
+                onClick={(e) => e.stopPropagation()}
                 >
-                Learn More <ExternalLink className="h-3 w-3" />
+                Learn More <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> {/* Adjusted icon size for mobile */}
                 </a>
             )}
         </TooltipContent>
@@ -194,8 +194,10 @@ const ItemInfoTooltipContent = ({ subItem }: { subItem: TaxSpendingSubItem }) =>
 const CustomLegend = (props: any) => {
   const { payload } = props;
   const [chartWidth, setChartWidth] = useState(0);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     if (typeof window !== 'undefined') {
         const chartContainer = document.querySelector('.recharts-responsive-container');
         if (chartContainer) {
@@ -211,15 +213,19 @@ const CustomLegend = (props: any) => {
     }
   }, []);
 
-  const maxItemWidth = chartWidth > 400 ? '150px' : '100px';
+  if (!isClient) {
+      return null; // Or a placeholder/skeleton
+  }
+
+  const maxItemWidth = chartWidth > 300 ? (chartWidth > 400 ? '150px' : '120px') : '80px'; // Adjusted for mobile
 
   return (
-    <ul className="flex flex-wrap justify-center gap-x-3 gap-y-1.5 text-xs mt-4 list-none p-0 max-w-full mx-auto">
+    <ul className="flex flex-wrap justify-center gap-x-2 sm:gap-x-3 gap-y-1 sm:gap-y-1.5 text-[10px] sm:text-xs mt-3 sm:mt-4 list-none p-0 max-w-full mx-auto"> {/* Adjusted spacing and font size for mobile */}
       {payload.map((entry: any, index: number) => {
           const percentage = entry.payload?.percentage;
           return (
             <li key={`item-${index}`} className="flex items-center space-x-1 cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
-              <span style={{ backgroundColor: entry.color }} className="h-2 w-2 rounded-full inline-block shrink-0"></span>
+              <span style={{ backgroundColor: entry.color }} className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full inline-block shrink-0"></span> {/* Adjusted size for mobile */}
               <span className="truncate" style={{ maxWidth: maxItemWidth }}>{entry.value}</span>
               {percentage != null && <span className="font-mono shrink-0">({percentage.toFixed(1)}%)</span>}
             </li>
@@ -254,7 +260,7 @@ const formatTime = (totalMinutes: number | null | undefined): string => {
         if (hours > 0) result += ' ';
         result += `${minutes}m`;
     }
-     if (hours === 0 && minutes === 0 && totalMinutes > 0) { 
+     if (hours === 0 && minutes === 0 && totalMinutes > 0) {
         return '< 1 min';
     }
     return result.trim();
@@ -262,7 +268,7 @@ const formatTime = (totalMinutes: number | null | undefined): string => {
 
 async function getFormattedNationalDebt(): Promise<string> {
     try {
-        const debtAmount = 34600000000000; 
+        const debtAmount = 34600000000000;
         if (isNaN(debtAmount)) {
             return 'currently over $34 trillion';
         }
@@ -275,15 +281,15 @@ async function getFormattedNationalDebt(): Promise<string> {
         }
     } catch (error) {
         console.error("Error fetching national debt:", error);
-        return 'currently over $34 trillion'; 
+        return 'currently over $34 trillion';
     }
 }
 
 export default function TaxBreakdownDashboard({
   taxAmount,
-  hourlyWage, 
+  hourlyWage,
   taxSpending,
-  onSelectionChange, 
+  onSelectionChange,
 }: TaxBreakdownDashboardProps) {
 
   const [selectedItems, setSelectedItems] = useState<Map<string, SelectedItem>>(new Map());
@@ -291,6 +297,12 @@ export default function TaxBreakdownDashboard({
   const [nationalDebt, setNationalDebt] = useState<string>('fetching...');
   const [balanceBudgetChecked, setBalanceBudgetChecked] = useState(false);
   const [displayMode, setDisplayMode] = useState<'currency' | 'time'>('currency');
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
 
   // State for pre-calculated perspectives for chart tooltips
   const [chartPerspectiveData, setChartPerspectiveData] = useState<Record<string, PerspectiveData>>({});
@@ -353,9 +365,9 @@ export default function TaxBreakdownDashboard({
 
    const handleCheckboxChange = (checked: boolean | 'indeterminate', item: TaxSpendingSubItem) => {
         const newSelectedItems = new Map(selectedItems);
-        const itemId = `${item.id}`; 
+        const itemId = `${item.id}`;
         if (checked === true) {
-            newSelectedItems.set(itemId, { id: itemId, description: item.description, fundingLevel: 0, category: item.category }); 
+            newSelectedItems.set(itemId, { id: itemId, description: item.description, fundingLevel: 0, category: item.category });
         } else {
             newSelectedItems.delete(itemId);
         }
@@ -367,72 +379,77 @@ export default function TaxBreakdownDashboard({
     }
 
    const currentYear = typeof window !== 'undefined' ? new Date().getFullYear() : null;
-   const dueDateDisplay = clientDueDate || (currentYear ? `April 15, ${currentYear + 1}` : 'April 15'); 
+   const dueDateDisplay = clientDueDate || (currentYear ? `April 15, ${currentYear + 1}` : 'April 15');
 
   const chartData = taxSpending.map(item => ({
     category: item.category,
     percentage: item.percentage,
   }));
 
+  const responsivePieHeight = isClient && window.innerWidth < 640 ? 280 : 320;
+  const responsiveOuterRadius = isClient && window.innerWidth < 640 ? 70 : (isClient && window.innerWidth < 768 ? 80 : 100);
+  const responsiveInnerRadius = isClient && window.innerWidth < 640 ? 40 : (isClient && window.innerWidth < 768 ? 50 : 65);
+
+
   return (
-    <TooltipProvider> 
-        <div className="space-y-10 animate-fadeIn relative pb-10">
-            <div className="text-center space-y-1 mb-6 relative"> 
-                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">{currentYear ? `${currentYear} ` : ''}Federal Income Tax Receipt</h1>
-                 <p className="text-lg text-muted-foreground">Based on your estimated <span className="font-semibold text-foreground">{formatCurrency(taxAmount)}</span> payment.</p>
+    <TooltipProvider>
+        <div className="space-y-6 sm:space-y-10 animate-fadeIn relative pb-10"> {/* Adjusted spacing for mobile */}
+            <div className="text-center space-y-0.5 sm:space-y-1 mb-4 sm:mb-6 relative"> {/* Adjusted spacing for mobile */}
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-foreground">{currentYear ? `${currentYear} ` : ''}Federal Income Tax Receipt</h1> {/* Adjusted font size for mobile */}
+                 <p className="text-base sm:text-lg text-muted-foreground">Based on your estimated <span className="font-semibold text-foreground">{formatCurrency(taxAmount)}</span> payment.</p> {/* Adjusted font size for mobile */}
                 <p className="text-xs text-muted-foreground/70">Next Filing Due: {dueDateDisplay}</p>
 
                 {hourlyWage !== null && (
-                    <div className="absolute top-0 right-0 sm:relative sm:flex sm:justify-center sm:items-center sm:mt-4 sm:space-x-2 pt-1 pr-1 sm:pt-0 sm:pr-0">
+                    <div className="absolute top-0 right-0 sm:relative sm:flex sm:justify-center sm:items-center sm:mt-2 md:mt-4 sm:space-x-2 pt-1 pr-1 sm:pt-0 sm:pr-0"> {/* Adjusted margin for mobile */}
                         <Label htmlFor="display-mode-toggle" className="text-xs font-medium text-muted-foreground hidden sm:inline">View as:</Label>
-                        <div className="flex items-center space-x-2 bg-muted p-1 rounded-full">
+                        <div className="flex items-center space-x-1 sm:space-x-2 bg-muted p-0.5 sm:p-1 rounded-full"> {/* Adjusted padding and spacing for mobile */}
                             <Button
                                 variant={displayMode === 'currency' ? 'default' : 'ghost'}
                                 size="sm"
                                 onClick={() => setDisplayMode('currency')}
-                                className={cn("rounded-full px-3 py-1 h-7 text-xs", displayMode === 'currency' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:bg-accent')}
+                                className={cn("rounded-full px-2.5 sm:px-3 py-1 h-6 sm:h-7 text-[10px] sm:text-xs", displayMode === 'currency' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:bg-accent')}
                                 aria-pressed={displayMode === 'currency'}
                             >
-                                <DollarSign className="h-3 w-3 mr-1" /> Currency
+                                <DollarSign className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" /> Currency {/* Adjusted icon size and margin for mobile */}
                             </Button>
                             <Button
                                  variant={displayMode === 'time' ? 'default' : 'ghost'}
                                  size="sm"
                                  onClick={() => setDisplayMode('time')}
-                                 className={cn("rounded-full px-3 py-1 h-7 text-xs", displayMode === 'time' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:bg-accent')}
+                                 className={cn("rounded-full px-2.5 sm:px-3 py-1 h-6 sm:h-7 text-[10px] sm:text-xs", displayMode === 'time' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:bg-accent')}
                                  aria-pressed={displayMode === 'time'}
                             >
-                                <Clock className="h-3 w-3 mr-1" /> Time Worked
+                                <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" /> Time Worked {/* Adjusted icon size and margin for mobile */}
                             </Button>
                         </div>
                     </div>
                 )}
              </div>
 
-            <Alert className="mb-8 shadow-sm rounded-lg border border-primary/20 bg-primary/5 text-foreground animate-fadeIn delay-500 duration-3000">
-                 <Megaphone className="h-5 w-5 mt-0.5 stroke-primary" />
-                <AlertTitle className="font-semibold text-primary">Make Your Voice Heard!</AlertTitle>
-                <AlertDescription className="text-sm text-foreground/90 space-y-1.5">
+            <Alert className="mb-6 sm:mb-8 shadow-sm rounded-lg border border-primary/20 bg-primary/5 text-foreground animate-fadeIn delay-500 duration-3000"> {/* Adjusted margin for mobile */}
+                 <Megaphone className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 stroke-primary" /> {/* Adjusted icon size for mobile */}
+                <AlertTitle className="font-semibold text-primary text-sm sm:text-base">Make Your Voice Heard!</AlertTitle> {/* Adjusted font size for mobile */}
+                <AlertDescription className="text-xs sm:text-sm text-foreground/90 space-y-1 sm:space-y-1.5"> {/* Adjusted font size and spacing for mobile */}
                     Understanding where your money goes is the first step. The next is action.
                     <span className="block">Your elected officials work for you. Let them know how you feel about these spending priorities. Select specific items below that concern you and use the button to draft a direct message.</span>
-                     <Button variant="link" className="p-0 h-auto ml-0 text-primary font-medium text-sm mt-1" onClick={() => {if (typeof window !== 'undefined') window.open('https://www.usa.gov/elected-officials', '_blank', 'noopener,noreferrer')}}>
-                        Find Your Officials <ExternalLink className="inline ml-1 h-3 w-3" />
+                     <Button variant="link" className="p-0 h-auto ml-0 text-primary font-medium text-xs sm:text-sm mt-1" onClick={() => {if (typeof window !== 'undefined') window.open('https://www.usa.gov/elected-officials', '_blank', 'noopener,noreferrer')}}>
+                        Find Your Officials <ExternalLink className="inline ml-1 h-2.5 w-2.5 sm:h-3 sm:w-3" /> {/* Adjusted icon size for mobile */}
                     </Button>
                 </AlertDescription>
             </Alert>
 
-          <div className="mb-12">
-             <h2 className="text-xl font-semibold text-center mb-4">Spending Overview</h2>
-             
-                  <ResponsiveContainer width="100%" height={320}>
+          <div className="mb-8 sm:mb-12"> {/* Adjusted margin for mobile */}
+             <h2 className="text-lg sm:text-xl font-semibold text-center mb-3 sm:mb-4">Spending Overview</h2> {/* Adjusted font size and margin for mobile */}
+
+                  <ResponsiveContainer width="100%" height={responsivePieHeight}>
                     <PieChart margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
                       <Pie
                         data={chartData}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        outerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 80 : 100} 
-                        innerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 50 : 65} 
+                        outerRadius={responsiveOuterRadius}
+                        innerRadius={responsiveInnerRadius}
                         fill="#8884d8"
                         paddingAngle={1}
                         dataKey="percentage"
@@ -442,7 +459,7 @@ export default function TaxBreakdownDashboard({
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke={'hsl(var(--background))'} strokeWidth={1} />
                         ))}
                       </Pie>
-                       <Tooltip 
+                       <Tooltip
                          content={({ active, payload, label: tooltipLabel }) => { // `label` here is the category name from Recharts
                             if (active && payload && payload.length) {
                                 return (
@@ -452,26 +469,26 @@ export default function TaxBreakdownDashboard({
                                         totalAmount={taxAmount}
                                         hourlyWage={hourlyWage}
                                         displayMode={displayMode}
-                                        perspectiveData={chartPerspectiveData[tooltipLabel] || { currency: null, time: null }}
+                                        perspectiveData={chartPerspectiveData[tooltipLabel as string] || { currency: null, time: null }}
                                     />
                                 );
                             }
                             return null;
                          }}
-                         cursor={{ fill: 'hsl(var(--accent))', fillOpacity: 0.4 }} 
+                         cursor={{ fill: 'hsl(var(--accent))', fillOpacity: 0.4 }}
                         />
                        <Legend content={<CustomLegend />} wrapperStyle={{ maxWidth: '100%', overflow: 'hidden' }}/>
                     </PieChart>
                   </ResponsiveContainer>
-                 <p className="text-xs text-muted-foreground text-center mt-4 flex items-center justify-center gap-1 px-2">
+                 <p className="text-xs text-muted-foreground text-center mt-3 sm:mt-4 flex items-center justify-center gap-1 px-2"> {/* Adjusted margin for mobile */}
                     <Info className="h-3 w-3" /> Hover over segments or values for details. Estimated data.
                  </p>
           </div>
 
            <Card className="shadow-lg border border-border/60 rounded-xl overflow-hidden bg-gradient-to-b from-card to-card/95">
-                <CardHeader className="px-4 py-4 sm:px-6 sm:py-5 border-b border-border/50">
-                    <CardTitle className="text-lg sm:text-xl font-semibold tracking-tight">Detailed Spending</CardTitle>
-                    <CardDescription className="text-muted-foreground text-xs sm:text-sm">Select items you believe need funding adjustments or prioritize balancing the budget.</CardDescription>
+                <CardHeader className="px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5 border-b border-border/50"> {/* Adjusted padding for mobile */}
+                    <CardTitle className="text-base sm:text-lg md:text-xl font-semibold tracking-tight">Detailed Spending</CardTitle> {/* Adjusted font size for mobile */}
+                    <CardDescription className="text-muted-foreground text-[10px] sm:text-xs md:text-sm">Select items you believe need funding adjustments or prioritize balancing the budget.</CardDescription> {/* Adjusted font size for mobile */}
                 </CardHeader>
                 <CardContent className="p-0">
                      <Accordion type="multiple" className="w-full">
@@ -501,53 +518,53 @@ export default function TaxBreakdownDashboard({
 
                             return (
                                  <AccordionItem value={`item-${index}`} key={item.id || index} className="border-b border-border/40 last:border-b-0 group">
-                                    <AccordionTrigger className="hover:no-underline py-3 px-3 sm:px-4 rounded-none hover:bg-accent/50 data-[state=open]:bg-accent/40 transition-colors duration-150 text-left">
-                                         <div className="flex justify-between items-center w-full gap-2 sm:gap-3">
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                <CategoryIcon className="h-4 w-4 text-primary shrink-0" />
-                                                <span className="font-medium text-sm truncate flex-1">{item.category}</span>
+                                    <AccordionTrigger className="hover:no-underline py-2.5 px-3 sm:py-3 sm:px-4 rounded-none hover:bg-accent/50 data-[state=open]:bg-accent/40 transition-colors duration-150 text-left"> {/* Adjusted padding for mobile */}
+                                         <div className="flex justify-between items-center w-full gap-1.5 sm:gap-2 md:gap-3"> {/* Adjusted spacing for mobile */}
+                                            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0"> {/* Adjusted spacing for mobile */}
+                                                <CategoryIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" /> {/* Adjusted icon size for mobile */}
+                                                <span className="font-medium text-xs sm:text-sm truncate flex-1">{item.category}</span> {/* Adjusted font size for mobile */}
                                             </div>
                                             <div className="text-right shrink-0 flex items-baseline gap-1 ml-auto">
                                                 <ShadTooltip>
                                                     <TooltipTrigger asChild>
-                                                        <span className="font-semibold font-mono text-sm cursor-default">{categoryDisplayValue}</span>
+                                                        <span className="font-semibold font-mono text-xs sm:text-sm cursor-default">{categoryDisplayValue}</span> {/* Adjusted font size for mobile */}
                                                     </TooltipTrigger>
                                                      <PerspectiveTooltipContent
                                                         perspectiveList={categoryPerspectiveList}
                                                         title={categoryPerspectiveTitle}
                                                     />
                                                 </ShadTooltip>
-                                                <span className="text-muted-foreground text-xs font-mono hidden sm:inline">({item.percentage.toFixed(1)}%)</span>
+                                                <span className="text-muted-foreground text-[10px] sm:text-xs font-mono hidden sm:inline">({item.percentage.toFixed(1)}%)</span> {/* Adjusted font size for mobile */}
                                             </div>
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent
                                         className="bg-background/30 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up overflow-hidden"
                                     >
-                                        <div className="pl-8 pr-3 sm:pl-10 sm:pr-4 pt-3 pb-4 text-muted-foreground space-y-2.5">
+                                        <div className="pl-6 pr-2 sm:pl-8 sm:pr-3 md:pl-10 md:pr-4 pt-2.5 pb-3 sm:pt-3 sm:pb-4 text-muted-foreground space-y-2 sm:space-y-2.5"> {/* Adjusted padding and spacing for mobile */}
                                          {isInterestOnDebt ? (
-                                             <Alert variant="destructive" className="bg-destructive/5 border-destructive/30 shadow-inner">
-                                                  <TrendingDown className="h-5 w-5 stroke-destructive/80 mt-1" /> 
-                                                  <AlertTitle className="text-destructive/95 font-semibold mb-1">National Debt Burden: {nationalDebt}</AlertTitle>
-                                                 <AlertDescription className="text-sm text-destructive/90 dark:text-destructive/80 leading-relaxed space-y-2">
+                                             <Alert variant="destructive" className="bg-destructive/5 border-destructive/30 shadow-inner p-3 sm:p-4"> {/* Adjusted padding for mobile */}
+                                                  <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 stroke-destructive/80 mt-0.5 sm:mt-1" />  {/* Adjusted icon size and margin for mobile */}
+                                                  <AlertTitle className="text-destructive/95 font-semibold mb-1 text-sm sm:text-base">National Debt Burden: {nationalDebt}</AlertTitle> {/* Adjusted font size for mobile */}
+                                                 <AlertDescription className="text-xs sm:text-sm text-destructive/90 dark:text-destructive/80 leading-relaxed space-y-1.5 sm:space-y-2"> {/* Adjusted font size and spacing for mobile */}
                                                      <p>This staggering amount paid just on <strong className="font-medium">interest</strong> is a direct consequence of sustained government spending exceeding revenue—often driven by tax cuts favoring the wealthy, unfunded wars, and economic bailouts.</p>
                                                      <p>High interest payments <strong className="font-medium">divert critical funds</strong> from essential public services, infrastructure, education, and potential tax relief, raising serious questions about long-term fiscal stability and government accountability.</p>
-                                                     <div className="flex items-center space-x-2 pt-3">
+                                                     <div className="flex items-center space-x-1.5 sm:space-x-2 pt-2 sm:pt-3"> {/* Adjusted spacing and padding for mobile */}
                                                           <Checkbox
                                                             id="balance-budget"
                                                             checked={balanceBudgetChecked}
                                                             onCheckedChange={handleBudgetCheckboxChange}
                                                             aria-label="Prioritize Balancing the Budget"
-                                                            className="rounded-[4px] border-destructive/70 data-[state=checked]:bg-destructive/80 data-[state=checked]:border-destructive/80"
+                                                            className="rounded-[4px] border-destructive/70 data-[state=checked]:bg-destructive/80 data-[state=checked]:border-destructive/80 h-3.5 w-3.5 sm:h-4 sm:w-4" // Adjusted size for mobile
                                                           />
-                                                         <Label htmlFor="balance-budget" className="text-xs font-medium text-destructive/95 dark:text-destructive/85 cursor-pointer">
+                                                         <Label htmlFor="balance-budget" className="text-[10px] sm:text-xs font-medium text-destructive/95 dark:text-destructive/85 cursor-pointer"> {/* Adjusted font size for mobile */}
                                                             Prioritize Balancing the Budget & Reducing Debt
                                                          </Label>
                                                       </div>
                                                  </AlertDescription>
                                              </Alert>
                                          ) : hasSubItems ? (
-                                            <ul className="space-y-2">
+                                            <ul className="space-y-1.5 sm:space-y-2"> {/* Adjusted spacing for mobile */}
                                                 {item.subItems!.map((subItem) => {
                                                     const subItemAmount = subItem.amountPerDollar * taxAmount;
                                                     const isSelected = selectedItems.has(subItem.id);
@@ -570,26 +587,26 @@ export default function TaxBreakdownDashboard({
                                                     }
 
                                                     return (
-                                                         <li key={subItem.id} className="flex justify-between items-center text-xs gap-2 group/subitem">
-                                                             <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                                                         <li key={subItem.id} className="flex justify-between items-center text-[10px] sm:text-xs gap-1.5 sm:gap-2 group/subitem"> {/* Adjusted font size and spacing for mobile */}
+                                                             <div className="flex items-center gap-1 sm:gap-1.5 flex-1 min-w-0"> {/* Adjusted spacing for mobile */}
                                                                 <Checkbox
                                                                    id={`subitem-${item.id}-${subItem.id}`}
                                                                    checked={isSelected}
                                                                    onCheckedChange={(checked) => handleCheckboxChange(checked, subItem)}
                                                                    aria-label={`Select ${subItem.description}`}
-                                                                   className="mt-0 shrink-0 rounded-[4px]" 
+                                                                   className="mt-0 shrink-0 rounded-[4px] h-3.5 w-3.5 sm:h-4 sm:w-4" // Adjusted size for mobile
                                                                 />
                                                                <ShadTooltip>
                                                                     <TooltipTrigger asChild>
                                                                          <label
                                                                             htmlFor={`subitem-${item.id}-${subItem.id}`}
                                                                             className={cn(
-                                                                                "truncate cursor-pointer hover:text-foreground transition-colors flex items-center gap-1 flex-1",
+                                                                                "truncate cursor-pointer hover:text-foreground transition-colors flex items-center gap-0.5 sm:gap-1 flex-1", // Adjusted spacing for mobile
                                                                                 isSelected ? "text-foreground font-medium" : ""
                                                                             )}
                                                                          >
                                                                             {subItem.description}
-                                                                            {(subItem.tooltipText || subItem.wikiLink) && <Info className="h-3 w-3 opacity-40 group-hover/subitem:opacity-100 transition-opacity shrink-0"/>}
+                                                                            {(subItem.tooltipText || subItem.wikiLink) && <Info className="h-2.5 w-2.5 sm:h-3 sm:w-3 opacity-40 group-hover/subitem:opacity-100 transition-opacity shrink-0"/>} {/* Adjusted icon size for mobile */}
                                                                         </label>
                                                                     </TooltipTrigger>
                                                                     {(subItem.tooltipText || subItem.wikiLink) && (
@@ -621,11 +638,11 @@ export default function TaxBreakdownDashboard({
                             );
                         })}
                      </Accordion>
-                     <div className="flex justify-between items-center w-full px-3 sm:px-4 py-3 sm:py-4 border-t-2 border-primary/50 bg-primary/5">
-                         <span className="font-bold text-sm sm:text-base text-primary tracking-tight">TOTAL ESTIMATED TAX</span>
+                     <div className="flex justify-between items-center w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-4 border-t-2 border-primary/50 bg-primary/5"> {/* Adjusted padding for mobile */}
+                         <span className="font-bold text-xs sm:text-sm md:text-base text-primary tracking-tight">TOTAL ESTIMATED TAX</span> {/* Adjusted font size for mobile */}
                           <ShadTooltip>
                              <TooltipTrigger asChild>
-                                 <span className="font-bold font-mono text-sm sm:text-base text-primary cursor-default">
+                                 <span className="font-bold font-mono text-xs sm:text-sm md:text-base text-primary cursor-default"> {/* Adjusted font size for mobile */}
                                    {displayMode === 'time' && hourlyWage && totalPerspectiveData?.time
                                        ? formatTime((taxAmount / hourlyWage) * 60)
                                        : formatCurrency(taxAmount)

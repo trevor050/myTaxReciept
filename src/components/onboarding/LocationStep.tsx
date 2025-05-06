@@ -34,9 +34,13 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
         console.log("Geolocation is not supported by this browser.");
       }
     };
-    checkGeolocation();
-    // Focus input on mount for easier typing/skipping
-    inputRef.current?.focus();
+
+    if (typeof window !== 'undefined') { // Ensure navigator is accessed only on client
+        checkGeolocation();
+        // Focus input on mount for easier typing/skipping
+        inputRef.current?.focus();
+    }
+
 
     // Add keydown listener for Enter key
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -178,14 +182,14 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
 
   // Client-side rendered content
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6"> {/* Adjusted spacing for mobile */}
       {/* Geolocation button section */}
        {geolocationSupported !== null && (
            <>
              <Button
                 onClick={handleUseCurrentLocation}
                  disabled={!geolocationSupported || isLocating} // Disable if not supported or locating
-                className="w-full transition-all duration-200 ease-in-out hover:scale-[1.02]"
+                className="w-full transition-all duration-200 ease-in-out hover:scale-[1.02] text-sm sm:text-base"
                 variant="outline"
                 size="lg"
                 aria-live="polite" // Announce changes for screen readers
@@ -209,7 +213,7 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
               )}
 
               {/* Separator */}
-              <div className="relative my-4">
+              <div className="relative my-2 sm:my-4"> {/* Adjusted margin for mobile */}
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t border-border/70" />
                 </div>
@@ -224,13 +228,13 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
 
 
       {/* Manual input form */}
-      <form onSubmit={handleManualSubmit} className="space-y-4">
-        <div className="space-y-2">
+      <form onSubmit={handleManualSubmit} className="space-y-3 sm:space-y-4"> {/* Adjusted spacing for mobile */}
+        <div className="space-y-1 sm:space-y-2"> {/* Adjusted spacing for mobile */}
           <Label htmlFor="location" className="sr-only">Location (Zip Code or City, State) or press Enter to skip</Label>
           <div className="relative">
              <MapPin className={cn(
-                 "absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/70 pointer-events-none transition-colors duration-200",
-                 typeof document !== 'undefined' && inputRef.current === document.activeElement && "text-primary" // Highlight icon on focus (client only)
+                 "absolute left-3 top-1/2 h-4 w-4 sm:h-5 sm:w-5 -translate-y-1/2 text-muted-foreground/70 pointer-events-none transition-colors duration-200",
+                 isClient && inputRef.current === document.activeElement && "text-primary" // Highlight icon on focus (client only)
              )} />
             <Input
               ref={inputRef}
@@ -239,21 +243,22 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
               placeholder="Zip Code or City, State"
               value={manualLocation}
               onChange={(e) => setManualLocation(e.target.value)}
-              className="pl-10 pr-16 h-12 text-base sm:text-lg" // Added right padding for skip hint
+              className="pl-9 sm:pl-10 pr-12 sm:pr-16 h-11 sm:h-12 text-sm sm:text-base" // Adjusted padding and height for mobile
               aria-label="Enter your location manually or press Enter to skip"
               aria-describedby="skip-hint" // Describe the skip action
             />
             {/* Skip Hint */}
-            <div id="skip-hint" className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs text-muted-foreground/70 pointer-events-none">
+            <div id="skip-hint" className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs text-muted-foreground/70 pointer-events-none">
                Skip <CornerDownLeft className="h-3 w-3"/>
             </div>
           </div>
            <p className="text-xs text-muted-foreground pt-1 pl-1">Enter your location or press <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-sm dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">Enter</kbd> to use the default (New York area).</p>
         </div>
-        <Button type="submit" className="w-full transition-all duration-200 ease-in-out hover:scale-[1.02]" size="lg">
+        <Button type="submit" className="w-full transition-all duration-200 ease-in-out hover:scale-[1.02] text-sm sm:text-base" size="lg">
            {manualLocation.trim() ? 'Next' : 'Skip & Use Default'}
         </Button>
       </form>
     </div>
   );
 }
+

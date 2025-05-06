@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -135,7 +136,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
             : undefined // Let CSS handle initial centering via translate
         }
         className={cn(
-          'dialog-pop fixed z-50 flex max-h-[85vh] w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:w-full sm:rounded-lg',
+          'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:rounded-lg', // Adjusted max-height and width for mobile
            // Apply centering ONLY when position is not yet calculated
           pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
           // Add scale animation classes for open/close
@@ -149,16 +150,16 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
          <div
             ref={refHandle}
             onMouseDown={onDown}
-            className='relative flex shrink-0 cursor-move select-none items-center justify-between border-b px-6 py-4 bg-card/95 rounded-t-lg' // Added bg and rounded-t
+            className='relative flex shrink-0 cursor-move select-none items-center justify-between border-b px-4 py-3 sm:px-6 sm:py-4 bg-card/95 rounded-t-lg' // Adjusted padding for mobile
          >
           {/* Left side: Grip + Title/Desc */}
-          <div className='flex items-center gap-3 pointer-events-none'> {/* Disable pointer events on inner elements */}
-            <GripVertical className='h-5 w-5 text-muted-foreground shrink-0' />
-            <div className='space-y-0.5'>
-              <DialogTitle className='text-lg sm:text-xl font-semibold flex items-center gap-2'>
-                <Mail className='h-5 w-5 text-primary'/> Customize Your Email
+          <div className='flex items-center gap-2 sm:gap-3 pointer-events-none'> {/* Adjusted gap for mobile */}
+            <GripVertical className='h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground shrink-0' /> {/* Adjusted icon size for mobile */}
+            <div className='space-y-0 sm:space-y-0.5'> {/* Adjusted spacing for mobile */}
+              <DialogTitle className='text-base sm:text-lg md:text-xl font-semibold flex items-center gap-1.5 sm:gap-2'> {/* Adjusted font size and gap for mobile */}
+                <Mail className='h-4 w-4 sm:h-5 sm:w-5 text-primary'/> Customize Your Email
               </DialogTitle>
-              <DialogDescription className='text-sm text-muted-foreground'>
+              <DialogDescription className='text-xs sm:text-sm text-muted-foreground'>
                 Adjust tone, priorities, and provide your info.
               </DialogDescription>
             </div>
@@ -166,60 +167,60 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
 
           {/* Right side: Close button */}
            <DialogClose asChild>
-                <Button variant='ghost' size='icon' className='h-8 w-8 flex-shrink-0 pointer-events-auto z-20 relative'> {/* Ensure close button is clickable */}
-                    <X className='h-4 w-4'/><span className='sr-only'>Close</span>
+                <Button variant='ghost' size='icon' className='h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0 pointer-events-auto z-20 relative'> {/* Ensure close button is clickable, adjusted size for mobile */}
+                    <X className='h-3.5 w-3.5 sm:h-4 sm:w-4'/><span className='sr-only'>Close</span> {/* Adjusted icon size for mobile */}
                 </Button>
             </DialogClose>
         </div>
 
 
         {/*──── BODY (scrolls) ────*/}
-        <ScrollArea className='flex-1 overflow-y-auto px-6 py-4 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent'>
-           <div className="space-y-8"> {/* Add container for padding */}
+        <ScrollArea className='flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent'> {/* Adjusted padding for mobile */}
+           <div className="space-y-6 sm:space-y-8"> {/* Adjusted spacing for mobile */}
               {/* name / location */}
-              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                <div className='space-y-2'>
-                  <Label htmlFor="userName">Your Name</Label>
-                  <Input id="userName" value={userName} onChange={e=>setUserName(e.target.value)} placeholder='Jane Doe' className="h-9"/>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'> {/* Adjusted gap for mobile */}
+                <div className='space-y-1.5 sm:space-y-2'> {/* Adjusted spacing for mobile */}
+                  <Label htmlFor="userName" className="text-xs sm:text-sm">Your Name</Label> {/* Adjusted font size for mobile */}
+                  <Input id="userName" value={userName} onChange={e=>setUserName(e.target.value)} placeholder='Jane Doe' className="h-8 sm:h-9 text-sm sm:text-base"/> {/* Adjusted height and font size for mobile */}
                 </div>
-                <div className='space-y-2'>
-                  <Label htmlFor="userLocation">Your Location</Label>
-                  <Input id="userLocation" value={userLocation} onChange={e=>setUserLocation(e.target.value)} placeholder='City, ST Zipcode' className="h-9"/>
+                <div className='space-y-1.5 sm:space-y-2'> {/* Adjusted spacing for mobile */}
+                  <Label htmlFor="userLocation" className="text-xs sm:text-sm">Your Location</Label> {/* Adjusted font size for mobile */}
+                  <Input id="userLocation" value={userLocation} onChange={e=>setUserLocation(e.target.value)} placeholder='City, ST Zipcode' className="h-8 sm:h-9 text-sm sm:text-base"/> {/* Adjusted height and font size for mobile */}
                 </div>
               </div>
 
               {/* tone slider */}
-              <div className='space-y-3 rounded-lg border p-4 bg-secondary/30 shadow-inner'>
+              <div className='space-y-2 sm:space-y-3 rounded-lg border p-3 sm:p-4 bg-secondary/30 shadow-inner'> {/* Adjusted padding and spacing for mobile */}
                 <div className='flex justify-between items-center'>
-                    <Label htmlFor="aggressiveness" className="text-base font-semibold">Overall Tone</Label>
-                    <span className='text-sm font-medium text-primary rounded-full bg-primary/10 px-2.5 py-0.5'>{tone(aggressiveness)}</span>
+                    <Label htmlFor="aggressiveness" className="text-sm sm:text-base font-semibold">Overall Tone</Label> {/* Adjusted font size for mobile */}
+                    <span className='text-xs sm:text-sm font-medium text-primary rounded-full bg-primary/10 px-2 sm:px-2.5 py-0.5'>{tone(aggressiveness)}</span> {/* Adjusted padding and font size for mobile */}
                 </div>
                 <Slider
                     id="aggressiveness"
                     value={[aggressiveness]}
                     onValueChange={v=>setAggressiveness(v[0])}
-                    className="my-2" // Add margin
+                    className="my-1.5 sm:my-2" // Add margin
                 />
-                <div className='flex justify-between text-xs text-muted-foreground'>
+                <div className='flex justify-between text-[10px] sm:text-xs text-muted-foreground'> {/* Adjusted font size for mobile */}
                     <span>Kind / Polite</span><span>Concerned</span><span>Stern / Demanding</span>
                 </div>
               </div>
 
               {/* funding sliders */}
               {selected.length > 0 && (
-                <div className='space-y-6'>
-                  <h3 className='text-lg font-semibold border-b pb-2'>Adjust Funding Priorities</h3>
+                <div className='space-y-4 sm:space-y-6'> {/* Adjusted spacing for mobile */}
+                  <h3 className='text-sm sm:text-lg font-semibold border-b pb-1.5 sm:pb-2'>Adjust Funding Priorities</h3> {/* Adjusted font size and padding for mobile */}
                   {selected.map(item => {
                     const sliderValue = itemFundingLevels.get(item.id) ?? 50; // Use 50 as default if not found
                     const det = fdet(sliderValue);
                     return (
-                      <div key={item.id} className='space-y-2 border p-4 rounded-md shadow-sm bg-card/50'>
-                        <div className='flex justify-between items-start gap-2'>
-                          <Label htmlFor={`funding-${item.id}`} className='text-sm font-medium text-foreground flex-1'>
+                      <div key={item.id} className='space-y-1.5 sm:space-y-2 border p-3 sm:p-4 rounded-md shadow-sm bg-card/50'> {/* Adjusted padding and spacing for mobile */}
+                        <div className='flex justify-between items-start gap-1.5 sm:gap-2'> {/* Adjusted gap for mobile */}
+                          <Label htmlFor={`funding-${item.id}`} className='text-xs sm:text-sm font-medium text-foreground flex-1'> {/* Adjusted font size for mobile */}
                             {item.description}
                           </Label>
                            <span className={cn(
-                               'text-xs font-semibold rounded-full px-2 py-0.5 text-white whitespace-nowrap', // Base styles
+                               'text-[10px] sm:text-xs font-semibold rounded-full px-1.5 sm:px-2 py-0.5 text-white whitespace-nowrap', // Base styles, adjusted padding and font for mobile
                                det.color // Apply color class
                            )}>
                                {det.label}
@@ -235,7 +236,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                                 '[&>span]:bg-muted' // Background track color
                             )}
                         />
-                        <div className='flex justify-between text-[10px] text-muted-foreground px-1'>
+                        <div className='flex justify-between text-[9px] sm:text-[10px] text-muted-foreground px-1'> {/* Adjusted font size for mobile */}
                           <span>Cut</span>
                           <span>Review</span>
                           <span>Increase</span>
@@ -247,7 +248,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
               )}
 
               {balanceBudgetChecked && (
-                <div className='mt-6 rounded-lg border border-amber-500/50 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-300'>
+                <div className='mt-4 sm:mt-6 rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 sm:p-4 text-xs sm:text-sm text-amber-800 dark:text-amber-300'> {/* Adjusted padding, margin and font size for mobile */}
                   <p><strong>Note:</strong> Your email will emphasize balancing the budget and tackling the national debt.</p>
                 </div>
               )}
@@ -255,8 +256,8 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
         </ScrollArea>
 
         {/*──── FOOTER ────*/}
-        <DialogFooter className='flex shrink-0 flex-col-reverse sm:flex-row sm:space-x-2 px-6 py-4 border-t bg-card/95 sticky bottom-0 z-10 sm:justify-between rounded-b-lg'> {/* Added bg and rounded-b */}
-          <DialogClose asChild><Button variant='outline' className='w-full sm:w-auto'>Cancel</Button></DialogClose>
+        <DialogFooter className='flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:space-x-2 px-4 py-3 sm:px-6 sm:py-4 border-t bg-card/95 sticky bottom-0 z-10 sm:justify-between rounded-b-lg'> {/* Adjusted padding and gap for mobile */}
+          <DialogClose asChild><Button variant='outline' className='w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10'>Cancel</Button></DialogClose> {/* Adjusted font size and height for mobile */}
           <Button
             disabled={!userName || !userLocation} // Disable if name or location is missing
             onClick={()=>{
@@ -282,9 +283,9 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
               window.location.href=`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
               onOpenChange(false); // Close modal after generating
             }}
-            className='w-full sm:w-auto bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 text-primary-foreground dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800'
+            className='w-full sm:w-auto bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 text-primary-foreground dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800 text-xs sm:text-sm h-9 sm:h-10' // Adjusted font size and height for mobile
           >
-            <Send className='mr-2 h-4 w-4'/> Generate & Open Email
+            <Send className='mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4'/> Generate & Open Email {/* Adjusted icon size and margin for mobile */}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -302,3 +303,4 @@ interface EmailCustomizationModalProps{
   userName:string;setUserName:(s:string)=>void;
   userLocation:string;setUserLocation:(s:string)=>void;
 }
+

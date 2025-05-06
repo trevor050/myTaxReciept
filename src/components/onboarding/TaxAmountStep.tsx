@@ -20,10 +20,13 @@ export default function TaxAmountStep({ onSubmit, isLoading, medianTax }: TaxAmo
   const [taxAmount, setTaxAmount] = useState('');
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isClient, setIsClient] = useState(false); // State to track client-side rendering
 
-   useEffect(() => {
-    // Focus input on mount
-    inputRef.current?.focus();
+  useEffect(() => {
+    setIsClient(true); // Set client to true on mount
+    if (typeof window !== 'undefined') { // Ensure inputRef.current is accessed only on client
+        inputRef.current?.focus();
+    }
 
     // Add keydown listener for Enter key
      const handleKeyDown = (event: KeyboardEvent) => {
@@ -86,15 +89,15 @@ export default function TaxAmountStep({ onSubmit, isLoading, medianTax }: TaxAmo
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6"> {/* Adjusted spacing for mobile */}
       {/* Main Input Form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
+      <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4"> {/* Adjusted spacing for mobile */}
+        <div className="space-y-1 sm:space-y-2"> {/* Adjusted spacing for mobile */}
           <Label htmlFor="taxAmount" className="sr-only">Estimated Annual Income Tax Paid or press Enter to skip</Label> {/* Updated sr-only label */}
            <div className="relative">
              <DollarSign className={cn(
-                "absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/70 pointer-events-none transition-colors duration-200",
-                 typeof document !== 'undefined' && inputRef.current === document.activeElement && "text-primary" // Highlight icon on focus (client only)
+                "absolute left-3 top-1/2 h-4 w-4 sm:h-5 sm:w-5 -translate-y-1/2 text-muted-foreground/70 pointer-events-none transition-colors duration-200",
+                isClient && inputRef.current === document.activeElement && "text-primary" // Highlight icon on focus (client only)
              )} />
               <Input
                 ref={inputRef}
@@ -104,18 +107,18 @@ export default function TaxAmountStep({ onSubmit, isLoading, medianTax }: TaxAmo
                 placeholder="Enter Amount (e.g., 5000)"
                 value={taxAmount}
                 onChange={handleInputChange}
-                className="pl-10 pr-16 h-12 text-lg sm:text-xl text-center" // Added right padding
+                className="pl-9 sm:pl-10 pr-12 sm:pr-16 h-11 sm:h-12 text-base sm:text-lg text-center" // Adjusted padding, height and font for mobile
                 aria-label="Estimated annual income tax paid or press Enter to skip"
                 aria-describedby="tax-skip-hint"
               />
               {/* Skip Hint */}
-                <div id="tax-skip-hint" className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs text-muted-foreground/70 pointer-events-none">
+                <div id="tax-skip-hint" className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs text-muted-foreground/70 pointer-events-none">
                    Skip <CornerDownLeft className="h-3 w-3"/>
                 </div>
            </div>
             <p className="text-xs text-muted-foreground pt-1 text-center">Enter your estimate or press <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-sm dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">Enter</kbd> to use the estimated median for your area.</p>
         </div>
-        <Button type="submit" className="w-full transition-all duration-200 ease-in-out hover:scale-[1.02]" size="lg" disabled={isLoading || !taxAmount}>
+        <Button type="submit" className="w-full transition-all duration-200 ease-in-out hover:scale-[1.02] text-sm sm:text-base" size="lg" disabled={isLoading || !taxAmount}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -128,7 +131,7 @@ export default function TaxAmountStep({ onSubmit, isLoading, medianTax }: TaxAmo
       </form>
 
         {/* Separator */}
-        <div className="relative my-4">
+        <div className="relative my-2 sm:my-4"> {/* Adjusted margin for mobile */}
             <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t border-border/70" />
             </div>
@@ -140,12 +143,12 @@ export default function TaxAmountStep({ onSubmit, isLoading, medianTax }: TaxAmo
         </div>
 
        {/* Use Median Button */}
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-1 sm:space-y-2"> {/* Adjusted spacing for mobile */}
              <Button
                 variant="outline" // Changed variant for better distinction
                 onClick={handleUseMedian}
                 disabled={isLoading}
-                 className="transition-colors w-full sm:w-auto text-base border-primary/50 text-primary hover:bg-primary/5" // Adjusted styling
+                 className="transition-colors w-full sm:w-auto text-sm sm:text-base border-primary/50 text-primary hover:bg-primary/5" // Adjusted styling
                 size="lg"
             >
                 <Zap className="mr-2 h-4 w-4" /> Use Area Median ($ {medianTax.toLocaleString()}) {/* Use prop */}
@@ -156,3 +159,4 @@ export default function TaxAmountStep({ onSubmit, isLoading, medianTax }: TaxAmo
     </div>
   );
 }
+
