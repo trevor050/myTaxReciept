@@ -1,3 +1,4 @@
+
 // src/components/dashboard/TaxBreakdownDashboard.tsx
 'use client';
 
@@ -353,284 +354,286 @@ export default function TaxBreakdownDashboard({
 
 
   return (
-    <div className="space-y-10 animate-fadeIn relative pb-10">
-        {/* --- Header --- */}
-        <div className="text-center space-y-1 mb-6 relative"> {/* Reduced mb */}
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">{currentYear ? `${currentYear} ` : ''}Federal Income Tax Receipt</h1>
-             <p className="text-lg text-muted-foreground">Based on your estimated <span className="font-semibold text-foreground">{formatCurrency(taxAmount)}</span> payment.</p>
-            <p className="text-xs text-muted-foreground/70">Next Filing Due: {dueDateDisplay}</p>
+    <TooltipProvider> {/* Wrap entire dashboard in TooltipProvider */}
+        <div className="space-y-10 animate-fadeIn relative pb-10">
+            {/* --- Header --- */}
+            <div className="text-center space-y-1 mb-6 relative"> {/* Reduced mb */}
+                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">{currentYear ? `${currentYear} ` : ''}Federal Income Tax Receipt</h1>
+                 <p className="text-lg text-muted-foreground">Based on your estimated <span className="font-semibold text-foreground">{formatCurrency(taxAmount)}</span> payment.</p>
+                <p className="text-xs text-muted-foreground/70">Next Filing Due: {dueDateDisplay}</p>
 
-             {/* --- Display Mode Toggle (only if wage provided) --- */}
-            {hourlyWage !== null && (
-                <div className="absolute top-0 right-0 sm:relative sm:flex sm:justify-center sm:items-center sm:mt-4 sm:space-x-2 pt-1 pr-1 sm:pt-0 sm:pr-0">
-                    <Label htmlFor="display-mode-toggle" className="text-xs font-medium text-muted-foreground hidden sm:inline">View as:</Label>
-                    <div className="flex items-center space-x-2 bg-muted p-1 rounded-full">
-                        <Button
-                            variant={displayMode === 'currency' ? 'default' : 'ghost'}
-                            size="sm"
-                            onClick={() => setDisplayMode('currency')}
-                            className={cn("rounded-full px-3 py-1 h-7 text-xs", displayMode === 'currency' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:bg-accent')}
-                            aria-pressed={displayMode === 'currency'}
-                        >
-                            <DollarSign className="h-3 w-3 mr-1" /> Currency
-                        </Button>
-                        <Button
-                             variant={displayMode === 'time' ? 'default' : 'ghost'}
-                             size="sm"
-                             onClick={() => setDisplayMode('time')}
-                             className={cn("rounded-full px-3 py-1 h-7 text-xs", displayMode === 'time' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:bg-accent')}
-                             aria-pressed={displayMode === 'time'}
-                        >
-                            <Clock className="h-3 w-3 mr-1" /> Time Worked
-                        </Button>
+                 {/* --- Display Mode Toggle (only if wage provided) --- */}
+                {hourlyWage !== null && (
+                    <div className="absolute top-0 right-0 sm:relative sm:flex sm:justify-center sm:items-center sm:mt-4 sm:space-x-2 pt-1 pr-1 sm:pt-0 sm:pr-0">
+                        <Label htmlFor="display-mode-toggle" className="text-xs font-medium text-muted-foreground hidden sm:inline">View as:</Label>
+                        <div className="flex items-center space-x-2 bg-muted p-1 rounded-full">
+                            <Button
+                                variant={displayMode === 'currency' ? 'default' : 'ghost'}
+                                size="sm"
+                                onClick={() => setDisplayMode('currency')}
+                                className={cn("rounded-full px-3 py-1 h-7 text-xs", displayMode === 'currency' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:bg-accent')}
+                                aria-pressed={displayMode === 'currency'}
+                            >
+                                <DollarSign className="h-3 w-3 mr-1" /> Currency
+                            </Button>
+                            <Button
+                                 variant={displayMode === 'time' ? 'default' : 'ghost'}
+                                 size="sm"
+                                 onClick={() => setDisplayMode('time')}
+                                 className={cn("rounded-full px-3 py-1 h-7 text-xs", displayMode === 'time' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:bg-accent')}
+                                 aria-pressed={displayMode === 'time'}
+                            >
+                                <Clock className="h-3 w-3 mr-1" /> Time Worked
+                            </Button>
+                        </div>
                     </div>
-                </div>
-            )}
-         </div>
+                )}
+             </div>
 
 
-       {/* --- Direct Activism Plea --- */}
-        <Alert className="mb-8 shadow-sm rounded-lg border border-primary/20 bg-primary/5 text-foreground animate-fadeIn delay-500 duration-3000">
-             <Megaphone className="h-5 w-5 mt-0.5 stroke-primary" />
-            <AlertTitle className="font-semibold text-primary">Make Your Voice Heard!</AlertTitle>
-            <AlertDescription className="text-sm text-foreground/90 space-y-1.5">
-                Understanding where your money goes is the first step. The next is action.
-                <span className="block">Your elected officials work for you. Let them know how you feel about these spending priorities. Select specific items below that concern you and use the button to draft a direct message.</span>
-                 <Button variant="link" className="p-0 h-auto ml-0 text-primary font-medium text-sm mt-1" onClick={() => {if (typeof window !== 'undefined') window.open('https://www.usa.gov/elected-officials', '_blank', 'noopener,noreferrer')}}>
-                    Find Your Officials <ExternalLink className="inline ml-1 h-3 w-3" />
-                </Button>
-            </AlertDescription>
-        </Alert>
+           {/* --- Direct Activism Plea --- */}
+            <Alert className="mb-8 shadow-sm rounded-lg border border-primary/20 bg-primary/5 text-foreground animate-fadeIn delay-500 duration-3000">
+                 <Megaphone className="h-5 w-5 mt-0.5 stroke-primary" />
+                <AlertTitle className="font-semibold text-primary">Make Your Voice Heard!</AlertTitle>
+                <AlertDescription className="text-sm text-foreground/90 space-y-1.5">
+                    Understanding where your money goes is the first step. The next is action.
+                    <span className="block">Your elected officials work for you. Let them know how you feel about these spending priorities. Select specific items below that concern you and use the button to draft a direct message.</span>
+                     <Button variant="link" className="p-0 h-auto ml-0 text-primary font-medium text-sm mt-1" onClick={() => {if (typeof window !== 'undefined') window.open('https://www.usa.gov/elected-officials', '_blank', 'noopener,noreferrer')}}>
+                        Find Your Officials <ExternalLink className="inline ml-1 h-3 w-3" />
+                    </Button>
+                </AlertDescription>
+            </Alert>
 
 
-      {/* --- Chart Section --- */}
-      <div className="mb-12">
-         <h2 className="text-xl font-semibold text-center mb-4">Spending Overview</h2>
-         <TooltipProvider delayDuration={150}>
-              <ResponsiveContainer width="100%" height={320}>
-                <PieChart margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 80 : 100} // Conditional radius client-side
-                    innerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 50 : 65} // Conditional radius client-side
-                    fill="#8884d8"
-                    paddingAngle={1}
-                    dataKey="percentage"
-                    nameKey="category"
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke={'hsl(var(--background))'} strokeWidth={1} />
-                    ))}
-                  </Pie>
-                   <Tooltip content={<CustomTooltip totalAmount={taxAmount} hourlyWage={hourlyWage} displayMode={displayMode} />} cursor={{ fill: 'hsl(var(--accent))', fillOpacity: 0.4 }} />
-                   <Legend content={<CustomLegend />} wrapperStyle={{ maxWidth: '100%', overflow: 'hidden' }}/>
-                </PieChart>
-              </ResponsiveContainer>
-            </TooltipProvider>
-             <p className="text-xs text-muted-foreground text-center mt-4 flex items-center justify-center gap-1 px-2">
-                <Info className="h-3 w-3" /> Hover over segments for details. Estimated data.
-             </p>
-      </div>
+          {/* --- Chart Section --- */}
+          <div className="mb-12">
+             <h2 className="text-xl font-semibold text-center mb-4">Spending Overview</h2>
+             <TooltipProvider delayDuration={150}>
+                  <ResponsiveContainer width="100%" height={320}>
+                    <PieChart margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+                      <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 80 : 100} // Conditional radius client-side
+                        innerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 50 : 65} // Conditional radius client-side
+                        fill="#8884d8"
+                        paddingAngle={1}
+                        dataKey="percentage"
+                        nameKey="category"
+                      >
+                        {chartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke={'hsl(var(--background))'} strokeWidth={1} />
+                        ))}
+                      </Pie>
+                       <Tooltip content={<CustomTooltip totalAmount={taxAmount} hourlyWage={hourlyWage} displayMode={displayMode} />} cursor={{ fill: 'hsl(var(--accent))', fillOpacity: 0.4 }} />
+                       <Legend content={<CustomLegend />} wrapperStyle={{ maxWidth: '100%', overflow: 'hidden' }}/>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </TooltipProvider>
+                 <p className="text-xs text-muted-foreground text-center mt-4 flex items-center justify-center gap-1 px-2">
+                    <Info className="h-3 w-3" /> Hover over segments for details. Estimated data.
+                 </p>
+          </div>
 
 
-      {/* --- Detailed Breakdown Card --- */}
-       <Card className="shadow-lg border border-border/60 rounded-xl overflow-hidden bg-gradient-to-b from-card to-card/95">
-            <CardHeader className="px-4 py-4 sm:px-6 sm:py-5 border-b border-border/50">
-                <CardTitle className="text-lg sm:text-xl font-semibold tracking-tight">Detailed Spending</CardTitle>
-                <CardDescription className="text-muted-foreground text-xs sm:text-sm">Select items you believe need funding adjustments or prioritize balancing the budget.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <TooltipProvider delayDuration={250}>
-                 <Accordion type="multiple" className="w-full">
-                    {taxSpending.map((item, index) => {
-                        const categoryAmount = (item.percentage / 100) * taxAmount;
-                        const Icon = categoryIcons[item.category] || DefaultIcon;
-                        const isInterestOnDebt = item.category === 'Interest on Debt';
-                        const hasSubItems = item.subItems && item.subItems.length > 0;
+          {/* --- Detailed Breakdown Card --- */}
+           <Card className="shadow-lg border border-border/60 rounded-xl overflow-hidden bg-gradient-to-b from-card to-card/95">
+                <CardHeader className="px-4 py-4 sm:px-6 sm:py-5 border-b border-border/50">
+                    <CardTitle className="text-lg sm:text-xl font-semibold tracking-tight">Detailed Spending</CardTitle>
+                    <CardDescription className="text-muted-foreground text-xs sm:text-sm">Select items you believe need funding adjustments or prioritize balancing the budget.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {/* Removed redundant TooltipProvider, using the one wrapping the whole dashboard */}
+                     <Accordion type="multiple" className="w-full">
+                        {taxSpending.map((item, index) => {
+                            const categoryAmount = (item.percentage / 100) * taxAmount;
+                            const Icon = categoryIcons[item.category] || DefaultIcon;
+                            const isInterestOnDebt = item.category === 'Interest on Debt';
+                            const hasSubItems = item.subItems && item.subItems.length > 0;
 
-                        let categoryDisplayValue: string;
-                        let categoryTimeTooltipText: string | null = null; // Added for category tooltip
-                        if (displayMode === 'time' && hourlyWage) {
-                            const hoursWorked = categoryAmount / hourlyWage;
-                            categoryDisplayValue = formatTime(hoursWorked * 60);
-                             categoryTimeTooltipText = getTimePerspectiveText(hoursWorked * 60); // Get time perspective for category
-                        } else {
-                            categoryDisplayValue = formatCurrency(categoryAmount);
-                        }
+                            let categoryDisplayValue: string;
+                            let categoryTimeTooltipText: string | null = null; // Added for category tooltip
+                            if (displayMode === 'time' && hourlyWage) {
+                                const hoursWorked = categoryAmount / hourlyWage;
+                                categoryDisplayValue = formatTime(hoursWorked * 60);
+                                 categoryTimeTooltipText = getTimePerspectiveText(hoursWorked * 60); // Get time perspective for category
+                            } else {
+                                categoryDisplayValue = formatCurrency(categoryAmount);
+                            }
 
-                        return (
-                             <AccordionItem value={`item-${index}`} key={item.id || index} className="border-b border-border/40 last:border-b-0 group">
-                                <AccordionTrigger className="hover:no-underline py-3 px-3 sm:px-4 rounded-none hover:bg-accent/50 data-[state=open]:bg-accent/40 transition-colors duration-150 text-left">
-                                     <div className="flex justify-between items-center w-full gap-2 sm:gap-3">
-                                        <div className="flex items-center gap-2 min-w-0">
-                                            <Icon className="h-4 w-4 text-primary shrink-0" />
-                                            <span className="font-medium text-sm truncate flex-1">{item.category}</span>
+                            return (
+                                 <AccordionItem value={`item-${index}`} key={item.id || index} className="border-b border-border/40 last:border-b-0 group">
+                                    <AccordionTrigger className="hover:no-underline py-3 px-3 sm:px-4 rounded-none hover:bg-accent/50 data-[state=open]:bg-accent/40 transition-colors duration-150 text-left">
+                                         <div className="flex justify-between items-center w-full gap-2 sm:gap-3">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <Icon className="h-4 w-4 text-primary shrink-0" />
+                                                <span className="font-medium text-sm truncate flex-1">{item.category}</span>
+                                            </div>
+                                            <div className="text-right shrink-0 flex items-baseline gap-1 ml-auto">
+                                                <ShadTooltip>
+                                                    <TooltipTrigger asChild>
+                                                        {/* Wrap the display value span in the trigger */}
+                                                        <span className="font-semibold font-mono text-sm cursor-default">{categoryDisplayValue}</span>
+                                                    </TooltipTrigger>
+                                                    {/* Category Time Perspective Tooltip */}
+                                                    {displayMode === 'time' && categoryTimeTooltipText && (
+                                                        <TooltipContent side="top" align="end" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50">
+                                                            <p className="text-popover-foreground text-sm leading-relaxed">{categoryTimeTooltipText}</p>
+                                                             {/* Optional: Icons */}
+                                                             <div className="flex gap-2 text-muted-foreground mt-2 justify-center">
+                                                                {categoryTimeTooltipText.includes("coffee") && <Coffee className="h-3 w-3"/>}
+                                                                {categoryTimeTooltipText.includes("movie") && <Film className="h-3 w-3"/>}
+                                                                {categoryTimeTooltipText.includes("fly") && <Plane className="h-3 w-3"/>}
+                                                             </div>
+                                                        </TooltipContent>
+                                                    )}
+                                                </ShadTooltip>
+                                                <span className="text-muted-foreground text-xs font-mono hidden sm:inline">({item.percentage.toFixed(1)}%)</span>
+                                            </div>
                                         </div>
-                                        <div className="text-right shrink-0 flex items-baseline gap-1 ml-auto">
-                                            <ShadTooltip>
-                                                <TooltipTrigger asChild>
-                                                    {/* Wrap the display value span in the trigger */}
-                                                    <span className="font-semibold font-mono text-sm cursor-default">{categoryDisplayValue}</span>
-                                                </TooltipTrigger>
-                                                {/* Category Time Perspective Tooltip */}
-                                                {displayMode === 'time' && categoryTimeTooltipText && (
-                                                    <TooltipContent side="top" align="end" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50">
-                                                        <p className="text-popover-foreground text-sm leading-relaxed">{categoryTimeTooltipText}</p>
-                                                         {/* Optional: Icons */}
-                                                         <div className="flex gap-2 text-muted-foreground mt-2 justify-center">
-                                                            {categoryTimeTooltipText.includes("coffee") && <Coffee className="h-3 w-3"/>}
-                                                            {categoryTimeTooltipText.includes("movie") && <Film className="h-3 w-3"/>}
-                                                            {categoryTimeTooltipText.includes("fly") && <Plane className="h-3 w-3"/>}
-                                                         </div>
-                                                    </TooltipContent>
-                                                )}
-                                            </ShadTooltip>
-                                            <span className="text-muted-foreground text-xs font-mono hidden sm:inline">({item.percentage.toFixed(1)}%)</span>
-                                        </div>
-                                    </div>
-                                </AccordionTrigger>
-                                <AccordionContent
-                                    className="bg-background/30 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up overflow-hidden"
-                                >
-                                    <div className="pl-8 pr-3 sm:pl-10 sm:pr-4 pt-3 pb-4 text-muted-foreground space-y-2.5">
-                                     {isInterestOnDebt ? (
-                                         <Alert variant="destructive" className="bg-destructive/5 border-destructive/30 shadow-inner">
-                                              <AlertTriangle className="h-5 w-5 stroke-destructive/80 mt-1" />
-                                              <AlertTitle className="text-destructive/95 font-semibold mb-1">National Debt Burden: {nationalDebt}</AlertTitle>
-                                             <AlertDescription className="text-sm text-destructive/90 dark:text-destructive/80 leading-relaxed space-y-2">
-                                                 <p>This staggering amount paid just on <strong className="font-medium">interest</strong> is a direct consequence of sustained government spending exceeding revenue—often driven by tax cuts favoring the wealthy, unfunded wars, and economic bailouts.</p>
-                                                 <p>High interest payments <strong className="font-medium">divert critical funds</strong> from essential public services, infrastructure, education, and potential tax relief, raising serious questions about long-term fiscal stability and government accountability.</p>
-                                                 <div className="flex items-center space-x-2 pt-3">
-                                                      <Checkbox
-                                                        id="balance-budget"
-                                                        checked={balanceBudgetChecked}
-                                                        onCheckedChange={handleBudgetCheckboxChange}
-                                                        aria-label="Prioritize Balancing the Budget"
-                                                        className="rounded-[4px] border-destructive/70 data-[state=checked]:bg-destructive/80 data-[state=checked]:border-destructive/80"
-                                                      />
-                                                     <Label htmlFor="balance-budget" className="text-xs font-medium text-destructive/95 dark:text-destructive/85 cursor-pointer">
-                                                        Prioritize Balancing the Budget & Reducing Debt
-                                                     </Label>
-                                                  </div>
-                                             </AlertDescription>
-                                         </Alert>
-                                     ) : hasSubItems ? (
-                                        <ul className="space-y-2">
-                                            {item.subItems!.map((subItem) => {
-                                                const subItemAmount = subItem.amountPerDollar * taxAmount;
-                                                const isSelected = selectedItems.has(subItem.id);
+                                    </AccordionTrigger>
+                                    <AccordionContent
+                                        className="bg-background/30 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up overflow-hidden"
+                                    >
+                                        <div className="pl-8 pr-3 sm:pl-10 sm:pr-4 pt-3 pb-4 text-muted-foreground space-y-2.5">
+                                         {isInterestOnDebt ? (
+                                             <Alert variant="destructive" className="bg-destructive/5 border-destructive/30 shadow-inner">
+                                                  <AlertTriangle className="h-5 w-5 stroke-destructive/80 mt-1" />
+                                                  <AlertTitle className="text-destructive/95 font-semibold mb-1">National Debt Burden: {nationalDebt}</AlertTitle>
+                                                 <AlertDescription className="text-sm text-destructive/90 dark:text-destructive/80 leading-relaxed space-y-2">
+                                                     <p>This staggering amount paid just on <strong className="font-medium">interest</strong> is a direct consequence of sustained government spending exceeding revenue—often driven by tax cuts favoring the wealthy, unfunded wars, and economic bailouts.</p>
+                                                     <p>High interest payments <strong className="font-medium">divert critical funds</strong> from essential public services, infrastructure, education, and potential tax relief, raising serious questions about long-term fiscal stability and government accountability.</p>
+                                                     <div className="flex items-center space-x-2 pt-3">
+                                                          <Checkbox
+                                                            id="balance-budget"
+                                                            checked={balanceBudgetChecked}
+                                                            onCheckedChange={handleBudgetCheckboxChange}
+                                                            aria-label="Prioritize Balancing the Budget"
+                                                            className="rounded-[4px] border-destructive/70 data-[state=checked]:bg-destructive/80 data-[state=checked]:border-destructive/80"
+                                                          />
+                                                         <Label htmlFor="balance-budget" className="text-xs font-medium text-destructive/95 dark:text-destructive/85 cursor-pointer">
+                                                            Prioritize Balancing the Budget & Reducing Debt
+                                                         </Label>
+                                                      </div>
+                                                 </AlertDescription>
+                                             </Alert>
+                                         ) : hasSubItems ? (
+                                            <ul className="space-y-2">
+                                                {item.subItems!.map((subItem) => {
+                                                    const subItemAmount = subItem.amountPerDollar * taxAmount;
+                                                    const isSelected = selectedItems.has(subItem.id);
 
-                                                let subItemDisplayValue: string;
-                                                let subItemTimeTooltipText: string | null = null;
-                                                if (displayMode === 'time' && hourlyWage) {
-                                                    const hoursWorked = subItemAmount / hourlyWage;
-                                                    subItemDisplayValue = formatTime(hoursWorked * 60);
-                                                    subItemTimeTooltipText = getTimePerspectiveText(hoursWorked * 60); // Get time perspective for subitem
-                                                } else {
-                                                    subItemDisplayValue = formatCurrency(subItemAmount);
-                                                }
+                                                    let subItemDisplayValue: string;
+                                                    let subItemTimeTooltipText: string | null = null;
+                                                    if (displayMode === 'time' && hourlyWage) {
+                                                        const hoursWorked = subItemAmount / hourlyWage;
+                                                        subItemDisplayValue = formatTime(hoursWorked * 60);
+                                                        subItemTimeTooltipText = getTimePerspectiveText(hoursWorked * 60); // Get time perspective for subitem
+                                                    } else {
+                                                        subItemDisplayValue = formatCurrency(subItemAmount);
+                                                    }
 
 
-                                                return (
-                                                     <li key={subItem.id} className="flex justify-between items-center text-xs gap-2 group/subitem">
-                                                         <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                                                            <Checkbox
-                                                               id={`subitem-${item.id}-${subItem.id}`}
-                                                               checked={isSelected}
-                                                               onCheckedChange={(checked) => handleCheckboxChange(checked, subItem)}
-                                                               aria-label={`Select ${subItem.description}`}
-                                                               className="mt-0 shrink-0 rounded-[4px]" // Slightly rounder checkbox
-                                                            />
-                                                           <ShadTooltip>
+                                                    return (
+                                                         <li key={subItem.id} className="flex justify-between items-center text-xs gap-2 group/subitem">
+                                                             <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                                                                <Checkbox
+                                                                   id={`subitem-${item.id}-${subItem.id}`}
+                                                                   checked={isSelected}
+                                                                   onCheckedChange={(checked) => handleCheckboxChange(checked, subItem)}
+                                                                   aria-label={`Select ${subItem.description}`}
+                                                                   className="mt-0 shrink-0 rounded-[4px]" // Slightly rounder checkbox
+                                                                />
+                                                               <ShadTooltip>
+                                                                    <TooltipTrigger asChild>
+                                                                        {/* Tooltip triggered by Info icon OR description if no icons */}
+                                                                         <label
+                                                                            htmlFor={`subitem-${item.id}-${subItem.id}`}
+                                                                            className={cn(
+                                                                                "truncate cursor-pointer hover:text-foreground transition-colors flex items-center gap-1 flex-1",
+                                                                                isSelected ? "text-foreground font-medium" : ""
+                                                                            )}
+                                                                         >
+                                                                            {subItem.description}
+                                                                            {/* Show info icon if wiki/tooltip exists */}
+                                                                            {(subItem.tooltipText || subItem.wikiLink) && <Info className="h-3 w-3 opacity-40 group-hover/subitem:opacity-100 transition-opacity shrink-0"/>}
+                                                                        </label>
+                                                                    </TooltipTrigger>
+                                                                    {/* Tooltip Content for Description/Wiki */}
+                                                                    {(subItem.tooltipText || subItem.wikiLink) && (
+                                                                         <SubItemTooltipContent
+                                                                             subItem={subItem}
+                                                                             amount={subItemAmount}
+                                                                             hourlyWage={hourlyWage}
+                                                                             displayMode={displayMode} // Pass mode for potential future use
+                                                                         />
+                                                                    )}
+                                                                </ShadTooltip>
+                                                             </div>
+                                                            {/* --- Value Span with Time Perspective Tooltip --- */}
+                                                            <ShadTooltip>
                                                                 <TooltipTrigger asChild>
-                                                                    {/* Tooltip triggered by Info icon OR description if no icons */}
-                                                                     <label
-                                                                        htmlFor={`subitem-${item.id}-${subItem.id}`}
-                                                                        className={cn(
-                                                                            "truncate cursor-pointer hover:text-foreground transition-colors flex items-center gap-1 flex-1",
-                                                                            isSelected ? "text-foreground font-medium" : ""
-                                                                        )}
-                                                                     >
-                                                                        {subItem.description}
-                                                                        {/* Show info icon if wiki/tooltip exists */}
-                                                                        {(subItem.tooltipText || subItem.wikiLink) && <Info className="h-3 w-3 opacity-40 group-hover/subitem:opacity-100 transition-opacity shrink-0"/>}
-                                                                    </label>
+                                                                     <span className="font-medium font-mono text-foreground/80 whitespace-nowrap cursor-default">
+                                                                        {subItemDisplayValue}
+                                                                     </span>
                                                                 </TooltipTrigger>
-                                                                {/* Tooltip Content for Description/Wiki */}
-                                                                {(subItem.tooltipText || subItem.wikiLink) && (
-                                                                     <SubItemTooltipContent
-                                                                         subItem={subItem}
-                                                                         amount={subItemAmount}
-                                                                         hourlyWage={hourlyWage}
-                                                                         displayMode={displayMode} // Pass mode for potential future use
-                                                                     />
+                                                                {/* SubItem Time Perspective Tooltip */}
+                                                                 {displayMode === 'time' && subItemTimeTooltipText && (
+                                                                    <TooltipContent side="top" align="end" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50">
+                                                                         <p className="text-popover-foreground text-sm leading-relaxed">{subItemTimeTooltipText}</p>
+                                                                         {/* Optional: Icons */}
+                                                                         <div className="flex gap-2 text-muted-foreground mt-2 justify-center">
+                                                                            {subItemTimeTooltipText.includes("coffee") && <Coffee className="h-3 w-3"/>}
+                                                                            {subItemTimeTooltipText.includes("movie") && <Film className="h-3 w-3"/>}
+                                                                            {subItemTimeTooltipText.includes("fly") && <Plane className="h-3 w-3"/>}
+                                                                         </div>
+                                                                     </TooltipContent>
                                                                 )}
                                                             </ShadTooltip>
-                                                         </div>
-                                                        {/* --- Value Span with Time Perspective Tooltip --- */}
-                                                        <ShadTooltip>
-                                                            <TooltipTrigger asChild>
-                                                                 <span className="font-medium font-mono text-foreground/80 whitespace-nowrap cursor-default">
-                                                                    {subItemDisplayValue}
-                                                                 </span>
-                                                            </TooltipTrigger>
-                                                            {/* SubItem Time Perspective Tooltip */}
-                                                             {displayMode === 'time' && subItemTimeTooltipText && (
-                                                                <TooltipContent side="top" align="end" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50">
-                                                                     <p className="text-popover-foreground text-sm leading-relaxed">{subItemTimeTooltipText}</p>
-                                                                     {/* Optional: Icons */}
-                                                                     <div className="flex gap-2 text-muted-foreground mt-2 justify-center">
-                                                                        {subItemTimeTooltipText.includes("coffee") && <Coffee className="h-3 w-3"/>}
-                                                                        {subItemTimeTooltipText.includes("movie") && <Film className="h-3 w-3"/>}
-                                                                        {subItemTimeTooltipText.includes("fly") && <Plane className="h-3 w-3"/>}
-                                                                     </div>
-                                                                 </TooltipContent>
-                                                            )}
-                                                        </ShadTooltip>
-                                                    </li>
-                                                );
-                                            })}
-                                        </ul>
-                                    ) : (
-                                        <p className="text-xs italic text-center py-2">No detailed breakdown available.</p>
-                                    )}
-                                    </div>
-                                </AccordionContent>
-                            </AccordionItem>
-                        );
-                    })}
-                 </Accordion>
-                </TooltipProvider>
-                 {/* --- Total Row --- */}
-                 <div className="flex justify-between items-center w-full px-3 sm:px-4 py-3 sm:py-4 border-t-2 border-primary/50 bg-primary/5">
-                     <span className="font-bold text-sm sm:text-base text-primary tracking-tight">TOTAL ESTIMATED TAX</span>
-                      <ShadTooltip>
-                         <TooltipTrigger asChild>
-                             <span className="font-bold font-mono text-sm sm:text-base text-primary cursor-default">
-                               {displayMode === 'time' && hourlyWage
-                                   ? formatTime((taxAmount / hourlyWage) * 60)
-                                   : formatCurrency(taxAmount)
-                               }
-                             </span>
-                         </TooltipTrigger>
-                          {/* Total Time Perspective Tooltip */}
-                         {displayMode === 'time' && hourlyWage && (
-                             <TooltipContent side="top" align="end" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50">
-                                 <p className="text-popover-foreground text-sm leading-relaxed">{getTimePerspectiveText((taxAmount / hourlyWage) * 60)}</p>
-                                  {/* Optional: Icons */}
-                                  <div className="flex gap-2 text-muted-foreground mt-2 justify-center">
-                                    {/* Add icons based on total time */}
-                                  </div>
-                              </TooltipContent>
-                         )}
-                      </ShadTooltip>
-                 </div>
-            </CardContent>
-        </Card>
+                                                        </li>
+                                                    );
+                                                })}
+                                            </ul>
+                                        ) : (
+                                            <p className="text-xs italic text-center py-2">No detailed breakdown available.</p>
+                                        )}
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            );
+                        })}
+                     </Accordion>
+                     {/* --- Total Row --- */}
+                     <div className="flex justify-between items-center w-full px-3 sm:px-4 py-3 sm:py-4 border-t-2 border-primary/50 bg-primary/5">
+                         <span className="font-bold text-sm sm:text-base text-primary tracking-tight">TOTAL ESTIMATED TAX</span>
+                          <ShadTooltip>
+                             <TooltipTrigger asChild>
+                                 <span className="font-bold font-mono text-sm sm:text-base text-primary cursor-default">
+                                   {displayMode === 'time' && hourlyWage
+                                       ? formatTime((taxAmount / hourlyWage) * 60)
+                                       : formatCurrency(taxAmount)
+                                   }
+                                 </span>
+                             </TooltipTrigger>
+                              {/* Total Time Perspective Tooltip */}
+                             {displayMode === 'time' && hourlyWage && (
+                                 <TooltipContent side="top" align="end" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50">
+                                     <p className="text-popover-foreground text-sm leading-relaxed">{getTimePerspectiveText((taxAmount / hourlyWage) * 60)}</p>
+                                      {/* Optional: Icons */}
+                                      <div className="flex gap-2 text-muted-foreground mt-2 justify-center">
+                                        {/* Add icons based on total time */}
+                                      </div>
+                                  </TooltipContent>
+                             )}
+                          </ShadTooltip>
+                     </div>
+                </CardContent>
+            </Card>
 
-    </div>
+        </div>
+    </TooltipProvider>
   );
 }
+
