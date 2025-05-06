@@ -1,3 +1,4 @@
+// src/components/dashboard/TaxBreakdownDashboard.tsx
 'use client';
 
 import * as React from 'react';
@@ -7,7 +8,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Switch } from '@/components/ui/switch'; // Import Switch
 import { Label } from '@/components/ui/label'; // Import Label
 
 import {
@@ -33,6 +33,9 @@ import {
     AlertTriangle, // Use for warning/emphasis on debt
     Clock, // Icon for time toggle
     DollarSign, // Icon for currency toggle
+    Coffee, // Example icon for time perspective
+    Film,   // Example icon
+    Plane,  // Example icon
 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -108,30 +111,37 @@ const CustomTooltip = ({ active, payload, label, totalAmount, hourlyWage, displa
     }
 
     return (
-        <TooltipProvider delayDuration={100}>
-            <ShadTooltip>
-                <TooltipTrigger asChild>
-                    <div className="rounded-lg border bg-popover p-2.5 text-popover-foreground shadow-lg animate-scaleIn text-xs max-w-[150px] sm:max-w-[200px]">
-                         <div className="flex items-center justify-between mb-1 gap-2">
-                             <span className="font-medium flex items-center gap-1.5 truncate">
-                                <Icon className="h-3 w-3 text-muted-foreground shrink-0" />
-                                {data.category}
-                             </span>
-                            <span className="font-mono text-muted-foreground shrink-0">{data.percentage.toFixed(1)}%</span>
-                        </div>
-                        <div className="font-semibold text-sm">
-                            {displayValue} {/* Display currency or time */}
-                        </div>
-                    </div>
-                 </TooltipTrigger>
-                 {/* Show time perspective tooltip only in time mode */}
-                 {displayMode === 'time' && timeTooltipText && (
-                    <TooltipContent side="top" align="center" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50">
-                        <p className="text-muted-foreground text-xs leading-relaxed">{timeTooltipText}</p>
-                    </TooltipContent>
-                 )}
-            </ShadTooltip>
-        </TooltipProvider>
+        // TooltipProvider/ShadTooltip moved inside to contain the time perspective logic
+        <div className="rounded-lg border bg-popover p-2.5 text-popover-foreground shadow-lg animate-scaleIn text-xs max-w-[150px] sm:max-w-[200px]">
+             <div className="flex items-center justify-between mb-1 gap-2">
+                 <span className="font-medium flex items-center gap-1.5 truncate">
+                    <Icon className="h-3 w-3 text-muted-foreground shrink-0" />
+                    {data.category}
+                 </span>
+                <span className="font-mono text-muted-foreground shrink-0">{data.percentage.toFixed(1)}%</span>
+            </div>
+             <TooltipProvider delayDuration={150}>
+                 <ShadTooltip>
+                    <TooltipTrigger asChild>
+                         <div className="font-semibold text-sm cursor-default"> {/* Make the value the trigger */}
+                            {displayValue}
+                         </div>
+                    </TooltipTrigger>
+                     {/* Show time perspective tooltip only in time mode and if text exists */}
+                     {displayMode === 'time' && timeTooltipText && (
+                        <TooltipContent side="top" align="center" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50">
+                             <p className="text-popover-foreground text-sm leading-relaxed">{timeTooltipText}</p>
+                             {/* Optional: Add icons based on perspective text */}
+                             <div className="flex gap-2 text-muted-foreground mt-2 justify-center">
+                                {timeTooltipText.includes("coffee") && <Coffee className="h-3 w-3"/>}
+                                {timeTooltipText.includes("movie") && <Film className="h-3 w-3"/>}
+                                {timeTooltipText.includes("fly") && <Plane className="h-3 w-3"/>}
+                             </div>
+                        </TooltipContent>
+                     )}
+                </ShadTooltip>
+             </TooltipProvider>
+        </div>
     );
   }
   return null;
@@ -193,9 +203,7 @@ const SubItemTooltipContent = ({ subItem, amount, hourlyWage, displayMode }: { s
         <TooltipContent side="top" align="center" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50"> {/* Added z-50 */}
             <p className="font-semibold mb-1.5 text-popover-foreground">{subItem.description}</p>
             {subItem.tooltipText && <p className="text-muted-foreground text-xs leading-relaxed mb-2">{subItem.tooltipText}</p>}
-            {timeTooltipText && (
-                 <p className="text-primary text-xs italic border-t pt-2 mt-2">{timeTooltipText}</p>
-            )}
+            {/* Time perspective moved to be shown when hovering over the time value itself */}
             {subItem.wikiLink && (
                 <a
                 href={subItem.wikiLink}
@@ -444,9 +452,11 @@ export default function TaxBreakdownDashboard({
                         const hasSubItems = item.subItems && item.subItems.length > 0;
 
                         let categoryDisplayValue: string;
+                        let categoryTimeTooltipText: string | null = null; // Added for category tooltip
                         if (displayMode === 'time' && hourlyWage) {
                             const hoursWorked = categoryAmount / hourlyWage;
                             categoryDisplayValue = formatTime(hoursWorked * 60);
+                             categoryTimeTooltipText = getTimePerspectiveText(hoursWorked * 60); // Get time perspective for category
                         } else {
                             categoryDisplayValue = formatCurrency(categoryAmount);
                         }
@@ -460,7 +470,24 @@ export default function TaxBreakdownDashboard({
                                             <span className="font-medium text-sm truncate flex-1">{item.category}</span>
                                         </div>
                                         <div className="text-right shrink-0 flex items-baseline gap-1 ml-auto">
-                                            <span className="font-semibold font-mono text-sm">{categoryDisplayValue}</span>
+                                            <ShadTooltip>
+                                                <TooltipTrigger asChild>
+                                                    {/* Wrap the display value span in the trigger */}
+                                                    <span className="font-semibold font-mono text-sm cursor-default">{categoryDisplayValue}</span>
+                                                </TooltipTrigger>
+                                                {/* Category Time Perspective Tooltip */}
+                                                {displayMode === 'time' && categoryTimeTooltipText && (
+                                                    <TooltipContent side="top" align="end" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50">
+                                                        <p className="text-popover-foreground text-sm leading-relaxed">{categoryTimeTooltipText}</p>
+                                                         {/* Optional: Icons */}
+                                                         <div className="flex gap-2 text-muted-foreground mt-2 justify-center">
+                                                            {categoryTimeTooltipText.includes("coffee") && <Coffee className="h-3 w-3"/>}
+                                                            {categoryTimeTooltipText.includes("movie") && <Film className="h-3 w-3"/>}
+                                                            {categoryTimeTooltipText.includes("fly") && <Plane className="h-3 w-3"/>}
+                                                         </div>
+                                                    </TooltipContent>
+                                                )}
+                                            </ShadTooltip>
                                             <span className="text-muted-foreground text-xs font-mono hidden sm:inline">({item.percentage.toFixed(1)}%)</span>
                                         </div>
                                     </div>
@@ -497,7 +524,7 @@ export default function TaxBreakdownDashboard({
                                                 const isSelected = selectedItems.has(subItem.id);
 
                                                 let subItemDisplayValue: string;
-                                                 let subItemTimeTooltipText: string | null = null;
+                                                let subItemTimeTooltipText: string | null = null;
                                                 if (displayMode === 'time' && hourlyWage) {
                                                     const hoursWorked = subItemAmount / hourlyWage;
                                                     subItemDisplayValue = formatTime(hoursWorked * 60);
@@ -519,7 +546,8 @@ export default function TaxBreakdownDashboard({
                                                             />
                                                            <ShadTooltip>
                                                                 <TooltipTrigger asChild>
-                                                                    <label
+                                                                    {/* Tooltip triggered by Info icon OR description if no icons */}
+                                                                     <label
                                                                         htmlFor={`subitem-${item.id}-${subItem.id}`}
                                                                         className={cn(
                                                                             "truncate cursor-pointer hover:text-foreground transition-colors flex items-center gap-1 flex-1",
@@ -527,22 +555,41 @@ export default function TaxBreakdownDashboard({
                                                                         )}
                                                                      >
                                                                         {subItem.description}
-                                                                        {/* Show info icon if tooltip exists OR if time perspective text exists */}
-                                                                        {(subItem.tooltipText || subItem.wikiLink || subItemTimeTooltipText) && <Info className="h-3 w-3 opacity-40 group-hover/subitem:opacity-100 transition-opacity shrink-0"/>}
+                                                                        {/* Show info icon if wiki/tooltip exists */}
+                                                                        {(subItem.tooltipText || subItem.wikiLink) && <Info className="h-3 w-3 opacity-40 group-hover/subitem:opacity-100 transition-opacity shrink-0"/>}
                                                                     </label>
                                                                 </TooltipTrigger>
-                                                                {/* Pass necessary props to SubItemTooltipContent */}
-                                                                {(subItem.tooltipText || subItem.wikiLink || subItemTimeTooltipText) && (
+                                                                {/* Tooltip Content for Description/Wiki */}
+                                                                {(subItem.tooltipText || subItem.wikiLink) && (
                                                                      <SubItemTooltipContent
                                                                          subItem={subItem}
                                                                          amount={subItemAmount}
                                                                          hourlyWage={hourlyWage}
-                                                                         displayMode={displayMode}
+                                                                         displayMode={displayMode} // Pass mode for potential future use
                                                                      />
                                                                 )}
                                                             </ShadTooltip>
                                                          </div>
-                                                        <span className="font-medium font-mono text-foreground/80 whitespace-nowrap">{subItemDisplayValue}</span>
+                                                        {/* --- Value Span with Time Perspective Tooltip --- */}
+                                                        <ShadTooltip>
+                                                            <TooltipTrigger asChild>
+                                                                 <span className="font-medium font-mono text-foreground/80 whitespace-nowrap cursor-default">
+                                                                    {subItemDisplayValue}
+                                                                 </span>
+                                                            </TooltipTrigger>
+                                                            {/* SubItem Time Perspective Tooltip */}
+                                                             {displayMode === 'time' && subItemTimeTooltipText && (
+                                                                <TooltipContent side="top" align="end" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50">
+                                                                     <p className="text-popover-foreground text-sm leading-relaxed">{subItemTimeTooltipText}</p>
+                                                                     {/* Optional: Icons */}
+                                                                     <div className="flex gap-2 text-muted-foreground mt-2 justify-center">
+                                                                        {subItemTimeTooltipText.includes("coffee") && <Coffee className="h-3 w-3"/>}
+                                                                        {subItemTimeTooltipText.includes("movie") && <Film className="h-3 w-3"/>}
+                                                                        {subItemTimeTooltipText.includes("fly") && <Plane className="h-3 w-3"/>}
+                                                                     </div>
+                                                                 </TooltipContent>
+                                                            )}
+                                                        </ShadTooltip>
                                                     </li>
                                                 );
                                             })}
@@ -560,12 +607,26 @@ export default function TaxBreakdownDashboard({
                  {/* --- Total Row --- */}
                  <div className="flex justify-between items-center w-full px-3 sm:px-4 py-3 sm:py-4 border-t-2 border-primary/50 bg-primary/5">
                      <span className="font-bold text-sm sm:text-base text-primary tracking-tight">TOTAL ESTIMATED TAX</span>
-                     <span className="font-bold font-mono text-sm sm:text-base text-primary">
-                       {displayMode === 'time' && hourlyWage
-                           ? formatTime((taxAmount / hourlyWage) * 60)
-                           : formatCurrency(taxAmount)
-                       }
-                     </span>
+                      <ShadTooltip>
+                         <TooltipTrigger asChild>
+                             <span className="font-bold font-mono text-sm sm:text-base text-primary cursor-default">
+                               {displayMode === 'time' && hourlyWage
+                                   ? formatTime((taxAmount / hourlyWage) * 60)
+                                   : formatCurrency(taxAmount)
+                               }
+                             </span>
+                         </TooltipTrigger>
+                          {/* Total Time Perspective Tooltip */}
+                         {displayMode === 'time' && hourlyWage && (
+                             <TooltipContent side="top" align="end" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50">
+                                 <p className="text-popover-foreground text-sm leading-relaxed">{getTimePerspectiveText((taxAmount / hourlyWage) * 60)}</p>
+                                  {/* Optional: Icons */}
+                                  <div className="flex gap-2 text-muted-foreground mt-2 justify-center">
+                                    {/* Add icons based on total time */}
+                                  </div>
+                              </TooltipContent>
+                         )}
+                      </ShadTooltip>
                  </div>
             </CardContent>
         </Card>

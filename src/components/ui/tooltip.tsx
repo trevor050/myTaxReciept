@@ -22,7 +22,7 @@ const TooltipContent = React.forwardRef<
       sideOffset={sideOffset}
       align={align} // Added align prop
       className={cn(
-        "z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-scaleIn data-[state=closed]:animate-scaleOut", // Updated animation
+        "z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-scaleIn data-[state=closed]:animate-scaleOut max-w-sm", // Updated animation, added max-width
         // Removed redundant individual side animations as scaleIn/Out handles it
         className
       )}
