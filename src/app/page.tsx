@@ -18,12 +18,15 @@ import ResourceSuggestionsModal from '@/components/dashboard/ResourceSuggestions
 import type { SuggestedResource } from '@/services/resource-suggestions'; // Import suggestion type
 import { suggestResources } from '@/services/resource-suggestions'; // Import suggestion service
 
-
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ThemeToggle from '@/components/ThemeToggle';
+import type { DashboardPerspectives, PerspectiveData } from '@/types/perspective'; // Import new types
+import { generateCurrencyPerspectiveList } from '@/lib/currency-perspective';
+import { generateCombinedPerspectiveList } from '@/lib/time-perspective';
+
 
 type AppStep = 'location' | 'tax' | 'hourlyWage' | 'dashboard'; // Added 'hourlyWage'
 
@@ -66,7 +69,18 @@ export default function Home() {
   // State for resource suggestions modal and data
   const [suggestedResources, setSuggestedResources] = useState<SuggestedResource[]>([]);
   const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
-  const [isSuggestingResources, setIsSuggestingResources] = useState(false);
+  const [isSuggestingResources, setIsSuggestingResources] = useState(false); // Corrected state setter name
+
+  // State for pre-calculated perspectives
+  const [dashboardPerspectives, setDashboardPerspectives] = useState<DashboardPerspectives | null>(null);
+  const [isMobileView, setIsMobileView] = useState(false); // For pre-calculating perspectives based on view
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobileView(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
 
   // Update itemFundingLevels based on selectedEmailItems whenever it changes
@@ -104,6 +118,7 @@ export default function Home() {
        setUserLocationText('');
        setSuggestedResources([]); // Clear suggestions
        setIsResourceModalOpen(false); // Ensure resource modal is closed
+       setDashboardPerspectives(null); // Clear pre-calculated perspectives
     }
      if (step === 'hourlyWage' && isGoingBack) {
         setTaxAmount(null); // Reset tax amount when going back from wage to allow re-entry/median
@@ -166,6 +181,45 @@ export default function Home() {
 
        const spendingData = await getTaxSpending(currentLocation, finalTaxAmount);
        setTaxSpending(spendingData);
+
+        // Pre-calculate perspectives
+        const maxPerspectiveItems = isMobileView ? 3 : 5;
+        const newChartPerspectives: Record<string, PerspectiveData> = {};
+        spendingData.forEach(item => {
+            const spendingAmount = (item.percentage / 100) * finalTaxAmount;
+            newChartPerspectives[item.category] = {
+                currency: generateCurrencyPerspectiveList(spendingAmount, maxPerspectiveItems),
+                time: wage ? generateCombinedPerspectiveList((spendingAmount / wage) * 60, maxPerspectiveItems) : null,
+            };
+        });
+
+        const newAccordionPerspectives: Record<string, PerspectiveData> = {};
+        spendingData.forEach(category => {
+            const categoryAmount = (category.percentage / 100) * finalTaxAmount;
+            newAccordionPerspectives[category.id || category.category] = {
+                currency: generateCurrencyPerspectiveList(categoryAmount, maxPerspectiveItems + 2), // Show a bit more for accordion
+                time: wage ? generateCombinedPerspectiveList((categoryAmount / wage) * 60, maxPerspectiveItems + 2) : null,
+            };
+            category.subItems?.forEach(subItem => {
+                const subItemAmount = subItem.amountPerDollar * finalTaxAmount;
+                 newAccordionPerspectives[subItem.id] = {
+                    currency: generateCurrencyPerspectiveList(subItemAmount, maxPerspectiveItems),
+                    time: wage ? generateCombinedPerspectiveList((subItemAmount / wage) * 60, maxPerspectiveItems) : null,
+                };
+            });
+        });
+
+        const newTotalPerspectiveData: PerspectiveData = {
+            currency: generateCurrencyPerspectiveList(finalTaxAmount, maxPerspectiveItems + 2),
+            time: wage ? generateCombinedPerspectiveList((finalTaxAmount / wage) * 60, maxPerspectiveItems + 2) : null,
+        };
+
+        setDashboardPerspectives({
+            chart: newChartPerspectives,
+            accordion: newAccordionPerspectives,
+            total: newTotalPerspectiveData,
+        });
+
 
        navigateToStep('dashboard');
      } catch (error) {
@@ -297,7 +351,7 @@ export default function Home() {
        <div className={`w-full ${step === 'dashboard' ? 'max-w-full md:max-w-4xl' : 'max-w-full sm:max-w-md md:max-w-2xl'} mx-auto space-y-1 sm:space-y-2 transition-all duration-300 ease-in-out z-10`}> {/* Adjusted max-width for mobile */}
         {/* Flex container JUST for Back button */}
         <div className="flex justify-start items-center min-h-[36px] sm:min-h-[40px] px-1 sm:px-0"> {/* Ensure minimum height */}
-            {step !== 'location' ? (
+            {step !== 'location' && step !== 'dashboard' ? ( // Show back button only on tax and hourlyWage steps
               <Button
                 variant="ghost"
                 size="sm"
@@ -333,7 +387,7 @@ export default function Home() {
                  {step === 'tax' && <TaxAmountStep onSubmit={handleTaxAmountSubmit} isLoading={isLoading} medianTax={estimatedMedianTax} />}
                  {step === 'hourlyWage' && <HourlyWageStep onSubmit={handleHourlyWageSubmit} isLoading={isLoading} />}
                  {step === 'dashboard' && (
-                     isLoading || taxAmount === null || taxSpending.length === 0 ? (
+                     isLoading || taxAmount === null || taxSpending.length === 0 || !dashboardPerspectives ? (
                          <div className="flex items-center justify-center h-full text-muted-foreground">
                             <div className="text-center p-6 sm:p-10">Loading your tax breakdown...</div> {/* Adjusted padding for mobile */}
                          </div>
@@ -343,6 +397,7 @@ export default function Home() {
                             hourlyWage={hourlyWage} // Pass hourly wage
                             taxSpending={taxSpending}
                             onSelectionChange={handleDashboardSelectionChange} // Pass new handler
+                            perspectives={dashboardPerspectives} // Pass pre-calculated perspectives
                          />
                      )
                  )}
@@ -397,3 +452,4 @@ export default function Home() {
     </main>
   );
 }
+

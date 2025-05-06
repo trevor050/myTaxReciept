@@ -42,8 +42,10 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { cn } from '@/lib/utils';
-import { generateCombinedPerspectiveList, type CombinedPerspective } from '@/lib/time-perspective';
-import { generateCurrencyPerspectiveList, type CombinedCurrencyPerspective } from '@/lib/currency-perspective';
+import type { CombinedPerspective } from '@/lib/time-perspective';
+import type { CombinedCurrencyPerspective } from '@/lib/currency-perspective';
+import type { DashboardPerspectives, PerspectiveData } from '@/types/perspective'; // Import new types
+
 
 interface TaxBreakdownDashboardProps {
   taxAmount: number;
@@ -55,6 +57,7 @@ interface TaxBreakdownDashboardProps {
     selectedItems: Map<string, SelectedItem>,
     balanceBudgetChecked: boolean
   ) => void;
+  perspectives: DashboardPerspectives | null; // Accept pre-calculated perspectives
 }
 
 // Use CSS variables for colors defined in globals.css
@@ -105,11 +108,6 @@ const iconComponents: { [key: string]: LucideIcon } = {
 
 const DefaultIcon = HelpCircle;
 
-// State for pre-calculated perspectives
-interface PerspectiveData {
-  currency: CombinedCurrencyPerspective[] | null;
-  time: CombinedPerspective[] | null;
-}
 
 // --- Tooltip Components ---
 const CustomPieTooltip = ({ active, payload, totalAmount, hourlyWage, displayMode, perspectiveData, isMobile }: any) => {
@@ -345,6 +343,7 @@ export default function TaxBreakdownDashboard({
   hourlyWage,
   taxSpending,
   onSelectionChange,
+  perspectives, // Use the prop
 }: TaxBreakdownDashboardProps) {
 
   const [selectedItems, setSelectedItems] = useState<Map<string, SelectedItem>>(new Map());
@@ -363,57 +362,16 @@ export default function TaxBreakdownDashboard({
     checkMobile();
     window.addEventListener('resize', checkMobile);
 
-    // Ensure perspective data is calculated only on client after mount
+    // Initial data loading moved to page.tsx
     if (typeof window !== 'undefined') {
         const currentYear = new Date().getFullYear();
         const date = new Date(currentYear + 1, 3, 15).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
         setClientDueDate(date);
         getFormattedNationalDebt().then(setNationalDebt);
-
-        const newChartPerspectives: Record<string, PerspectiveData> = {};
-        taxSpending.forEach(item => {
-            const spendingAmount = (item.percentage / 100) * taxAmount;
-            newChartPerspectives[item.category] = {
-                currency: generateCurrencyPerspectiveList(spendingAmount, isMobileView ? 3 : 5),
-                time: hourlyWage ? generateCombinedPerspectiveList((spendingAmount / hourlyWage) * 60, isMobileView ? 3: 5) : null,
-            };
-        });
-        setChartPerspectiveData(newChartPerspectives);
-
-        const newAccordionPerspectives: Record<string, PerspectiveData> = {};
-        taxSpending.forEach(category => {
-            const categoryAmount = (category.percentage / 100) * taxAmount;
-            newAccordionPerspectives[category.id || category.category] = {
-                currency: generateCurrencyPerspectiveList(categoryAmount),
-                time: hourlyWage ? generateCombinedPerspectiveList((categoryAmount / hourlyWage) * 60) : null,
-            };
-            category.subItems?.forEach(subItem => {
-                const subItemAmount = subItem.amountPerDollar * taxAmount;
-                 newAccordionPerspectives[subItem.id] = {
-                    currency: generateCurrencyPerspectiveList(subItemAmount),
-                    time: hourlyWage ? generateCombinedPerspectiveList((subItemAmount / hourlyWage) * 60) : null,
-                };
-            });
-        });
-        setAccordionPerspectiveData(newAccordionPerspectives);
-
-        setTotalPerspectiveData({
-            currency: generateCurrencyPerspectiveList(taxAmount),
-            time: hourlyWage ? generateCombinedPerspectiveList((taxAmount / hourlyWage) * 60) : null,
-        });
     }
-
     return () => window.removeEventListener('resize', checkMobile);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isClient, taxAmount, hourlyWage, taxSpending, displayMode, isMobileView]);
-
-
-  // State for pre-calculated perspectives for chart tooltips
-  const [chartPerspectiveData, setChartPerspectiveData] = useState<Record<string, PerspectiveData>>({});
-  // State for pre-calculated perspectives for accordion items
-  const [accordionPerspectiveData, setAccordionPerspectiveData] = useState<Record<string, PerspectiveData>>({});
-   // State for pre-calculated perspectives for total row
-  const [totalPerspectiveData, setTotalPerspectiveData] = useState<PerspectiveData | null>(null);
+  }, [isClient]); // Only depends on isClient for initial setup
 
 
     useEffect(() => {
@@ -460,8 +418,8 @@ export default function TaxBreakdownDashboard({
 
 
             {/* Currency/Time Toggle Button */}
-            {hourlyWage !== null && (
-                <div className="flex justify-center items-center my-4 sm:my-6"> {/* Centered and adjusted margin */}
+             {hourlyWage !== null && (
+                 <div className="flex justify-center items-center my-4 sm:my-6"> {/* Centered and adjusted margin */}
                     <Label htmlFor="display-mode-toggle" className="text-xs font-medium text-muted-foreground mr-2 sm:mr-3">View as:</Label> {/* Adjusted margin */}
                     <div className="flex items-center space-x-1 sm:space-x-2 bg-muted p-0.5 sm:p-1 rounded-full shadow-sm"> {/* Added shadow */}
                         <Button
@@ -545,7 +503,7 @@ export default function TaxBreakdownDashboard({
                        <RechartsTooltip
                          content={({ active, payload }) => { // Simplified destructuring
                             const currentPayload = payload && payload.length ? payload[0].payload : null;
-                            if ((active || (isMobileView && activePieIndex !== null && currentPayload?.category === chartData[activePieIndex ?? -1]?.category)) && currentPayload) { // Guard against -1 index
+                            if ((active || (isMobileView && activePieIndex !== null && currentPayload?.category === chartData[activePieIndex ?? -1]?.category)) && currentPayload && perspectives?.chart) { // Guard against -1 index
                                 return (
                                     <CustomPieTooltip
                                         active={active}
@@ -553,7 +511,7 @@ export default function TaxBreakdownDashboard({
                                         totalAmount={taxAmount}
                                         hourlyWage={hourlyWage}
                                         displayMode={displayMode}
-                                        perspectiveData={chartPerspectiveData[currentPayload.category] || { currency: null, time: null }}
+                                        perspectiveData={perspectives.chart[currentPayload.category] || { currency: null, time: null }}
                                         isMobile={isMobileView}
                                     />
                                 );
@@ -585,7 +543,7 @@ export default function TaxBreakdownDashboard({
                             const isInterestOnDebt = item.category === 'Interest on Debt';
                             const hasSubItems = item.subItems && item.subItems.length > 0;
 
-                            const currentCategoryPerspective = accordionPerspectiveData[item.id || item.category] || { currency: null, time: null };
+                            const currentCategoryPerspective = perspectives?.accordion[item.id || item.category] || { currency: null, time: null };
                             let categoryDisplayValue: string;
                             let categoryPerspectiveList: (CombinedPerspective | CombinedCurrencyPerspective)[] | null = null;
                             let categoryPerspectiveTitle = '';
@@ -654,7 +612,7 @@ export default function TaxBreakdownDashboard({
                                                 {item.subItems!.map((subItem) => {
                                                     const subItemAmount = subItem.amountPerDollar * taxAmount;
                                                     const isSelected = selectedItems.has(subItem.id);
-                                                    const currentSubItemPerspective = accordionPerspectiveData[subItem.id] || { currency: null, time: null };
+                                                    const currentSubItemPerspective = perspectives?.accordion[subItem.id] || { currency: null, time: null };
 
                                                     let subItemDisplayValue: string;
                                                     let subItemPerspectiveList: (CombinedPerspective | CombinedCurrencyPerspective)[] | null = null;
@@ -731,7 +689,7 @@ export default function TaxBreakdownDashboard({
                           <ShadTooltip>
                              <TooltipTrigger asChild>
                                  <span className="font-bold font-mono text-xs sm:text-sm md:text-base text-primary cursor-default">
-                                   {displayMode === 'time' && hourlyWage && totalPerspectiveData?.time
+                                   {displayMode === 'time' && hourlyWage && perspectives?.total?.time
                                        ? formatTime((taxAmount / hourlyWage) * 60)
                                        : formatCurrency(taxAmount)
                                    }
@@ -739,9 +697,9 @@ export default function TaxBreakdownDashboard({
                              </TooltipTrigger>
                              <PerspectiveTooltipContent
                                  perspectiveList={
-                                     displayMode === 'time' && hourlyWage && totalPerspectiveData?.time
-                                         ? totalPerspectiveData.time
-                                         : totalPerspectiveData?.currency || null
+                                     displayMode === 'time' && hourlyWage && perspectives?.total?.time
+                                         ? perspectives.total.time
+                                         : perspectives?.total?.currency || null
                                  }
                                  title={
                                      displayMode === 'time' && hourlyWage
@@ -757,6 +715,7 @@ export default function TaxBreakdownDashboard({
     </TooltipProvider>
   );
 }
+
 
 
 
