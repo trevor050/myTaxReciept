@@ -66,9 +66,9 @@ function generateItemSentence(item: SelectedItem, tone: Tone): string {
         const connectors = tone < 2 ? RATIONALE_CONNECTORS.polite : RATIONALE_CONNECTORS.firm;
         const connector = randomChoice(connectors);
 
-        // Format rationale: lowercase unless following sentence-ending punctuation
+        // Format rationale: ensure it starts lowercase unless following a strong punctuation mark from the connector.
         let formattedRationale = specificRationale.trim();
-        if (connector.match(/[.!?;]$/)) {
+        if (connector.match(/[.!?]$/)) {
             formattedRationale = capitalizeFirstLetter(formattedRationale);
         } else {
              // Ensure lowercase start if it's not the beginning of a sentence segment
@@ -129,21 +129,15 @@ export function generateRepresentativeEmailContent(
             // Ensure intro ends with a colon or appropriate punctuation
             categoryIntro = categoryIntro.trim().replace(/[:.,;]?$/, ':');
 
-            let categoryParagraph = categoryIntro + "\n"; // Start paragraph with category intro
+            let categoryParagraph = categoryIntro; // Start paragraph with category intro
 
             const itemSentences = itemsByCategory[category].map(item => generateItemSentence(item, tone));
 
             // Combine sentences within the category paragraph
             itemSentences.forEach((sentence, index) => {
                  // Ensure each generated sentence starts capitalized (should be handled by generateItemSentence, but double-check)
-                categoryParagraph += capitalizeFirstLetter(sentence);
-                // Add a connector *between* sentences within the same category for flow
-                if (index < itemSentences.length - 1) {
-                    // Use connectors that imply continuation within the topic
-                    categoryParagraph += ` ${randomChoice(INTRA_PARAGRAPH_CONNECTORS)} `;
-                } else {
-                     categoryParagraph += ' '; // Add space at the end of the last sentence in the category
-                }
+                 // Add sentence with appropriate leading space or newline/indentation
+                categoryParagraph += (index === 0 ? ' ' : ` ${randomChoice(INTRA_PARAGRAPH_CONNECTORS)} `) + capitalizeFirstLetter(sentence);
             });
             categorizedParagraphs.push(categoryParagraph.trim()); // Add the completed category paragraph
         });
@@ -169,6 +163,8 @@ export function generateRepresentativeEmailContent(
         // If items selected but NOT budget preference, remove debt part from default CTA
         callToActionText = callToActionText.replace(/ and (curb|tackle|aggressively tackle) the( national)? debt/gi, '');
         callToActionText = callToActionText.replace(/ and put our nation on a sustainable fiscal path/gi, '');
+        callToActionText = callToActionText.replace(/ Fiscal discipline must be central to every spending decision Congress makes, starting now./gi, ''); // More specific removal
+        callToActionText = callToActionText.replace(/ A concrete, aggressive debt-reduction plan is not optional—it is an absolute necessity./gi, ''); // More specific removal
     } else if (selectedItems.length === 0 && !balanceBudgetPreference) {
         // Fallback if somehow called with no selections at all
         callToActionText = "I would appreciate hearing your general thoughts on the current federal budget priorities.";
@@ -187,3 +183,5 @@ export function generateRepresentativeEmailContent(
 
     return { subject, body };
 }
+
+    

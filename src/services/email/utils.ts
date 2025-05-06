@@ -38,7 +38,7 @@ export function cleanItemDescription(description: string): string {
             break; // Remove only the first matching prefix
         }
     }
-     // Optional: Convert specific acronyms in parentheses
+     // Optional: Convert specific acronyms in parentheses to full names or more descriptive phrases
     cleaned = cleaned.replace(/\(CDC\)/, 'the Centers for Disease Control and Prevention');
     cleaned = cleaned.replace(/\(NLRB\)/, 'the National Labor Relations Board');
     cleaned = cleaned.replace(/\(CFPB\)/, 'the Consumer Financial Protection Bureau');
@@ -53,6 +53,11 @@ export function cleanItemDescription(description: string): string {
 
     // Remove any remaining simple parenthesized text at the end (like acronyms not caught above)
     cleaned = cleaned.replace(/\s*\([^)]+\)$/, '');
+
+    // Ensure it doesn't start with 'the ' if it's now redundant, e.g. "the the Centers for..."
+    if (cleaned.toLowerCase().startsWith('the the ')) {
+        cleaned = cleaned.substring(4);
+    }
 
     return cleaned.trim();
 }
@@ -71,36 +76,55 @@ export function capitalizeFirstLetter(string: string): string {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-/** Ensures a sentence ends with appropriate punctuation (defaulting to period). Handles existing punctuation. */
+/** Ensures a sentence or clause ends with appropriate punctuation (defaulting to period). Handles existing punctuation. */
 export function punctuateSentence(sentence: string): string {
     const trimmedSentence = sentence.trim();
     if (!trimmedSentence) return '.'; // Return period if empty
 
     const lastChar = trimmedSentence.slice(-1);
+
+    // If it already ends in strong punctuation, keep it.
     if (['.', '!', '?'].includes(lastChar)) {
-        return trimmedSentence; // Already punctuated
+        return trimmedSentence;
     }
-     // If ends with comma or semicolon, replace with period
-    if ([',', ';'].includes(lastChar)) {
+     // If it ends with clause punctuation (comma, semicolon), replace with period for sentence end.
+     // We handle clause connections separately.
+    if ([',', ';', ':'].includes(lastChar)) {
         return trimmedSentence.slice(0, -1) + '.';
     }
+    // Otherwise, add a period.
     return trimmedSentence + '.';
 }
 
-/** Basic cleanup of generated text: consolidates whitespace, fixes spacing around punctuation. */
+
+/** Basic cleanup of generated text: consolidates whitespace, fixes spacing around punctuation, ensures paragraph breaks. */
 export function cleanupText(text: string): string {
-    return text
-        .replace(/\s+/g, ' ') // Consolidate multiple spaces into one
-        .replace(/ \./g, '.') // Remove space before period
-        .replace(/ \?/g, '?') // Remove space before question mark
-        .replace(/ !/g, '!') // Remove space before exclamation mark
-        .replace(/ ,/g, ',') // Remove space before comma
-        .replace(/ ;/g, ';') // Remove space before semicolon
-        .replace(/\.{2,}/g, '.') // Replace multiple periods with one
-        .replace(/\?{2,}/g, '?') // Replace multiple question marks with one
-        .replace(/!{2,}/g, '!') // Replace multiple exclamation marks with one
-        .replace(/,+(?=[^\s])/g, ', ') // Ensure space after comma if not present
-        .replace(/;+(?=[^\s])/g, '; ') // Ensure space after semicolon if not present
-        .replace(/\n\s*\n/g, '\n\n') // Consolidate multiple newlines, removing extra whitespace between them
-        .trim(); // Remove leading/trailing whitespace
+    let cleaned = text;
+
+    // Consolidate multiple spaces/newlines into single spaces or double newlines
+    cleaned = cleaned.replace(/\s*\n\s*\n\s*/g, '\n\n'); // Ensure only double newlines between paragraphs
+    cleaned = cleaned.replace(/[ \t]+/g, ' '); // Consolidate horizontal whitespace
+
+    // Fix spacing around punctuation
+    cleaned = cleaned.replace(/ ([.,!?;:])/g, '$1'); // Remove space before punctuation
+    cleaned = cleaned.replace(/([.,!?;:])(?!\s|$)/g, '$1 '); // Ensure space after punctuation if not end of line/text
+
+    // Correct capitalization after sentence-ending punctuation followed by space
+    cleaned = cleaned.replace(/([.!?])\s+([a-z])/g, (match, p1, p2) => `${p1} ${p2.toUpperCase()}`);
+
+    // Remove potential duplicate punctuation (e.g., "..!?" -> "!")
+    cleaned = cleaned.replace(/([.!?]){2,}/g, '$1');
+    cleaned = cleaned.replace(/([,;:]){2,}/g, '$1');
+
+    // Ensure first letter of the entire text is capitalized
+    cleaned = capitalizeFirstLetter(cleaned.trim());
+
+     // Handle potential leading lowercase after connectors like "additionally,"
+     cleaned = cleaned.replace(/\n\n([a-z])/g, (match, p1) => `\n\n${p1.toUpperCase()}`);
+     cleaned = cleaned.replace(/([.!?]\s)([a-z])/g, (match, p1, p2) => `${p1}${p2.toUpperCase()}`);
+
+
+    return cleaned.trim(); // Final trim
 }
+
+    
