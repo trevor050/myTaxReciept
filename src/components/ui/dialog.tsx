@@ -43,8 +43,8 @@ const DialogContent = React.forwardRef<
         "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%]", // Keep default centering
         // Styling
         "gap-4 border bg-background p-6 shadow-lg",
-        // Animation
-        "duration-200 data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut",
+        // Animation (Use custom scaleIn/scaleOut from globals.css/tailwind.config.ts)
+        "data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut",
         // Responsive rounding
         "sm:rounded-lg",
         // Combine all classes
@@ -131,3 +131,4 @@ export {
   DialogTitle,
   DialogDescription,
 }
+

@@ -37,11 +37,13 @@ const ScrollBar = React.forwardRef<
         "h-full w-2.5 border-l border-l-transparent p-[1px]",
       orientation === "horizontal" &&
         "h-2.5 flex-col border-t border-t-transparent p-[1px]",
+       // Add custom scrollbar classes from tailwind.config.ts
+       "scrollbar-thin scrollbar-track-transparent",
       className
     )}
     {...props}
   >
-    {/* Apply custom scrollbar classes */}
+    {/* Apply custom scrollbar thumb class */}
     <ScrollAreaPrimitive.ScrollAreaThumb className={cn(
         "relative flex-1 rounded-full bg-border",
         "scrollbar-thumb-muted" // Use Tailwind custom class
@@ -51,3 +53,4 @@ const ScrollBar = React.forwardRef<
 ScrollBar.displayName = ScrollAreaPrimitive.ScrollAreaScrollbar.displayName
 
 export { ScrollArea, ScrollBar }
+

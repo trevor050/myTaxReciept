@@ -89,11 +89,11 @@ export default {
             'from': { transform: 'translateY(15px)', opacity: '0' },
             'to': { transform: 'translateY(0)', opacity: '1' },
         },
-        'slideOutUp': { // Added
+        'slideOutUp': {
              from: { transform: 'translateY(0)', opacity: '1' },
              to: { transform: 'translateY(-15px)', opacity: '0' },
         },
-        'slideInDown': { // Added
+        'slideInDown': {
             from: { transform: 'translateY(-15px)', opacity: '0' },
             to: { transform: 'translateY(0)', opacity: '1' },
         },
@@ -105,9 +105,14 @@ export default {
             from: { opacity: '1', transform: 'scale(1)' },
             to: { opacity: '0', transform: 'scale(0.95)' },
         },
-        'glow': { // Use hsla with CSS variables for opacity
+        // Define glow animations for light and dark separately
+        'glow': {
             '0%, 100%': { boxShadow: "0 0 5px hsla(var(--primary) / 0.5), 0 0 10px hsla(var(--primary) / 0.3)" },
             '50%': { boxShadow: "0 0 15px hsla(var(--primary) / 0.6), 0 0 25px hsla(var(--primary) / 0.4)" },
+        },
+         'glow-dark': { // Dark mode glow uses purple accent
+            '0%, 100%': { boxShadow: "0 0 5px hsla(270 70% 60% / 0.5), 0 0 10px hsla(270 70% 60% / 0.3)" },
+            '50%': { boxShadow: "0 0 15px hsla(270 70% 60% / 0.6), 0 0 25px hsla(270 70% 60% / 0.4)" },
         },
       },
       animation: {
@@ -115,11 +120,13 @@ export default {
         'accordion-up': 'accordion-up 0.25s ease-out',
         'fadeIn': 'fadeIn 0.5s ease-out forwards',
         'slideInUp': 'slideInUp 0.45s cubic-bezier(0.25, 0.8, 0.25, 1) forwards',
-        'slideOutUp': 'slideOutUp 0.3s ease-in forwards', // Added
-        'slideInDown': 'slideInDown 0.45s cubic-bezier(0.25, 0.8, 0.25, 1) forwards', // Added
+        'slideOutUp': 'slideOutUp 0.3s ease-in forwards',
+        'slideInDown': 'slideInDown 0.45s cubic-bezier(0.25, 0.8, 0.25, 1) forwards',
         'scaleIn': 'scaleIn 0.2s ease-out forwards', // Added
         'scaleOut': 'scaleOut 0.15s ease-in forwards', // Added
-        'glow': 'glow 2.5s ease-in-out infinite', // Added
+        // Apply correct glow animation based on theme context (handled in component/globals.css)
+        'glow': 'glow 2.5s ease-in-out infinite',
+        'glow-dark': 'glow-dark 2.5s ease-in-out infinite',
       }
     }
   },
@@ -130,10 +137,10 @@ export default {
           addUtilities({
               '.scrollbar-thin': {
                   'scrollbar-width': 'thin',
-                  '&::-webkit-scrollbar': {
-                      width: '8px',
-                      height: '8px',
-                  },
+              },
+              '.scrollbar-thin::-webkit-scrollbar': {
+                  width: '8px',
+                  height: '8px',
               },
               '.scrollbar-thumb-muted': {
                  '&::-webkit-scrollbar-thumb': {
@@ -141,9 +148,9 @@ export default {
                       borderRadius: '10px',
                       border: '2px solid hsl(var(--background))', // Match background
                   },
-                  '&::-webkit-scrollbar-thumb:hover': {
+              },
+              '.scrollbar-thumb-muted::-webkit-scrollbar-thumb:hover': {
                        backgroundColor: 'hsl(var(--muted-foreground))',
-                  },
               },
                '.scrollbar-track-transparent': {
                    '&::-webkit-scrollbar-track': {

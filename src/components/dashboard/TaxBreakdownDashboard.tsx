@@ -377,7 +377,7 @@ export default function TaxBreakdownDashboard({
                                      {isInterestOnDebt ? (
                                          <blockquote className="text-xs bg-secondary/40 p-3 rounded-md border border-border/40 text-foreground/75 shadow-inner flex flex-col gap-2 items-start">
                                              <div className="flex items-start gap-2">
-                                                 {/* Removed the second icon, kept TrendingDown */}
+                                                 {/* Use TrendingDown icon */}
                                                  <TrendingDown className="h-4 w-4 shrink-0 mt-0.5 text-destructive/80" />
                                                  {/* Use regular text, not italicized */}
                                                  <span className="leading-relaxed">
