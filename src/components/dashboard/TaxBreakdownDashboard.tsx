@@ -451,15 +451,15 @@ export default function TaxBreakdownDashboard({
 
   return (
     <TooltipProvider delayDuration={isMobileView ? 0 : 200}>
-        <div className="space-y-6 sm:space-y-10 animate-fadeIn relative pb-10">
-             <div className="text-center space-y-0.5 sm:space-y-1 mb-4 sm:mb-6 relative">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-foreground">{currentYear ? `${currentYear} ` : ''}Federal Income Tax Receipt</h1>
-                 <p className="text-base sm:text-lg text-muted-foreground">Based on your estimated <span className="font-semibold text-foreground">{formatCurrency(taxAmount)}</span> payment.</p>
+        <div className="space-y-6 sm:space-y-10 animate-fadeIn relative pb-10"> {/* Adjusted spacing for mobile */}
+             <div className="text-center space-y-0.5 sm:space-y-1 mb-4 sm:mb-6 relative"> {/* Adjusted spacing for mobile */}
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-foreground">{currentYear ? `${currentYear} ` : ''}Federal Income Tax Receipt</h1> {/* Adjusted font size for mobile */}
+                 <p className="text-base sm:text-lg text-muted-foreground">Based on your estimated <span className="font-semibold text-foreground">{formatCurrency(taxAmount)}</span> payment.</p> {/* Adjusted font size for mobile */}
                 <p className="text-xs text-muted-foreground/70">Next Filing Due: {dueDateDisplay}</p>
 
                 {hourlyWage !== null && (
                     <div className={cn(
-                        "mt-2 sm:mt-4 flex justify-center items-center",
+                        "mt-3 sm:mt-4 flex justify-center items-center", // Increased top margin for mobile
                         "sm:absolute sm:top-0 sm:right-0 sm:pt-1 sm:pr-1" // Desktop positioning
                     )}>
                         <Label htmlFor="display-mode-toggle" className="text-xs font-medium text-muted-foreground hidden sm:inline mr-2">View as:</Label>
@@ -633,7 +633,7 @@ export default function TaxBreakdownDashboard({
                                              <Alert variant="destructive" className="bg-destructive/5 border-destructive/30 shadow-inner p-3 sm:p-4">
                                                   <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 stroke-destructive/80 mt-0.5 sm:mt-1" />
                                                   <AlertTitle className="text-destructive/95 font-semibold mb-1 text-sm sm:text-base">National Debt Burden: {nationalDebt}</AlertTitle>
-                                                 <AlertDescription className="text-xs sm:text-sm text-destructive/90 dark:text-destructive/80 leading-relaxed space-y-1.5 sm:space-y-2">
+                                                 <AlertDescription className="text-xs sm:text-sm text-destructive/90 dark:text-destructive/85 leading-relaxed space-y-1.5 sm:space-y-2">
                                                      <p>This staggering amount paid just on <strong className="font-medium">interest</strong> is a direct consequence of sustained government spending exceeding revenue—often driven by tax cuts favoring the wealthy, unfunded wars, and economic bailouts.</p>
                                                      <p>High interest payments <strong className="font-medium">divert critical funds</strong> from essential public services, infrastructure, education, and potential tax relief, raising serious questions about long-term fiscal stability and government accountability.</p>
                                                      <div className="flex items-center space-x-1.5 sm:space-x-2 pt-2 sm:pt-3">
@@ -758,4 +758,5 @@ export default function TaxBreakdownDashboard({
     </TooltipProvider>
   );
 }
+
 
