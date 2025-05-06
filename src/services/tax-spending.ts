@@ -113,6 +113,8 @@ export async function getTaxSpending(location: Location, taxAmount: number): Pro
       id: 'interest_debt',
       category: 'Interest on Debt',
       percentage: (10105.93 / REFERENCE_TOTAL_TAX) * 100, // ~19.43%
+      // Updated activism-focused paragraph for Interest on Debt
+      tooltipText: 'This substantial portion represents the cost of servicing the national debt, a direct result of decades of government spending outpacing revenue. Chronic deficit spending, unfunded wars and tax cuts, and economic downturns have fueled this growing burden. Paying this interest diverts billions from crucial investments in infrastructure, healthcare, education, and climate solutions, essentially acting as a tax on future generations for past fiscal recklessness. It demands serious scrutiny and a shift towards responsible budgeting.',
       // No subItems, special paragraph handled in component
     },
     {
@@ -317,6 +319,10 @@ export function generateRepresentativeEmail(
             let reason = "";
             if (item.id === 'israel_wars') reason = " Continued funding for foreign conflicts draws resources away from critical domestic needs.";
             if (item.id === 'pentagon_contractors') reason = " Oversight is needed to prevent waste and ensure taxpayer money is used effectively by contractors.";
+            if (item.id === 'usaid_climate') reason = " Prioritizing domestic environmental issues should take precedence over international climate aid.";
+            if (item.id === 'nasa_spacex') reason = " Public funds directed to private space exploration could be better used elsewhere.";
+            if (item.id === 'medicare') reason = " While important, the current cost structure of Medicare requires review for efficiency.";
+
             // Add more reasons for other item.ids...
 
             return `- ${item.description}: ${actionPhrase}${reason}`;

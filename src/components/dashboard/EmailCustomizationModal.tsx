@@ -121,8 +121,8 @@ export default function EmailCustomizationModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      {/* Use flex utilities to center the content */}
-      <DialogContent className="sm:max-w-[90vw] md:max-w-[70vw] lg:max-w-[60vw] xl:max-w-[50vw] max-h-[90vh] flex flex-col p-0 rounded-lg items-center justify-center">
+      {/* Removed flex centering; Dialog primitive handles positioning */}
+      <DialogContent className="sm:max-w-[90vw] md:max-w-[70vw] lg:max-w-[60vw] xl:max-w-[50vw] max-h-[90vh] flex flex-col p-0 rounded-lg">
         <DialogHeader className="px-6 pt-5 pb-4 border-b border-border w-full"> {/* Ensure header spans width */}
           <DialogTitle className="flex items-center gap-2 text-xl sm:text-2xl">
              <Settings2 className="h-5 w-5" /> Customize Your Email

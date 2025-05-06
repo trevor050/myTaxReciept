@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import type { TaxSpending, TaxSpendingSubItem, SelectedItem } from '@/services/tax-spending';
-import type { SuggestRepresentativesOutput } from '@/ai/flows/suggest-representatives';
+import type { SuggestRepresentativesOutput } from '@/ai/flows/suggest-representatives'; // Keep type for prop definition, even if unused
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { Button } from '@/components/ui/button';
@@ -27,10 +27,10 @@ import {
     Landmark,
     Sprout,
     Train,
-    TrendingDown, // Changed from PiggyBank for Interest
+    TrendingDown,
     Crosshair,
     HelpCircle,
-    Link as LinkIcon,
+    Megaphone, // Icon for activism plea
 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -51,7 +51,7 @@ import { useToast } from '@/hooks/use-toast';
 interface TaxBreakdownDashboardProps {
   taxAmount: number;
   taxSpending: TaxSpending[];
-  representativeSuggestion: SuggestRepresentativesOutput | null;
+  representativeSuggestion: SuggestRepresentativesOutput | null; // Kept for type safety, but logic removed
 }
 
 // Use CSS variables for colors defined in globals.css
@@ -148,7 +148,7 @@ const SubItemTooltipContent = ({ subItem }: { subItem: TaxSpendingSubItem }) => 
 export default function TaxBreakdownDashboard({
   taxAmount,
   taxSpending,
-  representativeSuggestion,
+  representativeSuggestion, // Kept for prop type, but unused
 }: TaxBreakdownDashboardProps) {
 
   const [selectedItems, setSelectedItems] = useState<Map<string, SelectedItem>>(new Map());
@@ -223,21 +223,18 @@ export default function TaxBreakdownDashboard({
             <p className="text-xs text-muted-foreground/70">Next Filing Due: {dueDateDisplay}</p>
          </div>
 
-       {/* --- AI Suggestion / Action Prompt (Simplified & Improved Text) --- */}
-        {representativeSuggestion && representativeSuggestion.topSpendingCategories.length > 0 && (
-            <Alert className="mb-8 shadow-sm rounded-lg border border-primary/20 bg-primary/5 text-foreground">
-                 <Info className="h-4 w-4 mt-1 stroke-primary" />
-                <AlertTitle className="font-semibold text-primary">Consider Taking Action</AlertTitle>
-                <AlertDescription className="text-sm text-foreground/90 space-y-1.5">
-                    {/* Refined message */}
-                    Your estimated tax breakdown shows significant portions allocated to: <span className="font-medium">{representativeSuggestion.topSpendingCategories.join(', ')}</span>. These categories are often subjects of public debate.
-                    <span className="block">Your feedback can influence policy decisions. Select specific items below to include in a message to your representatives regarding areas you believe warrant review or reallocation.</span>
-                     <Button variant="link" className="p-0 h-auto ml-0 text-primary font-medium text-sm mt-1" onClick={() => window.open('https://www.usa.gov/elected-officials', '_blank', 'noopener,noreferrer')}>
-                        Find Your Officials <ExternalLink className="inline ml-1 h-3 w-3" />
-                    </Button>
-                </AlertDescription>
-            </Alert>
-        )}
+       {/* --- Direct Activism Plea --- */}
+        <Alert className="mb-8 shadow-sm rounded-lg border border-primary/20 bg-primary/5 text-foreground animate-fadeIn delay-500">
+             <Megaphone className="h-5 w-5 mt-0.5 stroke-primary" /> {/* Changed Icon */}
+            <AlertTitle className="font-semibold text-primary">Make Your Voice Heard!</AlertTitle>
+            <AlertDescription className="text-sm text-foreground/90 space-y-1.5">
+                Understanding where your money goes is the first step. The next is action.
+                <span className="block">Your elected officials work for you. Let them know how you feel about these spending priorities. Select specific items below that concern you and use the button to draft a direct message.</span>
+                 <Button variant="link" className="p-0 h-auto ml-0 text-primary font-medium text-sm mt-1" onClick={() => window.open('https://www.usa.gov/elected-officials', '_blank', 'noopener,noreferrer')}>
+                    Find Your Officials <ExternalLink className="inline ml-1 h-3 w-3" />
+                </Button>
+            </AlertDescription>
+        </Alert>
 
 
       {/* --- Chart Section --- */}
@@ -307,9 +304,10 @@ export default function TaxBreakdownDashboard({
                                 >
                                     <div className="pl-8 pr-3 sm:pl-10 sm:pr-4 pt-3 pb-4 text-muted-foreground space-y-2.5">
                                      {isInterestOnDebt && (
-                                         <blockquote className="text-xs italic bg-secondary/40 p-3 rounded-md border border-border/40 text-foreground/75 shadow-inner flex gap-2 items-start">
+                                         <blockquote className="text-xs bg-secondary/40 p-3 rounded-md border border-border/40 text-foreground/75 shadow-inner flex gap-2 items-start">
                                              <TrendingDown className="h-4 w-4 shrink-0 mt-0.5 text-destructive/80" />
-                                             <span>This significant portion reflects the cost of servicing the national debt, a consequence of sustained government spending exceeding revenue. Decades of deficit spending, unfunded initiatives, and fluctuating interest rates contribute to this burden. High interest payments divert critical funds from essential public services, infrastructure, education, and potential tax relief, raising serious concerns about long-term fiscal health and the responsibility of our government's financial decisions.</span>
+                                             {/* Removed italics, updated text */}
+                                             <span className="not-italic">This significant portion reflects the cost of servicing the national debt, a direct consequence of sustained government spending exceeding revenue collection. Decades of deficit spending, underfunded programs, and fluctuating interest rates contribute to this substantial burden. High interest payments divert critical funds from essential public services, infrastructure projects, education systems, and potential tax relief, raising serious questions about long-term fiscal stability and the accountability of our government's financial management.</span>
                                          </blockquote>
                                      )}
                                     {hasSubItems ? (
@@ -366,12 +364,17 @@ export default function TaxBreakdownDashboard({
             </CardContent>
         </Card>
 
-       {/* Floating Action Button - Centered */}
+        {/* Floating Action Button - Centered */}
         {selectedItems.size > 0 && (
             <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 animate-slideInUp transition-all duration-300 ease-out">
                 <Button
                     size="lg"
-                    className="shadow-2xl rounded-full text-sm sm:text-base px-5 py-3 sm:px-6 sm:py-3 bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 text-primary-foreground animate-glow flex items-center gap-2 ring-2 ring-primary/30 ring-offset-2 ring-offset-background"
+                    className={cn(
+                        "shadow-2xl rounded-full text-sm sm:text-base px-5 py-3 sm:px-6 sm:py-3",
+                        "bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700", // Light mode gradient
+                        "dark:bg-gradient-to-r dark:from-primary dark:to-purple-700 dark:hover:from-primary/90 dark:hover:to-purple-800", // Dark mode gradient (Purple only)
+                        "text-primary-foreground animate-glow flex items-center gap-2 ring-2 ring-primary/30 ring-offset-2 ring-offset-background"
+                    )}
                     onClick={handleOpenModal}
                     aria-label={`Email your representative about ${selectedItems.size} selected item(s)`}
                  >
@@ -380,6 +383,7 @@ export default function TaxBreakdownDashboard({
                 </Button>
             </div>
         )}
+
 
         {/* Email Customization Modal */}
         <EmailCustomizationModal

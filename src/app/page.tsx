@@ -29,7 +29,7 @@ export default function Home() {
   const [taxAmount, setTaxAmount] = useState<number | null>(null);
   const [taxSpending, setTaxSpending] = useState<TaxSpending[]>([]);
   const [representativeSuggestion, setRepresentativeSuggestion] =
-    useState<SuggestRepresentativesOutput | null>(null);
+    useState<SuggestRepresentativesOutput | null>(null); // Keep for potential future use or remove if AI is fully deprecated
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const [animationClass, setAnimationClass] = useState('animate-slideInUp');
@@ -70,23 +70,14 @@ export default function Home() {
     }
 
     try {
+      // Simulate loading time for smoother transition
       await new Promise(resolve => setTimeout(resolve, 400));
 
       const spendingData = await getTaxSpending(location, finalAmount);
       setTaxSpending(spendingData);
 
-      // Fetch AI suggestion (Simplified - focusing on top categories)
-      try {
-         const suggestionResult = await suggestRepresentatives({ taxSpending: spendingData });
-         setRepresentativeSuggestion(suggestionResult);
-      } catch (aiError) {
-          console.warn("AI suggestion failed:", aiError);
-           const topCategories = spendingData.slice(0, 2).map(s => s.category);
-           setRepresentativeSuggestion({
-               topSpendingCategories: topCategories,
-               reason: "Analysis based on highest spending areas.",
-           });
-      }
+      // Removed AI suggestion call - simple activism prompt will be shown directly in dashboard
+      setRepresentativeSuggestion(null); // Explicitly set to null
 
       navigateToStep('dashboard');
     } catch (error) {
@@ -181,16 +172,17 @@ export default function Home() {
                          <TaxBreakdownDashboard
                             taxAmount={taxAmount}
                             taxSpending={taxSpending}
-                            representativeSuggestion={representativeSuggestion}
+                            // Pass null for representativeSuggestion as AI is removed
+                            representativeSuggestion={null}
                         />
                      )
                  )}
              </div>
           </CardContent>
         </Card>
-        {/* Remove ThemeToggle from footer */}
+
         <footer className="mt-6 text-center text-muted-foreground/60 text-xs px-4 sm:px-0 relative">
-            Powered by Firebase & Google AI. Data is estimated and for informational purposes. Verify with official sources.
+            Powered by Firebase & Google AI (where applicable). Data is estimated and for informational purposes. Verify with official sources.
         </footer>
        </div>
     </main>
