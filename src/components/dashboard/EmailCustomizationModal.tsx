@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { GripVertical, Mail, X, Send } from 'lucide-react';
 
-import type { SelectedItem } from '@/services/tax-spending';
+import type { SelectedItem } from '@/services/tax-spending'; // This type includes `category`
 import { generateRepresentativeEmail } from '@/services/tax-spending';
 import { mapSliderToFundingLevel } from '@/lib/funding-utils';
 import { cn } from '@/lib/utils';
@@ -33,7 +33,7 @@ const fundingLevels = [
 /*──────────────── component ───────────────────────*/
 export default function EmailCustomizationModal (p: EmailCustomizationModalProps) {
   const {
-    isOpen, onOpenChange, selectedItems: initialSelectedItems,
+    isOpen, onOpenChange, selectedItems: initialSelectedItems, // initialSelectedItems contains category
     balanceBudgetChecked, aggressiveness, setAggressiveness,
     itemFundingLevels, setItemFundingLevels,
     userName, setUserName, userLocation, setUserLocation,
@@ -261,19 +261,19 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
           <Button
             disabled={!userName || !userLocation} // Disable if name or location is missing
             onClick={()=>{
-              // Map the current slider values back to SelectedItem with funding levels
+              // Map the current slider values back to SelectedItem with funding levels AND category
               const finalSelectedItems: SelectedItem[] = Array.from(itemFundingLevels.entries()).map(([id, sliderValue]) => {
-                 const originalItem = initialSelectedItems.get(id);
+                 const originalItem = initialSelectedItems.get(id); // This now contains the category
                  return {
                       id,
-                      description: originalItem?.description || 'Unknown Item', // Fallback
-                      category: originalItem?.category || 'Unknown Category', // Pass category
+                      description: originalItem?.description || 'Unknown Item',
+                      category: originalItem?.category || 'Unknown Category', // Ensure category is passed
                       fundingLevel: mapSliderToFundingLevel(sliderValue)
                   };
               });
 
               const {subject, body} = generateRepresentativeEmail(
-                  finalSelectedItems, // Pass the mapped items
+                  finalSelectedItems, // Pass the items with category
                   aggressiveness,
                   userName,
                   userLocation,
@@ -293,10 +293,10 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
   );
 }
 
-/*──────── prop type (unchanged) ────────*/
+/*──────── prop type ────────*/
 interface EmailCustomizationModalProps{
   isOpen:boolean;onOpenChange:(b:boolean)=>void;
-  selectedItems:Map<string,SelectedItem>; // This map still holds the original selection from dashboard
+  selectedItems:Map<string,SelectedItem>; // This map holds the original selection from dashboard, including category
   balanceBudgetChecked:boolean;taxAmount:number;
   aggressiveness:number;setAggressiveness:(n:number)=>void;
   itemFundingLevels:Map<string,number>;setItemFundingLevels:(m:Map<string,number>)=>void; // This map holds the slider values
@@ -304,3 +304,4 @@ interface EmailCustomizationModalProps{
   userLocation:string;setUserLocation:(s:string)=>void;
 }
 
+    

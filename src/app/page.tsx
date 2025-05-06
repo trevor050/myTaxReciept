@@ -265,6 +265,7 @@ export default function Home() {
 
     setIsSuggestingResources(true);
     try {
+        // Ensure selectedEmailItems (which should include category) is passed to suggestResources
         const itemsArray = Array.from(selectedEmailItems.values());
         const suggestions = await suggestResources(itemsArray, aggressiveness, balanceBudgetChecked);
         setSuggestedResources(suggestions);
@@ -365,10 +366,10 @@ export default function Home() {
         {/* Email Customization Modal */}
        <EmailCustomizationModal
             isOpen={isEmailModalOpen}
-            onOpenChange={(isOpen) => {
-                setIsEmailModalOpen(isOpen);
-                // If modal is closing AND items were selected or budget checked, offer suggestions
-                if (!isOpen && (selectedEmailItems.size > 0 || balanceBudgetChecked)) {
+            onOpenChange={(isOpenModal) => {
+                setIsEmailModalOpen(isOpenModal);
+                // If modal is closing AND (items were selected OR budget checked), offer suggestions
+                if (!isOpenModal && (selectedEmailItems.size > 0 || balanceBudgetChecked)) {
                     handleShowResourceSuggestions();
                 }
             }}
@@ -397,3 +398,5 @@ export default function Home() {
   );
 }
 
+
+    
