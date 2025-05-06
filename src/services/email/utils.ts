@@ -74,6 +74,7 @@ export function cleanItemDescription(description: string): string {
         '(IMLS)': 'Museum and Library Services programs', // Slightly more specific
         '(LIHEAP)': 'the Low Income Home Energy Assistance Program',
         '(TANF)': 'Temporary Assistance for Needy Families',
+        'Map': 'MapIcon', // Explicitly map Map to MapIcon if needed here, though icon handling is in dashboard
     };
 
     for (const acronym in acronymMap) {

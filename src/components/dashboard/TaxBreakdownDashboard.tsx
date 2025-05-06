@@ -1,4 +1,3 @@
-
 // src/components/dashboard/TaxBreakdownDashboard.tsx
 'use client';
 
@@ -19,7 +18,8 @@ import {
     Megaphone, CheckSquare, AlertTriangle, Clock, DollarSign, Wind, Smile, Music2, Music,
     Coffee, Mail, Newspaper, Footprints, Podcast, BookOpen, SprayCan, Tv, Puzzle, EggFried,
     ShoppingCart, Dumbbell, NotebookPen, Utensils, Users, Tractor, WashingMachine, Dice5,
-    Cookie, Film, Clapperboard, HandHeart, Hammer, Trophy, ChefHat, Car, Map, Presentation,
+    Cookie, Film, Clapperboard, HandHeart, Hammer, Trophy, ChefHat, Car, Map as MapIcon, // Renamed Map to MapIcon
+    Presentation,
     Plane, Sparkles, PlaneTakeoff, Navigation, Wrench, Youtube, Building2, MapPinned,
     BrainCircuit, Luggage, CalendarDays, HelpingHand, MountainSnow, ClipboardCheck,
     PaintRoller, PenTool, // Add any potentially missing icons here
@@ -69,7 +69,8 @@ const COLORS = [
 const iconComponents: { [key: string]: LucideIcon } = {
     Wind, Smile, Music2, Music, Coffee, Mail, Newspaper, Footprints, Podcast, BookOpen, SprayCan,
     Tv, Puzzle, EggFried, ShoppingCart, Dumbbell, NotebookPen, Utensils, Users, Tractor, WashingMachine,
-    Dice5, Cookie, Film, Clapperboard, HandHeart, Hammer, Trophy, ChefHat, Car, Map, Presentation,
+    Dice5, Cookie, Film, Clapperboard, HandHeart, Hammer, Trophy, ChefHat, Car, Map: MapIcon, // Use MapIcon alias here
+    Presentation,
     Plane, Sparkles, PlaneTakeoff, Navigation, Wrench, Youtube, Building2, MapPinned, BrainCircuit,
     Luggage, CalendarDays, HelpingHand, MountainSnow, ClipboardCheck, PaintRoller, PenTool,
     // Add main category icons too
@@ -77,12 +78,15 @@ const iconComponents: { [key: string]: LucideIcon } = {
     Sprout, Globe, Scale, Train, Atom, HelpCircle
 };
 
+// Use a default icon for categories without a specific mapping
+const DefaultIcon = HelpCircle;
 
 const CustomTooltip = ({ active, payload, label, totalAmount, hourlyWage, displayMode }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     const spendingAmount = (data.percentage / 100) * totalAmount;
-    const CategoryIcon = iconComponents[data.category] || HelpCircle; // Use lookup
+    // Use lookup, fallback to HelpCircle if category icon not mapped
+    const CategoryIcon = iconComponents[data.category] || DefaultIcon;
 
     let displayValue: string;
     let timePerspectiveList: CombinedPerspective[] | null = null;
@@ -433,7 +437,8 @@ export default function TaxBreakdownDashboard({
                      <Accordion type="multiple" className="w-full">
                         {taxSpending.map((item, index) => {
                             const categoryAmount = (item.percentage / 100) * taxAmount;
-                            const CategoryIcon = iconComponents[item.category] || DefaultIcon; // Use lookup
+                            // Use lookup, fallback to HelpCircle if category icon not mapped
+                            const CategoryIcon = iconComponents[item.category] || DefaultIcon;
                             const isInterestOnDebt = item.category === 'Interest on Debt';
                             const hasSubItems = item.subItems && item.subItems.length > 0;
 
@@ -490,7 +495,7 @@ export default function TaxBreakdownDashboard({
                                         <div className="pl-8 pr-3 sm:pl-10 sm:pr-4 pt-3 pb-4 text-muted-foreground space-y-2.5">
                                          {isInterestOnDebt ? (
                                              <Alert variant="destructive" className="bg-destructive/5 border-destructive/30 shadow-inner">
-                                                  <AlertTriangle className="h-5 w-5 stroke-destructive/80 mt-1" />
+                                                  <TrendingDown className="h-5 w-5 stroke-destructive/80 mt-1" /> {/* Updated Icon */}
                                                   <AlertTitle className="text-destructive/95 font-semibold mb-1">National Debt Burden: {nationalDebt}</AlertTitle>
                                                  <AlertDescription className="text-sm text-destructive/90 dark:text-destructive/80 leading-relaxed space-y-2">
                                                      <p>This staggering amount paid just on <strong className="font-medium">interest</strong> is a direct consequence of sustained government spending exceeding revenue—often driven by tax cuts favoring the wealthy, unfunded wars, and economic bailouts.</p>
@@ -643,6 +648,3 @@ export default function TaxBreakdownDashboard({
     </TooltipProvider>
   );
 }
-
-
-    
