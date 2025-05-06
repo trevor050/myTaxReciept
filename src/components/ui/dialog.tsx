@@ -39,15 +39,13 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        // Base styles (removed default centering: left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%])
-        "fixed z-50 w-full max-w-lg", // Apply width constraints
+        // Base styles - REMOVED default centering and animation
+        "fixed z-50 w-full max-w-lg", // Apply width constraints only
         // Styling
         "border bg-background shadow-lg", // Removed padding
-        // Animation: Removed default animations to allow for custom or manual positioning
-        // "data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut",
         // Responsive rounding
         "sm:rounded-lg",
-        // Combine all classes
+        // Combine all classes - allows external control of position/animation
         className
       )}
       {...props}
@@ -130,3 +128,4 @@ export {
   DialogTitle,
   DialogDescription,
 }
+

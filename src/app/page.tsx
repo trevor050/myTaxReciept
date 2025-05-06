@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import type { Location, TaxSpending, SelectedItem } from '@/services/tax-spending'; // Added SelectedItem
 import { getTaxSpending } from '@/services/tax-spending';
 import { guessStateFromZip, getAverageTaxForState } from '@/lib/zip-to-state';
+import { mapFundingLevelToSlider } from '@/lib/funding-utils'; // Import the mapping function
 
 import LocationStep from '@/components/onboarding/LocationStep';
 import TaxAmountStep from '@/components/onboarding/TaxAmountStep';
@@ -47,20 +48,44 @@ export default function Home() {
   // State to hold budget balance preference
   const [balanceBudgetChecked, setBalanceBudgetChecked] = useState(false);
 
+  // Lifted state for EmailCustomizationModal
+  const [aggressiveness, setAggressiveness] = useState<number>(50); // Default 50
+  const [itemFundingLevels, setItemFundingLevels] = useState<Map<string, number>>(new Map());
+  const [userName, setUserName] = useState('');
+  const [userLocation, setUserLocation] = useState('');
+
   const [estimatedMedianTax, setEstimatedMedianTax] = useState<number>(NATIONAL_MEDIAN_FEDERAL_TAX);
+
+
+  // Update itemFundingLevels based on selectedEmailItems whenever it changes
+  useEffect(() => {
+     setItemFundingLevels(new Map(
+       Array.from(selectedEmailItems.entries()).map(([id, item]) => [
+         id,
+         // Retrieve existing slider value if available, otherwise map from initial funding level
+         itemFundingLevels.get(id) ?? mapFundingLevelToSlider(item.fundingLevel)
+       ])
+     ));
+   // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [selectedEmailItems]); // Only run when selectedEmailItems changes
 
 
   const navigateToStep = (nextStep: AppStep) => {
     const isGoingBack = (step === 'tax' && nextStep === 'location') || (step === 'dashboard' && nextStep === 'tax');
     setAnimationClass(isGoingBack ? 'animate-slideOutUp' : 'animate-slideOutUp');
 
-    // Reset email button and selection state when navigating away from dashboard
+    // Reset state when navigating BACK from dashboard
     if (step === 'dashboard' && nextStep !== 'dashboard') {
        setShowEmailAction(false);
        setEmailActionCount(0);
        setSelectedEmailItems(new Map()); // Clear selected items
        setBalanceBudgetChecked(false); // Reset budget preference
        setIsEmailModalOpen(false); // Ensure modal is closed
+       // Reset modal customization state
+       setAggressiveness(50);
+       setItemFundingLevels(new Map());
+       setUserName('');
+       setUserLocation('');
     }
 
 
@@ -126,12 +151,17 @@ export default function Home() {
        setTaxSpending([]);
        // Reset tax amount when going back from dashboard to allow re-entry or using median
        setTaxAmount(null);
-       // Reset email action state
+       // Reset email action state and modal state
        setShowEmailAction(false);
        setEmailActionCount(0);
        setSelectedEmailItems(new Map()); // Clear selected items
        setBalanceBudgetChecked(false); // Reset budget preference
        setIsEmailModalOpen(false); // Ensure modal is closed
+        // Reset modal customization state
+       setAggressiveness(50);
+       setItemFundingLevels(new Map());
+       setUserName('');
+       setUserLocation('');
       navigateToStep('tax');
     }
   };
@@ -171,10 +201,25 @@ export default function Home() {
     setEmailActionCount(count);
     setSelectedEmailItems(selected); // Store the selected items map
     setBalanceBudgetChecked(budgetPref); // Store budget preference
+
+     // If the selection becomes empty, reset email customization state
+     if (count === 0) {
+        setAggressiveness(50);
+        // itemFundingLevels will be cleared by the useEffect watching selectedEmailItems
+        setUserName('');
+        setUserLocation('');
+     }
   };
 
   // Handler for the FloatingEmailButton click - now opens the modal
   const handleOpenEmailModal = () => {
+     // Update itemFundingLevels based on the *current* selection just before opening
+     setItemFundingLevels(new Map(
+       Array.from(selectedEmailItems.entries()).map(([id, item]) => [
+         id,
+         itemFundingLevels.get(id) ?? mapFundingLevelToSlider(item.fundingLevel)
+       ])
+     ));
      setIsEmailModalOpen(true);
   };
 
@@ -256,6 +301,15 @@ export default function Home() {
             selectedItems={selectedEmailItems} // Pass the stored selected items
             balanceBudgetChecked={balanceBudgetChecked} // Pass budget preference
             taxAmount={taxAmount ?? estimatedMedianTax} // Pass tax amount for context
+            // Pass lifted state and setters
+            aggressiveness={aggressiveness}
+            setAggressiveness={setAggressiveness}
+            itemFundingLevels={itemFundingLevels}
+            setItemFundingLevels={setItemFundingLevels}
+            userName={userName}
+            setUserName={setUserName}
+            userLocation={userLocation}
+            setUserLocation={setUserLocation}
         />
     </main>
   );

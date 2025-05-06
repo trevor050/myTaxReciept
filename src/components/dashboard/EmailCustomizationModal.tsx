@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { SelectedItem } from '@/services/tax-spending'; // Import SelectedItem type
 import { generateRepresentativeEmail } from '@/services/tax-spending'; // Import email generation function
+import { mapSliderToFundingLevel } from '@/lib/funding-utils'; // Import mapping functions
 import { X, Mail, Send, GripVertical } from 'lucide-react'; // Added GripVertical
 import { cn } from '@/lib/utils';
 
@@ -28,6 +29,16 @@ interface EmailCustomizationModalProps {
   selectedItems: Map<string, SelectedItem>; // Receive the map of selected items
   balanceBudgetChecked: boolean;
   taxAmount: number; // Pass tax amount for context if needed
+
+  // Lifted state and setters from parent
+  aggressiveness: number;
+  setAggressiveness: (value: number) => void;
+  itemFundingLevels: Map<string, number>;
+  setItemFundingLevels: (value: Map<string, number>) => void;
+  userName: string;
+  setUserName: (value: string) => void;
+  userLocation: string;
+  setUserLocation: (value: string) => void;
 }
 
 // Define funding levels and their labels/colors
@@ -39,114 +50,114 @@ const fundingLevels = [
     { value: 2, label: 'Fund More', color: 'bg-emerald-600', darkColor: 'dark:bg-emerald-500' },
 ];
 
-// Map slider value (0-100) to funding level value (-2 to 2)
-const mapSliderToFundingLevel = (sliderValue: number): number => {
-    if (sliderValue <= 10) return -2; // 0-10 -> Slash Heavily
-    if (sliderValue <= 35) return -1; // 11-35 -> Cut Significantly
-    if (sliderValue <= 65) return 0;  // 36-65 -> Improve Efficiency
-    if (sliderValue <= 90) return 1;  // 66-90 -> Fund
-    return 2;                       // 91-100 -> Fund More
-};
-
-// Map funding level value (-2 to 2) back to slider value (approximate midpoint)
-const mapFundingLevelToSlider = (fundingLevel: number): number => {
-    switch (fundingLevel) {
-        case -2: return 5;
-        case -1: return 23;
-        case 0:  return 50;
-        case 1:  return 78;
-        case 2:  return 95;
-        default: return 50; // Default to middle
-    }
-};
-
 export default function EmailCustomizationModal({
   isOpen,
   onOpenChange,
   selectedItems: initialSelectedItems, // Rename prop
   balanceBudgetChecked,
   taxAmount,
+  // Destructure lifted state props
+  aggressiveness,
+  setAggressiveness,
+  itemFundingLevels,
+  setItemFundingLevels,
+  userName,
+  setUserName,
+  userLocation,
+  setUserLocation,
 }: EmailCustomizationModalProps) {
-  const [aggressiveness, setAggressiveness] = useState<number>(50); // 0 (Kind) to 100 (Angry)
-  const [itemFundingLevels, setItemFundingLevels] = useState<Map<string, number>>(
-      new Map(
-        Array.from(initialSelectedItems.values()).map(item => [
-          item.id,
-          mapFundingLevelToSlider(item.fundingLevel) // Convert initial level (-2 to 2) to slider value (0-100)
-        ])
-      )
-  );
-  const [userName, setUserName] = useState('');
-  const [userLocation, setUserLocation] = useState(''); // e.g., "City, ST Zip"
 
   // --- Draggable State ---
-  const [position, setPosition] = useState({ x: 16, y: 16 }); // Initial position: top-left corner (16px padding)
+  const [position, setPosition] = useState({ x: 0, y: 0 }); // Initial position: center (will be set on open)
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
+  const [dragStartOffset, setDragStartOffset] = useState({ x: 0, y: 0 }); // Offset from top-left corner
   const modalRef = useRef<HTMLDivElement>(null); // Ref for the modal content
   const dragHandleRef = useRef<HTMLDivElement>(null); // Ref for the drag handle (header)
+  const isInitialOpen = useRef(true); // Track initial opening for centering
+
+  // --- Center Modal on Open and Reset Position on Close ---
+  useEffect(() => {
+    if (isOpen && isInitialOpen.current && modalRef.current) {
+       // Calculate initial center position
+        const modalWidth = modalRef.current.offsetWidth;
+        const modalHeight = modalRef.current.offsetHeight;
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        // Center position relative to viewport
+        const initialX = (viewportWidth - modalWidth) / 2;
+        const initialY = (viewportHeight - modalHeight) / 2;
+
+        setPosition({ x: initialX, y: initialY });
+        isInitialOpen.current = false; // Mark initial centering done
+    } else if (!isOpen) {
+      isInitialOpen.current = true; // Reset for next open
+      // Optionally reset position if desired when closed
+       // setPosition({ x: 0, y: 0 }); // Reset to top-left if needed
+    }
+  }, [isOpen]);
+
 
   // --- Drag Handlers ---
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (modalRef.current && dragHandleRef.current?.contains(e.target as Node)) {
-      setIsDragging(true);
-      const modalRect = modalRef.current.getBoundingClientRect();
-      setDragStartPos({
-        x: e.clientX - modalRect.left + position.x, // Adjust relative to current transform
-        y: e.clientY - modalRect.top + position.y,  // Adjust relative to current transform
-      });
-      // Prevent text selection while dragging
-      e.preventDefault();
+        setIsDragging(true);
+        const modalRect = modalRef.current.getBoundingClientRect();
+        setDragStartOffset({
+            x: e.clientX - modalRect.left,
+            y: e.clientY - modalRect.top,
+        });
+        e.preventDefault(); // Prevent text selection
     }
-  }, [position.x, position.y]);
+  }, []);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging) return;
-    setPosition({
-      x: e.clientX - dragStartPos.x,
-      y: e.clientY - dragStartPos.y,
-    });
-  }, [isDragging, dragStartPos]);
+    if (!isDragging || !modalRef.current) return;
+
+    // Calculate new top-left position based on mouse movement and initial offset
+    const newX = e.clientX - dragStartOffset.x;
+    const newY = e.clientY - dragStartOffset.y;
+
+    setPosition({ x: newX, y: newY });
+
+  }, [isDragging, dragStartOffset]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
+    // Remove global styles if needed, e.g., body cursor
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
   }, []);
 
   // --- Attach/Detach Window Event Listeners ---
   useEffect(() => {
     if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-      document.body.style.userSelect = 'none'; // Prevent text selection globally
+        document.body.style.cursor = 'grabbing'; // Indicate dragging globally
+        document.body.style.userSelect = 'none'; // Prevent text selection
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
     } else {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.userSelect = ''; // Re-enable text selection
+        document.body.style.cursor = ''; // Reset cursor
+        document.body.style.userSelect = ''; // Re-enable selection
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
     }
 
     // Cleanup function
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.userSelect = ''; // Ensure cleanup on unmount
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+        // Ensure styles are cleaned up on unmount
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
     };
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
 
-  // Update itemFundingLevels if the initialSelectedItems prop changes
-  React.useEffect(() => {
-    setItemFundingLevels(new Map(
-      Array.from(initialSelectedItems.values()).map(item => [
-        item.id,
-        mapFundingLevelToSlider(item.fundingLevel) // Map the initial level
-      ])
-    ));
-  }, [initialSelectedItems]);
-
-
   const handleFundingLevelChange = (itemId: string, value: number[]) => {
     const sliderValue = value[0];
-    setItemFundingLevels(prev => new Map(prev).set(itemId, sliderValue));
+    // Use the setter prop from parent
+    setItemFundingLevels(new Map(itemFundingLevels).set(itemId, sliderValue));
   };
 
   const handleGenerateEmail = () => {
@@ -201,20 +212,22 @@ export default function EmailCustomizationModal({
        <DialogContent
          ref={modalRef} // Add ref to the DialogContent
          style={{
-           transform: `translate(${position.x}px, ${position.y}px)`, // Apply position via transform
-           // Reset fixed positioning overrides from default DialogContent style
-           left: '0',
-           top: '0',
-           translateX: '0',
-           translateY: '0',
+           // Apply position via top/left for fixed positioning
+           left: `${position.x}px`,
+           top: `${position.y}px`,
+           transform: 'none', // Reset any transform if previously used
+           // Center initially via Tailwind if position is 0,0 (before drag)
+           // This is overridden by style once position changes
          }}
          className={cn(
-            "max-w-3xl w-[90vw] sm:w-full p-0 max-h-[85vh]", // Keep size constraints
-            "flex flex-col", // Use flex column for layout
-            "fixed", // Ensure it's fixed positioned
-            "data-[state=open]:animate-none data-[state=closed]:animate-none", // Disable default animations
-            "data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200", // Simple fade
-            "z-50 border bg-background shadow-lg sm:rounded-lg" // Base styles (removed centering)
+            "max-w-3xl w-[90vw] sm:w-full p-0 max-h-[85vh]",
+            "flex flex-col",
+            "fixed", // Ensure fixed positioning
+            // Apply centering classes by default, position state overrides via style prop
+             !isDragging && position.x === 0 && position.y === 0 && isInitialOpen.current ? "left-[50%] top-[50%] -translate-x-1/2 -translate-y-1/2" : "",
+             // Animations using keyframes defined in globals.css
+             "data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut",
+            "z-50 border bg-background shadow-lg sm:rounded-lg"
          )}
          // Prevent Radix default focus trapping from interfering with drag
          onInteractOutside={(e) => {
@@ -228,7 +241,7 @@ export default function EmailCustomizationModal({
             ref={dragHandleRef} // Add ref to the header as drag handle
             onMouseDown={handleMouseDown} // Attach mouse down handler
             className={cn(
-                "px-6 py-4 border-b bg-card/95 sticky top-0 z-10 shrink-0",
+                "px-6 py-4 border-b bg-card/95 sticky top-0 z-10 shrink-0 rounded-t-lg", // Added rounded-t-lg
                 isDragging ? "cursor-grabbing" : "cursor-move" // Change cursor on drag
             )}
          >
@@ -245,8 +258,9 @@ export default function EmailCustomizationModal({
                         </DialogDescription>
                     </div>
                 </div>
+                {/* Keep the close button inside the header but outside the drag handle trigger area logic if needed */}
                 <DialogClose asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 pointer-events-auto"> {/* Re-enable pointer events */}
+                    <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 pointer-events-auto z-20 relative"> {/* Ensure close button is clickable */}
                         <X className="h-4 w-4" />
                         <span className="sr-only">Close</span>
                     </Button>
@@ -265,7 +279,7 @@ export default function EmailCustomizationModal({
                     <Input
                         id="userName"
                         value={userName}
-                        onChange={(e) => setUserName(e.target.value)}
+                        onChange={(e) => setUserName(e.target.value)} // Use setter prop
                         placeholder="Jane Doe"
                         className="h-9"
                     />
@@ -275,7 +289,7 @@ export default function EmailCustomizationModal({
                     <Input
                         id="userLocation"
                         value={userLocation}
-                        onChange={(e) => setUserLocation(e.target.value)}
+                        onChange={(e) => setUserLocation(e.target.value)} // Use setter prop
                         placeholder="City, ST Zipcode"
                         className="h-9"
                     />
@@ -296,7 +310,7 @@ export default function EmailCustomizationModal({
                 max={100}
                 step={1}
                 value={[aggressiveness]}
-                onValueChange={(value) => setAggressiveness(value[0])}
+                onValueChange={(value) => setAggressiveness(value[0])} // Use setter prop
                 className="my-2"
               />
               <div className="flex justify-between text-xs text-muted-foreground">
@@ -311,7 +325,7 @@ export default function EmailCustomizationModal({
               <div className="space-y-6">
                 <h3 className="text-lg font-semibold border-b pb-2">Adjust Funding Priorities</h3>
                 {selectedItemsArray.map((item) => {
-                    const sliderValue = itemFundingLevels.get(item.id) ?? 50; // Default to middle if not found
+                    const sliderValue = itemFundingLevels.get(item.id) ?? 50; // Get from prop
                     const levelDetails = getFundingLevelDetails(sliderValue);
                     return (
                         <div key={item.id} className="space-y-2 border p-4 rounded-md shadow-sm bg-card/50">
@@ -332,7 +346,7 @@ export default function EmailCustomizationModal({
                                 max={100}
                                 step={1} // Fine-grained control, mapping happens on change/generate
                                 value={[sliderValue]}
-                                onValueChange={(value) => handleFundingLevelChange(item.id, value)}
+                                onValueChange={(value) => handleFundingLevelChange(item.id, value)} // Uses internal handler calling setter prop
                                 className={cn(
                                     "[&>span>span]:transition-colors [&>span>span]:duration-200", // Smooth track color change
                                      `[&>span>span]:${levelDetails.color}`, // Apply dynamic track color
@@ -361,7 +375,7 @@ export default function EmailCustomizationModal({
         </ScrollArea>
 
         {/* Footer with Action Button */}
-        <DialogFooter className="px-6 py-4 border-t bg-card/95 sticky bottom-0 z-10 sm:justify-between shrink-0">
+        <DialogFooter className="px-6 py-4 border-t bg-card/95 sticky bottom-0 z-10 sm:justify-between shrink-0 rounded-b-lg"> {/* Added rounded-b-lg */}
            <DialogClose asChild>
              <Button variant="outline" className="w-full sm:w-auto">Cancel</Button>
            </DialogClose>
@@ -378,3 +392,4 @@ export default function EmailCustomizationModal({
     </Dialog>
   );
 }
+
