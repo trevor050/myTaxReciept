@@ -102,7 +102,7 @@ const timePerspectives: TimePerspectiveItem[] = [
 
 /**
  * Generates a list of relatable time perspective activities that sum up to (or close to) the total minutes
- * using a randomized selection process.
+ * using a randomized selection process. Aims to cover at least 96% of the total time.
  *
  * @param totalMinutes The total number of minutes worked.
  * @param maxItems The maximum number of distinct activity items to include in the list.
@@ -123,17 +123,22 @@ export function generateCombinedPerspectiveList(
     }
 
     let remainingMinutes = totalMinutes;
+    let accumulatedMinutes = 0; // Keep track of time covered
+    const minTargetMinutes = totalMinutes * 0.96; // Target 96% coverage
+
     // Use a Map to store activity description -> { icon, count }
     const activityCounts = new Map<string, { icon?: string; count: number }>();
     const MIN_TIME_THRESHOLD = 1; // Stop when remaining time is very small
 
-    // Limit iterations to prevent infinite loops with very small remaining times
+    // Limit iterations to prevent infinite loops
     let iterations = 0;
-    const MAX_ITERATIONS = 150; // Increased slightly
+    const MAX_ITERATIONS = 250; // Increased iterations slightly
 
-    while (remainingMinutes >= MIN_TIME_THRESHOLD && iterations < MAX_ITERATIONS && activityCounts.size < maxItems * 1.5) { // Add constraint to stop filling if we have many items already
+    // Loop while we haven't covered enough time and haven't hit limits
+    while (remainingMinutes >= MIN_TIME_THRESHOLD && accumulatedMinutes < minTargetMinutes && iterations < MAX_ITERATIONS) {
         iterations++;
         // Filter perspectives that fit within the remaining time
+        // Prioritize larger chunks if far from target? (Simple random for now)
         const availablePerspectives = timePerspectives.filter(p => p.minutes <= remainingMinutes && p.minutes > 0);
 
         if (availablePerspectives.length === 0) {
@@ -153,8 +158,9 @@ export function generateCombinedPerspectiveList(
             count: (current?.count || 0) + 1,
         });
 
-        // Subtract the duration from remaining time
+        // Subtract the duration from remaining time AND add to accumulated time
         remainingMinutes -= chosenPerspective.minutes;
+        accumulatedMinutes += chosenPerspective.minutes;
     }
 
     // Convert the map to the desired array structure
@@ -169,14 +175,14 @@ export function generateCombinedPerspectiveList(
     // Optional: Sort the final list (e.g., by count descending or original duration)
     resultList.sort((a, b) => b.count - a.count); // Example: sort by most frequent
 
-    // Limit the number of *distinct* items shown
+    // Limit the number of *distinct* items shown in the tooltip
     if (resultList.length > maxItems) {
         resultList.length = maxItems;
     }
 
 
-    // If the list is empty after trying, return null
-     if (resultList.length === 0) {
+    // If the list is empty after trying (or didn't reach target sufficiently), try fallback
+     if (resultList.length === 0 || accumulatedMinutes < minTargetMinutes * 0.8) { // Lowered threshold slightly for fallback trigger
          // Fallback: Find the single closest perspective (even if slightly over) for very small amounts
          const closest = timePerspectives
               .filter(p => p.minutes > 0) // Ensure we don't pick a zero-minute item
@@ -186,7 +192,7 @@ export function generateCombinedPerspectiveList(
           if (closest.minutes <= totalMinutes * 1.5 && closest.minutes >= 1) { // Only if reasonably close and >= 1 min
               return [{ description: closest.description, icon: closest.icon, count: 1 }];
           }
-         return null;
+         return null; // Return null if even fallback fails
      }
 
     return resultList;
