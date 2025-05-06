@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { SelectedItem } from '@/services/tax-spending'; // Import SelectedItem type
 import { generateRepresentativeEmail } from '@/services/tax-spending'; // Import email generation function
-import { X, Mail, Send } from 'lucide-react';
+import { X, Mail, Send, GripVertical } from 'lucide-react'; // Added GripVertical
 import { cn } from '@/lib/utils';
 
 interface EmailCustomizationModalProps {
@@ -68,7 +68,6 @@ export default function EmailCustomizationModal({
   taxAmount,
 }: EmailCustomizationModalProps) {
   const [aggressiveness, setAggressiveness] = useState<number>(50); // 0 (Kind) to 100 (Angry)
-  // Initialize itemFundingLevels state based on initialSelectedItems
   const [itemFundingLevels, setItemFundingLevels] = useState<Map<string, number>>(
       new Map(
         Array.from(initialSelectedItems.values()).map(item => [
@@ -79,6 +78,60 @@ export default function EmailCustomizationModal({
   );
   const [userName, setUserName] = useState('');
   const [userLocation, setUserLocation] = useState(''); // e.g., "City, ST Zip"
+
+  // --- Draggable State ---
+  const [position, setPosition] = useState({ x: 16, y: 16 }); // Initial position: top-left corner (16px padding)
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
+  const modalRef = useRef<HTMLDivElement>(null); // Ref for the modal content
+  const dragHandleRef = useRef<HTMLDivElement>(null); // Ref for the drag handle (header)
+
+  // --- Drag Handlers ---
+  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (modalRef.current && dragHandleRef.current?.contains(e.target as Node)) {
+      setIsDragging(true);
+      const modalRect = modalRef.current.getBoundingClientRect();
+      setDragStartPos({
+        x: e.clientX - modalRect.left + position.x, // Adjust relative to current transform
+        y: e.clientY - modalRect.top + position.y,  // Adjust relative to current transform
+      });
+      // Prevent text selection while dragging
+      e.preventDefault();
+    }
+  }, [position.x, position.y]);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging) return;
+    setPosition({
+      x: e.clientX - dragStartPos.x,
+      y: e.clientY - dragStartPos.y,
+    });
+  }, [isDragging, dragStartPos]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  // --- Attach/Detach Window Event Listeners ---
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = 'none'; // Prevent text selection globally
+    } else {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = ''; // Re-enable text selection
+    }
+
+    // Cleanup function
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = ''; // Ensure cleanup on unmount
+    };
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+
 
   // Update itemFundingLevels if the initialSelectedItems prop changes
   React.useEffect(() => {
@@ -145,24 +198,55 @@ export default function EmailCustomizationModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-       <DialogContent className={cn(
-         "max-w-3xl w-[90vw] sm:w-full p-0 max-h-[85vh]", // Keep size constraints
-         "flex flex-col" // Use flex column for layout
-       )}>
-         {/* Custom Header */}
-         <DialogHeader className="px-6 py-4 border-b bg-card/95 sticky top-0 z-10 shrink-0"> {/* Added shrink-0 */}
-             <div className="flex justify-between items-center">
-                <div className="space-y-1">
-                     <DialogTitle className="text-xl sm:text-2xl font-semibold flex items-center gap-2">
-                        <Mail className="h-5 w-5 text-primary" />
-                        Customize Your Email
-                    </DialogTitle>
-                     <DialogDescription className="text-sm text-muted-foreground">
-                        Adjust the tone and desired funding changes for your message.
-                    </DialogDescription>
-                 </div>
+       <DialogContent
+         ref={modalRef} // Add ref to the DialogContent
+         style={{
+           transform: `translate(${position.x}px, ${position.y}px)`, // Apply position via transform
+           // Reset fixed positioning overrides from default DialogContent style
+           left: '0',
+           top: '0',
+           translateX: '0',
+           translateY: '0',
+         }}
+         className={cn(
+            "max-w-3xl w-[90vw] sm:w-full p-0 max-h-[85vh]", // Keep size constraints
+            "flex flex-col", // Use flex column for layout
+            "fixed", // Ensure it's fixed positioned
+            "data-[state=open]:animate-none data-[state=closed]:animate-none", // Disable default animations
+            "data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200", // Simple fade
+            "z-50 border bg-background shadow-lg sm:rounded-lg" // Base styles (removed centering)
+         )}
+         // Prevent Radix default focus trapping from interfering with drag
+         onInteractOutside={(e) => {
+            if (isDragging) {
+              e.preventDefault(); // Prevent closing modal while dragging outside
+            }
+          }}
+       >
+         {/* Custom Header - Drag Handle */}
+         <DialogHeader
+            ref={dragHandleRef} // Add ref to the header as drag handle
+            onMouseDown={handleMouseDown} // Attach mouse down handler
+            className={cn(
+                "px-6 py-4 border-b bg-card/95 sticky top-0 z-10 shrink-0",
+                isDragging ? "cursor-grabbing" : "cursor-move" // Change cursor on drag
+            )}
+         >
+             <div className="flex justify-between items-center pointer-events-none"> {/* Disable pointer events on inner content */}
+                <div className="flex items-center gap-2">
+                    <GripVertical className="h-5 w-5 text-muted-foreground shrink-0"/> {/* Drag indicator */}
+                    <div className="space-y-1">
+                        <DialogTitle className="text-xl sm:text-2xl font-semibold flex items-center gap-2">
+                            <Mail className="h-5 w-5 text-primary" />
+                            Customize Your Email
+                        </DialogTitle>
+                        <DialogDescription className="text-sm text-muted-foreground">
+                            Adjust the tone and desired funding changes for your message.
+                        </DialogDescription>
+                    </div>
+                </div>
                 <DialogClose asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full h-8 w-8">
+                    <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 pointer-events-auto"> {/* Re-enable pointer events */}
                         <X className="h-4 w-4" />
                         <span className="sr-only">Close</span>
                     </Button>
@@ -171,7 +255,7 @@ export default function EmailCustomizationModal({
          </DialogHeader>
 
         {/* Scrollable Content Area */}
-        <ScrollArea className="overflow-y-auto px-6 py-4 flex-1"> {/* Added flex-1 */}
+        <ScrollArea className="overflow-y-auto px-6 py-4 flex-1">
           <div className="space-y-8">
 
             {/* User Info Section */}
@@ -277,7 +361,7 @@ export default function EmailCustomizationModal({
         </ScrollArea>
 
         {/* Footer with Action Button */}
-        <DialogFooter className="px-6 py-4 border-t bg-card/95 sticky bottom-0 z-10 sm:justify-between shrink-0"> {/* Added shrink-0 */}
+        <DialogFooter className="px-6 py-4 border-t bg-card/95 sticky bottom-0 z-10 sm:justify-between shrink-0">
            <DialogClose asChild>
              <Button variant="outline" className="w-full sm:w-auto">Cancel</Button>
            </DialogClose>

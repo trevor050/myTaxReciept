@@ -39,12 +39,12 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        // Base styles for centering and layout
-        "fixed left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%]", // Keep default centering
+        // Base styles (removed default centering: left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%])
+        "fixed z-50 w-full max-w-lg", // Apply width constraints
         // Styling
-        "border bg-background shadow-lg", // Removed default padding (p-6), apply padding in specific modal if needed
-        // Animation (Use custom scaleIn/scaleOut from globals.css/tailwind.config.ts)
-        "data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut",
+        "border bg-background shadow-lg", // Removed padding
+        // Animation: Removed default animations to allow for custom or manual positioning
+        // "data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut",
         // Responsive rounding
         "sm:rounded-lg",
         // Combine all classes
@@ -53,13 +53,7 @@ const DialogContent = React.forwardRef<
       {...props}
     >
       {children}
-       {/* Remove the default X button here; it will be added explicitly where needed (like in EmailCustomizationModal) */}
-       {/*
-       <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-         <X className="h-4 w-4" />
-         <span className="sr-only">Close</span>
-       </DialogPrimitive.Close>
-       */}
+       {/* Remove the default X button here; it will be added explicitly where needed */}
     </DialogPrimitive.Content>
   </DialogPortal>
 ))
@@ -71,10 +65,9 @@ const DialogHeader = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      // Ensure header doesn't cause centering issues; focus on content
+      // Keep flex, space, text alignment
       "flex flex-col space-y-1.5 text-center sm:text-left",
-       // Adjusted default padding for header if content has its own
-       // Removed padding here, apply in specific modal header
+       // Removed padding
       className
     )}
     {...props}
@@ -88,10 +81,9 @@ const DialogFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      // Ensure footer doesn't cause centering issues
+      // Keep flex layout for footer items
       "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
-       // Adjusted default padding for footer if content has its own
-       // Removed padding here, apply in specific modal footer
+       // Removed padding
       className
     )}
     {...props}
@@ -138,5 +130,3 @@ export {
   DialogTitle,
   DialogDescription,
 }
-
-    
