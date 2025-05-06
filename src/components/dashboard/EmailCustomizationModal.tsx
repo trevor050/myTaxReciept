@@ -145,9 +145,12 @@ export default function EmailCustomizationModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl w-[90vw] sm:w-full grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[85vh]">
+       <DialogContent className={cn(
+         "max-w-3xl w-[90vw] sm:w-full p-0 max-h-[85vh]", // Keep size constraints
+         "flex flex-col" // Use flex column for layout
+       )}>
          {/* Custom Header */}
-         <DialogHeader className="px-6 py-4 border-b bg-card/95 sticky top-0 z-10">
+         <DialogHeader className="px-6 py-4 border-b bg-card/95 sticky top-0 z-10 shrink-0"> {/* Added shrink-0 */}
              <div className="flex justify-between items-center">
                 <div className="space-y-1">
                      <DialogTitle className="text-xl sm:text-2xl font-semibold flex items-center gap-2">
@@ -168,7 +171,7 @@ export default function EmailCustomizationModal({
          </DialogHeader>
 
         {/* Scrollable Content Area */}
-        <ScrollArea className="overflow-y-auto px-6 py-4">
+        <ScrollArea className="overflow-y-auto px-6 py-4 flex-1"> {/* Added flex-1 */}
           <div className="space-y-8">
 
             {/* User Info Section */}
@@ -274,7 +277,7 @@ export default function EmailCustomizationModal({
         </ScrollArea>
 
         {/* Footer with Action Button */}
-        <DialogFooter className="px-6 py-4 border-t bg-card/95 sticky bottom-0 z-10 sm:justify-between">
+        <DialogFooter className="px-6 py-4 border-t bg-card/95 sticky bottom-0 z-10 sm:justify-between shrink-0"> {/* Added shrink-0 */}
            <DialogClose asChild>
              <Button variant="outline" className="w-full sm:w-auto">Cancel</Button>
            </DialogClose>

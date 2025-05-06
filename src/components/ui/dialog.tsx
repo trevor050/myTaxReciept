@@ -40,9 +40,9 @@ const DialogContent = React.forwardRef<
       ref={ref}
       className={cn(
         // Base styles for centering and layout
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%]", // Keep default centering
+        "fixed left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%]", // Keep default centering
         // Styling
-        "gap-4 border bg-background p-6 shadow-lg", // Keep default padding and styling, adjust in specific modal if needed
+        "border bg-background shadow-lg", // Removed default padding (p-6), apply padding in specific modal if needed
         // Animation (Use custom scaleIn/scaleOut from globals.css/tailwind.config.ts)
         "data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut",
         // Responsive rounding
@@ -73,7 +73,8 @@ const DialogHeader = ({
     className={cn(
       // Ensure header doesn't cause centering issues; focus on content
       "flex flex-col space-y-1.5 text-center sm:text-left",
-       "p-6 pb-0", // Adjusted default padding for header if content has its own
+       // Adjusted default padding for header if content has its own
+       // Removed padding here, apply in specific modal header
       className
     )}
     {...props}
@@ -89,7 +90,8 @@ const DialogFooter = ({
     className={cn(
       // Ensure footer doesn't cause centering issues
       "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
-       "p-6 pt-0", // Adjusted default padding for footer if content has its own
+       // Adjusted default padding for footer if content has its own
+       // Removed padding here, apply in specific modal footer
       className
     )}
     {...props}
