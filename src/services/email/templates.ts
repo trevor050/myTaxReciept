@@ -61,37 +61,37 @@ export const LIST_INTRO: Record<Tone, string[]> = {
   ]
 };
 
-// ACTION Phrases (indexed by fundingLevel + tone bucket)
+// ACTION Phrases (indexed by fundingLevel + tone bucket) - Renamed from ACTION to ACTION_PHRASES for clarity
 export const ACTION_PHRASES: Record<SelectedItem['fundingLevel'], [string, string, string, string]> = {
     [-2]: [ // Slash Heavily
-        "should be considered for significant reduction or phasing out",
-        "requires a substantial cut; its current funding level seems excessive",
-        "must be drastically scaled back; this expenditure is difficult to justify",
-        "must be eliminated or fundamentally reformed; this spending is unacceptable",
+        "should be considered for significant reduction or phasing out.",
+        "requires a substantial cut; its current funding level seems excessive.",
+        "must be drastically scaled back; this expenditure is difficult to justify.",
+        "must be eliminated or fundamentally reformed; this spending is unacceptable.",
     ],
     [-1]: [ // Cut Significantly
-        "funding could likely be reduced without compromising essential functions",
-        "should undergo significant cuts; there are clear opportunities for savings",
-        "demands a sharp reduction to better align with fiscal responsibility",
-        "needs an aggressive cut; taxpayers expect more prudent use of funds",
+        "funding could likely be reduced without compromising essential functions.",
+        "should undergo significant cuts; there are clear opportunities for savings.",
+        "demands a sharp reduction to better align with fiscal responsibility.",
+        "needs an aggressive cut; taxpayers expect more prudent use of funds.",
     ],
     [0]: [ // Improve Efficiency / Maintain with Oversight
-        "funding should be maintained, but with a strong emphasis on improving efficiency and accountability",
-        "could continue at current levels, provided there's rigorous oversight to maximize its effectiveness",
-        "might remain level, but only if waste is eliminated and performance metrics are met",
-        "funding is questionable, but acceptable only with strict audits and proven results",
+        "funding should be maintained, but with a strong emphasis on improving efficiency and accountability.",
+        "could continue at current levels, provided there's rigorous oversight to maximize its effectiveness.",
+        "might remain level, but only if waste is eliminated and performance metrics are met.",
+        "funding is questionable, but acceptable only with strict audits and proven results.",
     ],
     [1]: [ // Fund / Modest Increase
-        "deserves stable and perhaps modestly increased funding to ensure it can meet its objectives",
-        "should receive reliable support, potentially with a moderate increase to enhance its impact",
-        "warrants a noticeable funding boost to strengthen its capabilities and reach",
-        "requires a clear increase in resources to adequately address important public needs",
+        "deserves stable and perhaps modestly increased funding to ensure it can meet its objectives.",
+        "should receive reliable support, potentially with a moderate increase to enhance its impact.",
+        "warrants a noticeable funding boost to strengthen its capabilities and reach.",
+        "requires a clear increase in resources to adequately address important public needs.",
     ],
     [2]: [ // Fund More / Substantial Increase
-        "merits a substantial increase in funding; the potential benefits are significant",
-        "needs robust new investment to expand its positive impact and capabilities",
-        "should be prioritized for major funding growth to address critical challenges",
-        "demands urgent and considerable expansion; underfunding this area is shortsighted",
+        "merits a substantial increase in funding; the potential benefits are significant.",
+        "needs robust new investment to expand its positive impact and capabilities.",
+        "should be prioritized for major funding growth to address critical challenges.",
+        "demands urgent and considerable expansion; underfunding this area is shortsighted.",
     ]
 };
 
@@ -1175,13 +1175,7 @@ export const CALL_TO_ACTION: Record<Tone, string> = {
     3: "I demand a prompt and specific action plan from your office detailing how you will fight to realign this irresponsible spending and put our nation on a sustainable fiscal path. Failure to act is unacceptable.",
 };
 
-// Transition phrases between items or between rationale and next item start
-export const TRANSITIONS: string[] = [
-    "Furthermore,", "Additionally,", "Moving on,", "Another point to consider is",
-    "Similarly,", "In addition,", "Moreover,", "Equally important is"
-];
-
-// Sentence openers to introduce an item's funding level (varied)
+// Sentence openers to introduce an item's funding level (More varied)
 export const ITEM_OPENERS: Record<FundingActionRationale, string[]> = {
     cut: [
         "Regarding funding for {ITEM}, my view is that it",
@@ -1191,30 +1185,39 @@ export const ITEM_OPENERS: Record<FundingActionRationale, string[]> = {
         "Concerning {ITEM}, the budget",
         "Turning to {ITEM}, I believe its funding",
         "The expenditure on {ITEM}",
+        "The justification for funding {ITEM}",
+        "Considering the budget for {ITEM}, it",
+        "It seems prudent to examine the funding for {ITEM}, which",
     ],
     fund: [
-        "Regarding {ITEM}, I believe increased investment is warranted.",
-        "For {ITEM}, adequate funding is crucial.",
+        "Regarding {ITEM}, I believe increased investment is warranted, as its funding",
+        "For {ITEM}, adequate funding is crucial, meaning its funding",
         "It's important to support {ITEM}; therefore, its funding",
         "Considering {ITEM}, the current budget",
         "When discussing {ITEM}, it seems clear that its funding",
         "Investment in {ITEM}",
+        "To ensure the success of {ITEM}, its funding",
+        "Prioritizing {ITEM} means its funding",
+        "The value provided by {ITEM} suggests its funding",
     ],
     review: [
-        "The funding for {ITEM} requires careful review.",
+        "The funding for {ITEM} requires careful review, as its budget",
         "With respect to {ITEM}, its budget",
         "Oversight of {ITEM} is critical, meaning its funding",
         "The allocation towards {ITEM}",
         "For {ITEM}, ensuring efficiency means its funding",
         "Evaluating {ITEM} suggests its budget",
+        "A closer look at {ITEM} indicates its funding",
+        "Scrutinizing the budget for {ITEM} reveals its funding",
+        "To optimize {ITEM}, its funding",
     ]
 };
 
 
 // Connectors between action phrase and rationale (varied)
 export const RATIONALE_CONNECTORS: { polite: string[], firm: string[] } = {
-    polite: [", as", ", because", ". Specifically,", ". For instance,", ". My reasoning is that"],
-    firm: [";", ". Clearly,", ". Simply put,", ". This is because", "; the justification being that"]
+    polite: [", as", ", because", ". Specifically,", ". For instance,", ". My reasoning is that", "; for example,", "; indeed,"],
+    firm: [";", ". Clearly,", ". Simply put,", ". This is because", "; the justification being that", ". To be precise,", ". In fact,"]
 };
 
 // Phrases to introduce categories (varied)
@@ -1225,36 +1228,43 @@ export const CATEGORY_INTRO_PHRASES: Record<string, string[]> = {
         "My thoughts on {CATEGORY} funding include the following:",
         "Regarding the {CATEGORY} budget:",
         "Within the {CATEGORY} allocation:",
+        "Focusing on {CATEGORY}, I note that:",
+        "Turning our attention to {CATEGORY}:",
     ],
     "War and Weapons": [
         "Turning to defense spending and related areas:",
         "Regarding the substantial budget for {CATEGORY}:",
         "My concerns about {CATEGORY} spending are as follows:",
+        "Examining the allocation for {CATEGORY}:",
     ],
      "Health": [
         "In the critical area of {CATEGORY} funding:",
         "Considering our nation's {CATEGORY} priorities:",
         "With respect to the {CATEGORY} budget:",
+        "Analyzing expenditures in {CATEGORY}:",
     ],
      "Interest on Debt": [ // Special handling for this category
-        "The significant amount allocated to {CATEGORY} is deeply concerning.",
+        "The significant amount allocated just to servicing the {CATEGORY} is deeply concerning.",
         "Addressing the burden of {CATEGORY} requires immediate focus.",
+        "The substantial payments towards {CATEGORY} warrant specific attention.",
     ]
     // Add more category-specific intros if desired
 };
 
-// Phrases to connect sentences within a paragraph (more subtle than full transitions)
+// Phrases to connect sentences within a category paragraph (more subtle than full transitions)
+// Added more variety and ensured they fit grammatically
 export const INTRA_PARAGRAPH_CONNECTORS: string[] = [
-    " ", // Just a space
-    " Also, ",
-    " Furthermore, ",
-    " Additionally, ",
-    " Moreover, ",
-    " In this context, ",
-    " Similarly, ",
+    "additionally,",
+    "furthermore,",
+    "moreover,",
+    "similarly,",
+    "in this same vein,",
+    "along these lines,",
+    "another point is that",
+    "it's also worth noting that",
 ];
 
 // Closing salutations
 export const SALUTATIONS: string[] = [
-    "Sincerely,", "Respectfully,", "Regards,", "Thank you for your consideration,",
+    "Sincerely,", "Respectfully,", "Regards,", "Thank you for your consideration,", "Yours truly,"
 ];

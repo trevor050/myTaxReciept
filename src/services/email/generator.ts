@@ -25,49 +25,60 @@ function generateItemSentence(item: SelectedItem, tone: Tone): string {
     const cleanedDescription = cleanItemDescription(item.description);
 
     // 1. Get the base action phrase + variability
-    // Start with a tone-specific phrase and add potential variations
-    let baseActionPhrase = randomChoice([
-        ACTION_PHRASES[fundingLevel][tone], // Original tone-specific
-        // Add some less common, slightly varied alternatives based on level
-        ...(fundingLevel === -2 ? ["requires drastic cuts or elimination."] : []),
-        ...(fundingLevel === -1 ? ["should be significantly scaled back."] : []),
-        ...(fundingLevel === 0 ? ["funding could remain, but only with much stricter efficiency measures."] : []),
-        ...(fundingLevel === 1 ? ["deserves reliable, perhaps increased, funding."] : []),
-        ...(fundingLevel === 2 ? ["must receive a substantial boost in resources."] : []),
-    ]);
+    let baseActionPhrase = '';
+    // Correctly access ACTION_PHRASES based on fundingLevel and tone
+    if (ACTION_PHRASES[fundingLevel] && ACTION_PHRASES[fundingLevel][tone]) {
+        const primaryAction = ACTION_PHRASES[fundingLevel][tone];
+        // Add potential variations based on level (ensure these alternatives exist or handle gracefully)
+        const alternatives: string[] = [];
+        if (fundingLevel === -2) alternatives.push("requires drastic cuts or elimination.");
+        if (fundingLevel === -1) alternatives.push("should be significantly scaled back.");
+        if (fundingLevel === 0) alternatives.push("funding could remain, but only with much stricter efficiency measures.");
+        if (fundingLevel === 1) alternatives.push("deserves reliable, perhaps increased, funding.");
+        if (fundingLevel === 2) alternatives.push("must receive a substantial boost in resources.");
+
+        baseActionPhrase = randomChoice([primaryAction, ...alternatives]);
+    } else {
+        console.error(`Missing action phrase for fundingLevel: ${fundingLevel}, tone: ${tone}`);
+        // Fallback phrase if definition is missing
+        baseActionPhrase = "requires careful review regarding its funding level.";
+    }
+
 
     // 2. Get multiple rationale options, falling back to defaults.
     const rationaleKey = `${item.id}_${actionRationaleType}`;
     const rationaleOptions = SPECIFIC_RATIONALES[rationaleKey] || SPECIFIC_RATIONALES[`default_${actionRationaleType}`] || [];
 
     // 3. Select a specific rationale.
-    let specificRationale = randomChoice(rationaleOptions);
+    let specificRationale = rationaleOptions.length > 0 ? randomChoice(rationaleOptions) : '';
 
     // 4. Construct the sentence - vary structure slightly for flow.
-    // Choose sentence opener based on funding action type
     const openerOptions = ITEM_OPENERS[actionRationaleType] || ITEM_OPENERS.review; // Fallback to 'review' openers
     let sentenceOpener = randomChoice(openerOptions).replace("{ITEM}", cleanedDescription);
 
-    // Combine opener, action, and rationale with appropriate connectors
+    // Combine opener and action phrase - ensure proper spacing and capitalization
+    // Ensure sentenceOpener is capitalized and doesn't end with punctuation yet
+    sentenceOpener = capitalizeFirstLetter(sentenceOpener.trim().replace(/[.,;:!?]$/, ''));
     let sentence = `${sentenceOpener} ${baseActionPhrase}`;
 
+    // Add rationale if available
     if (specificRationale) {
         const connectors = tone < 2 ? RATIONALE_CONNECTORS.polite : RATIONALE_CONNECTORS.firm;
         const connector = randomChoice(connectors);
 
-        // Ensure rationale starts lowercase if following comma/semicolon, uppercase if following period.
-        let formattedRationale = specificRationale;
-        if (connector.startsWith('.') || connector.startsWith('!') || connector.startsWith('?')) {
-            formattedRationale = capitalizeFirstLetter(specificRationale);
+        // Format rationale: lowercase unless following sentence-ending punctuation
+        let formattedRationale = specificRationale.trim();
+        if (connector.match(/[.!?;]$/)) {
+            formattedRationale = capitalizeFirstLetter(formattedRationale);
         } else {
-            formattedRationale = specificRationale.charAt(0).toLowerCase() + specificRationale.slice(1);
+             // Ensure lowercase start if it's not the beginning of a sentence segment
+            formattedRationale = formattedRationale.charAt(0).toLowerCase() + formattedRationale.slice(1);
         }
 
-        // Add connector and rationale
         sentence += `${connector} ${formattedRationale}`;
     }
 
-    // Ensure the sentence ends properly.
+    // Ensure the final sentence ends properly.
     return punctuateSentence(sentence);
 }
 
@@ -90,7 +101,8 @@ export function generateRepresentativeEmailContent(
     // Group items by category
     const itemsByCategory: { [category: string]: SelectedItem[] } = {};
     selectedItems.forEach(item => {
-        const categoryKey = item.category || 'Other Areas'; // Group uncategorized items
+        // Use item.category passed from the selection, fallback if missing
+        const categoryKey = item.category || 'Other Specific Programs';
         if (!itemsByCategory[categoryKey]) {
             itemsByCategory[categoryKey] = [];
         }
@@ -100,24 +112,37 @@ export function generateRepresentativeEmailContent(
     let categorizedParagraphs: string[] = [];
 
     if (Object.keys(itemsByCategory).length > 0) {
-        categorizedParagraphs.push(randomChoice(LIST_INTRO[tone])); // Add overall intro to the item list
+        // Add overall intro only if there are items selected
+        categorizedParagraphs.push(randomChoice(LIST_INTRO[tone]));
 
-        const categories = Object.keys(itemsByCategory);
+        const categories = Object.keys(itemsByCategory).sort(); // Sort categories for consistent order
         categories.forEach((category) => {
-            // Select category intro phrase
+            // Select category intro phrase, ensuring category name isn't repeated if already in the phrase
             const introOptions = CATEGORY_INTRO_PHRASES[category] || CATEGORY_INTRO_PHRASES.default;
-            let categoryParagraph = randomChoice(introOptions).replace('{CATEGORY}', category) + "\n"; // Start paragraph with category intro
+            let categoryIntro = randomChoice(introOptions);
+            if (!categoryIntro.includes('{CATEGORY}')) {
+                 // If the intro phrase doesn't include the placeholder, add the category name explicitly
+                 categoryIntro = `${categoryIntro} the category of ${category}:`;
+            } else {
+                categoryIntro = categoryIntro.replace('{CATEGORY}', category);
+            }
+            // Ensure intro ends with a colon or appropriate punctuation
+            categoryIntro = categoryIntro.trim().replace(/[:.,;]?$/, ':');
+
+            let categoryParagraph = categoryIntro + "\n"; // Start paragraph with category intro
 
             const itemSentences = itemsByCategory[category].map(item => generateItemSentence(item, tone));
 
             // Combine sentences within the category paragraph
             itemSentences.forEach((sentence, index) => {
-                categoryParagraph += capitalizeFirstLetter(sentence); // Ensure each sentence starts capitalized
+                 // Ensure each generated sentence starts capitalized (should be handled by generateItemSentence, but double-check)
+                categoryParagraph += capitalizeFirstLetter(sentence);
                 // Add a connector *between* sentences within the same category for flow
                 if (index < itemSentences.length - 1) {
-                    categoryParagraph += randomChoice(INTRA_PARAGRAPH_CONNECTORS);
+                    // Use connectors that imply continuation within the topic
+                    categoryParagraph += ` ${randomChoice(INTRA_PARAGRAPH_CONNECTORS)} `;
                 } else {
-                     categoryParagraph += ' '; // Add space before next paragraph potentially
+                     categoryParagraph += ' '; // Add space at the end of the last sentence in the category
                 }
             });
             categorizedParagraphs.push(categoryParagraph.trim()); // Add the completed category paragraph
@@ -134,7 +159,7 @@ export function generateRepresentativeEmailContent(
     let callToActionText = CALL_TO_ACTION[tone]; // Start with the default for the tone
     if (selectedItems.length === 0 && balanceBudgetPreference) {
         // If ONLY budget preference is checked, use a tailored CTA focused solely on debt/budget
-        callToActionText = {
+         callToActionText = {
             0: "Could you please share your specific plans for promoting greater fiscal responsibility and addressing the national debt? Thank you for your attention to this vital matter.",
             1: "I strongly urge you to outline the concrete steps you will take towards achieving fiscal sustainability and reducing the national debt. Accountability on this issue is paramount.",
             2: "I expect a detailed and actionable plan from your office describing how you will aggressively curb the national debt and champion fiscal discipline. Please respond promptly.",

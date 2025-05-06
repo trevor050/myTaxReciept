@@ -21,15 +21,42 @@ export function randomChoice<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-/** Cleans up item description for better readability in sentences. */
+/** Cleans up item description for better readability in sentences. Handles more prefixes. */
 export function cleanItemDescription(description: string): string {
-    // Remove common prefixes
-    let cleaned = description.replace(/^(Pentagon - |Dept\. of Education - |Federal Court System - |FEMA - |USAID - |NASA - )/,'');
-    // Optional: Convert acronyms in parentheses to full name if desired (more complex logic needed here)
-    // Example: Simple removal of parenthesized text
-    // cleaned = cleaned.replace(/\s*\([^)]+\)$/, ''); // Removes trailing acronyms in parens
+    // Expand list of common prefixes to remove
+    const prefixesToRemove = [
+        'Pentagon - ', 'Dept. of Education - ', 'Federal Court System - ', 'FEMA - ',
+        'USAID - ', 'NASA - ', 'Dept. of Housing and Urban Development - ',
+        'Nat\'l Oceanic & Atmospheric Administration ', // Handle NOAA variations
+        'Nat\'l Oceanic & Atmospheric Admin. ', // Handle NOAA variations
+        'Energy efficiency and ' // Handle this specific phrasing if needed
+    ];
+    let cleaned = description;
+    for (const prefix of prefixesToRemove) {
+        if (cleaned.startsWith(prefix)) {
+            cleaned = cleaned.substring(prefix.length);
+            break; // Remove only the first matching prefix
+        }
+    }
+     // Optional: Convert specific acronyms in parentheses
+    cleaned = cleaned.replace(/\(CDC\)/, 'the Centers for Disease Control and Prevention');
+    cleaned = cleaned.replace(/\(NLRB\)/, 'the National Labor Relations Board');
+    cleaned = cleaned.replace(/\(CFPB\)/, 'the Consumer Financial Protection Bureau');
+    cleaned = cleaned.replace(/\(WIC\)/, 'the Women, Infants, & Children program');
+    cleaned = cleaned.replace(/\(VA\)/, 'Veterans\' Affairs');
+    cleaned = cleaned.replace(/\(SNAP\)/, 'the Supplemental Nutrition Assistance Program (food stamps)');
+    cleaned = cleaned.replace(/\(NOAA\)/, 'the National Oceanic and Atmospheric Administration');
+    cleaned = cleaned.replace(/\(NASA\)/, 'the National Aeronautics and Space Administration');
+    cleaned = cleaned.replace(/\(NIH\)/, 'the National Institutes of Health');
+    cleaned = cleaned.replace(/\(PACT Act\)/, 'the PACT Act toxic exposure fund'); // Be more descriptive
+    cleaned = cleaned.replace(/\(DEI\)/, 'Diversity, Equity, and Inclusion initiatives');
+
+    // Remove any remaining simple parenthesized text at the end (like acronyms not caught above)
+    cleaned = cleaned.replace(/\s*\([^)]+\)$/, '');
+
     return cleaned.trim();
 }
+
 
 /** Determines the rationale type based on funding level */
 export function getFundingActionRationale(level: number): FundingActionRationale {
@@ -44,23 +71,36 @@ export function capitalizeFirstLetter(string: string): string {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-/** Ensures a sentence ends with appropriate punctuation (defaulting to period). */
+/** Ensures a sentence ends with appropriate punctuation (defaulting to period). Handles existing punctuation. */
 export function punctuateSentence(sentence: string): string {
-    if (!sentence) return '.'; // Return period if empty
-    const lastChar = sentence.trim().slice(-1);
+    const trimmedSentence = sentence.trim();
+    if (!trimmedSentence) return '.'; // Return period if empty
+
+    const lastChar = trimmedSentence.slice(-1);
     if (['.', '!', '?'].includes(lastChar)) {
-        return sentence.trim(); // Already punctuated
+        return trimmedSentence; // Already punctuated
     }
-    return sentence.trim() + '.';
+     // If ends with comma or semicolon, replace with period
+    if ([',', ';'].includes(lastChar)) {
+        return trimmedSentence.slice(0, -1) + '.';
+    }
+    return trimmedSentence + '.';
 }
 
-/** Basic cleanup of generated text */
+/** Basic cleanup of generated text: consolidates whitespace, fixes spacing around punctuation. */
 export function cleanupText(text: string): string {
     return text
-        .replace(/\s+/g, ' ') // Consolidate multiple spaces
+        .replace(/\s+/g, ' ') // Consolidate multiple spaces into one
         .replace(/ \./g, '.') // Remove space before period
+        .replace(/ \?/g, '?') // Remove space before question mark
+        .replace(/ !/g, '!') // Remove space before exclamation mark
         .replace(/ ,/g, ',') // Remove space before comma
         .replace(/ ;/g, ';') // Remove space before semicolon
-        .replace(/\n\n+/g, '\n\n') // Consolidate multiple newlines
+        .replace(/\.{2,}/g, '.') // Replace multiple periods with one
+        .replace(/\?{2,}/g, '?') // Replace multiple question marks with one
+        .replace(/!{2,}/g, '!') // Replace multiple exclamation marks with one
+        .replace(/,+(?=[^\s])/g, ', ') // Ensure space after comma if not present
+        .replace(/;+(?=[^\s])/g, '; ') // Ensure space after semicolon if not present
+        .replace(/\n\s*\n/g, '\n\n') // Consolidate multiple newlines, removing extra whitespace between them
         .trim(); // Remove leading/trailing whitespace
 }
