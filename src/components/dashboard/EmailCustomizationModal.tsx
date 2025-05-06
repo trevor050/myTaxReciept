@@ -2,418 +2,309 @@
 'use client';
 
 import * as React from 'react';
-// Use useLayoutEffect for window event listeners
-import { useState, useRef, useLayoutEffect, useCallback } from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import type { SelectedItem } from '@/services/tax-spending'; // Import SelectedItem type
-import { generateRepresentativeEmail } from '@/services/tax-spending'; // Import email generation function
-import { mapSliderToFundingLevel } from '@/lib/funding-utils'; // Import mapping functions
-import { X, Mail, Send, GripVertical } from 'lucide-react'; // Added GripVertical
+  useState, useRef, useLayoutEffect, useCallback,
+} from 'react';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+  DialogFooter, DialogClose,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { X, Mail, Send, GripVertical } from 'lucide-react';
+
+import type { SelectedItem } from '@/services/tax-spending';
+import { generateRepresentativeEmail } from '@/services/tax-spending';
+import { mapSliderToFundingLevel } from '@/lib/funding-utils';
 import { cn } from '@/lib/utils';
 
-interface EmailCustomizationModalProps {
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
-  selectedItems: Map<string, SelectedItem>; // Receive the map of selected items
-  balanceBudgetChecked: boolean;
-  taxAmount: number; // Pass tax amount for context if needed
-
-  // Lifted state and setters from parent
-  aggressiveness: number;
-  setAggressiveness: (value: number) => void;
-  itemFundingLevels: Map<string, number>;
-  setItemFundingLevels: (value: Map<string, number>) => void;
-  userName: string;
-  setUserName: (value: string) => void;
-  userLocation: string;
-  setUserLocation: (value: string) => void;
-}
-
-// Define funding levels and their labels/colors
+/* ---------------------------------------------------------------------- */
+/* funding‑level presets                                                 */
 const fundingLevels = [
-    { value: -2, label: 'Slash Heavily', color: 'bg-red-600', darkColor: 'dark:bg-red-500' },
-    { value: -1, label: 'Cut Significantly', color: 'bg-orange-500', darkColor: 'dark:bg-orange-400' },
-    { value: 0, label: 'Improve Efficiency', color: 'bg-yellow-500', darkColor: 'dark:bg-yellow-400' },
-    { value: 1, label: 'Fund', color: 'bg-green-500', darkColor: 'dark:bg-green-400' },
-    { value: 2, label: 'Fund More', color: 'bg-emerald-600', darkColor: 'dark:bg-emerald-500' },
+  { value: -2, label: 'Slash Heavily',   color: 'bg-red-600  dark:bg-red-500'     },
+  { value: -1, label: 'Cut Significantly', color: 'bg-orange-500 dark:bg-orange-400' },
+  { value:  0, label: 'Improve Efficiency', color: 'bg-yellow-500 dark:bg-yellow-400' },
+  { value:  1, label: 'Fund',             color: 'bg-green-500 dark:bg-green-400'  },
+  { value:  2, label: 'Fund More',        color: 'bg-emerald-600 dark:bg-emerald-500'},
 ];
 
-export default function EmailCustomizationModal({
-  isOpen,
-  onOpenChange,
-  selectedItems: initialSelectedItems, // Rename prop
-  balanceBudgetChecked,
-  taxAmount,
-  // Destructure lifted state props
-  aggressiveness,
-  setAggressiveness,
-  itemFundingLevels,
-  setItemFundingLevels,
-  userName,
-  setUserName,
-  userLocation,
-  setUserLocation,
-}: EmailCustomizationModalProps) {
+/* ---------------------------------------------------------------------- */
+export default function EmailCustomizationModal(props: EmailCustomizationModalProps) {
+  const {
+    isOpen, onOpenChange,
+    selectedItems: initialSelectedItems,
+    balanceBudgetChecked, aggressiveness, setAggressiveness,
+    itemFundingLevels, setItemFundingLevels,
+    userName, setUserName, userLocation, setUserLocation,
+  } = props;
 
-  // --- Draggable State ---
-  // 🟢 1. sentinel null means “not positioned yet” - rely on CSS centering initially
-  const [position, setPosition] = useState<{x: number | null, y: number | null}>({ x: null, y: null });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStartOffset, setDragStartOffset] = useState({ x: 0, y: 0 }); // Offset from top-left corner
-  const modalRef = useRef<HTMLDivElement>(null); // Ref for the modal content
-  const dragHandleRef = useRef<HTMLDivElement>(null); // Ref for the drag handle (header)
-  const isInitialPositionSet = useRef(false); // Track if absolute position has been set
+  /* ------------------------------------------------------------------ */
+  /* draggable position (null = let CSS centre)                         */
+    const [pos, setPos] = useState<{ x: number | null; y: number | null }>({ x: null, y: null });
+    const [drag, setDrag] = useState(false);
+    const dragOffset = useRef({ x: 0, y: 0 });
 
-   // --- Reset Position on Close ---
-   useLayoutEffect(() => {
-     if (!isOpen) {
-       setPosition({ x: null, y: null }); // Reset position state to use CSS centering again next time
-       isInitialPositionSet.current = false; // Reset flag
-     }
-   }, [isOpen]);
+    const modalRef      = useRef<HTMLDivElement>(null);
+    const dragHandleRef = useRef<HTMLDivElement>(null); // Ref for the entire header area
+
+    /* reset when closed ------------------------------------------------- */
+    useLayoutEffect(() => {
+      if (!isOpen) setPos({ x: null, y: null }); // Reset position when closed
+    }, [isOpen]);
+
+    /* ------------------------------------------------------------------ */
+    const onMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        // Only initiate drag if the mousedown is within the header element (dragHandleRef)
+        if (!dragHandleRef.current?.contains(e.target as Node) || !modalRef.current) return;
+
+        // Prevent dragging text selection
+        e.preventDefault();
+
+        // Switch to absolute positioning only on the first drag
+        if (pos.x === null) {
+          const r = modalRef.current.getBoundingClientRect();
+          setPos({ x: r.left, y: r.top });
+          dragOffset.current = { x: e.clientX - r.left, y: e.clientY - r.top };
+        } else {
+          dragOffset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
+        }
+
+        setDrag(true);
+        document.body.style.userSelect = 'none'; // Prevent text selection during drag
+      }, [pos]);
 
 
-  // --- Drag Handlers ---
-  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    // Check if the mousedown event originated within the drag handle
-    if (modalRef.current && dragHandleRef.current?.contains(e.target as Node)) {
-      e.preventDefault(); // Prevent default text selection behavior
+    const onMouseMove = useCallback((e: MouseEvent) => {
+        if (!drag || !modalRef.current) return;
 
-      let currentX = position.x;
-      let currentY = position.y;
+        const { innerWidth: vw, innerHeight: vh } = window;
+        const { width, height } = modalRef.current.getBoundingClientRect();
 
-      // 🟢 If this is the first drag, lock in the current visual position
-      if (currentX === null && modalRef.current) {
-        const modalRect = modalRef.current.getBoundingClientRect();
-        currentX = modalRect.left;
-        currentY = modalRect.top;
-        setPosition({ x: currentX, y: currentY }); // Set absolute position, killing CSS translate
-        isInitialPositionSet.current = true;
-      }
+        let x = e.clientX - dragOffset.current.x;
+        let y = e.clientY - dragOffset.current.y;
 
-      // Ensure currentX/Y are numbers before calculating offset
-      if (currentX !== null && currentY !== null) {
-          setIsDragging(true);
-          setDragStartOffset({
-            x: e.clientX - currentX,
-            y: e.clientY - currentY,
-          });
-          document.body.style.userSelect = 'none'; // Prevent text selection during drag
-      }
-    }
-  }, [position]);
+        /* Clamp position to viewport bounds */
+        x = Math.max(0, Math.min(x, vw - width));
+        y = Math.max(0, Math.min(y, vh - height));
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging || !modalRef.current) return;
+        setPos({ x, y });
+      }, [drag]);
 
-    // Calculate new top-left position based on mouse movement and initial offset
-    let newX = e.clientX - dragStartOffset.x;
-    let newY = e.clientY - dragStartOffset.y;
 
-    // Basic boundary collision detection (optional but recommended)
-    const modalRect = modalRef.current.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
+    const onMouseUp = useCallback(() => {
+        if (drag) {
+            setDrag(false);
+            document.body.style.userSelect = ''; // Re-enable text selection
+        }
+    }, [drag]);
 
-    newX = Math.max(0, Math.min(newX, viewportWidth - modalRect.width));
-    newY = Math.max(0, Math.min(newY, viewportHeight - modalRect.height));
-
-    setPosition({ x: newX, y: newY });
-
-  }, [isDragging, dragStartOffset]);
-
-  const handleMouseUp = useCallback(() => {
-    if (isDragging) {
-        setIsDragging(false);
-        document.body.style.userSelect = ''; // Re-enable text selection
-    }
-  }, [isDragging]);
-
-  // --- Attach/Detach Window Event Listeners ---
-  useLayoutEffect(() => { // Use layout effect for mouse move/up listeners as well
-    if (isDragging) {
-        document.body.style.cursor = 'grabbing';
-        window.addEventListener('mousemove', handleMouseMove);
-        window.addEventListener('mouseup', handleMouseUp);
-        // Add touch event listeners for mobile drag support (optional)
-        // window.addEventListener('touchmove', handleTouchMove);
-        // window.addEventListener('touchend', handleTouchEnd);
+  /* attach global drag listeners ------------------------------------- */
+  useLayoutEffect(() => {
+    if (drag) {
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup',   onMouseUp);
+      window.addEventListener('mouseleave', onMouseUp); // Handle mouse leaving window
     } else {
-        document.body.style.cursor = '';
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mouseup', handleMouseUp);
-        // window.removeEventListener('touchmove', handleTouchMove);
-        // window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup',   onMouseUp);
+      window.removeEventListener('mouseleave', onMouseUp);
     }
-
-    // Cleanup function
-    return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mouseup', handleMouseUp);
-        // window.removeEventListener('touchmove', handleTouchMove);
-        // window.removeEventListener('touchend', handleTouchEnd);
-        // Ensure styles are cleaned up
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
+    return () => { // Cleanup
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup',   onMouseUp);
+      window.removeEventListener('mouseleave', onMouseUp);
+      if (drag) document.body.style.userSelect = ''; // Ensure cleanup on unmount
     };
-  }, [isDragging, handleMouseMove, handleMouseUp]); // Re-run when drag state changes
+  }, [drag, onMouseMove, onMouseUp]);
 
+  /* ------------------------------------------------------------------ */
+  /* helpers                                                            */
+  const getAggressivenessLabel = (v: number) =>
+    v <= 15 ? 'Kind'
+      : v <= 40 ? 'Concerned'
+        : v <= 75 ? 'Stern'
+          : 'Angry';
 
-  const handleFundingLevelChange = (itemId: string, value: number[]) => {
-    const sliderValue = value[0];
-    // Use the setter prop from parent
-    setItemFundingLevels(new Map(itemFundingLevels).set(itemId, sliderValue));
-  };
+  const fundingDetails = (slider: number) =>
+    fundingLevels.find(f => f.value === mapSliderToFundingLevel(slider)) ?? fundingLevels[2];
 
-  const handleGenerateEmail = () => {
-    // Convert slider values back to funding levels (-2 to 2) for email generation
-     const finalSelectedItems: SelectedItem[] = Array.from(itemFundingLevels.entries())
-        .map(([id, sliderValue]) => {
-            const originalItem = initialSelectedItems.get(id);
-            if (!originalItem) return null; // Should not happen if logic is correct
-            return {
-                id: id,
-                description: originalItem.description,
-                fundingLevel: mapSliderToFundingLevel(sliderValue), // Map slider value back
-            };
-        })
-        .filter((item): item is SelectedItem => item !== null); // Filter out nulls
+  /* ------------------------------------------------------------------ */
+  const selectedItems = React.useMemo(() => Array.from(initialSelectedItems.values()), [initialSelectedItems]);
 
-    const { subject, body } = generateRepresentativeEmail(
-      finalSelectedItems,
-      aggressiveness,
-      userName,
-      userLocation,
-      balanceBudgetChecked
-    );
-
-    const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-
-    // Open the user's default email client
-    if (typeof window !== 'undefined') {
-        window.location.href = mailtoLink;
-    }
-    onOpenChange(false); // Close modal after generating
-  };
-
-  const getAggressivenessLabel = (value: number) => {
-    if (value <= 15) return 'Kind';
-    if (value <= 40) return 'Concerned';
-    if (value <= 75) return 'Stern';
-    return 'Angry';
-  };
-
-  const getFundingLevelDetails = (sliderValue: number) => {
-     const levelValue = mapSliderToFundingLevel(sliderValue);
-     return fundingLevels.find(level => level.value === levelValue) || fundingLevels[2]; // Default to 'Improve Efficiency'
-  };
-
-
-  // Convert Map to Array for rendering
-  const selectedItemsArray = Array.from(initialSelectedItems.values());
-
+  /* ------------------------------------------------------------------ */
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-       <DialogContent
-         ref={modalRef} // Add ref to the DialogContent
-         // 🟢 Only apply inline coords once we have them (after first drag)
-         style={
-             position.x !== null
-               ? { left: `${position.x}px`, top: `${position.y}px`, transform: "none" } // transform off when dragging
-               : undefined // Let CSS handle centering initially
-         }
-         className={cn(
-             // Base Styles (apply always)
-            "fixed max-w-3xl w-[90vw] sm:w-full p-0 max-h-[85vh]",
-            "flex flex-col",
-            "z-50 border bg-background shadow-lg sm:rounded-lg",
-            // Animations (apply always) - these might cause the initial measurement issue if they scale the element
-            "data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut",
-             // 🟢 Conditional CSS Centering (apply only before position is set/first drag)
-             position.x === null && "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-         )}
-         // Prevent Radix default focus trapping from interfering with drag
-         onInteractOutside={(e) => {
-            if (isDragging) {
-              e.preventDefault(); // Prevent closing modal while dragging outside
-            }
-          }}
-          onOpenAutoFocus={(e) => {
-              // Prevent Radix from focusing the first input automatically, which can interfere with initial measurement
-              e.preventDefault();
-              // Optionally focus the drag handle or another non-input element if desired
-              // dragHandleRef.current?.focus();
-          }}
-       >
-         {/* Custom Header - Drag Handle */}
-         <DialogHeader
-            ref={dragHandleRef} // Add ref to the header as drag handle
-            onMouseDown={handleMouseDown} // Attach mouse down handler
-            className={cn(
-                "px-6 py-4 border-b bg-card/95 sticky top-0 z-10 shrink-0 rounded-t-lg", // Added rounded-t-lg
-                isDragging ? "cursor-grabbing" : "cursor-move" // Change cursor on drag
-            )}
-             // Make the header focusable for accessibility if needed, but ensure it doesn't trap focus unintendedly
-             // tabIndex={0}
-         >
-             {/* Content within header */}
-             <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2 pointer-events-none"> {/* Re-add pointer-events-none here for inner content */}
-                    <GripVertical className="h-5 w-5 text-muted-foreground shrink-0"/> {/* Drag indicator */}
-                    <div className="space-y-1">
-                        <DialogTitle id="email-customization-title" className="text-xl sm:text-2xl font-semibold flex items-center gap-2">
-                            <Mail className="h-5 w-5 text-primary" />
-                            Customize Your Email
-                        </DialogTitle>
-                        <DialogDescription id="email-customization-description" className="text-sm text-muted-foreground">
-                            Adjust the tone and desired funding changes for your message.
-                        </DialogDescription>
-                    </div>
+      <DialogContent
+        ref={modalRef}
+        /* centre w/ CSS until we have absolute coords */
+        style={ pos.x !== null ? { left: pos.x, top: pos.y, transform: 'none' } : undefined }
+        className={cn(
+          'fixed z-50 flex max-h-[85vh] w-[90vw] max-w-3xl flex-col p-0 border bg-background shadow-lg sm:rounded-lg',
+          'data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut', // Use scale animation
+          pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2', // Center initially
+        )}
+        onInteractOutside={e => drag && e.preventDefault()} // Prevent closing during drag
+        onOpenAutoFocus={e => e.preventDefault()} // Prevent auto-focus on first element
+      >
+
+        {/* ---------------- header (drag handle) -------------------- */}
+        <DialogHeader
+          ref={dragHandleRef} // Attach ref to the header for dragging
+          onMouseDown={onMouseDown}
+          className={cn(
+            'relative flex shrink-0 items-center justify-between gap-4 border-b bg-card/95 px-6 py-4 rounded-t-lg', // Use justify-between
+            'cursor-move', // Indicate draggable area
+             drag ? 'cursor-grabbing' : 'cursor-move',
+          )}
+        >
+            {/* Left side: Grip + Title/Description */}
+            <div className="flex items-center gap-3">
+                <GripVertical className='h-5 w-5 text-muted-foreground shrink-0 hidden sm:block' /> {/* Hide grip on small screens */}
+                <div className='space-y-1 text-left'> {/* Align text left */}
+                    <DialogTitle className='flex items-center gap-2 text-xl sm:text-2xl font-semibold'>
+                        <Mail className='h-5 w-5 text-primary' />
+                        Customize Your Email
+                    </DialogTitle>
+                    <DialogDescription className='text-sm text-muted-foreground'>
+                        Adjust the tone and desired funding changes for your message.
+                    </DialogDescription>
                 </div>
-                {/* Close Button - Ensure it's clickable */}
-                <DialogClose asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 z-20 relative">
-                        <X className="h-4 w-4" />
-                        <span className="sr-only">Close</span>
-                    </Button>
-                </DialogClose>
-             </div>
-         </DialogHeader>
-
-        {/* Scrollable Content Area */}
-        <ScrollArea className="overflow-y-auto px-6 py-4 flex-1">
-          <div className="space-y-8">
-
-            {/* User Info Section */}
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                 <div className="space-y-2">
-                    <Label htmlFor="userName" className="text-sm font-medium">Your Name</Label>
-                    <Input
-                        id="userName"
-                        value={userName}
-                        onChange={(e) => setUserName(e.target.value)} // Use setter prop
-                        placeholder="Jane Doe"
-                        className="h-9"
-                    />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="userLocation" className="text-sm font-medium">Your Location</Label>
-                    <Input
-                        id="userLocation"
-                        value={userLocation}
-                        onChange={(e) => setUserLocation(e.target.value)} // Use setter prop
-                        placeholder="City, ST Zipcode"
-                        className="h-9"
-                    />
-                 </div>
-             </div>
-
-            {/* Aggressiveness Slider */}
-            <div className="space-y-3 rounded-lg border p-4 bg-secondary/30 shadow-inner">
-              <div className="flex justify-between items-center">
-                <Label htmlFor="aggressiveness" className="text-base font-semibold">Overall Tone</Label>
-                <span className="text-sm font-medium text-primary rounded-full bg-primary/10 px-2.5 py-0.5">
-                    {getAggressivenessLabel(aggressiveness)}
-                </span>
-              </div>
-              <Slider
-                id="aggressiveness"
-                min={0}
-                max={100}
-                step={1}
-                value={[aggressiveness]}
-                onValueChange={(value) => setAggressiveness(value[0])} // Use setter prop
-                className="my-2"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Kind / Polite</span>
-                <span>Concerned</span>
-                <span>Stern / Demanding</span>
-              </div>
             </div>
 
-            {/* Funding Level Sliders for Each Item */}
-            {selectedItemsArray.length > 0 && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold border-b pb-2">Adjust Funding Priorities</h3>
-                {selectedItemsArray.map((item) => {
-                    const sliderValue = itemFundingLevels.get(item.id) ?? 50; // Get from prop
-                    const levelDetails = getFundingLevelDetails(sliderValue);
-                    return (
-                        <div key={item.id} className="space-y-2 border p-4 rounded-md shadow-sm bg-card/50">
-                            <div className="flex justify-between items-start gap-2">
-                                <Label htmlFor={`funding-${item.id}`} className="text-sm font-medium text-foreground flex-1">
-                                    {item.description}
-                                </Label>
-                                <span className={cn(
-                                    "text-xs font-semibold rounded-full px-2 py-0.5 text-white whitespace-nowrap",
-                                     levelDetails.color, levelDetails.darkColor // Apply dynamic background color
-                                )}>
-                                    {levelDetails.label}
-                                </span>
-                            </div>
-                            <Slider
-                                id={`funding-${item.id}`}
-                                min={0}
-                                max={100}
-                                step={1} // Fine-grained control, mapping happens on change/generate
-                                value={[sliderValue]}
-                                onValueChange={(value) => handleFundingLevelChange(item.id, value)} // Uses internal handler calling setter prop
-                                className={cn(
-                                    "[&>span>span]:transition-colors [&>span>span]:duration-200", // Smooth track color change
-                                     `[&>span>span]:${levelDetails.color}`, // Apply dynamic track color
-                                     `[&>span>span]:${levelDetails.darkColor}`, // Apply dynamic dark track color
-                                    "[&>span]:bg-muted" // Track background
-                                )}
-                            />
-                             <div className="flex justify-between text-[10px] text-muted-foreground px-1">
-                                <span>Cut</span>
-                                <span>Review</span>
-                                <span>Increase</span>
-                            </div>
-                        </div>
-                    );
-                })}
-              </div>
-            )}
+           {/* Right side: Close Button */}
+           <DialogClose asChild>
+            <Button variant='ghost' size='icon' className='h-8 w-8 shrink-0 rounded-full'> {/* Make button round */}
+              <X className='h-4 w-4' />
+              <span className='sr-only'>Close</span>
+            </Button>
+          </DialogClose>
+        </DialogHeader>
 
-            {/* Budget Balancing Preference Display */}
-             {balanceBudgetChecked && (
-                <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-300 shadow-sm">
-                    <p><span className="font-semibold">Note:</span> Your email will also emphasize prioritizing a balanced budget and addressing the national debt.</p>
+        {/* ---------------- body ------------------------------------ */}
+        <ScrollArea className='flex-1 overflow-y-auto px-6 py-4 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent'> {/* Added scrollbar styles */}
+         <div className="space-y-8"> {/* Add spacing between sections */}
+              {/* name / location */}
+              <div className='grid gap-4 sm:grid-cols-2'>
+                <div className='space-y-2'>
+                  <Label htmlFor='userName'>Your Name</Label>
+                  <Input id='userName' value={userName} onChange={e => setUserName(e.target.value)} placeholder='Jane Doe' className="h-9"/> {/* Reduced height */}
                 </div>
-             )}
-          </div>
+                <div className='space-y-2'>
+                  <Label htmlFor='userLocation'>Your Location</Label>
+                  <Input id='userLocation' value={userLocation} onChange={e => setUserLocation(e.target.value)} placeholder='City, ST Zipcode' className="h-9"/> {/* Reduced height */}
+                </div>
+              </div>
+
+              {/* aggressiveness */}
+              <div className='rounded-lg border bg-secondary/30 p-4 shadow-inner space-y-3'>
+                <div className='flex items-center justify-between'>
+                  <Label htmlFor="aggressiveness" className="text-base font-semibold">Overall Tone</Label> {/* Use standard label styling */}
+                  <span className='rounded-full bg-primary/10 px-2.5 py-0.5 text-sm font-medium text-primary'>
+                    {getAggressivenessLabel(aggressiveness)}
+                  </span>
+                </div>
+                <Slider
+                  id="aggressiveness"
+                  min={0} max={100} step={1}
+                  value={[aggressiveness]}
+                  onValueChange={v => setAggressiveness(v[0])}
+                  className='my-2'
+                />
+                <div className='flex justify-between text-xs text-muted-foreground'>
+                  <span>Kind / Polite</span><span>Concerned</span><span>Stern / Demanding</span>
+                </div>
+              </div>
+
+              {/* funding sliders */}
+              {selectedItems.length > 0 && (
+                <div className='space-y-6'>
+                  <h3 className='border-b pb-2 text-lg font-semibold'>Adjust Funding Priorities</h3>
+                  {selectedItems.map(item => {
+                    const sliderValue = itemFundingLevels.get(item.id) ?? 50;
+                    const fundingDetail = fundingDetails(sliderValue);
+                    return (
+                      <div key={item.id} className='space-y-2 rounded-md border bg-card/50 p-4 shadow-sm'>
+                        <div className='flex items-start justify-between gap-2'>
+                          <Label htmlFor={`funding-${item.id}`} className='flex-1 text-sm font-medium text-foreground'>{item.description}</Label>
+                          <span className={cn('whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold text-white', fundingDetail.color)}>
+                            {fundingDetail.label}
+                          </span>
+                        </div>
+                        <Slider
+                          id={`funding-${item.id}`}
+                          min={0} max={100} step={1}
+                          value={[sliderValue]}
+                          onValueChange={v => setItemFundingLevels(new Map(itemFundingLevels).set(item.id, v[0]))}
+                          className={cn(
+                            '[&>span>span]:transition-colors [&>span>span]:duration-200', // Smooth color transition
+                            `[&>span>span]:${fundingDetail.color.split(' ')[0]}`, // Apply base color class
+                            `[&>span>span]:dark:${fundingDetail.color.split(' ')[1] ?? fundingDetail.color.split(' ')[0]}`, // Apply dark mode color if available
+                            '[&>span]:bg-muted' // Make track muted
+                          )}
+                        />
+                        <div className='flex justify-between text-[10px] text-muted-foreground px-1'>
+                          <span>Cut</span><span>Review</span><span>Increase</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {balanceBudgetChecked && (
+                <div className='rounded-lg border border-amber-500/50 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-300'>
+                  <p><strong>Note:</strong> Your email will emphasise balancing the budget and tackling the national debt.</p>
+                </div>
+              )}
+         </div>
         </ScrollArea>
 
-        {/* Footer with Action Button */}
-        <DialogFooter className="px-6 py-4 border-t bg-card/95 sticky bottom-0 z-10 sm:justify-between shrink-0 rounded-b-lg"> {/* Added rounded-b-lg */}
-           <DialogClose asChild>
-             <Button variant="outline" className="w-full sm:w-auto">Cancel</Button>
-           </DialogClose>
-           <Button
-                onClick={handleGenerateEmail}
-                className="w-full sm:w-auto bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800 text-primary-foreground"
-                disabled={!userName || !userLocation} // Basic validation
-            >
-                <Send className="mr-2 h-4 w-4" />
-                Generate & Open Email
-            </Button>
+        {/* ---------------- footer ---------------------------------- */}
+        <DialogFooter className='sticky bottom-0 z-10 flex shrink-0 items-center gap-4 border-t bg-card/95 px-6 py-4 rounded-b-lg sm:justify-between'> {/* Added justify-between */}
+          <DialogClose asChild>
+            <Button variant='outline' className='w-full sm:w-auto'>Cancel</Button>
+          </DialogClose>
+          <Button
+            disabled={!userName || !userLocation}
+            onClick={() => {
+              const mapped: SelectedItem[] = Array.from(itemFundingLevels).map(([id, slider]) => ({
+                id,
+                description: initialSelectedItems.get(id)!.description,
+                fundingLevel: mapSliderToFundingLevel(slider),
+              }));
+              const { subject, body } = generateRepresentativeEmail(mapped, aggressiveness, userName, userLocation, balanceBudgetChecked);
+              window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+              onOpenChange(false);
+            }}
+            className='w-full sm:w-auto bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 text-primary-foreground
+                       dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800'
+          >
+            <Send className='mr-2 h-4 w-4' /> Generate & Open Email
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
+
+/* ---------------------------------------------------------------------- */
+/* prop types ----------------------------------------------------------- */
+interface EmailCustomizationModalProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  selectedItems: Map<string, SelectedItem>;
+  balanceBudgetChecked: boolean;
+  taxAmount: number;                        // not used inside, but kept for future
+  aggressiveness: number;
+  setAggressiveness: (n: number) => void;
+  itemFundingLevels: Map<string, number>;
+  setItemFundingLevels: (m: Map<string, number>) => void;
+  userName: string;
+  setUserName: (s: string) => void;
+  userLocation: string;
+  setUserLocation: (s: string) => void;
+}
+
