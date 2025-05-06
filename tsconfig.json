@@ -1,3 +1,4 @@
+
 {
   "compilerOptions": {
     "target": "ES2017",
@@ -20,8 +21,11 @@
     ],
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+     // Add typeRoots if needed, though usually not necessary with modern TypeScript/npm
+     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }
+

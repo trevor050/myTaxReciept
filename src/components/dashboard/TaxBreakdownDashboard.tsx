@@ -19,10 +19,9 @@ import {
     Coffee, Mail, Newspaper, Footprints, Podcast, BookOpen, SprayCan, Tv, Puzzle, EggFried,
     ShoppingCart, Dumbbell, NotebookPen, Utensils, Users, Tractor, WashingMachine, Dice5,
     Cookie, Film, Clapperboard, HandHeart, Hammer, Trophy, ChefHat, Car, Map as MapIcon, // Renamed Map to MapIcon
-    Presentation,
-    Plane, Sparkles, PlaneTakeoff, Navigation, Wrench, Youtube, Building2, MapPinned,
+    Presentation, Plane, Sparkles, PlaneTakeoff, Navigation, Wrench, Youtube, Building2, MapPinned,
     BrainCircuit, Luggage, CalendarDays, HelpingHand, MountainSnow, ClipboardCheck,
-    PaintRoller, PenTool, // Add any potentially missing icons here
+    PaintRoller, PenTool, Move, Languages, Gamepad2, Trees, ShoppingBasket, Flower2, // Added new icons
     type LucideIcon
 } from 'lucide-react';
 // --- End Lucide Icon Imports ---
@@ -70,12 +69,13 @@ const iconComponents: { [key: string]: LucideIcon } = {
     Wind, Smile, Music2, Music, Coffee, Mail, Newspaper, Footprints, Podcast, BookOpen, SprayCan,
     Tv, Puzzle, EggFried, ShoppingCart, Dumbbell, NotebookPen, Utensils, Users, Tractor, WashingMachine,
     Dice5, Cookie, Film, Clapperboard, HandHeart, Hammer, Trophy, ChefHat, Car, Map: MapIcon, // Use MapIcon alias here
-    Presentation,
-    Plane, Sparkles, PlaneTakeoff, Navigation, Wrench, Youtube, Building2, MapPinned, BrainCircuit,
+    Presentation, Plane, Sparkles, PlaneTakeoff, Navigation, Wrench, Youtube, Building2, MapPinned, BrainCircuit,
     Luggage, CalendarDays, HelpingHand, MountainSnow, ClipboardCheck, PaintRoller, PenTool,
     // Add main category icons too
     HeartPulse, Crosshair, TrendingDown, ShieldCheck, Briefcase, GraduationCap, Wheat, Landmark, Building,
-    Sprout, Globe, Scale, Train, Atom, HelpCircle
+    Sprout, Globe, Scale, Train, Atom, HelpCircle,
+    // Add NEW icons from updated time-perspective.ts
+    Move, Languages, Gamepad2, Trees, ShoppingBasket, Flower2,
 };
 
 // Use a default icon for categories without a specific mapping
@@ -126,7 +126,7 @@ const CustomTooltip = ({ active, payload, label, totalAmount, hourlyWage, displa
                                     const Icon = item.icon ? iconComponents[item.icon] || Info : Info; // Use Info as fallback
                                     return (
                                         <li key={index} className="flex items-center gap-2 text-xs">
-                                            <Icon className="h-3 w-3 text-muted-foreground shrink-0"/>
+                                            <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0"/> {/* Slightly larger icon */}
                                             <span>{item.description}{item.count > 1 ? ` (${item.count} times)` : ''}</span>
                                         </li>
                                     );
@@ -476,7 +476,7 @@ export default function TaxBreakdownDashboard({
                                                                     const PIcon = pItem.icon ? iconComponents[pItem.icon] || Info : Info;
                                                                     return (
                                                                         <li key={pIndex} className="flex items-center gap-2 text-xs">
-                                                                            <PIcon className="h-3 w-3 text-muted-foreground shrink-0"/>
+                                                                            <PIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0"/> {/* Slightly larger icon */}
                                                                             <span>{pItem.description}{pItem.count > 1 ? ` (${pItem.count} times)` : ''}</span>
                                                                         </li>
                                                                     );
@@ -584,7 +584,7 @@ export default function TaxBreakdownDashboard({
                                                                                  const PIcon = pItem.icon ? iconComponents[pItem.icon] || Info : Info;
                                                                                  return (
                                                                                     <li key={pIndex} className="flex items-center gap-2 text-xs">
-                                                                                        <PIcon className="h-3 w-3 text-muted-foreground shrink-0"/>
+                                                                                        <PIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0"/> {/* Slightly larger icon */}
                                                                                          <span>{pItem.description}{pItem.count > 1 ? ` (${pItem.count} times)` : ''}</span>
                                                                                      </li>
                                                                                 );
@@ -630,7 +630,7 @@ export default function TaxBreakdownDashboard({
                                                 const PIcon = pItem.icon ? iconComponents[pItem.icon] || Info : Info;
                                                 return (
                                                     <li key={pIndex} className="flex items-center gap-2 text-xs">
-                                                        <PIcon className="h-3 w-3 text-muted-foreground shrink-0"/>
+                                                        <PIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0"/> {/* Slightly larger icon */}
                                                         <span>{pItem.description}{pItem.count > 1 ? ` (${pItem.count} times)` : ''}</span>
                                                     </li>
                                                 );
