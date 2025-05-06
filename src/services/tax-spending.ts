@@ -256,12 +256,12 @@ export async function getTaxSpending(location: Location, taxAmount: number): Pro
 }
 
 /**
- * Represents a selected item for email generation, including reduction level.
+ * Represents a selected item for email generation, including desired funding level.
  */
 export interface SelectedItem {
   id: string;
   description: string;
-  reductionLevel: number; // 0: Review, 50: Reduce, 100: Reallocate
+  fundingLevel: number; // -2: Slash Heavily, -1: Cut Significantly, 0: Improve Efficiency, 1: Fund, 2: Fund More
 }
 
 
@@ -269,7 +269,7 @@ export interface SelectedItem {
  * Generates a draft email to representatives based on selected spending items and customization options.
  *
  * @param selectedItems An array of SelectedItem objects.
- * @param aggressiveness The overall tone (0: Polite, 50: Concerned, 100: Stern).
+ * @param aggressiveness The overall tone (0: Kind, 33: Concerned, 66: Stern, 100: Angry).
  * @param userName The user's name.
  * @param userLocation The user's location (City, State, Zip).
  * @param balanceBudgetPreference Whether the user checked the 'Prioritize Balancing the Budget' box.
@@ -277,79 +277,88 @@ export interface SelectedItem {
  */
 export function generateRepresentativeEmail(
     selectedItems: SelectedItem[],
-    aggressiveness: number,
+    aggressiveness: number, // 0-100 scale
     userName: string,
     userLocation: string,
-    balanceBudgetPreference: boolean // Added parameter
+    balanceBudgetPreference: boolean
 ): { subject: string; body: string } {
 
     // --- Determine Subject Line ---
     let subject = "Regarding Federal Tax Spending Priorities";
-    if (aggressiveness > 75) {
-        subject = "Urgent: Demand for Re-evaluation of Federal Spending";
-    } else if (aggressiveness > 25 || balanceBudgetPreference) { // Elevate subject if budget balance is priority
-        subject = "Concern Regarding Federal Budget & Spending Allocations";
-    }
+    if (aggressiveness >= 75) { // Angry
+        subject = "Urgent Demand: Re-evaluate Federal Spending Priorities Now";
+    } else if (aggressiveness >= 50 || balanceBudgetPreference) { // Stern / Budget focused
+        subject = "Serious Concern Regarding Federal Budget & Spending Allocations";
+    } else if (aggressiveness >= 25) { // Concerned
+        subject = "Constituent Concerns About Federal Spending";
+    } // Kind uses default
 
     // --- Determine Opening ---
-    let opening = "Dear Representative,\n\nI am writing as a constituent";
-    if (aggressiveness > 75) {
-        opening = "Dear Representative,\n\nI am writing to demand immediate attention";
-    } else if (aggressiveness > 25) {
-        opening = "Dear Representative,\n\nI am writing to express my serious concern";
+    let opening = "Dear Representative,\n\nI am writing as your constituent";
+    if (aggressiveness >= 75) { // Angry
+        opening = "Dear Representative,\n\nI am writing to express my outrage and demand immediate attention";
+    } else if (aggressiveness >= 50) { // Stern
+        opening = "Dear Representative,\n\nI am writing to convey my serious disapproval";
+    } else if (aggressiveness >= 25) { // Concerned
+        opening = "Dear Representative,\n\nI am writing to express my concern";
     }
-    opening += ` regarding the current allocation of our federal tax dollars. As someone residing in ${userLocation || '[Your Area]'}, I believe it is crucial that our hard-earned money is spent responsibly and effectively, prioritizing the needs of the American people.\n\n`;
+    opening += ` regarding the current allocation of our federal tax dollars. As someone residing in ${userLocation || '[Your Area]'}, I expect our hard-earned money to be spent responsibly, effectively, and in alignment with the values and needs of the American people.\n\n`;
 
-    // --- Build Item List with Action Phrases ---
+    // --- Build Item List with Action Phrases based on Funding Level ---
     let itemList = "";
     if (selectedItems.length > 0) {
-        const introPhrases = [
-            "After reviewing federal spending estimates, I would like to bring the following areas to your attention for review and potential adjustment:",
-            "After reviewing federal spending estimates, I am particularly concerned by the resources directed towards the following areas, which I believe warrant significant reduction or reallocation:",
-            "After reviewing federal spending estimates, I demand scrutiny and significant changes to the funding for the following areas, which represent grossly misplaced priorities or excessive, wasteful expenditure:"
+        const introPhrases = [ // Based on aggressiveness
+            "After reviewing federal spending estimates, I would like to bring the following areas to your attention:", // Kind
+            "My review of federal spending estimates has raised concerns about the following areas:", // Concerned
+            "Based on my review of federal spending, I strongly believe the funding for the following areas requires significant changes:", // Stern
+            "My review of federal spending reveals grossly misplaced priorities and excessive expenditure in the following areas:" // Angry
         ];
-        itemList = introPhrases[Math.floor(aggressiveness / 34)] + "\n\n"; // Select intro based on aggressiveness
+        itemList = introPhrases[Math.floor(aggressiveness / 25)] + "\n\n";
 
         itemList += selectedItems.map(item => {
             let actionPhrase = "";
-            let reason = ""; // Generic reason placeholder
+            let reason = ""; // Generic reason placeholder - can be expanded
 
-             // Phrases based on reduction level and aggressiveness
-             const reductionPhrases = {
-                 review: [ // Reduction Level 0-25
-                     "should be reviewed for necessity and efficiency.",
-                     "funding warrants closer examination.",
-                     "requires justification for its current budget allocation."
-                 ],
-                 reduce: [ // Reduction Level 26-75
-                     "spending should be carefully evaluated for potential reductions.",
-                     "requires substantial reduction.",
-                     "budget needs to be significantly trimmed."
-                 ],
-                 reallocate: [ // Reduction Level 76-100
-                     "funding should be significantly reduced and redirected towards more pressing domestic needs.",
-                     "funding must be drastically cut and reallocated to essential programs.",
-                     "represents wasteful spending that must be eliminated or severely curtailed."
-                 ]
-             };
-
-             let reductionCategory: 'review' | 'reduce' | 'reallocate' = 'review';
-             if (item.reductionLevel > 75) reductionCategory = 'reallocate';
-             else if (item.reductionLevel > 25) reductionCategory = 'reduce';
-
-             // Select phrase based on aggressiveness (within the chosen reduction level)
-             actionPhrase = reductionPhrases[reductionCategory][Math.floor(aggressiveness / 34)];
+            // Action phrases based on fundingLevel
+            switch (item.fundingLevel) {
+                case -2: // Slash Heavily
+                    actionPhrase = "funding must be drastically cut or eliminated entirely. This represents wasteful spending that diverts resources from essential needs.";
+                    if (aggressiveness >= 75) actionPhrase = "funding must be immediately slashed. This is unacceptable, wasteful spending.";
+                    break;
+                case -1: // Cut Significantly
+                    actionPhrase = "budget requires significant reduction. The current allocation is excessive compared to its value or impact.";
+                     if (aggressiveness >= 75) actionPhrase = "budget must be significantly cut. Its current level is unjustifiable.";
+                     else if (aggressiveness >= 50) actionPhrase = "budget needs to be substantially trimmed. It is disproportionately large.";
+                    break;
+                case 0: // Improve Efficiency
+                    actionPhrase = "should be maintained, but I urge you to advocate for greater efficiency and oversight to ensure taxpayer dollars are used effectively.";
+                     if (aggressiveness >= 50) actionPhrase = "funding, while potentially necessary, demands rigorous oversight to eliminate waste and improve efficiency.";
+                    break;
+                case 1: // Fund
+                    actionPhrase = "is an important program that deserves continued support. Ensuring adequate funding is crucial.";
+                    if (aggressiveness >= 50) actionPhrase = "is a necessary program, and its funding should be protected and potentially increased modestly.";
+                    break;
+                case 2: // Fund More
+                    actionPhrase = "is a vital program that requires increased investment to meet its objectives and better serve the public.";
+                     if (aggressiveness >= 50) actionPhrase = "is critically underfunded and requires a significant increase in resources to fulfill its important mission.";
+                    break;
+                default: // Should not happen with slider steps, but fallback
+                    actionPhrase = "funding level needs careful review.";
+            }
 
 
             // Add specific boilerplate reason (examples - expand these)
-            if (item.id === 'israel_wars') reason = " Continued funding for foreign conflicts draws resources away from critical domestic needs.";
-            if (item.id === 'pentagon_contractors') reason = " Oversight is needed to prevent waste and ensure taxpayer money is used effectively by contractors.";
-            if (item.id === 'usaid_climate') reason = " Prioritizing domestic environmental issues should take precedence over international climate aid.";
-            if (item.id === 'nasa_spacex') reason = " Public funds directed to private space exploration could be better used elsewhere.";
-            if (item.id === 'medicare') reason = " While important, the current cost structure of Medicare requires review for efficiency.";
+            if (item.id === 'israel_wars') reason = " Supporting foreign conflicts draws critical resources away from domestic priorities.";
+            if (item.id === 'pentagon_contractors') reason = " Lack of oversight can lead to waste and inefficiency in defense contracting.";
+            if (item.id === 'usaid_climate') reason = " Domestic environmental challenges should be prioritized over international climate aid.";
+            if (item.id === 'nasa_spacex') reason = " Public funds subsidizing private space ventures could be better allocated.";
+            if (item.id === 'medicare' && item.fundingLevel < 0) reason = " While essential, Medicare's cost structure needs reform to ensure long-term sustainability and efficiency.";
+            if (item.id === 'medicare' && item.fundingLevel > 0) reason = " Ensuring access to healthcare for seniors is vital and requires adequate, potentially increased, funding.";
+            if (item.id === 'nih' && item.fundingLevel > 0) reason = " Investing in biomedical research yields long-term health and economic benefits.";
+            if (item.id === 'cdc' && item.fundingLevel > 0) reason = " A strong public health infrastructure is essential for national security and well-being.";
             // Add more reasons for other item.ids...
 
-            return `- ${item.description}: ${actionPhrase}${reason}`;
+            return `* ${item.description}: This program ${actionPhrase}${reason ? ` ${reason}` : ''}`;
         }).join('\n');
         itemList += "\n\n";
     }
@@ -357,35 +366,37 @@ export function generateRepresentativeEmail(
      // --- Add Budget Balancing Paragraph if selected ---
     let budgetParagraph = "";
     if (balanceBudgetPreference) {
-        const budgetPhrases = [
-            "Additionally, I believe prioritizing fiscal responsibility and working towards a balanced federal budget should be a key consideration in all spending decisions. Addressing the national debt is crucial for our country's long-term economic health.",
-            "Furthermore, I am deeply concerned about the ever-growing national debt. It is imperative that Congress prioritizes fiscal responsibility and takes meaningful steps towards balancing the budget. We cannot continue burdening future generations with our current spending habits.",
-            "Moreover, the staggering national debt is unacceptable and demands immediate action. Balancing the federal budget must become a top priority. Fiscal recklessness must end, and resources should be directed towards paying down the debt rather than funding questionable programs."
+        const budgetPhrases = [ // Based on aggressiveness
+            "Additionally, I believe prioritizing fiscal responsibility and working towards a balanced federal budget should be a key consideration in all spending decisions. Addressing the national debt is crucial for our country's long-term economic health.", // Kind
+            "Furthermore, I am deeply concerned about the national debt. It is imperative that Congress prioritizes fiscal responsibility and takes meaningful steps towards balancing the budget. Continued deficit spending burdens future generations.", // Concerned
+            "Moreover, the staggering national debt demands immediate action. Balancing the federal budget must become a top priority, requiring difficult decisions about spending across the board. Fiscal recklessness must end.", // Stern
+            "The national debt is an existential threat fueled by decades of irresponsible spending. I demand you make balancing the budget and reducing the debt your absolute top fiscal priority, even if it requires unpopular cuts." // Angry
         ];
-         budgetParagraph = budgetPhrases[Math.floor(aggressiveness / 34)] + "\n\n";
+         budgetParagraph = budgetPhrases[Math.floor(aggressiveness / 25)] + "\n\n";
     }
 
      // --- Determine Connecting Statement ---
-     // Adjusted to be more relevant even if only budget is selected
     let connectingStatement = "";
-    if (aggressiveness > 75) {
-        connectingStatement = "This pattern of spending diverts critical funds from vital domestic needs like affordable healthcare, infrastructure repair, and quality education. We cannot afford to continue prioritizing these questionable programs over the well-being of your constituents.\n\n";
-    } else if (aggressiveness > 25 || balanceBudgetPreference) { // Broaden condition
-        connectingStatement = "Continued spending at current levels, especially when considering pressing domestic issues and the national debt, raises serious concerns about fiscal responsibility. Every dollar potentially misspent is a dollar not invested in strengthening our communities here at home.\n\n";
-    } else if (selectedItems.length > 0) { // Only add if items were selected and tone is low
-         connectingStatement = "Ensuring our tax dollars are used efficiently allows for better investment in programs that benefit our communities directly.\n\n";
+     if (selectedItems.length > 0 || balanceBudgetPreference) {
+         const connectPhrases = [ // Based on aggressiveness
+             "Ensuring our tax dollars are used efficiently allows for better investment in programs that benefit our communities directly.", // Kind
+             "Responsible allocation of taxpayer money is essential. Every dollar potentially misspent is a dollar not invested in strengthening our communities or securing our fiscal future.", // Concerned
+             "This pattern of spending, coupled with the ballooning national debt, is unsustainable. We need a fundamental shift in priorities towards addressing domestic needs and fiscal stability.", // Stern
+             "This reckless spending pattern, ignoring the crippling national debt, is an insult to taxpayers. We cannot afford to continue prioritizing these questionable expenditures over the well-being of your constituents." // Angry
+         ];
+         connectingStatement = connectPhrases[Math.floor(aggressiveness / 25)] + "\n\n";
      }
 
 
     // --- Determine Call to Action ---
     let callToAction = "";
-    if (aggressiveness > 75) {
-         callToAction = `I demand you take immediate action to advocate for significant changes in spending priorities and champion the redirection of funds towards programs that directly benefit the people of ${userLocation || 'our district'}, alongside a concrete plan to address the national debt. Outline the specific steps you will take.\n\nI expect a prompt and detailed response outlining your commitment and planned actions.`;
-    } else if (aggressiveness > 25 || balanceBudgetPreference) { // Broaden condition
-         callToAction = `I urge you to advocate for greater scrutiny of spending and promote greater fiscal responsibility, including addressing the national debt. Please detail your stance on these issues and the actions you are taking.\n\nI look forward to your response outlining your position.`;
-    } else {
-        callToAction = `Could you please provide information on your position regarding the funding levels for these programs and your efforts towards ensuring fiscal responsibility?\n\nThank you for your time and attention to this matter.`;
-    }
+     const actionPhrases = [ // Based on aggressiveness
+         `Could you please provide information on your position regarding the funding levels for these programs${balanceBudgetPreference ? ' and your commitment to balancing the budget' : ''}?\n\nThank you for your time and attention to this matter.`, // Kind
+         `I urge you to consider these concerns seriously and advocate for greater scrutiny of spending and fiscal responsibility${balanceBudgetPreference ? ', including addressing the national debt' : ''}. Please share your stance on these issues.\n\nI look forward to your response.`, // Concerned
+         `I expect you to take concrete action to address these spending concerns and champion fiscal discipline${balanceBudgetPreference ? ', making significant progress towards a balanced budget' : ''}. Please outline the specific steps you will take.\n\nI await your detailed response outlining your commitment and planned actions.`, // Stern
+         `I demand you take immediate action to challenge this wasteful spending, advocate for the redirection of funds to essential domestic needs, and present a clear plan to tackle the national debt. Failure to act decisively is unacceptable.\n\nI expect a prompt and substantive response detailing your specific actions.` // Angry
+     ];
+     callToAction = actionPhrases[Math.floor(aggressiveness / 25)];
 
 
     // --- Construct Full Body ---
@@ -394,4 +405,3 @@ export function generateRepresentativeEmail(
 
     return { subject, body };
 }
-

@@ -3,14 +3,15 @@
 
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import type { Location, TaxSpending } from '@/services/tax-spending';
+import type { Location, TaxSpending, SelectedItem } from '@/services/tax-spending'; // Added SelectedItem
 import { getTaxSpending } from '@/services/tax-spending';
-import { guessStateFromZip, getAverageTaxForState } from '@/lib/zip-to-state'; // Added guessStateFromZip and getAverageTaxForState
+import { guessStateFromZip, getAverageTaxForState } from '@/lib/zip-to-state';
 
 import LocationStep from '@/components/onboarding/LocationStep';
 import TaxAmountStep from '@/components/onboarding/TaxAmountStep';
 import TaxBreakdownDashboard from '@/components/dashboard/TaxBreakdownDashboard';
-import FloatingEmailButton from '@/components/dashboard/FloatingEmailButton'; // Import the new component
+import FloatingEmailButton from '@/components/dashboard/FloatingEmailButton';
+import EmailCustomizationModal from '@/components/dashboard/EmailCustomizationModal'; // Import the modal
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -39,7 +40,13 @@ export default function Home() {
   // State for controlling the email button visibility/count
   const [showEmailAction, setShowEmailAction] = useState(false);
   const [emailActionCount, setEmailActionCount] = useState(0);
-  // Removed state related to email modal open status
+  // State for the email modal
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  // State to hold the selected items from the dashboard
+  const [selectedEmailItems, setSelectedEmailItems] = useState<Map<string, SelectedItem>>(new Map());
+  // State to hold budget balance preference
+  const [balanceBudgetChecked, setBalanceBudgetChecked] = useState(false);
+
   const [estimatedMedianTax, setEstimatedMedianTax] = useState<number>(NATIONAL_MEDIAN_FEDERAL_TAX);
 
 
@@ -47,11 +54,13 @@ export default function Home() {
     const isGoingBack = (step === 'tax' && nextStep === 'location') || (step === 'dashboard' && nextStep === 'tax');
     setAnimationClass(isGoingBack ? 'animate-slideOutUp' : 'animate-slideOutUp');
 
-    // Reset email button state when navigating away from dashboard
+    // Reset email button and selection state when navigating away from dashboard
     if (step === 'dashboard' && nextStep !== 'dashboard') {
        setShowEmailAction(false);
        setEmailActionCount(0);
-       // Removed resetting modal state
+       setSelectedEmailItems(new Map()); // Clear selected items
+       setBalanceBudgetChecked(false); // Reset budget preference
+       setIsEmailModalOpen(false); // Ensure modal is closed
     }
 
 
@@ -120,7 +129,9 @@ export default function Home() {
        // Reset email action state
        setShowEmailAction(false);
        setEmailActionCount(0);
-       // Removed resetting modal state
+       setSelectedEmailItems(new Map()); // Clear selected items
+       setBalanceBudgetChecked(false); // Reset budget preference
+       setIsEmailModalOpen(false); // Ensure modal is closed
       navigateToStep('tax');
     }
   };
@@ -150,27 +161,28 @@ export default function Home() {
   const { title, description } = getTitleAndDescription();
 
   // Handler for changes in dashboard selection state (from TaxBreakdownDashboard)
-  const handleEmailButtonStateChange = (show: boolean, count: number) => {
-    setShowEmailAction(show);
+  const handleDashboardSelectionChange = (
+      showButton: boolean,
+      count: number,
+      selected: Map<string, SelectedItem>,
+      budgetPref: boolean
+    ) => {
+    setShowEmailAction(showButton);
     setEmailActionCount(count);
+    setSelectedEmailItems(selected); // Store the selected items map
+    setBalanceBudgetChecked(budgetPref); // Store budget preference
   };
 
-  // Handler for the FloatingEmailButton click - now does nothing
+  // Handler for the FloatingEmailButton click - now opens the modal
   const handleOpenEmailModal = () => {
-     console.log("Email Officials button clicked (modal removed).");
-     // No action needed as the modal is removed
-     // You could add a toast message here if desired:
-     // toast({
-     //   title: "Feature Under Construction",
-     //   description: "Email customization is temporarily disabled.",
-     // });
+     setIsEmailModalOpen(true);
   };
 
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 md:p-10 bg-gradient-to-br from-background via-secondary/5 to-background">
+    <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 md:p-10 bg-gradient-to-br from-background via-secondary/5 to-background relative"> {/* Added relative positioning */}
        {/* Container for Back button and Card */}
-       <div className={`w-full ${step === 'dashboard' ? 'max-w-4xl' : 'max-w-2xl'} mx-auto space-y-2 transition-all duration-300 ease-in-out`}>
+       <div className={`w-full ${step === 'dashboard' ? 'max-w-4xl' : 'max-w-2xl'} mx-auto space-y-2 transition-all duration-300 ease-in-out z-10`}> {/* Ensure content is above potential fixed footer/button */}
         {/* Flex container JUST for Back button */}
         <div className="flex justify-start items-center min-h-[40px] px-1 sm:px-0"> {/* Ensure minimum height */}
             {step !== 'location' ? (
@@ -216,7 +228,7 @@ export default function Home() {
                          <TaxBreakdownDashboard
                             taxAmount={taxAmount}
                             taxSpending={taxSpending}
-                            onEmailButtonStateChange={handleEmailButtonStateChange}
+                            onSelectionChange={handleDashboardSelectionChange} // Pass new handler
                          />
                      )
                  )}
@@ -225,7 +237,7 @@ export default function Home() {
         </Card>
 
         {/* Footer */}
-        <footer className="mt-6 text-center text-muted-foreground/60 text-xs px-4 sm:px-0 relative">
+        <footer className="mt-6 text-center text-muted-foreground/60 text-xs px-4 sm:px-0 relative pb-16 sm:pb-6"> {/* Add padding-bottom to avoid FAB overlap */}
             Powered by Firebase & Google AI (where applicable). Data is estimated and for informational purposes. Verify with official sources.
         </footer>
        </div>
@@ -234,8 +246,17 @@ export default function Home() {
        <FloatingEmailButton
             isVisible={showEmailAction && step === 'dashboard'} // Only visible on dashboard when items selected
             count={emailActionCount}
-            onClick={handleOpenEmailModal} // Button click now does nothing
+            onClick={handleOpenEmailModal} // Opens the customization modal
        />
+
+        {/* Email Customization Modal */}
+       <EmailCustomizationModal
+            isOpen={isEmailModalOpen}
+            onOpenChange={setIsEmailModalOpen}
+            selectedItems={selectedEmailItems} // Pass the stored selected items
+            balanceBudgetChecked={balanceBudgetChecked} // Pass budget preference
+            taxAmount={taxAmount ?? estimatedMedianTax} // Pass tax amount for context
+        />
     </main>
   );
 }

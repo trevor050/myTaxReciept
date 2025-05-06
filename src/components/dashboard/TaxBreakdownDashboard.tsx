@@ -4,12 +4,10 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import type { TaxSpending, TaxSpendingSubItem, SelectedItem } from '@/services/tax-spending';
-// Removed unused type import
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-// Removed import for EmailCustomizationModal
 
 import {
     ExternalLink,
@@ -51,9 +49,13 @@ import { Label } from '@/components/ui/label'; // Import Label
 interface TaxBreakdownDashboardProps {
   taxAmount: number;
   taxSpending: TaxSpending[];
-  // New props for handling email action state from parent
-  onEmailButtonStateChange: (show: boolean, count: number) => void;
-  // Removed modal state props: isEmailModalOpen, setIsEmailModalOpen
+  // Consolidated callback prop
+  onSelectionChange: (
+    showButton: boolean,
+    count: number,
+    selectedItems: Map<string, SelectedItem>,
+    balanceBudgetChecked: boolean
+  ) => void;
 }
 
 // Use CSS variables for colors defined in globals.css
@@ -214,8 +216,7 @@ async function getFormattedNationalDebt(): Promise<string> {
 export default function TaxBreakdownDashboard({
   taxAmount,
   taxSpending,
-  onEmailButtonStateChange,
-  // Removed modal state props
+  onSelectionChange, // Use the consolidated prop
 }: TaxBreakdownDashboardProps) {
 
   const [selectedItems, setSelectedItems] = useState<Map<string, SelectedItem>>(new Map());
@@ -237,17 +238,16 @@ export default function TaxBreakdownDashboard({
     // Effect to update parent component about selection changes
     useEffect(() => {
         const count = selectedItems.size + (balanceBudgetChecked ? 1 : 0);
-        onEmailButtonStateChange(count > 0, count);
-    }, [selectedItems, balanceBudgetChecked, onEmailButtonStateChange]);
-
-   // Removed handleEmailSubmit function as modal is removed
+        onSelectionChange(count > 0, count, selectedItems, balanceBudgetChecked);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedItems, balanceBudgetChecked]); // Removed onSelectionChange from deps to avoid potential loops if parent passes unstable function
 
    const handleCheckboxChange = (checked: boolean | 'indeterminate', item: TaxSpendingSubItem) => {
         const newSelectedItems = new Map(selectedItems);
         const itemId = `${item.id}`; // Ensure key is string
         if (checked === true) {
-            // Add default reduction level (e.g., 'Reduce') when selected
-            newSelectedItems.set(itemId, { id: itemId, description: item.description, reductionLevel: 50 });
+            // Add default funding level (e.g., 0: Improve Efficiency) when selected
+            newSelectedItems.set(itemId, { id: itemId, description: item.description, fundingLevel: 0 });
         } else {
             newSelectedItems.delete(itemId);
         }
@@ -331,7 +331,7 @@ export default function TaxBreakdownDashboard({
        <Card className="shadow-lg border border-border/60 rounded-xl overflow-hidden bg-gradient-to-b from-card to-card/95">
             <CardHeader className="px-4 py-4 sm:px-6 sm:py-5 border-b border-border/50">
                 <CardTitle className="text-lg sm:text-xl font-semibold tracking-tight">Detailed Spending</CardTitle>
-                <CardDescription className="text-muted-foreground text-xs sm:text-sm">Select items you believe are overspent or prioritize balancing the budget.</CardDescription>
+                <CardDescription className="text-muted-foreground text-xs sm:text-sm">Select items you believe need funding adjustments or prioritize balancing the budget.</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               <TooltipProvider delayDuration={250}>
@@ -435,7 +435,6 @@ export default function TaxBreakdownDashboard({
             </CardContent>
         </Card>
 
-        {/* Removed Email Customization Modal rendering */}
     </div>
   );
 }

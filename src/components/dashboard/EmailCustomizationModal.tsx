@@ -1,0 +1,293 @@
+
+'use client';
+
+import * as React from 'react';
+import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import type { SelectedItem } from '@/services/tax-spending'; // Import SelectedItem type
+import { generateRepresentativeEmail } from '@/services/tax-spending'; // Import email generation function
+import { X, Mail, Send } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+interface EmailCustomizationModalProps {
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  selectedItems: Map<string, SelectedItem>; // Receive the map of selected items
+  balanceBudgetChecked: boolean;
+  taxAmount: number; // Pass tax amount for context if needed
+}
+
+// Define funding levels and their labels/colors
+const fundingLevels = [
+    { value: -2, label: 'Slash Heavily', color: 'bg-red-600', darkColor: 'dark:bg-red-500' },
+    { value: -1, label: 'Cut Significantly', color: 'bg-orange-500', darkColor: 'dark:bg-orange-400' },
+    { value: 0, label: 'Improve Efficiency', color: 'bg-yellow-500', darkColor: 'dark:bg-yellow-400' },
+    { value: 1, label: 'Fund', color: 'bg-green-500', darkColor: 'dark:bg-green-400' },
+    { value: 2, label: 'Fund More', color: 'bg-emerald-600', darkColor: 'dark:bg-emerald-500' },
+];
+
+// Map slider value (0-100) to funding level value (-2 to 2)
+const mapSliderToFundingLevel = (sliderValue: number): number => {
+    if (sliderValue <= 10) return -2; // 0-10 -> Slash Heavily
+    if (sliderValue <= 35) return -1; // 11-35 -> Cut Significantly
+    if (sliderValue <= 65) return 0;  // 36-65 -> Improve Efficiency
+    if (sliderValue <= 90) return 1;  // 66-90 -> Fund
+    return 2;                       // 91-100 -> Fund More
+};
+
+// Map funding level value (-2 to 2) back to slider value (approximate midpoint)
+const mapFundingLevelToSlider = (fundingLevel: number): number => {
+    switch (fundingLevel) {
+        case -2: return 5;
+        case -1: return 23;
+        case 0:  return 50;
+        case 1:  return 78;
+        case 2:  return 95;
+        default: return 50; // Default to middle
+    }
+};
+
+export default function EmailCustomizationModal({
+  isOpen,
+  onOpenChange,
+  selectedItems: initialSelectedItems, // Rename prop
+  balanceBudgetChecked,
+  taxAmount,
+}: EmailCustomizationModalProps) {
+  const [aggressiveness, setAggressiveness] = useState<number>(50); // 0 (Kind) to 100 (Angry)
+  // Initialize itemFundingLevels state based on initialSelectedItems
+  const [itemFundingLevels, setItemFundingLevels] = useState<Map<string, number>>(
+      new Map(
+        Array.from(initialSelectedItems.values()).map(item => [
+          item.id,
+          mapFundingLevelToSlider(item.fundingLevel) // Convert initial level (-2 to 2) to slider value (0-100)
+        ])
+      )
+  );
+  const [userName, setUserName] = useState('');
+  const [userLocation, setUserLocation] = useState(''); // e.g., "City, ST Zip"
+
+  // Update itemFundingLevels if the initialSelectedItems prop changes
+  React.useEffect(() => {
+    setItemFundingLevels(new Map(
+      Array.from(initialSelectedItems.values()).map(item => [
+        item.id,
+        mapFundingLevelToSlider(item.fundingLevel) // Map the initial level
+      ])
+    ));
+  }, [initialSelectedItems]);
+
+
+  const handleFundingLevelChange = (itemId: string, value: number[]) => {
+    const sliderValue = value[0];
+    setItemFundingLevels(prev => new Map(prev).set(itemId, sliderValue));
+  };
+
+  const handleGenerateEmail = () => {
+    // Convert slider values back to funding levels (-2 to 2) for email generation
+     const finalSelectedItems: SelectedItem[] = Array.from(itemFundingLevels.entries())
+        .map(([id, sliderValue]) => {
+            const originalItem = initialSelectedItems.get(id);
+            if (!originalItem) return null; // Should not happen if logic is correct
+            return {
+                id: id,
+                description: originalItem.description,
+                fundingLevel: mapSliderToFundingLevel(sliderValue), // Map slider value back
+            };
+        })
+        .filter((item): item is SelectedItem => item !== null); // Filter out nulls
+
+    const { subject, body } = generateRepresentativeEmail(
+      finalSelectedItems,
+      aggressiveness,
+      userName,
+      userLocation,
+      balanceBudgetChecked
+    );
+
+    const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    // Open the user's default email client
+    if (typeof window !== 'undefined') {
+        window.location.href = mailtoLink;
+    }
+    onOpenChange(false); // Close modal after generating
+  };
+
+  const getAggressivenessLabel = (value: number) => {
+    if (value <= 15) return 'Kind';
+    if (value <= 40) return 'Concerned';
+    if (value <= 75) return 'Stern';
+    return 'Angry';
+  };
+
+  const getFundingLevelDetails = (sliderValue: number) => {
+     const levelValue = mapSliderToFundingLevel(sliderValue);
+     return fundingLevels.find(level => level.value === levelValue) || fundingLevels[2]; // Default to 'Improve Efficiency'
+  };
+
+
+  // Convert Map to Array for rendering
+  const selectedItemsArray = Array.from(initialSelectedItems.values());
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl w-[90vw] sm:w-full grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[85vh]">
+         {/* Custom Header */}
+         <DialogHeader className="px-6 py-4 border-b bg-card/95 sticky top-0 z-10">
+             <div className="flex justify-between items-center">
+                <div className="space-y-1">
+                     <DialogTitle className="text-xl sm:text-2xl font-semibold flex items-center gap-2">
+                        <Mail className="h-5 w-5 text-primary" />
+                        Customize Your Email
+                    </DialogTitle>
+                     <DialogDescription className="text-sm text-muted-foreground">
+                        Adjust the tone and desired funding changes for your message.
+                    </DialogDescription>
+                 </div>
+                <DialogClose asChild>
+                    <Button variant="ghost" size="icon" className="rounded-full h-8 w-8">
+                        <X className="h-4 w-4" />
+                        <span className="sr-only">Close</span>
+                    </Button>
+                </DialogClose>
+             </div>
+         </DialogHeader>
+
+        {/* Scrollable Content Area */}
+        <ScrollArea className="overflow-y-auto px-6 py-4">
+          <div className="space-y-8">
+
+            {/* User Info Section */}
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                    <Label htmlFor="userName" className="text-sm font-medium">Your Name</Label>
+                    <Input
+                        id="userName"
+                        value={userName}
+                        onChange={(e) => setUserName(e.target.value)}
+                        placeholder="Jane Doe"
+                        className="h-9"
+                    />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="userLocation" className="text-sm font-medium">Your Location</Label>
+                    <Input
+                        id="userLocation"
+                        value={userLocation}
+                        onChange={(e) => setUserLocation(e.target.value)}
+                        placeholder="City, ST Zipcode"
+                        className="h-9"
+                    />
+                 </div>
+             </div>
+
+            {/* Aggressiveness Slider */}
+            <div className="space-y-3 rounded-lg border p-4 bg-secondary/30 shadow-inner">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="aggressiveness" className="text-base font-semibold">Overall Tone</Label>
+                <span className="text-sm font-medium text-primary rounded-full bg-primary/10 px-2.5 py-0.5">
+                    {getAggressivenessLabel(aggressiveness)}
+                </span>
+              </div>
+              <Slider
+                id="aggressiveness"
+                min={0}
+                max={100}
+                step={1}
+                value={[aggressiveness]}
+                onValueChange={(value) => setAggressiveness(value[0])}
+                className="my-2"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Kind / Polite</span>
+                <span>Concerned</span>
+                <span>Stern / Demanding</span>
+              </div>
+            </div>
+
+            {/* Funding Level Sliders for Each Item */}
+            {selectedItemsArray.length > 0 && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold border-b pb-2">Adjust Funding Priorities</h3>
+                {selectedItemsArray.map((item) => {
+                    const sliderValue = itemFundingLevels.get(item.id) ?? 50; // Default to middle if not found
+                    const levelDetails = getFundingLevelDetails(sliderValue);
+                    return (
+                        <div key={item.id} className="space-y-2 border p-4 rounded-md shadow-sm bg-card/50">
+                            <div className="flex justify-between items-start gap-2">
+                                <Label htmlFor={`funding-${item.id}`} className="text-sm font-medium text-foreground flex-1">
+                                    {item.description}
+                                </Label>
+                                <span className={cn(
+                                    "text-xs font-semibold rounded-full px-2 py-0.5 text-white whitespace-nowrap",
+                                     levelDetails.color, levelDetails.darkColor // Apply dynamic background color
+                                )}>
+                                    {levelDetails.label}
+                                </span>
+                            </div>
+                            <Slider
+                                id={`funding-${item.id}`}
+                                min={0}
+                                max={100}
+                                step={1} // Fine-grained control, mapping happens on change/generate
+                                value={[sliderValue]}
+                                onValueChange={(value) => handleFundingLevelChange(item.id, value)}
+                                className={cn(
+                                    "[&>span>span]:transition-colors [&>span>span]:duration-200", // Smooth track color change
+                                     `[&>span>span]:${levelDetails.color}`, // Apply dynamic track color
+                                     `[&>span>span]:${levelDetails.darkColor}`, // Apply dynamic dark track color
+                                    "[&>span]:bg-muted" // Track background
+                                )}
+                            />
+                             <div className="flex justify-between text-[10px] text-muted-foreground px-1">
+                                <span>Cut</span>
+                                <span>Review</span>
+                                <span>Increase</span>
+                            </div>
+                        </div>
+                    );
+                })}
+              </div>
+            )}
+
+            {/* Budget Balancing Preference Display */}
+             {balanceBudgetChecked && (
+                <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-300 shadow-sm">
+                    <p><span className="font-semibold">Note:</span> Your email will also emphasize prioritizing a balanced budget and addressing the national debt.</p>
+                </div>
+             )}
+          </div>
+        </ScrollArea>
+
+        {/* Footer with Action Button */}
+        <DialogFooter className="px-6 py-4 border-t bg-card/95 sticky bottom-0 z-10 sm:justify-between">
+           <DialogClose asChild>
+             <Button variant="outline" className="w-full sm:w-auto">Cancel</Button>
+           </DialogClose>
+           <Button
+                onClick={handleGenerateEmail}
+                className="w-full sm:w-auto bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800 text-primary-foreground"
+                disabled={!userName || !userLocation} // Basic validation
+            >
+                <Send className="mr-2 h-4 w-4" />
+                Generate & Open Email
+            </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
