@@ -94,7 +94,7 @@ const timePerspectives: TimePerspectiveItem[] = [
     { minutes: 1440, description: "spend a full day thoroughly exploring a new city", icon: "Building2" }, // 24 hours / 1 day
     { minutes: 1800, description: "learn the absolute basics of knitting or crochet", icon: "BrainCircuit" }, // 30 hours
     { minutes: 2160, description: "take a relaxing 3-day weekend getaway", icon: "Luggage" }, // 36 hours
-    { minutes: 2400, description: "complete a substantial online course module", icon: "GraduationCap" }, // 40 hours (Simulating a 'work week' conceptually)
+    { minutes: 2400, description: "complete a substantial online course module", icon: "GraduationCap" }, // 40 hours
     { minutes: 2700, description: "drive from New York City to Miami", icon: "Car" }, // ~45 hours driving
     { minutes: 3000, description: "fly round-trip NYC to London (incl. airport/travel time)", icon: "Globe" }, // ~50 hours (MAX LIMIT)
 ];
@@ -132,7 +132,7 @@ export function generateCombinedPerspectiveList(
 
     // Limit iterations to prevent infinite loops
     let iterations = 0;
-    const MAX_ITERATIONS = 250; // Increased iterations slightly
+    const MAX_ITERATIONS = 300; // Increased iterations
 
     // Loop while we haven't covered enough time and haven't hit limits
     while (remainingMinutes >= MIN_TIME_THRESHOLD && accumulatedMinutes < minTargetMinutes && iterations < MAX_ITERATIONS) {

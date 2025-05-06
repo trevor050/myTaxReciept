@@ -107,9 +107,10 @@ export function generateCurrencyPerspectiveList(
     const purchaseCounts = new Map<string, { icon?: string; count: number }>();
     const MIN_AMOUNT_THRESHOLD = 0.50; // Stop when remaining amount is very small
     let iterations = 0;
-    const MAX_ITERATIONS = 150;
+    const MAX_ITERATIONS = 300; // Increased max iterations
 
-    while (remainingAmount >= MIN_AMOUNT_THRESHOLD && iterations < MAX_ITERATIONS && purchaseCounts.size < maxItems * 1.5) {
+    // Removed the check for purchaseCounts.size to allow more items for larger amounts
+    while (remainingAmount >= MIN_AMOUNT_THRESHOLD && iterations < MAX_ITERATIONS) {
         iterations++;
         const availablePurchases = currencyPerspectives.filter(p => p.cost <= remainingAmount && p.cost > 0);
 
@@ -117,7 +118,20 @@ export function generateCurrencyPerspectiveList(
             break;
         }
 
-        const chosenPurchase = sample(availablePurchases);
+        // Strategy: If remaining amount is large, bias towards picking larger items
+        let chosenPurchase: CurrencyPerspectiveItem | undefined;
+        if (remainingAmount > 500 && availablePurchases.some(p => p.cost > 100)) {
+            // If remaining amount > $500 and large items are available, increase chance of picking one
+            const largeItems = availablePurchases.filter(p => p.cost > 100);
+            if (Math.random() < 0.6 && largeItems.length > 0) { // 60% chance to pick a large item
+                 chosenPurchase = sample(largeItems);
+            } else {
+                 chosenPurchase = sample(availablePurchases);
+            }
+        } else {
+             chosenPurchase = sample(availablePurchases);
+        }
+
 
         if (!chosenPurchase) break;
 
@@ -140,12 +154,13 @@ export function generateCurrencyPerspectiveList(
 
     resultList.sort((a, b) => b.count - a.count); // Sort by most frequent
 
+    // Apply maxItems limit *after* accumulating counts
     if (resultList.length > maxItems) {
         resultList.length = maxItems;
     }
 
+    // Fallback logic remains the same
     if (resultList.length === 0) {
-        // Fallback: Find the single closest purchase (even if slightly over)
         const closest = currencyPerspectives
             .filter(p => p.cost > 0)
             .reduce((prev, curr) =>
