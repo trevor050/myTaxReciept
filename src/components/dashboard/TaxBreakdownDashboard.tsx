@@ -451,40 +451,36 @@ export default function TaxBreakdownDashboard({
 
   return (
     <TooltipProvider delayDuration={isMobileView ? 0 : 200}>
-        <div className="space-y-6 sm:space-y-10 animate-fadeIn relative pb-10">
-            {/* Header: Title and Subtitle */}
-            <div className="text-center sm:text-left space-y-0.5 sm:space-y-1">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-foreground">
-                    {currentYear ? `${currentYear} ` : ''}Federal Income Tax Receipt
-                </h1>
-                <p className="text-base sm:text-lg text-muted-foreground">
-                    Based on your estimated <span className="font-semibold text-foreground">{formatCurrency(taxAmount)}</span> payment.
-                </p>
+        <div className="space-y-6 sm:space-y-10 animate-fadeIn relative pb-10"> {/* Adjusted spacing for mobile */}
+            <div className="text-center space-y-0.5 sm:space-y-1 mb-4 sm:mb-6 relative"> {/* Adjusted spacing for mobile */}
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-foreground">{currentYear ? `${currentYear} ` : ''}Federal Income Tax Receipt</h1> {/* Adjusted font size for mobile */}
+                <p className="text-base sm:text-lg text-muted-foreground">Based on your estimated <span className="font-semibold text-foreground">{formatCurrency(taxAmount)}</span> payment.</p> {/* Adjusted font size for mobile */}
                 <p className="text-xs text-muted-foreground/70">Next Filing Due: {dueDateDisplay}</p>
             </div>
 
-            {/* Currency/Time Toggle Button - New Position */}
+
+            {/* Currency/Time Toggle Button */}
             {hourlyWage !== null && (
-                <div className="flex justify-center sm:justify-start items-center mt-3 mb-4 sm:mb-6">
-                    <Label htmlFor="display-mode-toggle" className="text-xs font-medium text-muted-foreground mr-2">View as:</Label>
-                    <div className="flex items-center space-x-1 sm:space-x-2 bg-muted p-0.5 sm:p-1 rounded-full">
+                <div className="flex justify-center items-center my-4 sm:my-6"> {/* Centered and adjusted margin */}
+                    <Label htmlFor="display-mode-toggle" className="text-xs font-medium text-muted-foreground mr-2 sm:mr-3">View as:</Label> {/* Adjusted margin */}
+                    <div className="flex items-center space-x-1 sm:space-x-2 bg-muted p-0.5 sm:p-1 rounded-full shadow-sm"> {/* Added shadow */}
                         <Button
                             variant={displayMode === 'currency' ? 'default' : 'ghost'}
                             size="sm"
                             onClick={() => setDisplayMode('currency')}
-                            className={cn("rounded-full px-2.5 sm:px-3 py-1 h-6 sm:h-7 text-[10px] sm:text-xs", displayMode === 'currency' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:bg-accent')}
+                            className={cn("rounded-full px-2.5 py-1 sm:px-3 sm:py-1.5 h-7 sm:h-8 text-[10px] sm:text-xs transition-all duration-200", displayMode === 'currency' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:bg-accent/80')}
                             aria-pressed={displayMode === 'currency'}
                         >
-                            <DollarSign className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" /> Currency
+                            <DollarSign className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5" /> Currency {/* Adjusted icon size and margin */}
                         </Button>
                         <Button
                              variant={displayMode === 'time' ? 'default' : 'ghost'}
                              size="sm"
                              onClick={() => setDisplayMode('time')}
-                             className={cn("rounded-full px-2.5 sm:px-3 py-1 h-6 sm:h-7 text-[10px] sm:text-xs", displayMode === 'time' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:bg-accent')}
+                             className={cn("rounded-full px-2.5 py-1 sm:px-3 sm:py-1.5 h-7 sm:h-8 text-[10px] sm:text-xs transition-all duration-200", displayMode === 'time' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:bg-accent/80')}
                              aria-pressed={displayMode === 'time'}
                         >
-                            <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" /> Time Worked
+                            <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5" /> Time Worked {/* Adjusted icon size and margin */}
                         </Button>
                     </div>
                 </div>
@@ -761,6 +757,7 @@ export default function TaxBreakdownDashboard({
     </TooltipProvider>
   );
 }
+
 
 
 
