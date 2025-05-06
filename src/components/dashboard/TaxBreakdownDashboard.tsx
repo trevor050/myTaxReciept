@@ -11,33 +11,22 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label'; // Import Label
 
+// --- Import ALL potentially used Lucide icons ---
+// Consider dynamic imports if bundle size becomes an issue
 import {
-    ExternalLink,
-    Info,
-    Scale,
-    HeartPulse,
-    ShieldCheck,
-    Briefcase,
-    GraduationCap,
-    Wheat,
-    Building,
-    Atom,
-    Globe,
-    Landmark,
-    Sprout,
-    Train,
-    TrendingDown,
-    Crosshair,
-    HelpCircle,
-    Megaphone, // Icon for activism plea
-    CheckSquare, // Icon for budget balance checkbox
-    AlertTriangle, // Use for warning/emphasis on debt
-    Clock, // Icon for time toggle
-    DollarSign, // Icon for currency toggle
-    Coffee, // Example icon for time perspective
-    Film,   // Example icon
-    Plane,  // Example icon
+    ExternalLink, Info, Scale, HeartPulse, ShieldCheck, Briefcase, GraduationCap, Wheat,
+    Building, Atom, Globe, Landmark, Sprout, Train, TrendingDown, Crosshair, HelpCircle,
+    Megaphone, CheckSquare, AlertTriangle, Clock, DollarSign, Wind, Smile, Music2, Music,
+    Coffee, Mail, Newspaper, Footprints, Podcast, BookOpen, SprayCan, Tv, Puzzle, EggFried,
+    ShoppingCart, Dumbbell, NotebookPen, Utensils, Users, Tractor, WashingMachine, Dice5,
+    Cookie, Film, Clapperboard, HandHeart, Hammer, Trophy, ChefHat, Car, Map, Presentation,
+    Plane, Sparkles, PlaneTakeoff, Navigation, Wrench, Youtube, Building2, MapPinned,
+    BrainCircuit, Luggage, CalendarDays, HelpingHand, MountainSnow, ClipboardCheck,
+    PaintRoller, PenTool, // Add any potentially missing icons here
+    type LucideIcon
 } from 'lucide-react';
+// --- End Lucide Icon Imports ---
+
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
     Accordion,
@@ -52,7 +41,7 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { cn } from '@/lib/utils';
-import { getTimePerspectiveText } from '@/lib/time-perspective'; // Import time perspective function
+import { generateCombinedPerspectiveList, type CombinedPerspective } from '@/lib/time-perspective'; // Import NEW list generation function
 
 interface TaxBreakdownDashboardProps {
   taxAmount: number;
@@ -75,48 +64,44 @@ const COLORS = [
     'hsl(var(--chart-13))','hsl(var(--chart-14))','hsl(var(--chart-15))'
 ];
 
-const categoryIcons: { [key: string]: React.ElementType } = {
-    'Health': HeartPulse,
-    'War and Weapons': Crosshair,
-    'Interest on Debt': TrendingDown, // Use TrendingDown for Debt
-    'Veterans': ShieldCheck,
-    'Unemployment and Labor': Briefcase,
-    'Education': GraduationCap,
-    'Food and Agriculture': Wheat,
-    'Government': Landmark,
-    'Housing and Community': Building,
-    'Energy and Environment': Sprout,
-    'International Affairs': Globe,
-    'Law Enforcement': Scale,
-    'Transportation': Train,
-    'Science': Atom,
+// Mapping from string names (used in time-perspective.ts) to imported Lucide components
+// IMPORTANT: Ensure keys match the 'icon' strings defined in time-perspective.ts
+const iconComponents: { [key: string]: LucideIcon } = {
+    Wind, Smile, Music2, Music, Coffee, Mail, Newspaper, Footprints, Podcast, BookOpen, SprayCan,
+    Tv, Puzzle, EggFried, ShoppingCart, Dumbbell, NotebookPen, Utensils, Users, Tractor, WashingMachine,
+    Dice5, Cookie, Film, Clapperboard, HandHeart, Hammer, Trophy, ChefHat, Car, Map, Presentation,
+    Plane, Sparkles, PlaneTakeoff, Navigation, Wrench, Youtube, Building2, MapPinned, BrainCircuit,
+    Luggage, CalendarDays, HelpingHand, MountainSnow, ClipboardCheck, PaintRoller, PenTool,
+    // Add main category icons too
+    HeartPulse, Crosshair, TrendingDown, ShieldCheck, Briefcase, GraduationCap, Wheat, Landmark, Building,
+    Sprout, Globe, Scale, Train, Atom, HelpCircle
 };
-const DefaultIcon = HelpCircle;
 
 
 const CustomTooltip = ({ active, payload, label, totalAmount, hourlyWage, displayMode }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     const spendingAmount = (data.percentage / 100) * totalAmount;
-    const Icon = categoryIcons[data.category] || DefaultIcon;
+    const CategoryIcon = iconComponents[data.category] || HelpCircle; // Use lookup
 
     let displayValue: string;
-    let timeTooltipText: string | null = null;
+    let timePerspectiveList: CombinedPerspective[] | null = null;
 
     if (displayMode === 'time' && hourlyWage) {
         const hoursWorked = spendingAmount / hourlyWage;
-        displayValue = formatTime(hoursWorked * 60); // Convert hours to minutes for formatting
-        timeTooltipText = getTimePerspectiveText(hoursWorked * 60); // Get perspective text
+        const totalMinutes = hoursWorked * 60;
+        displayValue = formatTime(totalMinutes); // Convert hours to minutes for formatting
+        timePerspectiveList = generateCombinedPerspectiveList(totalMinutes); // Get perspective LIST
     } else {
         displayValue = formatCurrency(spendingAmount);
     }
 
     return (
         // TooltipProvider/ShadTooltip moved inside to contain the time perspective logic
-        <div className="rounded-lg border bg-popover p-2.5 text-popover-foreground shadow-lg animate-scaleIn text-xs max-w-[150px] sm:max-w-[200px]">
+        <div className="rounded-lg border bg-popover p-2.5 text-popover-foreground shadow-lg animate-scaleIn text-xs max-w-[180px] sm:max-w-[220px]"> {/* Increased max-width */}
              <div className="flex items-center justify-between mb-1 gap-2">
                  <span className="font-medium flex items-center gap-1.5 truncate">
-                    <Icon className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <CategoryIcon className="h-3 w-3 text-muted-foreground shrink-0" />
                     {data.category}
                  </span>
                 <span className="font-mono text-muted-foreground shrink-0">{data.percentage.toFixed(1)}%</span>
@@ -124,20 +109,25 @@ const CustomTooltip = ({ active, payload, label, totalAmount, hourlyWage, displa
              <TooltipProvider delayDuration={150}>
                  <ShadTooltip>
                     <TooltipTrigger asChild>
-                         <div className="font-semibold text-sm cursor-default"> {/* Make the value the trigger */}
+                         <div className="font-semibold text-sm sm:text-base cursor-default text-left"> {/* Changed alignment */}
                             {displayValue}
                          </div>
                     </TooltipTrigger>
-                     {/* Show time perspective tooltip only in time mode and if text exists */}
-                     {displayMode === 'time' && timeTooltipText && (
-                        <TooltipContent side="top" align="center" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50">
-                             <p className="text-popover-foreground text-sm leading-relaxed">{timeTooltipText}</p>
-                             {/* Optional: Add icons based on perspective text */}
-                             <div className="flex gap-2 text-muted-foreground mt-2 justify-center">
-                                {timeTooltipText.includes("coffee") && <Coffee className="h-3 w-3"/>}
-                                {timeTooltipText.includes("movie") && <Film className="h-3 w-3"/>}
-                                {timeTooltipText.includes("fly") && <Plane className="h-3 w-3"/>}
-                             </div>
+                     {/* Show time perspective tooltip only in time mode and if list exists */}
+                     {displayMode === 'time' && timePerspectiveList && timePerspectiveList.length > 0 && (
+                        <TooltipContent side="top" align="center" className="max-w-xs text-sm bg-popover border shadow-xl p-4 rounded-lg animate-scaleIn z-50">
+                            <p className="text-popover-foreground text-sm font-semibold mb-2">In this time, you could have:</p>
+                            <ul className="space-y-1.5 text-popover-foreground/90">
+                                {timePerspectiveList.map((item, index) => {
+                                    const Icon = item.icon ? iconComponents[item.icon] || Info : Info; // Use Info as fallback
+                                    return (
+                                        <li key={index} className="flex items-center gap-2 text-xs">
+                                            <Icon className="h-3 w-3 text-muted-foreground shrink-0"/>
+                                            <span>{item.description}{item.count > 1 ? ` (${item.count} times)` : ''}</span>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
                         </TooltipContent>
                      )}
                 </ShadTooltip>
@@ -194,17 +184,11 @@ const CustomLegend = (props: any) => {
 
 
 const SubItemTooltipContent = ({ subItem, amount, hourlyWage, displayMode }: { subItem: TaxSpendingSubItem, amount: number, hourlyWage: number | null, displayMode: 'currency' | 'time' }) => {
-    let timeTooltipText: string | null = null;
-    if(displayMode === 'time' && hourlyWage) {
-        const hoursWorked = amount / hourlyWage;
-        timeTooltipText = getTimePerspectiveText(hoursWorked * 60);
-    }
-
+    // This tooltip is for the Info icon, not the time perspective itself
     return (
-        <TooltipContent side="top" align="center" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50"> {/* Added z-50 */}
+        <TooltipContent side="top" align="center" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50">
             <p className="font-semibold mb-1.5 text-popover-foreground">{subItem.description}</p>
             {subItem.tooltipText && <p className="text-muted-foreground text-xs leading-relaxed mb-2">{subItem.tooltipText}</p>}
-            {/* Time perspective moved to be shown when hovering over the time value itself */}
             {subItem.wikiLink && (
                 <a
                 href={subItem.wikiLink}
@@ -449,16 +433,17 @@ export default function TaxBreakdownDashboard({
                      <Accordion type="multiple" className="w-full">
                         {taxSpending.map((item, index) => {
                             const categoryAmount = (item.percentage / 100) * taxAmount;
-                            const Icon = categoryIcons[item.category] || DefaultIcon;
+                            const CategoryIcon = iconComponents[item.category] || DefaultIcon; // Use lookup
                             const isInterestOnDebt = item.category === 'Interest on Debt';
                             const hasSubItems = item.subItems && item.subItems.length > 0;
 
                             let categoryDisplayValue: string;
-                            let categoryTimeTooltipText: string | null = null; // Added for category tooltip
+                            let categoryTimePerspectiveList: CombinedPerspective[] | null = null; // Added for category tooltip
                             if (displayMode === 'time' && hourlyWage) {
                                 const hoursWorked = categoryAmount / hourlyWage;
-                                categoryDisplayValue = formatTime(hoursWorked * 60);
-                                 categoryTimeTooltipText = getTimePerspectiveText(hoursWorked * 60); // Get time perspective for category
+                                const totalMinutes = hoursWorked * 60;
+                                categoryDisplayValue = formatTime(totalMinutes);
+                                categoryTimePerspectiveList = generateCombinedPerspectiveList(totalMinutes); // Get time perspective for category
                             } else {
                                 categoryDisplayValue = formatCurrency(categoryAmount);
                             }
@@ -468,7 +453,7 @@ export default function TaxBreakdownDashboard({
                                     <AccordionTrigger className="hover:no-underline py-3 px-3 sm:px-4 rounded-none hover:bg-accent/50 data-[state=open]:bg-accent/40 transition-colors duration-150 text-left">
                                          <div className="flex justify-between items-center w-full gap-2 sm:gap-3">
                                             <div className="flex items-center gap-2 min-w-0">
-                                                <Icon className="h-4 w-4 text-primary shrink-0" />
+                                                <CategoryIcon className="h-4 w-4 text-primary shrink-0" />
                                                 <span className="font-medium text-sm truncate flex-1">{item.category}</span>
                                             </div>
                                             <div className="text-right shrink-0 flex items-baseline gap-1 ml-auto">
@@ -478,17 +463,22 @@ export default function TaxBreakdownDashboard({
                                                         <span className="font-semibold font-mono text-sm cursor-default">{categoryDisplayValue}</span>
                                                     </TooltipTrigger>
                                                     {/* Category Time Perspective Tooltip */}
-                                                    {displayMode === 'time' && categoryTimeTooltipText && (
-                                                        <TooltipContent side="top" align="end" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50">
-                                                            <p className="text-popover-foreground text-sm leading-relaxed">{categoryTimeTooltipText}</p>
-                                                             {/* Optional: Icons */}
-                                                             <div className="flex gap-2 text-muted-foreground mt-2 justify-center">
-                                                                {categoryTimeTooltipText.includes("coffee") && <Coffee className="h-3 w-3"/>}
-                                                                {categoryTimeTooltipText.includes("movie") && <Film className="h-3 w-3"/>}
-                                                                {categoryTimeTooltipText.includes("fly") && <Plane className="h-3 w-3"/>}
-                                                             </div>
+                                                     {displayMode === 'time' && categoryTimePerspectiveList && categoryTimePerspectiveList.length > 0 && (
+                                                        <TooltipContent side="top" align="end" className="max-w-xs text-sm bg-popover border shadow-xl p-4 rounded-lg animate-scaleIn z-50">
+                                                            <p className="text-popover-foreground text-sm font-semibold mb-2">In this time, you could have:</p>
+                                                            <ul className="space-y-1.5 text-popover-foreground/90">
+                                                                {categoryTimePerspectiveList.map((pItem, pIndex) => {
+                                                                    const PIcon = pItem.icon ? iconComponents[pItem.icon] || Info : Info;
+                                                                    return (
+                                                                        <li key={pIndex} className="flex items-center gap-2 text-xs">
+                                                                            <PIcon className="h-3 w-3 text-muted-foreground shrink-0"/>
+                                                                            <span>{pItem.description}{pItem.count > 1 ? ` (${pItem.count} times)` : ''}</span>
+                                                                        </li>
+                                                                    );
+                                                                })}
+                                                            </ul>
                                                         </TooltipContent>
-                                                    )}
+                                                     )}
                                                 </ShadTooltip>
                                                 <span className="text-muted-foreground text-xs font-mono hidden sm:inline">({item.percentage.toFixed(1)}%)</span>
                                             </div>
@@ -526,11 +516,12 @@ export default function TaxBreakdownDashboard({
                                                     const isSelected = selectedItems.has(subItem.id);
 
                                                     let subItemDisplayValue: string;
-                                                    let subItemTimeTooltipText: string | null = null;
+                                                    let subItemTimePerspectiveList: CombinedPerspective[] | null = null; // Changed to list
                                                     if (displayMode === 'time' && hourlyWage) {
                                                         const hoursWorked = subItemAmount / hourlyWage;
-                                                        subItemDisplayValue = formatTime(hoursWorked * 60);
-                                                        subItemTimeTooltipText = getTimePerspectiveText(hoursWorked * 60); // Get time perspective for subitem
+                                                        const totalMinutes = hoursWorked * 60;
+                                                        subItemDisplayValue = formatTime(totalMinutes);
+                                                        subItemTimePerspectiveList = generateCombinedPerspectiveList(totalMinutes); // Get perspective list for subitem
                                                     } else {
                                                         subItemDisplayValue = formatCurrency(subItemAmount);
                                                     }
@@ -580,15 +571,20 @@ export default function TaxBreakdownDashboard({
                                                                      </span>
                                                                 </TooltipTrigger>
                                                                 {/* SubItem Time Perspective Tooltip */}
-                                                                 {displayMode === 'time' && subItemTimeTooltipText && (
-                                                                    <TooltipContent side="top" align="end" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50">
-                                                                         <p className="text-popover-foreground text-sm leading-relaxed">{subItemTimeTooltipText}</p>
-                                                                         {/* Optional: Icons */}
-                                                                         <div className="flex gap-2 text-muted-foreground mt-2 justify-center">
-                                                                            {subItemTimeTooltipText.includes("coffee") && <Coffee className="h-3 w-3"/>}
-                                                                            {subItemTimeTooltipText.includes("movie") && <Film className="h-3 w-3"/>}
-                                                                            {subItemTimeTooltipText.includes("fly") && <Plane className="h-3 w-3"/>}
-                                                                         </div>
+                                                                 {displayMode === 'time' && subItemTimePerspectiveList && subItemTimePerspectiveList.length > 0 && (
+                                                                    <TooltipContent side="top" align="end" className="max-w-xs text-sm bg-popover border shadow-xl p-4 rounded-lg animate-scaleIn z-50">
+                                                                          <p className="text-popover-foreground text-sm font-semibold mb-2">In this time, you could have:</p>
+                                                                          <ul className="space-y-1.5 text-popover-foreground/90">
+                                                                            {subItemTimePerspectiveList.map((pItem, pIndex) => {
+                                                                                 const PIcon = pItem.icon ? iconComponents[pItem.icon] || Info : Info;
+                                                                                 return (
+                                                                                    <li key={pIndex} className="flex items-center gap-2 text-xs">
+                                                                                        <PIcon className="h-3 w-3 text-muted-foreground shrink-0"/>
+                                                                                         <span>{pItem.description}{pItem.count > 1 ? ` (${pItem.count} times)` : ''}</span>
+                                                                                     </li>
+                                                                                );
+                                                                             })}
+                                                                         </ul>
                                                                      </TooltipContent>
                                                                 )}
                                                             </ShadTooltip>
@@ -618,15 +614,26 @@ export default function TaxBreakdownDashboard({
                                  </span>
                              </TooltipTrigger>
                               {/* Total Time Perspective Tooltip */}
-                             {displayMode === 'time' && hourlyWage && (
-                                 <TooltipContent side="top" align="end" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50">
-                                     <p className="text-popover-foreground text-sm leading-relaxed">{getTimePerspectiveText((taxAmount / hourlyWage) * 60)}</p>
-                                      {/* Optional: Icons */}
-                                      <div className="flex gap-2 text-muted-foreground mt-2 justify-center">
-                                        {/* Add icons based on total time */}
-                                      </div>
-                                  </TooltipContent>
-                             )}
+                             {displayMode === 'time' && hourlyWage && (() => { // Use IIFE to avoid variable scope issues
+                                const totalMinutes = (taxAmount / hourlyWage) * 60;
+                                const perspectiveList = generateCombinedPerspectiveList(totalMinutes);
+                                return perspectiveList && perspectiveList.length > 0 && (
+                                    <TooltipContent side="top" align="end" className="max-w-xs text-sm bg-popover border shadow-xl p-4 rounded-lg animate-scaleIn z-50">
+                                        <p className="text-popover-foreground text-sm font-semibold mb-2">In this total time, you could have:</p>
+                                        <ul className="space-y-1.5 text-popover-foreground/90">
+                                            {perspectiveList.map((pItem, pIndex) => {
+                                                const PIcon = pItem.icon ? iconComponents[pItem.icon] || Info : Info;
+                                                return (
+                                                    <li key={pIndex} className="flex items-center gap-2 text-xs">
+                                                        <PIcon className="h-3 w-3 text-muted-foreground shrink-0"/>
+                                                        <span>{pItem.description}{pItem.count > 1 ? ` (${pItem.count} times)` : ''}</span>
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
+                                    </TooltipContent>
+                                );
+                             })()}
                           </ShadTooltip>
                      </div>
                 </CardContent>
@@ -637,3 +644,5 @@ export default function TaxBreakdownDashboard({
   );
 }
 
+
+    
