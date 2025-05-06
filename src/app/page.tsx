@@ -294,7 +294,7 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-2 sm:p-4 md:p-8 bg-gradient-to-br from-background via-secondary/5 to-background relative"> {/* Adjusted padding for mobile */}
        {/* Container for Back button and Card */}
-       <div className={`w-full ${step === 'dashboard' ? 'max-w-full md:max-w-4xl' : 'max-w-full md:max-w-2xl'} mx-auto space-y-1 sm:space-y-2 transition-all duration-300 ease-in-out z-10`}> {/* Adjusted max-width for mobile */}
+       <div className={`w-full ${step === 'dashboard' ? 'max-w-full md:max-w-4xl' : 'max-w-full sm:max-w-md md:max-w-2xl'} mx-auto space-y-1 sm:space-y-2 transition-all duration-300 ease-in-out z-10`}> {/* Adjusted max-width for mobile */}
         {/* Flex container JUST for Back button */}
         <div className="flex justify-start items-center min-h-[36px] sm:min-h-[40px] px-1 sm:px-0"> {/* Ensure minimum height */}
             {step !== 'location' ? (
@@ -397,6 +397,3 @@ export default function Home() {
     </main>
   );
 }
-
-
-    

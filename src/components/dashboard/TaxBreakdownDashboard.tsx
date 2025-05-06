@@ -84,19 +84,19 @@ const iconComponents: { [key: string]: LucideIcon } = {
     // Map UserTie usage to PersonStanding (placeholder)
     UserTie: PersonStanding,
 
-    // Main Category Icons - Ensuring specific mapping for all 14 categories
+    // Main Category Icons - Ensuring specific mapping for all 14 categories + Government + Housing and Community
     "Health": HeartPulse,
     "War and Weapons": ShieldCheck,
     "Interest on Debt": TrendingDown,
-    "Veterans": Medal, // Specific icon for Veterans
+    "Veterans": Medal,
     "Unemployment and Labor": Briefcase,
     "Education": GraduationCap,
     "Food and Agriculture": Wheat,
-    "Government": Landmark,
-    "Housing and Community": Home, // Specific icon for Housing
-    "Energy and Environment": Sprout, // Using Sprout as a general environment icon
+    "Government": Landmark, // Added Government mapping
+    "Housing and Community": Home, // Ensured Housing and Community is mapped
+    "Energy and Environment": Sprout,
     "International Affairs": Globe,
-    "Law Enforcement": Gavel, // Specific icon for Law Enforcement
+    "Law Enforcement": Gavel,
     "Transportation": Train,
     "Science": Atom,
     // Fallback/General Icons - already part of the initial import list
@@ -112,7 +112,7 @@ interface PerspectiveData {
 }
 
 // --- Tooltip Components ---
-const CustomPieTooltip = ({ active, payload, totalAmount, hourlyWage, displayMode, perspectiveData }: any) => {
+const CustomPieTooltip = ({ active, payload, totalAmount, hourlyWage, displayMode, perspectiveData, isMobile }: any) => {
   if (active && payload && payload.length && perspectiveData) {
     const data = payload[0].payload; // data here is for the specific pie slice
     const iconKey = data.category; // Use category name for icon lookup
@@ -136,7 +136,7 @@ const CustomPieTooltip = ({ active, payload, totalAmount, hourlyWage, displayMod
         perspectiveTitle = 'With this amount, you could buy:';
     }
 
-    return (
+    const content = (
         <div className="rounded-lg border bg-popover p-2 sm:p-2.5 text-popover-foreground shadow-lg animate-scaleIn text-[10px] sm:text-xs max-w-[160px] sm:max-w-[220px]"> {/* Adjusted padding and font size for mobile */}
              <div className="flex items-center justify-between mb-0.5 sm:mb-1 gap-1 sm:gap-2"> {/* Adjusted spacing for mobile */}
                  <span className="font-medium flex items-center gap-1 sm:gap-1.5 truncate">
@@ -145,30 +145,50 @@ const CustomPieTooltip = ({ active, payload, totalAmount, hourlyWage, displayMod
                  </span>
                 <span className="font-mono text-muted-foreground shrink-0">{data.percentage.toFixed(1)}%</span>
             </div>
-             <ShadTooltip>
+             <div className="font-semibold text-xs sm:text-sm md:text-base cursor-default text-left"> {/* Adjusted font size for mobile */}
+                {displayValue}
+             </div>
+        </div>
+    );
+
+    if (isMobile) {
+        return (
+            <ShadTooltip open> {/* Force open on mobile for initial tap */}
                 <TooltipTrigger asChild>
-                     <div className="font-semibold text-xs sm:text-sm md:text-base cursor-default text-left"> {/* Adjusted font size for mobile */}
-                        {displayValue}
-                     </div>
+                    {content}
                 </TooltipTrigger>
                 <PerspectiveTooltipContent
                     perspectiveList={perspectiveList}
                     title={perspectiveTitle}
+                    isMobile={isMobile}
                 />
-             </ShadTooltip>
-        </div>
+            </ShadTooltip>
+        );
+    }
+
+    return (
+        <ShadTooltip>
+            <TooltipTrigger asChild>
+                {content}
+            </TooltipTrigger>
+            <PerspectiveTooltipContent
+                perspectiveList={perspectiveList}
+                title={perspectiveTitle}
+                isMobile={isMobile}
+            />
+        </ShadTooltip>
     );
   }
   return null;
 };
 
-const PerspectiveTooltipContent = ({ perspectiveList, title }: { perspectiveList: (CombinedPerspective | CombinedCurrencyPerspective)[] | null, title: string }) => {
+const PerspectiveTooltipContent = ({ perspectiveList, title, isMobile }: { perspectiveList: (CombinedPerspective | CombinedCurrencyPerspective)[] | null, title: string, isMobile?: boolean }) => {
     if (!perspectiveList || perspectiveList.length === 0) {
         return null;
     }
 
     return (
-        <TooltipContent side="top" align="center" className="max-w-[200px] sm:max-w-xs text-xs sm:text-sm bg-popover border shadow-xl p-3 sm:p-4 rounded-lg animate-scaleIn z-50"> {/* Adjusted padding and max-width for mobile */}
+        <TooltipContent side="top" align="center" className={cn("max-w-[200px] sm:max-w-xs text-xs sm:text-sm bg-popover border shadow-xl p-3 sm:p-4 rounded-lg animate-scaleIn z-50", isMobile && "pointer-events-auto")}> {/* Adjusted padding and max-width for mobile, allow pointer events on mobile */}
             <p className="text-popover-foreground text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2">{title}</p> {/* Adjusted font size and margin for mobile */}
             <ul className="space-y-1 sm:space-y-1.5 text-popover-foreground/90 max-h-48 sm:max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"> {/* Adjusted max-height for mobile */}
                 {perspectiveList.map((item, index) => {
@@ -185,9 +205,9 @@ const PerspectiveTooltipContent = ({ perspectiveList, title }: { perspectiveList
     );
 };
 
-const ItemInfoTooltipContent = ({ subItem }: { subItem: TaxSpendingSubItem }) => {
+const ItemInfoTooltipContent = ({ subItem, isMobile }: { subItem: TaxSpendingSubItem, isMobile?: boolean }) => {
     return (
-        <TooltipContent side="top" align="center" className="max-w-[200px] sm:max-w-sm text-xs sm:text-sm bg-popover border shadow-xl p-2.5 sm:p-3 rounded-lg animate-scaleIn z-50"> {/* Adjusted padding and max-width for mobile */}
+        <TooltipContent side="top" align="center" className={cn("max-w-[200px] sm:max-w-sm text-xs sm:text-sm bg-popover border shadow-xl p-2.5 sm:p-3 rounded-lg animate-scaleIn z-50", isMobile && "pointer-events-auto")}> {/* Adjusted padding and max-width for mobile, allow pointer events */}
             <p className="font-semibold mb-1 sm:mb-1.5 text-popover-foreground">{subItem.description}</p> {/* Adjusted margin for mobile */}
             {subItem.tooltipText && <p className="text-muted-foreground text-[10px] sm:text-xs leading-relaxed mb-1.5 sm:mb-2">{subItem.tooltipText}</p>} {/* Adjusted font size and margin for mobile */}
             {subItem.wikiLink && (
@@ -196,7 +216,7 @@ const ItemInfoTooltipContent = ({ subItem }: { subItem: TaxSpendingSubItem }) =>
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline flex items-center gap-1 text-[10px] sm:text-xs font-medium mt-1.5 sm:mt-2" // Adjusted font size and margin for mobile
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()} // Prevent accordion close on link click
                 >
                 Learn More <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> {/* Adjusted icon size for mobile */}
                 </a>
@@ -313,9 +333,16 @@ export default function TaxBreakdownDashboard({
   const [balanceBudgetChecked, setBalanceBudgetChecked] = useState(false);
   const [displayMode, setDisplayMode] = useState<'currency' | 'time'>('currency');
   const [isClient, setIsClient] = useState(false);
+  const [activePieIndex, setActivePieIndex] = useState<number | null>(null);
+  const [isMobileView, setIsMobileView] = useState(false);
+
 
   useEffect(() => {
     setIsClient(true);
+    const checkMobile = () => setIsMobileView(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
 
@@ -339,8 +366,8 @@ export default function TaxBreakdownDashboard({
         taxSpending.forEach(item => {
             const spendingAmount = (item.percentage / 100) * taxAmount;
             newChartPerspectives[item.category] = {
-                currency: generateCurrencyPerspectiveList(spendingAmount, 5), // Show fewer items in pie tooltip
-                time: hourlyWage ? generateCombinedPerspectiveList((spendingAmount / hourlyWage) * 60, 5) : null,
+                currency: generateCurrencyPerspectiveList(spendingAmount, isMobileView ? 3 : 5), // Fewer items on mobile for tooltip
+                time: hourlyWage ? generateCombinedPerspectiveList((spendingAmount / hourlyWage) * 60, isMobileView ? 3: 5) : null,
             };
         });
         setChartPerspectiveData(newChartPerspectives);
@@ -371,7 +398,7 @@ export default function TaxBreakdownDashboard({
         });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taxAmount, hourlyWage, taxSpending, displayMode]); // Rerun if these change, including displayMode for potential optimization
+  }, [taxAmount, hourlyWage, taxSpending, displayMode, isMobileView]); // Rerun if these change, including displayMode and isMobileView for perspective list length
 
     useEffect(() => {
         const count = selectedItems.size + (balanceBudgetChecked ? 1 : 0);
@@ -393,7 +420,7 @@ export default function TaxBreakdownDashboard({
         setBalanceBudgetChecked(checked === true);
     }
 
-   const currentYear = typeof window !== 'undefined' ? new Date().getFullYear() : null;
+   const currentYear = typeof window !== 'undefined' ? new Date().getFullYear() : new Date().getFullYear(); // Fallback for server
    const dueDateDisplay = clientDueDate || (currentYear ? `April 15, ${currentYear + 1}` : 'April 15');
 
   const chartData = taxSpending.map(item => ({
@@ -401,13 +428,13 @@ export default function TaxBreakdownDashboard({
     percentage: item.percentage,
   }));
 
-  const responsivePieHeight = isClient && window.innerWidth < 640 ? 280 : 320;
-  const responsiveOuterRadius = isClient && window.innerWidth < 640 ? 70 : (isClient && window.innerWidth < 768 ? 80 : 100);
-  const responsiveInnerRadius = isClient && window.innerWidth < 640 ? 40 : (isClient && window.innerWidth < 768 ? 50 : 65);
+  const responsivePieHeight = isMobileView ? 260 : 320; // Smaller height on mobile to prevent clipping
+  const responsiveOuterRadius = isMobileView ? 65 : (isClient && window.innerWidth < 768 ? 80 : 100); // Smaller radius on mobile
+  const responsiveInnerRadius = isMobileView ? 35 : (isClient && window.innerWidth < 768 ? 50 : 65); // Smaller inner radius
 
 
   return (
-    <TooltipProvider>
+    <TooltipProvider delayDuration={isMobileView ? 0 : 200}> {/* No delay on mobile for tap */}
         <div className="space-y-6 sm:space-y-10 animate-fadeIn relative pb-10"> {/* Adjusted spacing for mobile */}
             <div className="text-center space-y-0.5 sm:space-y-1 mb-4 sm:mb-6 relative"> {/* Adjusted spacing for mobile */}
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-foreground">{currentYear ? `${currentYear} ` : ''}Federal Income Tax Receipt</h1> {/* Adjusted font size for mobile */}
@@ -457,7 +484,7 @@ export default function TaxBreakdownDashboard({
              <h2 className="text-lg sm:text-xl font-semibold text-center mb-3 sm:mb-4">Spending Overview</h2> {/* Adjusted font size and margin for mobile */}
 
                   <ResponsiveContainer width="100%" height={responsivePieHeight}>
-                    <PieChart margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+                    <PieChart margin={{ top: isMobileView ? 20 : 5, right: 5, bottom: 5, left: 5 }}> {/* Added top margin for mobile */}
                       <Pie
                         data={chartData}
                         cx="50%"
@@ -469,14 +496,38 @@ export default function TaxBreakdownDashboard({
                         paddingAngle={1}
                         dataKey="percentage"
                         nameKey="category"
+                        activeIndex={activePieIndex ?? undefined}
+                        activeShape={({ cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value }) => ( // Custom active shape for better control
+                            <g>
+                                <Cell fill={fill} strokeWidth={2} stroke="hsl(var(--background))" />
+                                <Sector
+                                    cx={cx}
+                                    cy={cy}
+                                    innerRadius={innerRadius}
+                                    outerRadius={outerRadius + (isMobileView ? 3 : 5)} // Slightly expand on active/hover
+                                    startAngle={startAngle}
+                                    endAngle={endAngle}
+                                    fill={fill}
+                                    stroke={'hsl(var(--foreground))'}
+                                    strokeWidth={1}
+                                />
+                            </g>
+                        )}
+                        onMouseEnter={(_, index) => !isMobileView && setActivePieIndex(index)}
+                        onMouseLeave={() => !isMobileView && setActivePieIndex(null)}
+                        onClick={(_, index) => {
+                            if (isMobileView) {
+                                setActivePieIndex(activePieIndex === index ? null : index); // Toggle active state on click for mobile
+                            }
+                        }}
                       >
                         {chartData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke={'hsl(var(--background))'} strokeWidth={1} />
                         ))}
                       </Pie>
                        <RechartsTooltip
-                         content={({ active, payload, label: tooltipLabel }) => { // `label` here is the category name from Recharts
-                            if (active && payload && payload.length) {
+                         content={({ active, payload, label: tooltipLabel }) => {
+                            if ((active || (isMobileView && activePieIndex !== null && payload && payload[0]?.payload.category === chartData[activePieIndex]?.category)) && payload && payload.length) {
                                 return (
                                     <CustomPieTooltip
                                         active={active}
@@ -485,18 +536,20 @@ export default function TaxBreakdownDashboard({
                                         hourlyWage={hourlyWage}
                                         displayMode={displayMode}
                                         perspectiveData={chartPerspectiveData[tooltipLabel as string] || { currency: null, time: null }}
+                                        isMobile={isMobileView}
                                     />
                                 );
                             }
                             return null;
                          }}
                          cursor={{ fill: 'hsl(var(--accent))', fillOpacity: 0.4 }}
+                         wrapperStyle={{ zIndex: 100 }} // Ensure tooltip is above other elements
                         />
                        <Legend content={<CustomLegend />} wrapperStyle={{ maxWidth: '100%', overflow: 'hidden' }}/>
                     </PieChart>
                   </ResponsiveContainer>
                  <p className="text-xs text-muted-foreground text-center mt-3 sm:mt-4 flex items-center justify-center gap-1 px-2"> {/* Adjusted margin for mobile */}
-                    <Info className="h-3 w-3" /> Hover over segments or values for details. Estimated data.
+                    <Info className="h-3 w-3" /> {isMobileView ? "Tap segments" : "Hover over segments"} or values for details. Estimated data.
                  </p>
           </div>
 
@@ -509,8 +562,8 @@ export default function TaxBreakdownDashboard({
                      <Accordion type="multiple" className="w-full">
                         {taxSpending.map((item, index) => {
                             const categoryAmount = (item.percentage / 100) * taxAmount;
-                            const categoryIconKey = item.category; // Use the category name directly
-                            const CategoryIcon = iconComponents[categoryIconKey] || DefaultIcon; // Fallback to DefaultIcon
+                            const categoryIconKey = item.category;
+                            const CategoryIcon = iconComponents[categoryIconKey] || DefaultIcon;
                             const isInterestOnDebt = item.category === 'Interest on Debt';
                             const hasSubItems = item.subItems && item.subItems.length > 0;
 
@@ -540,13 +593,14 @@ export default function TaxBreakdownDashboard({
                                                 <span className="font-medium text-xs sm:text-sm truncate flex-1">{item.category}</span> {/* Adjusted font size for mobile */}
                                             </div>
                                             <div className="text-right shrink-0 flex items-baseline gap-1 ml-auto">
-                                                <ShadTooltip>
+                                                <ShadTooltip open={isMobileView ? undefined : undefined}>
                                                     <TooltipTrigger asChild>
                                                         <span className="font-semibold font-mono text-xs sm:text-sm cursor-default">{categoryDisplayValue}</span>
                                                     </TooltipTrigger>
                                                      <PerspectiveTooltipContent
                                                         perspectiveList={categoryPerspectiveList}
                                                         title={categoryPerspectiveTitle}
+                                                        isMobile={isMobileView}
                                                     />
                                                 </ShadTooltip>
                                                 <span className="text-muted-foreground text-[10px] sm:text-xs font-mono hidden sm:inline">({item.percentage.toFixed(1)}%)</span> {/* Adjusted font size for mobile */}
@@ -611,7 +665,7 @@ export default function TaxBreakdownDashboard({
                                                                    aria-label={`Select ${subItem.description}`}
                                                                    className="mt-0 shrink-0 rounded-[4px] h-3.5 w-3.5 sm:h-4 sm:w-4" // Adjusted size for mobile
                                                                 />
-                                                               <ShadTooltip>
+                                                               <ShadTooltip open={isMobileView ? undefined : undefined}>
                                                                     <TooltipTrigger asChild>
                                                                          <label
                                                                             htmlFor={`subitem-${item.id}-${subItem.id}`}
@@ -627,11 +681,11 @@ export default function TaxBreakdownDashboard({
                                                                         </label>
                                                                     </TooltipTrigger>
                                                                     {(subItem.tooltipText || subItem.wikiLink) && (
-                                                                         <ItemInfoTooltipContent subItem={subItem} />
+                                                                         <ItemInfoTooltipContent subItem={subItem} isMobile={isMobileView} />
                                                                     )}
                                                                 </ShadTooltip>
                                                              </div>
-                                                            <ShadTooltip>
+                                                            <ShadTooltip open={isMobileView ? undefined : undefined}>
                                                                 <TooltipTrigger asChild>
                                                                      <span className="font-medium font-mono text-foreground/80 whitespace-nowrap cursor-default">
                                                                         {subItemDisplayValue}
@@ -640,6 +694,7 @@ export default function TaxBreakdownDashboard({
                                                                  <PerspectiveTooltipContent
                                                                      perspectiveList={subItemPerspectiveList}
                                                                      title={subItemPerspectiveTitle}
+                                                                     isMobile={isMobileView}
                                                                  />
                                                             </ShadTooltip>
                                                         </li>
@@ -657,7 +712,7 @@ export default function TaxBreakdownDashboard({
                      </Accordion>
                      <div className="flex justify-between items-center w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-4 border-t-2 border-primary/50 bg-primary/5"> {/* Adjusted padding for mobile */}
                          <span className="font-bold text-xs sm:text-sm md:text-base text-primary tracking-tight">TOTAL ESTIMATED TAX</span> {/* Adjusted font size for mobile */}
-                          <ShadTooltip>
+                          <ShadTooltip open={isMobileView ? undefined : undefined}>
                              <TooltipTrigger asChild>
                                  <span className="font-bold font-mono text-xs sm:text-sm md:text-base text-primary cursor-default"> {/* Adjusted font size for mobile */}
                                    {displayMode === 'time' && hourlyWage && totalPerspectiveData?.time
@@ -677,6 +732,7 @@ export default function TaxBreakdownDashboard({
                                          ? 'In this total time, you could have:'
                                          : 'With this total amount, you could buy:'
                                  }
+                                 isMobile={isMobileView}
                              />
                           </ShadTooltip>
                      </div>
@@ -686,3 +742,4 @@ export default function TaxBreakdownDashboard({
     </TooltipProvider>
   );
 }
+

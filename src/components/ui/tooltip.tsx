@@ -12,10 +12,15 @@ const Tooltip = TooltipPrimitive.Root
 
 const TooltipTrigger = TooltipPrimitive.Trigger
 
+// Extend props to include an optional isMobile flag
+interface TooltipContentProps extends React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content> {
+  isMobile?: boolean;
+}
+
 const TooltipContent = React.forwardRef<
   React.ElementRef<typeof TooltipPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>
->(({ className, sideOffset = 6, align = "center", ...props }, ref) => ( // Increased sideOffset, default align
+  TooltipContentProps // Use the extended props type
+>(({ className, sideOffset = 6, align = "center", isMobile, ...props }, ref) => ( // Added isMobile to destructuring
   <TooltipPrimitive.Portal>
      <TooltipPrimitive.Content
       ref={ref}
@@ -24,6 +29,7 @@ const TooltipContent = React.forwardRef<
       className={cn(
         "z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-scaleIn data-[state=closed]:animate-scaleOut max-w-sm", // Updated animation, added max-width
         // Removed redundant individual side animations as scaleIn/Out handles it
+        isMobile && "pointer-events-auto", // Allow pointer events on mobile for interaction
         className
       )}
       {...props}
@@ -33,4 +39,3 @@ const TooltipContent = React.forwardRef<
 TooltipContent.displayName = TooltipPrimitive.Content.displayName
 
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
-
