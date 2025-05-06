@@ -97,11 +97,10 @@ interface PerspectiveData {
 }
 
 // --- Tooltip Components ---
-const CustomPieTooltip = ({ active, payload, label, totalAmount, hourlyWage, displayMode, perspectiveData }: any) => {
+const CustomPieTooltip = ({ active, payload, totalAmount, hourlyWage, displayMode, perspectiveData }: any) => {
   if (active && payload && payload.length && perspectiveData) {
-    const data = payload[0].payload;
-    const spendingAmount = (data.percentage / 100) * totalAmount;
-    const iconKey = data.category || data.description;
+    const data = payload[0].payload; // data here is for the specific pie slice
+    const iconKey = data.category; // Use category name for icon lookup
     const CategoryIcon = iconComponents[iconKey] || DefaultIcon;
 
     let displayValue: string;
@@ -109,12 +108,14 @@ const CustomPieTooltip = ({ active, payload, label, totalAmount, hourlyWage, dis
     let perspectiveTitle = '';
 
     if (displayMode === 'time' && hourlyWage) {
+        const spendingAmount = (data.percentage / 100) * totalAmount;
         const hoursWorked = spendingAmount / hourlyWage;
         const totalMinutes = hoursWorked * 60;
         displayValue = formatTime(totalMinutes);
         perspectiveList = perspectiveData.time;
         perspectiveTitle = 'In this time, you could have:';
     } else {
+        const spendingAmount = (data.percentage / 100) * totalAmount;
         displayValue = formatCurrency(spendingAmount);
         perspectiveList = perspectiveData.currency;
         perspectiveTitle = 'With this amount, you could buy:';
@@ -442,12 +443,21 @@ export default function TaxBreakdownDashboard({
                         ))}
                       </Pie>
                        <Tooltip 
-                         content={<CustomPieTooltip 
-                            totalAmount={taxAmount} 
-                            hourlyWage={hourlyWage} 
-                            displayMode={displayMode}
-                            perspectiveData={chartPerspectiveData[label] || {currency: null, time: null}} // Pass specific perspective data for the hovered item
-                         />} 
+                         content={({ active, payload, label: tooltipLabel }) => { // `label` here is the category name from Recharts
+                            if (active && payload && payload.length) {
+                                return (
+                                    <CustomPieTooltip
+                                        active={active}
+                                        payload={payload}
+                                        totalAmount={taxAmount}
+                                        hourlyWage={hourlyWage}
+                                        displayMode={displayMode}
+                                        perspectiveData={chartPerspectiveData[tooltipLabel] || { currency: null, time: null }}
+                                    />
+                                );
+                            }
+                            return null;
+                         }}
                          cursor={{ fill: 'hsl(var(--accent))', fillOpacity: 0.4 }} 
                         />
                        <Legend content={<CustomLegend />} wrapperStyle={{ maxWidth: '100%', overflow: 'hidden' }}/>
