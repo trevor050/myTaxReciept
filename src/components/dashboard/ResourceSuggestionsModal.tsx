@@ -46,17 +46,28 @@ export default function ResourceSuggestionsModal({
   React.useEffect(() => {
     const loadIcons = async () => {
       const loaded: Record<string, React.ElementType> = {};
-      for (const resource of suggestedResources) {
+      // Create a temporary set of icons to load to avoid redundant calls if suggestedResources change rapidly
+      const iconsToLoad = new Set<string>();
+      suggestedResources.forEach(resource => {
         if (resource.icon && !IconComponents[resource.icon]) {
-          loaded[resource.icon] = await importLucideIcon(resource.icon);
+          iconsToLoad.add(resource.icon);
         }
+      });
+
+      for (const iconName of iconsToLoad) {
+        loaded[iconName] = await importLucideIcon(iconName);
       }
-      setIconComponents(prev => ({ ...prev, ...loaded }));
+      // Only update state if new icons were actually loaded
+      if (Object.keys(loaded).length > 0) {
+        setIconComponents(prev => ({ ...prev, ...loaded }));
+      }
     };
+
     if (isOpen && suggestedResources.length > 0) {
       loadIcons();
     }
-  }, [isOpen, suggestedResources, IconComponents]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, suggestedResources]); // Removed IconComponents from dependency array to prevent infinite loop
 
 
   return (
@@ -67,7 +78,7 @@ export default function ResourceSuggestionsModal({
             'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
             'data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut'
         )}
-        onInteractOutside={(e) => e.preventDefault()} // Allow preventing close on outside click if needed
+        // onInteractOutside={(e) => e.preventDefault()} // Potentially problematic, removing for now unless explicitly needed
       >
         <DialogHeader className="px-4 py-3 sm:px-6 sm:py-4 border-b bg-card/95 rounded-t-lg text-left">
           <DialogTitle className="text-base sm:text-lg md:text-xl font-semibold flex items-center gap-1.5 sm:gap-2">
