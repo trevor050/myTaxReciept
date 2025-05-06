@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { generateRepresentativeEmail, type SelectedItem } from '@/services/tax-spending'; // Adjust path as needed
 import { Mail, Send, Settings2, X } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area"; // Import ScrollArea
+import { useToast } from '@/hooks/use-toast'; // Import useToast
 
 interface EmailCustomizationModalProps {
   isOpen: boolean;
@@ -72,9 +73,10 @@ export default function EmailCustomizationModal({
   const [userName, setUserName] = useState('');
   const [userLocation, setUserLocation] = useState(''); // e.g., "City, State, Zip"
   const formRef = React.useRef<HTMLFormElement>(null);
+  const { toast } = useToast(); // Use the hook
 
   // Reset state when modal opens
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
         setAggressiveness(50); // Reset aggressiveness
         // Reset item reductions based on currently selected items
@@ -96,51 +98,53 @@ export default function EmailCustomizationModal({
   };
 
   const handleGenerateEmailClick = () => {
-    formRef.current?.requestSubmit();
+    // Trigger form validation and submission
+     if (!formRef.current?.checkValidity()) {
+         formRef.current?.reportValidity(); // Show browser validation messages
+         return;
+     }
+     // If valid, manually call the submit handler
+     handleFormSubmit(new Event('submit') as unknown as React.FormEvent);
   };
 
+
   const handleFormSubmit = (event: React.FormEvent) => {
-     event.preventDefault();
+     event.preventDefault(); // Prevent default form submission
      if (!userName || !userLocation) {
         toast({ // Use toast for feedback
            title: "Missing Information",
            description: "Please enter your name and location to generate the email.",
            variant: "destructive",
         });
-        return;
+        return; // Stop if info is missing (redundant check, but safe)
      }
      const emailDetails = generateRepresentativeEmail(
        selectedItems.map(item => ({
          ...item,
-         reductionLevel: itemReductions[item.id],
+         reductionLevel: itemReductions[item.id] ?? 50, // Ensure reduction level is set
        })),
        aggressiveness,
        userName,
        userLocation
      );
      onSubmit(emailDetails);
-     onClose(); // Close modal after successful submission
+     // Keep modal open - user might want to copy/paste or re-generate
+     // onClose();
    };
-
-  // Need to import useToast hook
-  const { toast } = React.useContext(ToastContext); // Assuming ToastContext is set up globally or provided higher up
-
-  // Or if not using Context:
-  // import { useToast } from '@/hooks/use-toast';
-  // const { toast } = useToast();
 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[90vw] md:max-w-[70vw] lg:max-w-[60vw] xl:max-w-[50vw] max-h-[90vh] flex flex-col p-0 rounded-lg overflow-hidden border-border/70 shadow-2xl"> {/* Use overflow-hidden on DialogContent */}
-        <DialogHeader className="px-6 pt-5 pb-4 border-b border-border/50 flex-shrink-0"> {/* Ensure header doesn't grow */}
+      {/* Apply centering and max height/width styles directly to DialogContent */}
+      <DialogContent className="sm:max-w-[90vw] md:max-w-[70vw] lg:max-w-[60vw] xl:max-w-[50vw] max-h-[90vh] flex flex-col p-0 rounded-lg overflow-hidden border-border/70 shadow-2xl">
+        <DialogHeader className="px-6 pt-5 pb-4 border-b border-border/50 flex-shrink-0">
           <DialogTitle className="flex items-center gap-2 text-xl sm:text-2xl">
              <Settings2 className="h-5 w-5" /> Customize Your Email
           </DialogTitle>
           <DialogDescription>
             Adjust the tone and specific requests for your message to your representative.
           </DialogDescription>
-           {/* Manual close button for robustness */}
+           {/* Use DialogClose provided by ShadCN for the X button */}
            <DialogClose asChild>
              <Button variant="ghost" size="icon" className="absolute top-3 right-3 text-muted-foreground hover:text-foreground">
                 <X className="h-4 w-4" />
@@ -150,8 +154,9 @@ export default function EmailCustomizationModal({
         </DialogHeader>
 
         {/* Scroll area for the main content */}
-        <ScrollArea className="flex-grow px-6 py-4 w-full overflow-y-auto">
-            <form ref={formRef} onSubmit={handleFormSubmit} className="space-y-6">
+        {/* Ensure ScrollArea takes up remaining space and allows scrolling */}
+        <ScrollArea className="flex-grow overflow-y-auto">
+            <form ref={formRef} onSubmit={handleFormSubmit} className="space-y-6 px-6 py-4">
                 {/* Overall Tone Slider */}
                 <div className="space-y-3">
                     <Label htmlFor="aggressiveness" className="text-base font-medium">Overall Tone</Label>
@@ -233,8 +238,11 @@ export default function EmailCustomizationModal({
          </ScrollArea>
 
 
-        <DialogFooter className="px-6 pb-5 pt-4 border-t border-border/50 flex-shrink-0"> {/* Ensure footer doesn't grow */}
-             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+        <DialogFooter className="px-6 pb-5 pt-4 border-t border-border/50 flex-shrink-0">
+            {/* Use DialogClose for Cancel button */}
+             <DialogClose asChild>
+                <Button type="button" variant="outline">Cancel</Button>
+             </DialogClose>
              <Button type="button" onClick={handleGenerateEmailClick} disabled={!userName || !userLocation || selectedItems.length === 0}>
                  <Send className="mr-2 h-4 w-4" /> Generate Email
             </Button>
@@ -243,6 +251,3 @@ export default function EmailCustomizationModal({
     </Dialog>
   );
 }
-
-// Helper Context (if not already globally available)
-const ToastContext = React.createContext<{ toast: Function }>({ toast: () => {} });

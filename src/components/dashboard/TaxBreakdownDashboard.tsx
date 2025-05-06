@@ -97,7 +97,7 @@ const CustomTooltip = ({ active, payload, label, totalAmount }: any) => {
                 <span className="font-mono text-muted-foreground shrink-0">{data.percentage.toFixed(1)}%</span>
             </div>
             <div className="font-semibold text-sm">
-                ${spendingAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {formatCurrency(spendingAmount)} {/* Use helper function */}
             </div>
         </div>
     );
@@ -165,6 +165,15 @@ const SubItemTooltipContent = ({ subItem }: { subItem: TaxSpendingSubItem }) => 
     </TooltipContent>
 );
 
+// Helper function to format currency
+const formatCurrency = (amount: number | null | undefined) => {
+     if (typeof amount !== 'number' || isNaN(amount)) {
+      return '$--.--';
+    }
+    // Use standard currency formatting
+    return '$' + amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 
 export default function TaxBreakdownDashboard({
   taxAmount,
@@ -215,14 +224,6 @@ export default function TaxBreakdownDashboard({
     };
 
 
-  const formatCurrency = (amount: number) => {
-       if (typeof amount !== 'number' || isNaN(amount)) {
-        return '$--.--';
-      }
-      // Use standard currency formatting
-      return '$' + amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
-
   // Use client-side date state
   const currentYear = new Date().getFullYear(); // Get current year for display
   const dueDateDisplay = clientDueDate || `April 15, ${currentYear + 1}`; // Use calculated due date
@@ -235,7 +236,7 @@ export default function TaxBreakdownDashboard({
 
   return (
     // Add relative positioning and padding-bottom to the container to prevent overlap with FAB
-    <div className="space-y-10 animate-fadeIn relative pb-28 sm:pb-24">
+    <div className="space-y-10 animate-fadeIn relative pb-28 sm:pb-24"> {/* Increased padding-bottom */}
         {/* --- Header --- */}
         <div className="text-center space-y-1 mb-10">
             {/* Keep only one main title */}
@@ -388,8 +389,8 @@ export default function TaxBreakdownDashboard({
 
         {/* Floating Action Button - Fixed Centered Bottom */}
         <div className={cn(
-            "fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 transition-opacity duration-300 ease-out",
-            selectedItems.size > 0 ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+            "fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 ease-out", // Fixed positioning
+            selectedItems.size > 0 ? "opacity-100 pointer-events-auto scale-100" : "opacity-0 pointer-events-none scale-95" // Show/hide with scale
         )}>
             <Button
                 size="lg"
