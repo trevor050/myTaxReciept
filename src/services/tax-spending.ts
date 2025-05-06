@@ -61,6 +61,10 @@ export interface TaxSpending {
     * Optional array of sub-items detailing the spending within this category.
     */
    subItems?: TaxSpendingSubItem[];
+   /**
+    * Optional tooltip text for the main category (used for Interest on Debt).
+    */
+   tooltipText?: string;
 }
 
 // Reference total tax amount from the provided example
@@ -114,7 +118,8 @@ export async function getTaxSpending(location: Location, taxAmount: number): Pro
       category: 'Interest on Debt',
       percentage: (10105.93 / REFERENCE_TOTAL_TAX) * 100, // ~19.43%
       // Updated activism-focused paragraph for Interest on Debt
-      tooltipText: 'This substantial portion represents the cost of servicing the national debt, a direct result of decades of government spending outpacing revenue. Chronic deficit spending, unfunded wars and tax cuts, and economic downturns have fueled this growing burden. Paying this interest diverts billions from crucial investments in infrastructure, healthcare, education, and climate solutions, essentially acting as a tax on future generations for past fiscal recklessness. It demands serious scrutiny and a shift towards responsible budgeting.',
+      // Note: Actual national debt will be fetched dynamically in the component
+      tooltipText: 'This substantial portion represents the cost of servicing the national debt. This debt is a direct consequence of sustained government spending exceeding revenue collection. Decades of deficit spending (often driven by tax cuts for the wealthy and corporations, unfunded wars, and economic bailouts) contribute to this substantial burden. High interest payments divert critical funds from essential public services, infrastructure projects, education systems, and potential tax relief, raising serious questions about long-term fiscal stability and the accountability of our government\'s financial management.',
       // No subItems, special paragraph handled in component
     },
     {
@@ -267,21 +272,23 @@ export interface SelectedItem {
  * @param aggressiveness The overall tone (0: Polite, 50: Concerned, 100: Stern).
  * @param userName The user's name.
  * @param userLocation The user's location (City, State, Zip).
+ * @param balanceBudgetPreference Whether the user checked the 'Prioritize Balancing the Budget' box.
  * @returns An object containing the generated email subject and body.
  */
 export function generateRepresentativeEmail(
     selectedItems: SelectedItem[],
     aggressiveness: number,
     userName: string,
-    userLocation: string
+    userLocation: string,
+    balanceBudgetPreference: boolean // Added parameter
 ): { subject: string; body: string } {
 
     // --- Determine Subject Line ---
     let subject = "Regarding Federal Tax Spending Priorities";
     if (aggressiveness > 75) {
         subject = "Urgent: Demand for Re-evaluation of Federal Spending";
-    } else if (aggressiveness > 25) {
-        subject = "Concern Regarding Federal Tax Allocations";
+    } else if (aggressiveness > 25 || balanceBudgetPreference) { // Elevate subject if budget balance is priority
+        subject = "Concern Regarding Federal Budget & Spending Allocations";
     }
 
     // --- Determine Opening ---
@@ -296,50 +303,76 @@ export function generateRepresentativeEmail(
     // --- Build Item List with Action Phrases ---
     let itemList = "";
     if (selectedItems.length > 0) {
-        if (aggressiveness > 75) {
-             itemList = "After reviewing federal spending estimates, I demand scrutiny and significant changes to the funding for the following areas, which represent grossly misplaced priorities or excessive, wasteful expenditure:\n\n";
-        } else if (aggressiveness > 25) {
-             itemList = "After reviewing federal spending estimates, I am particularly concerned by the resources directed towards the following areas, which I believe warrant significant reduction or reallocation:\n\n";
-        } else {
-             itemList = "After reviewing federal spending estimates, I would like to bring the following areas to your attention for review and potential adjustment:\n\n";
-        }
+        const introPhrases = [
+            "After reviewing federal spending estimates, I would like to bring the following areas to your attention for review and potential adjustment:",
+            "After reviewing federal spending estimates, I am particularly concerned by the resources directed towards the following areas, which I believe warrant significant reduction or reallocation:",
+            "After reviewing federal spending estimates, I demand scrutiny and significant changes to the funding for the following areas, which represent grossly misplaced priorities or excessive, wasteful expenditure:"
+        ];
+        itemList = introPhrases[Math.floor(aggressiveness / 34)] + "\n\n"; // Select intro based on aggressiveness
 
         itemList += selectedItems.map(item => {
-            let actionPhrase = "should be reviewed for necessity and efficiency.";
-            if (item.reductionLevel > 75) { // Reallocate/Gut
-                actionPhrase = aggressiveness > 50
-                    ? "funding must be drastically cut and reallocated to essential domestic programs."
-                    : "funding should be significantly reduced and redirected towards more pressing needs.";
-            } else if (item.reductionLevel > 25) { // Reduce
-                actionPhrase = aggressiveness > 50
-                    ? "spending requires substantial reduction."
-                    : "spending should be carefully evaluated for potential reductions.";
-            }
+            let actionPhrase = "";
+            let reason = ""; // Generic reason placeholder
+
+             // Phrases based on reduction level and aggressiveness
+             const reductionPhrases = {
+                 review: [ // Reduction Level 0-25
+                     "should be reviewed for necessity and efficiency.",
+                     "funding warrants closer examination.",
+                     "requires justification for its current budget allocation."
+                 ],
+                 reduce: [ // Reduction Level 26-75
+                     "spending should be carefully evaluated for potential reductions.",
+                     "requires substantial reduction.",
+                     "budget needs to be significantly trimmed."
+                 ],
+                 reallocate: [ // Reduction Level 76-100
+                     "funding should be significantly reduced and redirected towards more pressing domestic needs.",
+                     "funding must be drastically cut and reallocated to essential programs.",
+                     "represents wasteful spending that must be eliminated or severely curtailed."
+                 ]
+             };
+
+             let reductionCategory: 'review' | 'reduce' | 'reallocate' = 'review';
+             if (item.reductionLevel > 75) reductionCategory = 'reallocate';
+             else if (item.reductionLevel > 25) reductionCategory = 'reduce';
+
+             // Select phrase based on aggressiveness (within the chosen reduction level)
+             actionPhrase = reductionPhrases[reductionCategory][Math.floor(aggressiveness / 34)];
+
+
             // Add specific boilerplate reason (examples - expand these)
-            let reason = "";
             if (item.id === 'israel_wars') reason = " Continued funding for foreign conflicts draws resources away from critical domestic needs.";
             if (item.id === 'pentagon_contractors') reason = " Oversight is needed to prevent waste and ensure taxpayer money is used effectively by contractors.";
             if (item.id === 'usaid_climate') reason = " Prioritizing domestic environmental issues should take precedence over international climate aid.";
             if (item.id === 'nasa_spacex') reason = " Public funds directed to private space exploration could be better used elsewhere.";
             if (item.id === 'medicare') reason = " While important, the current cost structure of Medicare requires review for efficiency.";
-
             // Add more reasons for other item.ids...
 
             return `- ${item.description}: ${actionPhrase}${reason}`;
         }).join('\n');
         itemList += "\n\n";
-    } else {
-        // Default message if somehow called with no items
-         itemList = "While I am reviewing the specific breakdown, I urge a general commitment to fiscal responsibility and prioritizing domestic investments.\n\n";
+    }
+
+     // --- Add Budget Balancing Paragraph if selected ---
+    let budgetParagraph = "";
+    if (balanceBudgetPreference) {
+        const budgetPhrases = [
+            "Additionally, I believe prioritizing fiscal responsibility and working towards a balanced federal budget should be a key consideration in all spending decisions. Addressing the national debt is crucial for our country's long-term economic health.",
+            "Furthermore, I am deeply concerned about the ever-growing national debt. It is imperative that Congress prioritizes fiscal responsibility and takes meaningful steps towards balancing the budget. We cannot continue burdening future generations with our current spending habits.",
+            "Moreover, the staggering national debt is unacceptable and demands immediate action. Balancing the federal budget must become a top priority. Fiscal recklessness must end, and resources should be directed towards paying down the debt rather than funding questionable programs."
+        ];
+         budgetParagraph = budgetPhrases[Math.floor(aggressiveness / 34)] + "\n\n";
     }
 
      // --- Determine Connecting Statement ---
+     // Adjusted to be more relevant even if only budget is selected
     let connectingStatement = "";
-     if (aggressiveness > 75) {
-        connectingStatement = "This reckless spending diverts critical funds from vital domestic needs like affordable healthcare, infrastructure repair, and quality education. We cannot afford to continue prioritizing these questionable programs over the well-being of your constituents.\n\n";
-     } else if (aggressiveness > 25) {
-        connectingStatement = "Continued funding at these levels, especially when considering pressing domestic issues, raises concerns about fiscal responsibility. Every dollar potentially misspent is a dollar not invested in strengthening our communities here at home.\n\n";
-     } else {
+    if (aggressiveness > 75) {
+        connectingStatement = "This pattern of spending diverts critical funds from vital domestic needs like affordable healthcare, infrastructure repair, and quality education. We cannot afford to continue prioritizing these questionable programs over the well-being of your constituents.\n\n";
+    } else if (aggressiveness > 25 || balanceBudgetPreference) { // Broaden condition
+        connectingStatement = "Continued spending at current levels, especially when considering pressing domestic issues and the national debt, raises serious concerns about fiscal responsibility. Every dollar potentially misspent is a dollar not invested in strengthening our communities here at home.\n\n";
+    } else if (selectedItems.length > 0) { // Only add if items were selected and tone is low
          connectingStatement = "Ensuring our tax dollars are used efficiently allows for better investment in programs that benefit our communities directly.\n\n";
      }
 
@@ -347,16 +380,18 @@ export function generateRepresentativeEmail(
     // --- Determine Call to Action ---
     let callToAction = "";
     if (aggressiveness > 75) {
-        callToAction = `I demand you take immediate action to advocate for significant cuts in these areas and champion the redirection of funds towards programs that directly benefit the people of ${userLocation || 'our district'}. Outline the specific steps you will take to address this fiscal irresponsibility.\n\nI expect a prompt and detailed response outlining your commitment and planned actions.`;
-    } else if (aggressiveness > 25) {
-        callToAction = `I urge you to advocate for greater scrutiny and reductions in these specific categories. Please detail your stance on this issue and the actions you are taking to promote greater fiscal responsibility.\n\nI look forward to your response outlining your position.`;
+         callToAction = `I demand you take immediate action to advocate for significant changes in spending priorities and champion the redirection of funds towards programs that directly benefit the people of ${userLocation || 'our district'}, alongside a concrete plan to address the national debt. Outline the specific steps you will take.\n\nI expect a prompt and detailed response outlining your commitment and planned actions.`;
+    } else if (aggressiveness > 25 || balanceBudgetPreference) { // Broaden condition
+         callToAction = `I urge you to advocate for greater scrutiny of spending and promote greater fiscal responsibility, including addressing the national debt. Please detail your stance on these issues and the actions you are taking.\n\nI look forward to your response outlining your position.`;
     } else {
         callToAction = `Could you please provide information on your position regarding the funding levels for these programs and your efforts towards ensuring fiscal responsibility?\n\nThank you for your time and attention to this matter.`;
     }
 
 
     // --- Construct Full Body ---
-    const body = `${opening}${itemList}${connectingStatement}${callToAction}\n\nSincerely,\n${userName || '[Your Name]'}\n${userLocation || '[Your City, State, Zip Code]'}`;
+     const body = `${opening}${itemList}${budgetParagraph}${connectingStatement}${callToAction}\n\nSincerely,\n${userName || '[Your Name]'}\n${userLocation || '[Your City, State, Zip Code]'}`;
+
 
     return { subject, body };
 }
+

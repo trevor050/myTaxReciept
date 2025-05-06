@@ -25,6 +25,7 @@ interface EmailCustomizationModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedItems: SelectedItem[];
+  balanceBudgetChecked: boolean; // Added prop
   onSubmit: (emailDetails: { subject: string; body: string }) => void;
 }
 
@@ -61,6 +62,7 @@ export default function EmailCustomizationModal({
   isOpen,
   onClose,
   selectedItems,
+  balanceBudgetChecked, // Use prop
   onSubmit,
 }: EmailCustomizationModalProps) {
   const [aggressiveness, setAggressiveness] = useState(50); // Default to 'Concerned'
@@ -118,6 +120,16 @@ export default function EmailCustomizationModal({
         });
         return; // Stop if info is missing (redundant check, but safe)
      }
+     // Check if anything is selected (items or budget balance)
+     if (selectedItems.length === 0 && !balanceBudgetChecked) {
+        toast({
+            title: "Nothing Selected",
+            description: "Please select items or check 'Prioritize Balancing the Budget' to include in the email.",
+            variant: "destructive",
+        });
+        return;
+     }
+
      const emailDetails = generateRepresentativeEmail(
        selectedItems.map(item => ({
          ...item,
@@ -125,12 +137,16 @@ export default function EmailCustomizationModal({
        })),
        aggressiveness,
        userName,
-       userLocation
+       userLocation,
+       balanceBudgetChecked // Pass budget preference
      );
      onSubmit(emailDetails);
      // Keep modal open - user might want to copy/paste or re-generate
      // onClose();
    };
+
+   // Determine if the generate button should be disabled
+   const isGenerateDisabled = !userName || !userLocation || (selectedItems.length === 0 && !balanceBudgetChecked);
 
 
   return (
@@ -179,9 +195,9 @@ export default function EmailCustomizationModal({
 
                 {/* Per-Item Reduction Sliders */}
                  <div className="space-y-4 pt-4 border-t border-border/50">
-                     <Label className="text-base font-medium">Specific Requests per Item</Label>
+                     <Label className="text-base font-medium">Specific Spending Requests</Label>
                      {selectedItems.length === 0 ? (
-                         <p className="text-sm text-muted-foreground italic">No items selected.</p>
+                         <p className="text-sm text-muted-foreground italic">No specific spending items selected.</p>
                      ) : (
                          selectedItems.map((item) => (
                             <div key={item.id} className="space-y-2 ml-1">
@@ -204,6 +220,15 @@ export default function EmailCustomizationModal({
                          ))
                      )}
                 </div>
+
+                {/* Budget Balance Info (if checked) */}
+                {balanceBudgetChecked && (
+                     <div className="pt-4 border-t border-border/50">
+                         <p className="text-sm font-medium text-foreground">Budget Balance:</p>
+                         <p className="text-sm text-muted-foreground">You've indicated a priority for balancing the budget. This will be included in the email.</p>
+                     </div>
+                 )}
+
 
                 {/* User Info Inputs */}
                  <div className="space-y-4 pt-4 border-t border-border/50">
@@ -243,7 +268,7 @@ export default function EmailCustomizationModal({
              <DialogClose asChild>
                 <Button type="button" variant="outline">Cancel</Button>
              </DialogClose>
-             <Button type="button" onClick={handleGenerateEmailClick} disabled={!userName || !userLocation || selectedItems.length === 0}>
+             <Button type="button" onClick={handleGenerateEmailClick} disabled={isGenerateDisabled}>
                  <Send className="mr-2 h-4 w-4" /> Generate Email
             </Button>
         </DialogFooter>
@@ -251,3 +276,4 @@ export default function EmailCustomizationModal({
     </Dialog>
   );
 }
+

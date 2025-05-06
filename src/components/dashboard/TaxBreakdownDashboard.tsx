@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import EmailCustomizationModal from '@/components/dashboard/EmailCustomizationModal';
+import EmailCustomizationModal from '@/components/dashboard/EmailCustomizationModal'; // Keep this import
 
 import {
     ExternalLink,
@@ -31,6 +31,7 @@ import {
     Crosshair,
     HelpCircle,
     Megaphone, // Icon for activism plea
+    CheckSquare, // Icon for budget balance checkbox
 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -47,11 +48,12 @@ import {
 } from "@/components/ui/tooltip"
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Label } from '@/components/ui/label'; // Import Label
 
 interface TaxBreakdownDashboardProps {
   taxAmount: number;
   taxSpending: TaxSpending[];
-  representativeSuggestion: SuggestRepresentativesOutput | null; // Kept for type safety, but logic removed
+  representativeSuggestion: SuggestRepresentativesOutput | null; // Kept for type safety, but unused
 }
 
 // Use CSS variables for colors defined in globals.css
@@ -175,6 +177,37 @@ const formatCurrency = (amount: number | null | undefined) => {
 }
 
 
+// Helper function to fetch and format national debt
+async function getFormattedNationalDebt(): Promise<string> {
+    try {
+        // Placeholder: Replace with a real API call if available
+        // Example using a hypothetical API structure
+        // const response = await fetch('https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/debt_to_penny?sort=-record_date&limit=1');
+        // const data = await response.json();
+        // const debtAmount = parseFloat(data.data[0].tot_pub_debt_out_amt);
+
+        // Using a static placeholder value for now
+        const debtAmount = 34600000000000; // Approx $34.6 Trillion
+
+        if (isNaN(debtAmount)) {
+            return 'currently over $34 trillion';
+        }
+
+        // Format the number
+        if (debtAmount >= 1e12) {
+            return `currently over $${(debtAmount / 1e12).toFixed(1)} trillion`;
+        } else if (debtAmount >= 1e9) {
+            return `currently over $${(debtAmount / 1e9).toFixed(1)} billion`;
+        } else {
+            return `currently $${debtAmount.toLocaleString()}`;
+        }
+    } catch (error) {
+        console.error("Error fetching national debt:", error);
+        return 'currently over $34 trillion'; // Fallback
+    }
+}
+
+
 export default function TaxBreakdownDashboard({
   taxAmount,
   taxSpending,
@@ -184,6 +217,8 @@ export default function TaxBreakdownDashboard({
   const [selectedItems, setSelectedItems] = useState<Map<string, SelectedItem>>(new Map());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [clientDueDate, setClientDueDate] = useState<string | null>(null);
+  const [nationalDebt, setNationalDebt] = useState<string>('fetching...');
+  const [balanceBudgetChecked, setBalanceBudgetChecked] = useState(false);
   const { toast } = useToast();
 
    useEffect(() => {
@@ -191,24 +226,30 @@ export default function TaxBreakdownDashboard({
     // Use consistent date format
     const date = new Date(currentYear + 1, 3, 15).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     setClientDueDate(date);
-  }, []);
+
+    // Fetch national debt on component mount
+    getFormattedNationalDebt().then(setNationalDebt);
+
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   const handleOpenModal = () => {
-    if (selectedItems.size > 0) {
-      setIsModalOpen(true);
-    } else {
+     // Check if either items are selected OR the budget balance is checked
+     if (selectedItems.size > 0 || balanceBudgetChecked) {
+       setIsModalOpen(true);
+     } else {
          toast({
-            title: "No Items Selected",
-            description: "Please select items from the breakdown to include in your email.",
+            title: "Nothing Selected",
+            description: "Please select items or check 'Prioritize Balancing the Budget' to include in your email.",
             variant: "default",
          });
-    }
+     }
   };
+
 
   const handleEmailSubmit = (emailDetails: { subject: string; body: string }) => {
     const mailtoLink = `mailto:?subject=${encodeURIComponent(emailDetails.subject)}&body=${encodeURIComponent(emailDetails.body)}`;
     window.open(mailtoLink, '_self');
-    setIsModalOpen(false);
+    setIsModalOpen(false); // Close modal after generating mailto link
   };
 
 
@@ -216,12 +257,17 @@ export default function TaxBreakdownDashboard({
         const newSelectedItems = new Map(selectedItems);
         const itemId = `${item.id}`; // Ensure key is string
         if (checked === true) {
+            // Add default reduction level (e.g., 'Reduce') when selected
             newSelectedItems.set(itemId, { id: itemId, description: item.description, reductionLevel: 50 });
         } else {
             newSelectedItems.delete(itemId);
         }
         setSelectedItems(newSelectedItems);
     };
+
+    const handleBudgetCheckboxChange = (checked: boolean | 'indeterminate') => {
+        setBalanceBudgetChecked(checked === true);
+    }
 
 
   // Use client-side date state
@@ -296,7 +342,7 @@ export default function TaxBreakdownDashboard({
        <Card className="shadow-lg border border-border/60 rounded-xl overflow-hidden bg-gradient-to-b from-card to-card/95">
             <CardHeader className="px-4 py-4 sm:px-6 sm:py-5 border-b border-border/50">
                 <CardTitle className="text-lg sm:text-xl font-semibold tracking-tight">Detailed Spending</CardTitle>
-                <CardDescription className="text-muted-foreground text-xs sm:text-sm">Select items you believe are overspent to include in an email.</CardDescription>
+                <CardDescription className="text-muted-foreground text-xs sm:text-sm">Select items you believe are overspent or prioritize balancing the budget.</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               <TooltipProvider delayDuration={250}>
@@ -325,15 +371,29 @@ export default function TaxBreakdownDashboard({
                                     className="bg-background/30 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up overflow-hidden"
                                 >
                                     <div className="pl-8 pr-3 sm:pl-10 sm:pr-4 pt-3 pb-4 text-muted-foreground space-y-2.5">
-                                     {isInterestOnDebt && (
-                                         <blockquote className="text-xs bg-secondary/40 p-3 rounded-md border border-border/40 text-foreground/75 shadow-inner flex gap-2 items-start">
-                                             {/* Use TrendingDown icon only once */}
-                                             <TrendingDown className="h-4 w-4 shrink-0 mt-0.5 text-destructive/80" />
-                                             {/* Removed italics, updated text */}
-                                             <span className="leading-relaxed">This significant portion reflects the cost of servicing the national debt, a direct consequence of sustained government spending exceeding revenue collection. Decades of deficit spending, underfunded programs, and fluctuating interest rates contribute to this substantial burden. High interest payments divert critical funds from essential public services, infrastructure projects, education systems, and potential tax relief, raising serious questions about long-term fiscal stability and the accountability of our government's financial management.</span>
+                                     {isInterestOnDebt ? (
+                                         <blockquote className="text-xs bg-secondary/40 p-3 rounded-md border border-border/40 text-foreground/75 shadow-inner flex flex-col gap-2 items-start">
+                                             <div className="flex items-start gap-2">
+                                                 <TrendingDown className="h-4 w-4 shrink-0 mt-0.5 text-destructive/80" />
+                                                 <span className="leading-relaxed">
+                                                    This significant portion reflects the cost of servicing the national debt, {nationalDebt}. This debt is a direct consequence of sustained government spending exceeding revenue collection. Decades of deficit spending (often driven by tax cuts for the wealthy and corporations, unfunded wars, and economic bailouts) contribute to this substantial burden. High interest payments divert critical funds from essential public services, infrastructure projects, education systems, and potential tax relief, raising serious questions about long-term fiscal stability and the accountability of our government's financial management.
+                                                </span>
+                                             </div>
+                                             {/* Add Budget Balance Checkbox here */}
+                                             <div className="flex items-center space-x-2 pl-6 pt-2">
+                                                 <Checkbox
+                                                    id="balance-budget"
+                                                    checked={balanceBudgetChecked}
+                                                    onCheckedChange={handleBudgetCheckboxChange}
+                                                    aria-label="Prioritize Balancing the Budget"
+                                                    className="rounded-[4px]"
+                                                 />
+                                                <Label htmlFor="balance-budget" className="text-xs font-medium text-foreground/90 cursor-pointer">
+                                                   Prioritize Balancing the Budget
+                                                </Label>
+                                             </div>
                                          </blockquote>
-                                     )}
-                                    {hasSubItems ? (
+                                     ) : hasSubItems ? (
                                         <ul className="space-y-2">
                                             {item.subItems!.map((subItem) => {
                                                 const subItemAmount = subItem.amountPerDollar * taxAmount;
@@ -369,7 +429,7 @@ export default function TaxBreakdownDashboard({
                                                 );
                                             })}
                                         </ul>
-                                    ) : !isInterestOnDebt && (
+                                    ) : (
                                         <p className="text-xs italic text-center py-2">No detailed breakdown available.</p>
                                     )}
                                     </div>
@@ -388,10 +448,11 @@ export default function TaxBreakdownDashboard({
         </Card>
 
         {/* Floating Action Button - Fixed Centered Bottom */}
+        {/* Ensure this div is outside the main card content flow */}
         <div className={cn(
-            "fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 ease-out", // Fixed positioning
-            selectedItems.size > 0 ? "opacity-100 pointer-events-auto scale-100" : "opacity-0 pointer-events-none scale-95" // Show/hide with scale
-        )}>
+             "fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 ease-out pointer-events-none", // Use fixed positioning, always present but controlled by pointer-events
+             (selectedItems.size > 0 || balanceBudgetChecked) ? "opacity-100 pointer-events-auto scale-100" : "opacity-0 scale-95" // Show/hide with scale and pointer-events
+         )}>
             <Button
                 size="lg"
                 className={cn(
@@ -403,12 +464,13 @@ export default function TaxBreakdownDashboard({
                 )}
                 onClick={handleOpenModal}
                 aria-label={`Email your representative about ${selectedItems.size} selected item(s)`}
-                // Disable button if no items selected (redundant with opacity but safe)
-                disabled={selectedItems.size === 0}
+                // Button is effectively disabled by pointer-events-none when no items are selected
+                // disabled={selectedItems.size === 0 && !balanceBudgetChecked} // Keep disabled prop for accessibility state
              >
-                <Mail className="h-4 w-4 sm:h-5 sm:w-5"/>
-                Email Officials ({selectedItems.size})
-            </Button>
+                 <Mail className="h-4 w-4 sm:h-5 sm:w-5"/>
+                 {/* Update button text based on selection */}
+                 Email Officials ({selectedItems.size + (balanceBudgetChecked ? 1 : 0)})
+             </Button>
         </div>
 
 
@@ -417,8 +479,10 @@ export default function TaxBreakdownDashboard({
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             selectedItems={Array.from(selectedItems.values())}
+            balanceBudgetChecked={balanceBudgetChecked} // Pass budget check state
             onSubmit={handleEmailSubmit}
         />
     </div>
   );
 }
+
