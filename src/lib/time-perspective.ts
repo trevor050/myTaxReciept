@@ -4,83 +4,101 @@
 
 import { sample } from 'lodash'; // Using lodash for random sampling
 
-interface TimePerspectiveItem {
+export interface TimePerspectiveItem {
     minutes: number;
     description: string;
     icon?: string; // Optional: Suggest an icon name (e.g., from lucide-react)
 }
 
 // Ordered list of activities and their approximate durations in minutes (Expanded & Sorted Ascending)
-// Target: 50+ items, max duration ~3000 mins (50 hours), more experiential
+// Target: 70+ items, max duration ~3000 mins (50 hours), more experiential, avoid generic 'work'
 const timePerspectives: TimePerspectiveItem[] = [
-    // Short (1-15 mins)
+    // Ultra Short (1-5 mins)
     { minutes: 1, description: "take a few deep breaths", icon: "Wind" },
-    { minutes: 2, description: "brush your teeth", icon: "Smile" },
-    { minutes: 3, description: "listen to a song intro", icon: "Music2" },
-    { minutes: 4, description: "stretch for a few moments", icon: "Move" }, // Generic move icon
-    { minutes: 5, description: "make a cup of coffee or tea", icon: "Coffee" },
-    { minutes: 6, description: "quickly skim a news headline feed", icon: "Newspaper" },
-    { minutes: 7, description: "check your email", icon: "Mail" },
-    { minutes: 8, description: "water a houseplant", icon: "Sprout" },
-    { minutes: 10, description: "listen to 2 average songs", icon: "Music" },
-    { minutes: 12, description: "read a short online article", icon: "BookOpen" },
-    { minutes: 15, description: "take a short walk around the block", icon: "Footprints" },
-    { minutes: 15, description: "listen to a short podcast segment", icon: "Podcast" },
+    { minutes: 2, description: "brush your teeth thoroughly", icon: "Smile" },
+    { minutes: 3, description: "listen to a song intro/outro", icon: "Music2" },
+    { minutes: 4, description: "do a quick stretch routine", icon: "Move" },
+    { minutes: 5, description: "make a cup of instant coffee or tea", icon: "Coffee" },
 
-    // Medium-Short (16-60 mins)
-    { minutes: 18, description: "solve a Sudoku puzzle", icon: "Puzzle" },
-    { minutes: 20, description: "read a chapter of a book", icon: "BookOpen" },
-    { minutes: 25, description: "do a quick tidy-up of a room", icon: "SprayCan" },
-    { minutes: 30, description: "watch an episode of a sitcom", icon: "Tv" },
-    { minutes: 30, description: "meditate or practice mindfulness", icon: "BrainCircuit" },
-    { minutes: 35, description: "cook a simple breakfast", icon: "EggFried" },
-    { minutes: 40, description: "take a quick grocery run for essentials", icon: "ShoppingCart" },
-    { minutes: 45, description: "do a short home workout video", icon: "Dumbbell" },
-    { minutes: 50, description: "plan your meals for the week", icon: "NotebookPen" },
-    { minutes: 55, description: "learn a few phrases in a new language", icon: "Languages" }, // Languages icon
-    { minutes: 60, description: "prepare and eat a simple lunch", icon: "Utensils" }, // 1 hour
-    { minutes: 60, description: "attend a standard virtual meeting", icon: "Users" },
+    // Short (6-15 mins)
+    { minutes: 6, description: "quickly scan news headlines", icon: "Newspaper" },
+    { minutes: 7, description: "check and reply to a couple of emails", icon: "Mail" },
+    { minutes: 8, description: "water a few houseplants", icon: "Sprout" },
+    { minutes: 9, description: "walk to the end of the street and back", icon: "Footprints" },
+    { minutes: 10, description: "listen to 2-3 average pop songs", icon: "Music" },
+    { minutes: 12, description: "read a short online news article", icon: "BookOpen" },
+    { minutes: 13, description: "fold a small basket of laundry", icon: "WashingMachine" },
+    { minutes: 15, description: "take a brisk walk around the block", icon: "Footprints" },
+    { minutes: 15, description: "listen to a short daily podcast", icon: "Podcast" },
 
-    // Medium-Long (61-180 mins / 1-3 hours)
-    { minutes: 70, description: "go for a brisk walk or jog", icon: "Footprints" },
-    { minutes: 75, description: "do a load of laundry (wash & dry)", icon: "WashingMachine" },
-    { minutes: 80, description: "play a couple of rounds of a favorite video game", icon: "Gamepad2" }, // Gamepad icon
-    { minutes: 90, description: "watch a short feature film", icon: "Film" }, // 1.5 hours
-    { minutes: 100, description: "bake a batch of cookies", icon: "Cookie" },
-    { minutes: 110, description: "visit a local park for a while", icon: "Trees" }, // Trees icon
+    // Medium-Short (16-30 mins)
+    { minutes: 17, description: "solve an easy Sudoku puzzle", icon: "Puzzle" },
+    { minutes: 18, description: "unload the dishwasher", icon: "Sparkles" }, // Using Sparkles for clean
+    { minutes: 20, description: "read a chapter of a novel", icon: "BookOpen" },
+    { minutes: 22, description: "watch a typical YouTube video essay", icon: "Youtube" },
+    { minutes: 25, description: "do a quick tidy-up of one room", icon: "SprayCan" },
+    { minutes: 28, description: "play a few levels of a mobile game", icon: "Gamepad2" },
+    { minutes: 30, description: "watch an episode of a standard sitcom", icon: "Tv" },
+    { minutes: 30, description: "practice mindfulness or meditate", icon: "BrainCircuit" },
+
+    // Medium (31-60 mins)
+    { minutes: 33, description: "cook a simple breakfast from scratch", icon: "EggFried" },
+    { minutes: 35, description: "make and eat a sandwich lunch", icon: "Sandwich" }, // Assuming Sandwich icon exists or use Utensils
+    { minutes: 40, description: "make a quick grocery run for essentials", icon: "ShoppingCart" },
+    { minutes: 45, description: "do a short yoga or HIIT workout video", icon: "Dumbbell" },
+    { minutes: 50, description: "plan your meals for the next few days", icon: "NotebookPen" },
+    { minutes: 55, description: "learn a few useful phrases in a new language", icon: "Languages" },
+    { minutes: 60, description: "prepare and eat a standard dinner", icon: "Utensils" }, // 1 hour
+    { minutes: 60, description: "attend a typical team meeting", icon: "Users" },
+
+    // Medium-Long (61-120 mins / 1-2 hours)
+    { minutes: 65, description: "go for a focused jog or run", icon: "Footprints" },
+    { minutes: 70, description: "watch a documentary episode", icon: "Film" },
+    { minutes: 75, description: "do a full load of laundry (wash & dry)", icon: "WashingMachine" },
+    { minutes: 80, description: "play a competitive online game match", icon: "Gamepad2" },
+    { minutes: 90, description: "watch a shorter feature film", icon: "Film" }, // 1.5 hours
+    { minutes: 100, description: "bake a batch of cookies or muffins", icon: "Cookie" },
+    { minutes: 110, description: "spend some quality time at a local park", icon: "Trees" },
     { minutes: 120, description: "watch an average-length movie", icon: "Clapperboard" }, // 2 hours
-    { minutes: 135, description: "assemble a small piece of furniture", icon: "Hammer" },
-    { minutes: 150, description: "visit a local farmer's market", icon: "ShoppingBasket" }, // Basket icon
-    { minutes: 165, description: "learn a new card game", icon: "Dice5" },
-    { minutes: 180, description: "attend a local community event", icon: "Building" }, // 3 hours
-    { minutes: 180, description: "prepare a nice dinner", icon: "ChefHat" },
+    { minutes: 120, description: "have a relaxed dinner with conversation", icon: "Pizza" }, // Assuming Pizza icon exists or use Utensils
 
-    // Long (181-600 mins / 3-10 hours)
-    { minutes: 210, description: "visit a local museum or art gallery", icon: "Landmark" }, // 3.5 hours
-    { minutes: 240, description: "take a scenic drive to a nearby town", icon: "Map" }, // 4 hours
-    { minutes: 270, description: "attend a half-day workshop", icon: "Presentation" },
-    { minutes: 300, description: "deep clean a couple of rooms", icon: "Sparkles" }, // 5 hours
-    { minutes: 330, description: "plant some flowers in a garden", icon: "Flower2" }, // Flower icon
-    { minutes: 360, description: "attend a live music concert", icon: "Music" }, // 6 hours
-    { minutes: 390, description: "spend an afternoon volunteering", icon: "HandHeart" },
-    { minutes: 420, description: "paint a small accent wall", icon: "PaintRoller" }, // 7 hours
-    { minutes: 480, description: "go on a moderate day hike", icon: "MountainSnow" }, // 8 hours
-    { minutes: 540, description: "fly from Chicago to New York (incl. airport time)", icon: "PlaneTakeoff" }, // 9 hours
-    { minutes: 600, description: "attend a full-day training seminar", icon: "ClipboardCheck" }, // 10 hours
+    // Long (121-240 mins / 2-4 hours)
+    { minutes: 135, description: "assemble a small piece of IKEA furniture", icon: "Hammer" },
+    { minutes: 150, description: "visit a local farmer's market and browse", icon: "ShoppingBasket" }, // 2.5 hours
+    { minutes: 165, description: "learn and play a new board game", icon: "Dice5" },
+    { minutes: 180, description: "attend a local community festival or event", icon: "Building" }, // 3 hours
+    { minutes: 180, description: "prepare and host a simple dinner party", icon: "ChefHat" },
+    { minutes: 200, description: "go on a bike ride on a local trail", icon: "Bike" },
+    { minutes: 210, description: "visit a local museum or small art gallery", icon: "Landmark" }, // 3.5 hours
+    { minutes: 240, description: "take a scenic drive to a nearby viewpoint", icon: "MapIcon" }, // 4 hours // Using MapIcon alias
+    { minutes: 240, description: "watch two full movies back-to-back", icon: "Clapperboard"},
 
-    // Very Long (601-3000 mins / 10-50 hours) - Removed 'work', kept below 50hr cap
+    // Very Long (241-600 mins / 4-10 hours)
+    { minutes: 270, description: "attend a half-day professional workshop", icon: "Presentation" }, // 4.5 hours
+    { minutes: 300, description: "deep clean your kitchen or bathroom", icon: "Sparkles" }, // 5 hours
+    { minutes: 330, description: "plant some flowers or start a small garden bed", icon: "Flower2" },
+    { minutes: 360, description: "attend a live music concert (including travel)", icon: "Music" }, // 6 hours
+    { minutes: 390, description: "spend an afternoon volunteering for a cause", icon: "HandHeart" },
+    { minutes: 420, description: "paint an accent wall in a room", icon: "PaintRoller" }, // 7 hours
+    { minutes: 450, description: "binge-watch half a season of a TV show", icon: "Tv" },
+    { minutes: 480, description: "go on a moderate day hike in the mountains", icon: "MountainSnow" }, // 8 hours
+    { minutes: 540, description: "fly one-way Chicago to NYC (incl. airport time)", icon: "PlaneTakeoff" }, // 9 hours
+    { minutes: 600, description: "attend a full-day conference or training seminar", icon: "ClipboardCheck" }, // 10 hours
+
+    // Extended (601-3000 mins / 10-50 hours)
+    { minutes: 660, description: "drive from Boston to Washington D.C.", icon: "Car"},
     { minutes: 720, description: "drive from Los Angeles to San Francisco", icon: "Navigation" }, // 12 hours
-    { minutes: 840, description: "binge-watch a short TV series season", icon: "Youtube" }, // 14 hours
-    { minutes: 960, description: "complete a significant weekend DIY project", icon: "Wrench" }, // 16 hours
-    { minutes: 1140, description: "take a long weekend road trip", icon: "MapPinned" }, // 19 hours
-    { minutes: 1440, description: "spend an entire day exploring a new city", icon: "Building2" }, // 24 hours / 1 day
-    { minutes: 1800, description: "learn the basics of a simple new skill (e.g., knitting)", icon: "BrainCircuit" }, // 30 hours
-    { minutes: 2160, description: "take a relaxing 3-day weekend getaway trip", icon: "Luggage" }, // 36 hours
-    { minutes: 2400, description: "complete a detailed online course module", icon: "GraduationCap" }, // 40 hours
-    { minutes: 3000, description: "fly from New York to London (incl. airport time, ~48-50hrs total round trip factored)", icon: "Globe" }, // ~50 hours (MAX LIMIT)
+    { minutes: 840, description: "binge-watch an entire short TV series season", icon: "Youtube" }, // 14 hours
+    { minutes: 960, description: "complete a significant weekend home DIY project", icon: "Wrench" }, // 16 hours
+    { minutes: 1140, description: "take a long weekend road trip adventure", icon: "MapPinned" }, // 19 hours
+    { minutes: 1440, description: "spend a full day thoroughly exploring a new city", icon: "Building2" }, // 24 hours / 1 day
+    { minutes: 1800, description: "learn the absolute basics of knitting or crochet", icon: "BrainCircuit" }, // 30 hours
+    { minutes: 2160, description: "take a relaxing 3-day weekend getaway", icon: "Luggage" }, // 36 hours
+    { minutes: 2400, description: "complete a substantial online course module", icon: "GraduationCap" }, // 40 hours (Simulating a 'work week' conceptually)
+    { minutes: 2700, description: "drive from New York City to Miami", icon: "Car" }, // ~45 hours driving
+    { minutes: 3000, description: "fly round-trip NYC to London (incl. airport/travel time)", icon: "Globe" }, // ~50 hours (MAX LIMIT)
 ];
 
-// No need to sort for the new random algorithm
 
 /**
  * Generates a list of relatable time perspective activities that sum up to (or close to) the total minutes
@@ -111,9 +129,9 @@ export function generateCombinedPerspectiveList(
 
     // Limit iterations to prevent infinite loops with very small remaining times
     let iterations = 0;
-    const MAX_ITERATIONS = 100;
+    const MAX_ITERATIONS = 150; // Increased slightly
 
-    while (remainingMinutes >= MIN_TIME_THRESHOLD && iterations < MAX_ITERATIONS) {
+    while (remainingMinutes >= MIN_TIME_THRESHOLD && iterations < MAX_ITERATIONS && activityCounts.size < maxItems * 1.5) { // Add constraint to stop filling if we have many items already
         iterations++;
         // Filter perspectives that fit within the remaining time
         const availablePerspectives = timePerspectives.filter(p => p.minutes <= remainingMinutes && p.minutes > 0);
@@ -163,9 +181,9 @@ export function generateCombinedPerspectiveList(
          const closest = timePerspectives
               .filter(p => p.minutes > 0) // Ensure we don't pick a zero-minute item
               .reduce((prev, curr) =>
-                 Math.abs(curr.minutes - totalMinutes) < Math.abs(prev.minutes - totalMinutes) ? curr : prev
-              );
-          if (closest && closest.minutes <= totalMinutes * 2 && closest.minutes >= 1) { // Only if reasonably close and >= 1 min
+                 (curr.minutes > 0 && Math.abs(curr.minutes - totalMinutes) < Math.abs(prev.minutes - totalMinutes)) ? curr : prev
+              , { minutes: Infinity, description: '' }); // Start with Infinity
+          if (closest.minutes <= totalMinutes * 1.5 && closest.minutes >= 1) { // Only if reasonably close and >= 1 min
               return [{ description: closest.description, icon: closest.icon, count: 1 }];
           }
          return null;
@@ -173,47 +191,3 @@ export function generateCombinedPerspectiveList(
 
     return resultList;
 }
-
-
-/**
- * DEPRECATED: Kept for reference or potential fallback, but the list generation is preferred.
- * Generates a relatable time perspective description, potentially combining activities.
- *
- * @param totalMinutes The total number of minutes worked.
- * @returns A string describing relatable activities, or null if no suitable perspective found.
- */
-export function getTimePerspectiveText(totalMinutes: number): string | null {
-    const combinedList = generateCombinedPerspectiveList(totalMinutes);
-
-    if (!combinedList || combinedList.length === 0) {
-        return null;
-    }
-
-    let output = "In the time you worked for this, you could have ";
-    const descriptions = combinedList.map(item =>
-        `${item.description}${item.count > 1 ? ` ${item.count} times` : ''}`
-    );
-
-    if (descriptions.length === 1) {
-        output += descriptions[0];
-    } else if (descriptions.length === 2) {
-        output += `${descriptions[0]} and ${descriptions[1]}`;
-    } else {
-        // Join with commas and "and" for the last item
-        const last = descriptions.pop();
-        output += descriptions.join(', ') + `, and ${last}`;
-    }
-
-    return output + '.';
-}
-
-
-// Example usage (for testing):
-// console.log("5 minutes List:", generateCombinedPerspectiveList(5));
-// console.log("70 minutes List:", generateCombinedPerspectiveList(70));
-// console.log("300 minutes List:", generateCombinedPerspectiveList(300));
-// console.log("1000 minutes List:", generateCombinedPerspectiveList(1000));
-// console.log("5000 minutes List:", generateCombinedPerspectiveList(5000)); // ~83 hours
-// console.log("15000 minutes List:", generateCombinedPerspectiveList(15000)); // ~250 hours - test upper bounds
-// console.log("0.5 minutes List:", generateCombinedPerspectiveList(0.5));
-// console.log("1 minute List:", generateCombinedPerspectiveList(1));

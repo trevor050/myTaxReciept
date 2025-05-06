@@ -22,6 +22,7 @@ import {
     Presentation, Plane, Sparkles, PlaneTakeoff, Navigation, Wrench, Youtube, Building2, MapPinned,
     BrainCircuit, Luggage, CalendarDays, HelpingHand, MountainSnow, ClipboardCheck,
     PaintRoller, PenTool, Move, Languages, Gamepad2, Trees, ShoppingBasket, Flower2, // Added new icons
+    GlassWater, Package, Bus, Croissant, Beer, Ticket, Truck, Martini, Grape, Shirt, Backpack, Headphones, Tent, Tablet, Theater, Bike, Watch, Home, Laptop, Smartphone, ShoppingBag, CircleDot, Pizza, Sandwich, Bed, PersonStanding, // Currency Icons - Removed Burger, Golf, UserTie
     type LucideIcon
 } from 'lucide-react';
 // --- End Lucide Icon Imports ---
@@ -41,6 +42,7 @@ import {
 } from "@/components/ui/tooltip"
 import { cn } from '@/lib/utils';
 import { generateCombinedPerspectiveList, type CombinedPerspective } from '@/lib/time-perspective'; // Import NEW list generation function
+import { generateCurrencyPerspectiveList, type CombinedCurrencyPerspective } from '@/lib/currency-perspective'; // Import currency perspective
 
 interface TaxBreakdownDashboardProps {
   taxAmount: number;
@@ -63,46 +65,64 @@ const COLORS = [
     'hsl(var(--chart-13))','hsl(var(--chart-14))','hsl(var(--chart-15))'
 ];
 
-// Mapping from string names (used in time-perspective.ts) to imported Lucide components
-// IMPORTANT: Ensure keys match the 'icon' strings defined in time-perspective.ts
+// Mapping from string names (used in perspective files) to imported Lucide components
+// IMPORTANT: Ensure keys match the 'icon' strings defined
 const iconComponents: { [key: string]: LucideIcon } = {
+    // Time Icons
     Wind, Smile, Music2, Music, Coffee, Mail, Newspaper, Footprints, Podcast, BookOpen, SprayCan,
     Tv, Puzzle, EggFried, ShoppingCart, Dumbbell, NotebookPen, Utensils, Users, Tractor, WashingMachine,
     Dice5, Cookie, Film, Clapperboard, HandHeart, Hammer, Trophy, ChefHat, Car, Map: MapIcon, // Use MapIcon alias here
     Presentation, Plane, Sparkles, PlaneTakeoff, Navigation, Wrench, Youtube, Building2, MapPinned, BrainCircuit,
     Luggage, CalendarDays, HelpingHand, MountainSnow, ClipboardCheck, PaintRoller, PenTool,
-    // Add main category icons too
+    Move, Languages, Gamepad2, Trees, ShoppingBasket, Flower2, Pizza, Sandwich, Bike,
+
+    // Currency Icons
+    GlassWater, Package, Bus, Croissant, Beer, Ticket, Truck, Martini, Grape, Shirt, Backpack, Headphones, Tent, Tablet, Theater, Watch, Home, Laptop, Smartphone, ShoppingBag, CircleDot, Bed, PersonStanding, // Replaced Burger with Utensils, Removed Golf, Replaced UserTie with PersonStanding
+
+    // Explicitly map Burger usage to Utensils
+    Burger: Utensils, // Map 'Burger' key used in data to 'Utensils' icon component
+    // Map Golf usage to CircleDot
+    Golf: CircleDot, // Map 'Golf' key used in data to 'CircleDot' icon component
+    // Map UserTie usage to PersonStanding (placeholder)
+    UserTie: PersonStanding,
+
+    // Main Category Icons
     HeartPulse, Crosshair, TrendingDown, ShieldCheck, Briefcase, GraduationCap, Wheat, Landmark, Building,
     Sprout, Globe, Scale, Train, Atom, HelpCircle,
-    // Add NEW icons from updated time-perspective.ts
-    Move, Languages, Gamepad2, Trees, ShoppingBasket, Flower2,
 };
 
-// Use a default icon for categories without a specific mapping
+// Use a default icon for categories/perspectives without a specific mapping
 const DefaultIcon = HelpCircle;
 
-const CustomTooltip = ({ active, payload, label, totalAmount, hourlyWage, displayMode }: any) => {
+// --- Tooltip Components ---
+
+const CustomPieTooltip = ({ active, payload, label, totalAmount, hourlyWage, displayMode }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     const spendingAmount = (data.percentage / 100) * totalAmount;
-    // Use lookup, fallback to HelpCircle if category icon not mapped
-    const CategoryIcon = iconComponents[data.category] || DefaultIcon;
+    // Use category name (or description if category missing) to find icon
+    const iconKey = data.category || data.description;
+    const CategoryIcon = iconComponents[iconKey] || DefaultIcon;
+
 
     let displayValue: string;
-    let timePerspectiveList: CombinedPerspective[] | null = null;
+    let perspectiveList: (CombinedPerspective | CombinedCurrencyPerspective)[] | null = null;
+    let perspectiveTitle = '';
 
     if (displayMode === 'time' && hourlyWage) {
         const hoursWorked = spendingAmount / hourlyWage;
         const totalMinutes = hoursWorked * 60;
-        displayValue = formatTime(totalMinutes); // Convert hours to minutes for formatting
-        timePerspectiveList = generateCombinedPerspectiveList(totalMinutes); // Get perspective LIST
+        displayValue = formatTime(totalMinutes);
+        perspectiveList = generateCombinedPerspectiveList(totalMinutes);
+        perspectiveTitle = 'In this time, you could have:';
     } else {
         displayValue = formatCurrency(spendingAmount);
+        perspectiveList = generateCurrencyPerspectiveList(spendingAmount);
+        perspectiveTitle = 'With this amount, you could buy:';
     }
 
     return (
-        // TooltipProvider/ShadTooltip moved inside to contain the time perspective logic
-        <div className="rounded-lg border bg-popover p-2.5 text-popover-foreground shadow-lg animate-scaleIn text-xs max-w-[180px] sm:max-w-[220px]"> {/* Increased max-width */}
+        <div className="rounded-lg border bg-popover p-2.5 text-popover-foreground shadow-lg animate-scaleIn text-xs max-w-[180px] sm:max-w-[220px]">
              <div className="flex items-center justify-between mb-1 gap-2">
                  <span className="font-medium flex items-center gap-1.5 truncate">
                     <CategoryIcon className="h-3 w-3 text-muted-foreground shrink-0" />
@@ -113,34 +133,68 @@ const CustomTooltip = ({ active, payload, label, totalAmount, hourlyWage, displa
              <TooltipProvider delayDuration={150}>
                  <ShadTooltip>
                     <TooltipTrigger asChild>
-                         <div className="font-semibold text-sm sm:text-base cursor-default text-left"> {/* Changed alignment */}
+                         <div className="font-semibold text-sm sm:text-base cursor-default text-left">
                             {displayValue}
                          </div>
                     </TooltipTrigger>
-                     {/* Show time perspective tooltip only in time mode and if list exists */}
-                     {displayMode === 'time' && timePerspectiveList && timePerspectiveList.length > 0 && (
-                        <TooltipContent side="top" align="center" className="max-w-xs text-sm bg-popover border shadow-xl p-4 rounded-lg animate-scaleIn z-50">
-                            <p className="text-popover-foreground text-sm font-semibold mb-2">In this time, you could have:</p>
-                            <ul className="space-y-1.5 text-popover-foreground/90">
-                                {timePerspectiveList.map((item, index) => {
-                                    const Icon = item.icon ? iconComponents[item.icon] || Info : Info; // Use Info as fallback
-                                    return (
-                                        <li key={index} className="flex items-center gap-2 text-xs">
-                                            <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0"/> {/* Slightly larger icon */}
-                                            <span>{item.description}{item.count > 1 ? ` (${item.count} times)` : ''}</span>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        </TooltipContent>
-                     )}
-                </ShadTooltip>
+                    <PerspectiveTooltipContent
+                        perspectiveList={perspectiveList}
+                        title={perspectiveTitle}
+                    />
+                 </ShadTooltip>
              </TooltipProvider>
         </div>
     );
   }
   return null;
 };
+
+const PerspectiveTooltipContent = ({ perspectiveList, title }: { perspectiveList: (CombinedPerspective | CombinedCurrencyPerspective)[] | null, title: string }) => {
+    if (!perspectiveList || perspectiveList.length === 0) {
+        return null;
+    }
+
+    return (
+        <TooltipContent side="top" align="center" className="max-w-xs text-sm bg-popover border shadow-xl p-4 rounded-lg animate-scaleIn z-50">
+            <p className="text-popover-foreground text-sm font-semibold mb-2">{title}</p>
+            <ul className="space-y-1.5 text-popover-foreground/90">
+                {perspectiveList.map((item, index) => {
+                    // Use icon mapping, default to Info if not found or not specified
+                    const Icon = item.icon ? iconComponents[item.icon] || Info : Info;
+                    return (
+                        <li key={index} className="flex items-center gap-2 text-xs">
+                            <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0"/>
+                            <span>{item.description}{item.count > 1 ? ` (${item.count} times)` : ''}</span>
+                        </li>
+                    );
+                })}
+            </ul>
+        </TooltipContent>
+    );
+};
+
+const ItemInfoTooltipContent = ({ subItem }: { subItem: TaxSpendingSubItem }) => {
+    // This tooltip is for the Info icon (description/wiki link)
+    return (
+        <TooltipContent side="top" align="center" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50">
+            <p className="font-semibold mb-1.5 text-popover-foreground">{subItem.description}</p>
+            {subItem.tooltipText && <p className="text-muted-foreground text-xs leading-relaxed mb-2">{subItem.tooltipText}</p>}
+            {subItem.wikiLink && (
+                <a
+                href={subItem.wikiLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline flex items-center gap-1 text-xs font-medium mt-2"
+                onClick={(e) => e.stopPropagation()} // Prevent accordion closing
+                >
+                Learn More <ExternalLink className="h-3 w-3" />
+                </a>
+            )}
+        </TooltipContent>
+    );
+}
+
+// --- End Tooltip Components ---
 
 
 const CustomLegend = (props: any) => {
@@ -185,28 +239,6 @@ const CustomLegend = (props: any) => {
     </ul>
   );
 };
-
-
-const SubItemTooltipContent = ({ subItem, amount, hourlyWage, displayMode }: { subItem: TaxSpendingSubItem, amount: number, hourlyWage: number | null, displayMode: 'currency' | 'time' }) => {
-    // This tooltip is for the Info icon, not the time perspective itself
-    return (
-        <TooltipContent side="top" align="center" className="max-w-xs sm:max-w-sm text-sm bg-popover border shadow-xl p-3 rounded-lg animate-scaleIn z-50">
-            <p className="font-semibold mb-1.5 text-popover-foreground">{subItem.description}</p>
-            {subItem.tooltipText && <p className="text-muted-foreground text-xs leading-relaxed mb-2">{subItem.tooltipText}</p>}
-            {subItem.wikiLink && (
-                <a
-                href={subItem.wikiLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline flex items-center gap-1 text-xs font-medium mt-2"
-                onClick={(e) => e.stopPropagation()} // Prevent accordion closing
-                >
-                Learn More <ExternalLink className="h-3 w-3" />
-                </a>
-            )}
-        </TooltipContent>
-    );
-}
 
 
 // Helper function to format currency
@@ -336,10 +368,6 @@ export default function TaxBreakdownDashboard({
     percentage: item.percentage,
   }));
 
-   const handleDisplayModeToggle = (checked: boolean) => {
-      setDisplayMode(checked ? 'time' : 'currency');
-   };
-
 
   return (
     <TooltipProvider> {/* Wrap entire dashboard in TooltipProvider */}
@@ -415,13 +443,13 @@ export default function TaxBreakdownDashboard({
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke={'hsl(var(--background))'} strokeWidth={1} />
                         ))}
                       </Pie>
-                       <Tooltip content={<CustomTooltip totalAmount={taxAmount} hourlyWage={hourlyWage} displayMode={displayMode} />} cursor={{ fill: 'hsl(var(--accent))', fillOpacity: 0.4 }} />
+                       <Tooltip content={<CustomPieTooltip totalAmount={taxAmount} hourlyWage={hourlyWage} displayMode={displayMode} />} cursor={{ fill: 'hsl(var(--accent))', fillOpacity: 0.4 }} />
                        <Legend content={<CustomLegend />} wrapperStyle={{ maxWidth: '100%', overflow: 'hidden' }}/>
                     </PieChart>
                   </ResponsiveContainer>
                 </TooltipProvider>
                  <p className="text-xs text-muted-foreground text-center mt-4 flex items-center justify-center gap-1 px-2">
-                    <Info className="h-3 w-3" /> Hover over segments for details. Estimated data.
+                    <Info className="h-3 w-3" /> Hover over segments or values for details. Estimated data.
                  </p>
           </div>
 
@@ -433,24 +461,29 @@ export default function TaxBreakdownDashboard({
                     <CardDescription className="text-muted-foreground text-xs sm:text-sm">Select items you believe need funding adjustments or prioritize balancing the budget.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
-                  {/* Removed redundant TooltipProvider, using the one wrapping the whole dashboard */}
+                  {/* TooltipProvider wraps the entire component now */}
                      <Accordion type="multiple" className="w-full">
                         {taxSpending.map((item, index) => {
                             const categoryAmount = (item.percentage / 100) * taxAmount;
-                            // Use lookup, fallback to HelpCircle if category icon not mapped
-                            const CategoryIcon = iconComponents[item.category] || DefaultIcon;
+                             // Use category name to find icon
+                            const categoryIconKey = item.category;
+                            const CategoryIcon = iconComponents[categoryIconKey] || DefaultIcon;
                             const isInterestOnDebt = item.category === 'Interest on Debt';
                             const hasSubItems = item.subItems && item.subItems.length > 0;
 
                             let categoryDisplayValue: string;
-                            let categoryTimePerspectiveList: CombinedPerspective[] | null = null; // Added for category tooltip
+                            let categoryPerspectiveList: (CombinedPerspective | CombinedCurrencyPerspective)[] | null = null;
+                            let categoryPerspectiveTitle = '';
                             if (displayMode === 'time' && hourlyWage) {
                                 const hoursWorked = categoryAmount / hourlyWage;
                                 const totalMinutes = hoursWorked * 60;
                                 categoryDisplayValue = formatTime(totalMinutes);
-                                categoryTimePerspectiveList = generateCombinedPerspectiveList(totalMinutes); // Get time perspective for category
+                                categoryPerspectiveList = generateCombinedPerspectiveList(totalMinutes);
+                                categoryPerspectiveTitle = 'In this time, you could have:';
                             } else {
                                 categoryDisplayValue = formatCurrency(categoryAmount);
+                                categoryPerspectiveList = generateCurrencyPerspectiveList(categoryAmount);
+                                categoryPerspectiveTitle = 'With this amount, you could buy:';
                             }
 
                             return (
@@ -467,23 +500,11 @@ export default function TaxBreakdownDashboard({
                                                         {/* Wrap the display value span in the trigger */}
                                                         <span className="font-semibold font-mono text-sm cursor-default">{categoryDisplayValue}</span>
                                                     </TooltipTrigger>
-                                                    {/* Category Time Perspective Tooltip */}
-                                                     {displayMode === 'time' && categoryTimePerspectiveList && categoryTimePerspectiveList.length > 0 && (
-                                                        <TooltipContent side="top" align="end" className="max-w-xs text-sm bg-popover border shadow-xl p-4 rounded-lg animate-scaleIn z-50">
-                                                            <p className="text-popover-foreground text-sm font-semibold mb-2">In this time, you could have:</p>
-                                                            <ul className="space-y-1.5 text-popover-foreground/90">
-                                                                {categoryTimePerspectiveList.map((pItem, pIndex) => {
-                                                                    const PIcon = pItem.icon ? iconComponents[pItem.icon] || Info : Info;
-                                                                    return (
-                                                                        <li key={pIndex} className="flex items-center gap-2 text-xs">
-                                                                            <PIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0"/> {/* Slightly larger icon */}
-                                                                            <span>{pItem.description}{pItem.count > 1 ? ` (${pItem.count} times)` : ''}</span>
-                                                                        </li>
-                                                                    );
-                                                                })}
-                                                            </ul>
-                                                        </TooltipContent>
-                                                     )}
+                                                    {/* Category Perspective Tooltip */}
+                                                     <PerspectiveTooltipContent
+                                                        perspectiveList={categoryPerspectiveList}
+                                                        title={categoryPerspectiveTitle}
+                                                    />
                                                 </ShadTooltip>
                                                 <span className="text-muted-foreground text-xs font-mono hidden sm:inline">({item.percentage.toFixed(1)}%)</span>
                                             </div>
@@ -521,14 +542,18 @@ export default function TaxBreakdownDashboard({
                                                     const isSelected = selectedItems.has(subItem.id);
 
                                                     let subItemDisplayValue: string;
-                                                    let subItemTimePerspectiveList: CombinedPerspective[] | null = null; // Changed to list
+                                                    let subItemPerspectiveList: (CombinedPerspective | CombinedCurrencyPerspective)[] | null = null;
+                                                    let subItemPerspectiveTitle = '';
                                                     if (displayMode === 'time' && hourlyWage) {
                                                         const hoursWorked = subItemAmount / hourlyWage;
                                                         const totalMinutes = hoursWorked * 60;
                                                         subItemDisplayValue = formatTime(totalMinutes);
-                                                        subItemTimePerspectiveList = generateCombinedPerspectiveList(totalMinutes); // Get perspective list for subitem
+                                                        subItemPerspectiveList = generateCombinedPerspectiveList(totalMinutes);
+                                                        subItemPerspectiveTitle = 'In this time, you could have:';
                                                     } else {
                                                         subItemDisplayValue = formatCurrency(subItemAmount);
+                                                        subItemPerspectiveList = generateCurrencyPerspectiveList(subItemAmount);
+                                                        subItemPerspectiveTitle = 'With this amount, you could buy:';
                                                     }
 
 
@@ -544,7 +569,6 @@ export default function TaxBreakdownDashboard({
                                                                 />
                                                                <ShadTooltip>
                                                                     <TooltipTrigger asChild>
-                                                                        {/* Tooltip triggered by Info icon OR description if no icons */}
                                                                          <label
                                                                             htmlFor={`subitem-${item.id}-${subItem.id}`}
                                                                             className={cn(
@@ -553,45 +577,27 @@ export default function TaxBreakdownDashboard({
                                                                             )}
                                                                          >
                                                                             {subItem.description}
-                                                                            {/* Show info icon if wiki/tooltip exists */}
                                                                             {(subItem.tooltipText || subItem.wikiLink) && <Info className="h-3 w-3 opacity-40 group-hover/subitem:opacity-100 transition-opacity shrink-0"/>}
                                                                         </label>
                                                                     </TooltipTrigger>
                                                                     {/* Tooltip Content for Description/Wiki */}
                                                                     {(subItem.tooltipText || subItem.wikiLink) && (
-                                                                         <SubItemTooltipContent
-                                                                             subItem={subItem}
-                                                                             amount={subItemAmount}
-                                                                             hourlyWage={hourlyWage}
-                                                                             displayMode={displayMode} // Pass mode for potential future use
-                                                                         />
+                                                                         <ItemInfoTooltipContent subItem={subItem} />
                                                                     )}
                                                                 </ShadTooltip>
                                                              </div>
-                                                            {/* --- Value Span with Time Perspective Tooltip --- */}
+                                                            {/* --- Value Span with Perspective Tooltip --- */}
                                                             <ShadTooltip>
                                                                 <TooltipTrigger asChild>
                                                                      <span className="font-medium font-mono text-foreground/80 whitespace-nowrap cursor-default">
                                                                         {subItemDisplayValue}
                                                                      </span>
                                                                 </TooltipTrigger>
-                                                                {/* SubItem Time Perspective Tooltip */}
-                                                                 {displayMode === 'time' && subItemTimePerspectiveList && subItemTimePerspectiveList.length > 0 && (
-                                                                    <TooltipContent side="top" align="end" className="max-w-xs text-sm bg-popover border shadow-xl p-4 rounded-lg animate-scaleIn z-50">
-                                                                          <p className="text-popover-foreground text-sm font-semibold mb-2">In this time, you could have:</p>
-                                                                          <ul className="space-y-1.5 text-popover-foreground/90">
-                                                                            {subItemTimePerspectiveList.map((pItem, pIndex) => {
-                                                                                 const PIcon = pItem.icon ? iconComponents[pItem.icon] || Info : Info;
-                                                                                 return (
-                                                                                    <li key={pIndex} className="flex items-center gap-2 text-xs">
-                                                                                        <PIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0"/> {/* Slightly larger icon */}
-                                                                                         <span>{pItem.description}{pItem.count > 1 ? ` (${pItem.count} times)` : ''}</span>
-                                                                                     </li>
-                                                                                );
-                                                                             })}
-                                                                         </ul>
-                                                                     </TooltipContent>
-                                                                )}
+                                                                {/* SubItem Perspective Tooltip */}
+                                                                 <PerspectiveTooltipContent
+                                                                     perspectiveList={subItemPerspectiveList}
+                                                                     title={subItemPerspectiveTitle}
+                                                                 />
                                                             </ShadTooltip>
                                                         </li>
                                                     );
@@ -618,25 +624,23 @@ export default function TaxBreakdownDashboard({
                                    }
                                  </span>
                              </TooltipTrigger>
-                              {/* Total Time Perspective Tooltip */}
-                             {displayMode === 'time' && hourlyWage && (() => { // Use IIFE to avoid variable scope issues
-                                const totalMinutes = (taxAmount / hourlyWage) * 60;
-                                const perspectiveList = generateCombinedPerspectiveList(totalMinutes);
-                                return perspectiveList && perspectiveList.length > 0 && (
-                                    <TooltipContent side="top" align="end" className="max-w-xs text-sm bg-popover border shadow-xl p-4 rounded-lg animate-scaleIn z-50">
-                                        <p className="text-popover-foreground text-sm font-semibold mb-2">In this total time, you could have:</p>
-                                        <ul className="space-y-1.5 text-popover-foreground/90">
-                                            {perspectiveList.map((pItem, pIndex) => {
-                                                const PIcon = pItem.icon ? iconComponents[pItem.icon] || Info : Info;
-                                                return (
-                                                    <li key={pIndex} className="flex items-center gap-2 text-xs">
-                                                        <PIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0"/> {/* Slightly larger icon */}
-                                                        <span>{pItem.description}{pItem.count > 1 ? ` (${pItem.count} times)` : ''}</span>
-                                                    </li>
-                                                );
-                                            })}
-                                        </ul>
-                                    </TooltipContent>
+                              {/* Total Perspective Tooltip */}
+                             {(() => { // Use IIFE to handle conditional logic cleanly
+                                let perspectiveList: (CombinedPerspective | CombinedCurrencyPerspective)[] | null = null;
+                                let perspectiveTitle = '';
+                                if (displayMode === 'time' && hourlyWage) {
+                                    const totalMinutes = (taxAmount / hourlyWage) * 60;
+                                    perspectiveList = generateCombinedPerspectiveList(totalMinutes);
+                                    perspectiveTitle = 'In this total time, you could have:';
+                                } else {
+                                    perspectiveList = generateCurrencyPerspectiveList(taxAmount);
+                                    perspectiveTitle = 'With this total amount, you could buy:';
+                                }
+                                return (
+                                     <PerspectiveTooltipContent
+                                         perspectiveList={perspectiveList}
+                                         title={perspectiveTitle}
+                                     />
                                 );
                              })()}
                           </ShadTooltip>
