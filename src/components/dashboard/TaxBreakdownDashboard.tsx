@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/accordion"
 import {
     TooltipProvider,
-    Tooltip, // Renamed ShadCN Tooltip to avoid conflict with RechartsTooltip
+    Tooltip as ShadTooltip, // Renamed ShadCN Tooltip to avoid conflict with RechartsTooltip
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
@@ -188,7 +188,7 @@ const CustomPieTooltip = ({ active, payload, totalAmount, hourlyWage, displayMod
 
     // Desktop hover tooltip
     return (
-        <Tooltip>
+        <ShadTooltip>
             <TooltipTrigger asChild>
                 {content}
             </TooltipTrigger>
@@ -196,7 +196,7 @@ const CustomPieTooltip = ({ active, payload, totalAmount, hourlyWage, displayMod
                 perspectiveList={perspectiveList}
                 title={perspectiveTitle}
             />
-        </Tooltip>
+        </ShadTooltip>
     );
   }
   return null;
@@ -459,7 +459,7 @@ export default function TaxBreakdownDashboard({
 
                 {hourlyWage !== null && (
                     <div className={cn(
-                        "mt-3 sm:mt-4 flex justify-center items-center", // Increased top margin for mobile
+                        "mt-6 sm:mt-4 flex justify-center items-center", // Increased top margin for mobile to mt-6
                         "sm:absolute sm:top-0 sm:right-0 sm:pt-1 sm:pr-1" // Desktop positioning
                     )}>
                         <Label htmlFor="display-mode-toggle" className="text-xs font-medium text-muted-foreground hidden sm:inline mr-2">View as:</Label>
@@ -546,7 +546,7 @@ export default function TaxBreakdownDashboard({
                        <RechartsTooltip
                          content={({ active, payload }) => { // Simplified destructuring
                             const currentPayload = payload && payload.length ? payload[0].payload : null;
-                            if ((active || (isMobileView && activePieIndex !== null && currentPayload?.category === chartData[activePieIndex]?.category)) && currentPayload) {
+                            if ((active || (isMobileView && activePieIndex !== null && currentPayload?.category === chartData[activePieIndex ?? -1]?.category)) && currentPayload) { // Guard against -1 index
                                 return (
                                     <CustomPieTooltip
                                         active={active}
@@ -612,7 +612,7 @@ export default function TaxBreakdownDashboard({
                                                 <span className="font-medium text-xs sm:text-sm truncate flex-1">{item.category}</span>
                                             </div>
                                             <div className="text-right shrink-0 flex items-baseline gap-1 ml-auto">
-                                                <Tooltip>
+                                                <ShadTooltip>
                                                     <TooltipTrigger asChild>
                                                         <span className="font-semibold font-mono text-xs sm:text-sm cursor-default">{categoryDisplayValue}</span>
                                                     </TooltipTrigger>
@@ -620,7 +620,7 @@ export default function TaxBreakdownDashboard({
                                                         perspectiveList={categoryPerspectiveList}
                                                         title={categoryPerspectiveTitle}
                                                     />
-                                                </Tooltip>
+                                                </ShadTooltip>
                                                 <span className="text-muted-foreground text-[10px] sm:text-xs font-mono hidden sm:inline">({item.percentage.toFixed(1)}%)</span>
                                             </div>
                                         </div>
@@ -683,7 +683,7 @@ export default function TaxBreakdownDashboard({
                                                                    aria-label={`Select ${subItem.description}`}
                                                                    className="mt-0 shrink-0 rounded-[4px] h-3.5 w-3.5 sm:h-4 sm:w-4"
                                                                 />
-                                                               <Tooltip>
+                                                               <ShadTooltip>
                                                                     <TooltipTrigger asChild>
                                                                          <label
                                                                             htmlFor={`subitem-${item.id}-${subItem.id}`}
@@ -701,9 +701,9 @@ export default function TaxBreakdownDashboard({
                                                                     {(subItem.tooltipText || subItem.wikiLink) && (
                                                                          <ItemInfoTooltipContent subItem={subItem} />
                                                                     )}
-                                                                </Tooltip>
+                                                                </ShadTooltip>
                                                              </div>
-                                                            <Tooltip>
+                                                            <ShadTooltip>
                                                                 <TooltipTrigger asChild>
                                                                      <span className="font-medium font-mono text-foreground/80 whitespace-nowrap cursor-default">
                                                                         {subItemDisplayValue}
@@ -713,7 +713,7 @@ export default function TaxBreakdownDashboard({
                                                                      perspectiveList={subItemPerspectiveList}
                                                                      title={subItemPerspectiveTitle}
                                                                  />
-                                                            </Tooltip>
+                                                            </ShadTooltip>
                                                         </li>
                                                     );
                                                 })}
@@ -729,7 +729,7 @@ export default function TaxBreakdownDashboard({
                      </Accordion>
                      <div className="flex justify-between items-center w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-4 border-t-2 border-primary/50 bg-primary/5">
                          <span className="font-bold text-xs sm:text-sm md:text-base text-primary tracking-tight">TOTAL ESTIMATED TAX</span>
-                          <Tooltip>
+                          <ShadTooltip>
                              <TooltipTrigger asChild>
                                  <span className="font-bold font-mono text-xs sm:text-sm md:text-base text-primary cursor-default">
                                    {displayMode === 'time' && hourlyWage && totalPerspectiveData?.time
@@ -750,7 +750,7 @@ export default function TaxBreakdownDashboard({
                                          : 'With this total amount, you could buy:'
                                  }
                              />
-                          </Tooltip>
+                          </ShadTooltip>
                      </div>
                 </CardContent>
             </Card>
@@ -758,5 +758,6 @@ export default function TaxBreakdownDashboard({
     </TooltipProvider>
   );
 }
+
 
 
