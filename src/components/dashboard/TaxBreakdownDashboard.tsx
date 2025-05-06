@@ -6,7 +6,7 @@ import * as React from 'react';
 import { useState, useEffect } from 'react';
 import type { TaxSpending, TaxSpendingSubItem, SelectedItem } from '@/services/tax-spending';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend } from 'recharts'; // Renamed Tooltip to RechartsTooltip to avoid conflict
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend } from 'recharts'; // Renamed Tooltip to avoid conflict
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label'; // Import Label
@@ -23,6 +23,7 @@ import {
     BrainCircuit, Luggage, CalendarDays, HelpingHand, MountainSnow, ClipboardCheck,
     PaintRoller, PenTool, Move, Languages, Gamepad2, Trees, ShoppingBasket, Flower2,
     GlassWater, Package, Bus, Croissant, Beer, Ticket, Truck, Martini, Grape, Shirt, Backpack, Headphones, Tent, Tablet, Theater, Bike, Watch, Home, Laptop, Smartphone, ShoppingBag, CircleDot, Pizza, Sandwich, Bed, PersonStanding, Armchair, Fish, Phone,
+    Medal, Gavel, // Added Medal for Veterans, Gavel for Law Enforcement
     type LucideIcon
 } from 'lucide-react';
 // --- End Lucide Icon Imports ---
@@ -83,9 +84,23 @@ const iconComponents: { [key: string]: LucideIcon } = {
     // Map UserTie usage to PersonStanding (placeholder)
     UserTie: PersonStanding,
 
-    // Main Category Icons
-    HeartPulse, Crosshair, TrendingDown, ShieldCheck, Briefcase, GraduationCap, Wheat, Landmark, Building,
-    Sprout, Globe, Scale, Train, Atom, HelpCircle,
+    // Main Category Icons - Ensuring specific mapping for all 14 categories
+    "Health": HeartPulse,
+    "War and Weapons": ShieldCheck,
+    "Interest on Debt": TrendingDown,
+    "Veterans": Medal, // Specific icon for Veterans
+    "Unemployment and Labor": Briefcase,
+    "Education": GraduationCap,
+    "Food and Agriculture": Wheat,
+    "Government": Landmark,
+    "Housing and Community": Home, // Specific icon for Housing
+    "Energy and Environment": Sprout, // Using Sprout as a general environment icon
+    "International Affairs": Globe,
+    "Law Enforcement": Gavel, // Specific icon for Law Enforcement
+    "Transportation": Train,
+    "Science": Atom,
+    // Fallback/General Icons - already part of the initial import list
+    HelpCircle, Info, Scale, Crosshair, Building, Megaphone, CheckSquare, AlertTriangle,
 };
 
 const DefaultIcon = HelpCircle;
@@ -494,8 +509,8 @@ export default function TaxBreakdownDashboard({
                      <Accordion type="multiple" className="w-full">
                         {taxSpending.map((item, index) => {
                             const categoryAmount = (item.percentage / 100) * taxAmount;
-                            const categoryIconKey = item.category;
-                            const CategoryIcon = iconComponents[categoryIconKey] || DefaultIcon;
+                            const categoryIconKey = item.category; // Use the category name directly
+                            const CategoryIcon = iconComponents[categoryIconKey] || DefaultIcon; // Fallback to DefaultIcon
                             const isInterestOnDebt = item.category === 'Interest on Debt';
                             const hasSubItems = item.subItems && item.subItems.length > 0;
 
