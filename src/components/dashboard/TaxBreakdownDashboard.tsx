@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import EmailCustomizationModal from '@/components/dashboard/EmailCustomizationModal'; // Keep this import
+import EmailCustomizationModal from '@/components/dashboard/EmailCustomizationModal'; // Updated import name
 
 import {
     ExternalLink,
@@ -279,6 +279,8 @@ export default function TaxBreakdownDashboard({
     percentage: item.percentage,
   }));
 
+  const showFab = selectedItems.size > 0 || balanceBudgetChecked;
+
 
   return (
     // Add relative positioning and padding-bottom to the container to prevent overlap with FAB
@@ -447,42 +449,42 @@ export default function TaxBreakdownDashboard({
             </CardContent>
         </Card>
 
-        {/* Floating Action Button - Fixed Centered Bottom */}
-        {/* Ensure this div is outside the main card content flow */}
-        <div className={cn(
-             "fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 ease-out pointer-events-none", // Use fixed positioning, always present but controlled by pointer-events
-             (selectedItems.size > 0 || balanceBudgetChecked) ? "opacity-100 pointer-events-auto scale-100" : "opacity-0 scale-95" // Show/hide with scale and pointer-events
-         )}>
-            <Button
-                size="lg"
-                className={cn(
-                    "shadow-2xl rounded-full text-sm sm:text-base px-5 py-3 sm:px-6 sm:py-3",
-                    "bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700", // Light mode gradient remains Teal
-                    "dark:bg-gradient-to-r dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800", // Dark mode gradient corrected to purple only
-                    "text-primary-foreground animate-glow flex items-center gap-2 ring-2 ring-primary/30 ring-offset-2 ring-offset-background",
-                    "transition-transform hover:scale-105 active:scale-95" // Add hover/active transforms
-                )}
-                onClick={handleOpenModal}
-                aria-label={`Email your representative about ${selectedItems.size} selected item(s)`}
-                // Button is effectively disabled by pointer-events-none when no items are selected
-                // disabled={selectedItems.size === 0 && !balanceBudgetChecked} // Keep disabled prop for accessibility state
-             >
-                 <Mail className="h-4 w-4 sm:h-5 sm:w-5"/>
-                 {/* Update button text based on selection */}
-                 Email Officials ({selectedItems.size + (balanceBudgetChecked ? 1 : 0)})
-             </Button>
+       {/* Floating Action Button (FAB) */}
+        <div
+          className={cn(
+            "fixed bottom-6 right-6 z-50 transition-all duration-300 ease-out transform",
+            showFab ? "scale-100 opacity-100" : "scale-95 opacity-0 pointer-events-none"
+          )}
+        >
+          <Button
+            size="lg" // Use large size for better visibility
+            className={cn(
+                "shadow-2xl rounded-full text-sm sm:text-base px-5 py-3 sm:px-6 sm:py-3", // Standard FAB styling
+                "bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700", // Light mode gradient
+                "dark:bg-gradient-to-r dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800", // Dark mode gradient
+                "text-primary-foreground animate-glow flex items-center gap-2 ring-2 ring-primary/30 ring-offset-2 ring-offset-background",
+                "transition-transform hover:scale-105 active:scale-95" // Hover/active effects
+            )}
+            onClick={handleOpenModal}
+            aria-label={`Email your representative about ${selectedItems.size + (balanceBudgetChecked ? 1 : 0)} item(s)`}
+          >
+            <Mail className="h-4 w-4 sm:h-5 sm:w-5" />
+            Email Officials ({selectedItems.size + (balanceBudgetChecked ? 1 : 0)})
+          </Button>
         </div>
 
 
         {/* Email Customization Modal */}
-        <EmailCustomizationModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            selectedItems={Array.from(selectedItems.values())}
-            balanceBudgetChecked={balanceBudgetChecked} // Pass budget check state
-            onSubmit={handleEmailSubmit}
-        />
+        {/* Render the modal only when isModalOpen is true to handle mounting/unmounting */}
+        {isModalOpen && (
+            <EmailCustomizationModal
+                selectedItems={Array.from(selectedItems.values())}
+                balanceBudgetChecked={balanceBudgetChecked}
+                onSubmit={handleEmailSubmit}
+                open={isModalOpen} // Pass open state
+                onOpenChange={setIsModalOpen} // Pass setter to allow closing from within modal
+            />
+        )}
     </div>
   );
 }
-
