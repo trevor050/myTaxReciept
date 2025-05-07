@@ -1,3 +1,4 @@
+// src/components/dashboard/ResourceSuggestionsModal.tsx
 'use client';
 
 import * as React from 'react';
@@ -7,23 +8,24 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Removed CardDescription import as it's not used here
-import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X } from 'lucide-react';
-import type { SuggestedResource } from '@/services/resource-suggestions';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, CheckCircle, AlertCircle, Search } from 'lucide-react';
+import type { SuggestedResource, MatchedReason } from '@/services/resource-suggestions'; // Updated import
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import type { SelectedItem } from '@/services/tax-spending';
+import type { Tone } from '@/services/email/types';
 
-// Dynamically import lucide icons based on string names
 const importLucideIcon = async (iconName: string | undefined): Promise<React.ElementType | typeof Info> => {
   if (!iconName) return Info;
   try {
-    // Ensure iconName is capitalized as expected by lucide-react exports
     const normalizedIconName = iconName.charAt(0).toUpperCase() + iconName.slice(1);
     const module = await import('lucide-react');
     // @ts-ignore
     return module[normalizedIconName] || Info;
   } catch (error) {
     console.warn(`Failed to load icon: ${iconName}`, error);
-    return Info; // Fallback icon
+    return Info;
   }
 };
 
@@ -33,17 +35,54 @@ interface ResourceSuggestionsModalProps {
   onOpenChange: (isOpen: boolean) => void;
   suggestedResources: SuggestedResource[];
   isLoading: boolean;
+  selectedItems: Map<string, SelectedItem>; // For context in relevance
+  balanceBudgetChecked: boolean; // For context
+  userTone: Tone; // For context
 }
+
+const MatchedReasonTooltipContent = ({ reasons, resourceName }: { reasons: MatchedReason[], resourceName: string }) => {
+  if (!reasons || reasons.length === 0) {
+    return <TooltipContent><p>No specific matching reasons found.</p></TooltipContent>;
+  }
+  return (
+    <TooltipContent side="top" align="center" className="max-w-xs bg-popover p-3 shadow-xl rounded-lg border text-popover-foreground animate-scaleIn z-[60]">
+      <p className="font-semibold mb-2 text-sm">How {resourceName} aligns with your concerns:</p>
+      <ul className="space-y-1.5 text-xs list-disc list-inside">
+        {reasons.map((reason, index) => {
+          let prefix = "Addresses";
+          let icon = <Info className="inline-block mr-1.5 h-3.5 w-3.5 text-muted-foreground" />;
+          if (reason.type === 'supports') {
+            prefix = "Supports";
+            icon = <CheckCircle className="inline-block mr-1.5 h-3.5 w-3.5 text-green-500" />;
+          } else if (reason.type === 'opposes') {
+            prefix = "Opposes";
+            icon = <AlertCircle className="inline-block mr-1.5 h-3.5 w-3.5 text-red-500" />;
+          } else if (reason.type === 'reviews') {
+             prefix = "Advocates for review of";
+             icon = <Search className="inline-block mr-1.5 h-3.5 w-3.5 text-blue-500" />
+          }
+          return (
+            <li key={index} className="flex items-start">
+              {icon}
+              <span><strong>{prefix}:</strong> {reason.description}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </TooltipContent>
+  );
+};
+
 
 export default function ResourceSuggestionsModal({
   isOpen,
   onOpenChange,
   suggestedResources,
   isLoading,
+  // selectedItems, balanceBudgetChecked, userTone // These are now used by suggestResources directly if needed
 }: ResourceSuggestionsModalProps) {
   const [IconComponents, setIconComponents] = React.useState<Record<string, React.ElementType>>({});
 
-  // --- Draggable Modal Logic ---
   const [pos, setPos] = React.useState<{ x: number | null; y: number | null }>({ x: null, y: null });
   const [drag, setDrag] = React.useState(false);
   const dragOffset = React.useRef({ x: 0, y: 0 });
@@ -119,8 +158,6 @@ export default function ResourceSuggestionsModal({
       window.removeEventListener('mouseup', stopDrag);
     };
   }, [drag, onMove, stopDrag]);
-  // --- End Draggable Modal Logic ---
-
 
   React.useEffect(() => {
     const loadIcons = async () => {
@@ -145,6 +182,10 @@ export default function ResourceSuggestionsModal({
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, suggestedResources]);
+
+
+  const bestMatches = suggestedResources.filter(r => r.matchCount && r.matchCount >= 2); // Example: 2+ matches is "best"
+  const otherMatches = suggestedResources.filter(r => !bestMatches.includes(r));
 
 
   return (
@@ -177,7 +218,7 @@ export default function ResourceSuggestionsModal({
                 Take Further Action
               </DialogTitle>
               <DialogDescription className='text-xs sm:text-sm text-muted-foreground'>
-                Here are some organizations and resources related to your concerns.
+                Organizations related to your concerns. Hover for detailed relevance.
               </DialogDescription>
             </div>
           </div>
@@ -190,40 +231,105 @@ export default function ResourceSuggestionsModal({
 
 
         <ScrollArea className="flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+          <TooltipProvider delayDuration={100}>
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
               <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
               <p className="text-sm">Finding relevant resources...</p>
             </div>
           ) : suggestedResources.length > 0 ? (
-            <div className="space-y-4">
-              {suggestedResources.map((resource, index) => {
-                const Icon = IconComponents[resource.icon || 'Info'] || Info;
-                return (
-                  <Card key={index} className="shadow-md hover:shadow-lg transition-shadow duration-200 bg-card/80 border-border/50">
-                    <CardHeader className="pb-2 pt-4 px-4">
-                      <CardTitle className="text-sm sm:text-base font-semibold flex items-center gap-2 text-primary">
-                         <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                        {resource.name}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-xs sm:text-sm space-y-1.5 px-4 pb-4">
-                      <p className="text-muted-foreground leading-relaxed">{resource.description}</p>
-                      <p className="text-foreground/80 italic"><strong className="font-medium text-foreground/90">Relevance:</strong> {resource.relevance}</p>
-                      <Button
-                        variant="link"
-                        size="sm"
-                        asChild
-                        className="p-0 h-auto text-primary hover:text-primary/80 text-xs sm:text-sm"
-                      >
-                        <a href={resource.url} target="_blank" rel="noopener noreferrer">
-                          Visit Website <ExternalLink className="ml-1 h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                        </a>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+            <div className="space-y-6">
+              {bestMatches.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold mb-2 text-primary">Best Matches:</h3>
+                  <div className="space-y-3">
+                    {bestMatches.map((resource, index) => {
+                        const Icon = IconComponents[resource.icon || 'Info'] || Info;
+                        return (
+                          <Tooltip key={`best-${index}`}>
+                            <TooltipTrigger asChild>
+                              <Card className="shadow-md hover:shadow-lg transition-shadow duration-200 bg-card/80 border-border/50 cursor-help">
+                                <CardHeader className="pb-2 pt-3 px-3 sm:px-4">
+                                  <CardTitle className="text-sm sm:text-base font-semibold flex items-center justify-between text-primary">
+                                    <span className="flex items-center gap-1.5 sm:gap-2">
+                                        <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                                        {resource.name}
+                                    </span>
+                                    <span className="text-xs font-normal text-muted-foreground bg-accent px-1.5 py-0.5 rounded-full">
+                                        Matches {resource.matchCount} concern{resource.matchCount !== 1 ? 's':''}
+                                    </span>
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent className="text-xs sm:text-sm space-y-1 px-3 sm:px-4 pb-3">
+                                  <p className="text-muted-foreground leading-relaxed line-clamp-2 sm:line-clamp-3">{resource.description}</p>
+                                  <p className="text-foreground/80 italic text-[10px] sm:text-xs"><strong className="font-medium text-foreground/90">Overall Relevance:</strong> {resource.overallRelevance}</p>
+                                  <Button
+                                    variant="link"
+                                    size="sm"
+                                    asChild
+                                    className="p-0 h-auto text-primary hover:text-primary/80 text-xs sm:text-sm mt-1"
+                                  >
+                                    <a href={resource.url} target="_blank" rel="noopener noreferrer">
+                                      Visit Website <ExternalLink className="ml-1 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                                    </a>
+                                  </Button>
+                                </CardContent>
+                              </Card>
+                            </TooltipTrigger>
+                             <MatchedReasonTooltipContent reasons={resource.matchedReasons || []} resourceName={resource.name}/>
+                          </Tooltip>
+                        );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {otherMatches.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold mt-6 mb-2 text-muted-foreground">Other Suggestions:</h3>
+                   <div className="space-y-3">
+                    {otherMatches.map((resource, index) => {
+                        const Icon = IconComponents[resource.icon || 'Info'] || Info;
+                        return (
+                          <Tooltip key={`other-${index}`}>
+                            <TooltipTrigger asChild>
+                              <Card className="shadow-sm hover:shadow-md transition-shadow duration-200 bg-card/60 border-border/40 cursor-help">
+                                <CardHeader className="pb-1.5 pt-2.5 px-3 sm:px-4">
+                                  <CardTitle className="text-xs sm:text-sm font-medium flex items-center justify-between text-foreground/90">
+                                      <span className="flex items-center gap-1.5 sm:gap-2">
+                                          <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-muted-foreground" />
+                                          {resource.name}
+                                      </span>
+                                      {resource.matchCount && resource.matchCount > 0 && (
+                                        <span className="text-[10px] sm:text-xs font-normal text-muted-foreground/80 bg-accent/70 px-1.5 py-0.5 rounded-full">
+                                            Matches {resource.matchCount} concern{resource.matchCount !== 1 ? 's':''}
+                                        </span>
+                                      )}
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent className="text-[10px] sm:text-xs space-y-1 px-3 sm:px-4 pb-2.5">
+                                  <p className="text-muted-foreground leading-normal line-clamp-2">{resource.description}</p>
+                                   <p className="text-foreground/70 italic text-[9px] sm:text-[10px]"><strong className="font-medium text-foreground/80">Overall Relevance:</strong> {resource.overallRelevance}</p>
+                                  <Button
+                                    variant="link"
+                                    size="sm"
+                                    asChild
+                                    className="p-0 h-auto text-primary/90 hover:text-primary/70 text-[10px] sm:text-xs mt-0.5"
+                                  >
+                                    <a href={resource.url} target="_blank" rel="noopener noreferrer">
+                                      Visit Website <ExternalLink className="ml-1 h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                                    </a>
+                                  </Button>
+                                </CardContent>
+                              </Card>
+                            </TooltipTrigger>
+                            <MatchedReasonTooltipContent reasons={resource.matchedReasons || []} resourceName={resource.name}/>
+                          </Tooltip>
+                        );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-center py-10 text-muted-foreground">
@@ -232,6 +338,7 @@ export default function ResourceSuggestionsModal({
               <p className="text-xs mt-1">Consider broadening your search or contacting your representatives directly with the email you generated.</p>
             </div>
           )}
+          </TooltipProvider>
         </ScrollArea>
 
         <DialogFooter className="flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-between px-4 py-3 sm:px-6 sm:py-4 border-t bg-card/95 rounded-b-lg">
@@ -243,3 +350,5 @@ export default function ResourceSuggestionsModal({
     </Dialog>
   );
 }
+
+    

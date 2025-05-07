@@ -9,6 +9,23 @@ import { Button } from "@/components/ui/button"
 
 export default function ThemeToggle() {
   const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    // Return a placeholder or null during SSR and initial client render before hydration
+    // This avoids mismatch for theme-dependent attributes like aria-label
+    // You can also return a Skeleton component or null
+    return (
+        <Button variant="ghost" size="icon" disabled aria-label="Toggle theme">
+            <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
+             {/* Moon is initially hidden by scale-0, so it's less critical for initial render mismatch */}
+        </Button>
+    );
+  }
 
   return (
     <Button
