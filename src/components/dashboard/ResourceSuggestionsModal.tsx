@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription as CardDesc } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, MessageSquareQuote, PlusCircle, MinusCircle, Search, Sparkles, Trophy, Users as UsersIcon, Target, HandHeart, FilterX, Megaphone, Gavel, Landmark, Dove, LibrarySquare, DollarSign, Eye, School, Home, Bed, Utensils, Medal, Hammer, Anchor, ListFilter, Tag, FlaskConical, Brain, Building as BuildingIcon, Star } from 'lucide-react';
+import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, MessageSquareQuote, PlusCircle, MinusCircle, Search, Sparkles, Trophy, Users as UsersIcon, Target, HandHeart, FilterX, Megaphone, Gavel, Landmark, Dove, LibrarySquare, DollarSign, Eye, School, Home, Bed, Utensils, Medal, Hammer, Anchor, ListFilter, Tag, FlaskConical, Brain, Building as BuildingIcon, Star, Wheelchair, PawPrint } from 'lucide-react';
 import type { SuggestedResource, MatchedReason, BadgeType } from '@/types/resource-suggestions';
 import { BADGE_DISPLAY_PRIORITY_MAP } from '@/types/resource-suggestions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -101,8 +101,8 @@ const DatabaseIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 const BadgeIcon = ({ badgeType }: { badgeType: BadgeType }) => {
     switch (badgeType) {
-        case 'Best Match': return <Trophy className="h-3 w-3 mr-1" />; // Color handled by Badge variant
-        case 'Top Match': return <Sparkles className="h-3 w-3 mr-1" />; // Color handled by Badge variant
+        case 'Best Match': return <Trophy className="h-3 w-3 mr-1" />;
+        case 'Top Match': return <Sparkles className="h-3 w-3 mr-1" />;
         case 'High Impact': return <Megaphone className="h-3 w-3 mr-1 text-rose-600 dark:text-rose-400" />;
         case 'Broad Focus': return <UsersIcon className="h-3 w-3 mr-1 text-blue-600 dark:text-blue-400" />;
         case 'Niche Focus': return <Target className="h-3 w-3 mr-1 text-indigo-600 dark:text-indigo-400" />;
@@ -156,84 +156,90 @@ export default function ResourceSuggestionsModal({
   const refHandle = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    if (!isOpen) {
-      isInitialOpen.current = true;
+    if (isOpen) {
       if (hasUserConcerns && suggestedResources.some(r => (r.matchCount || 0) > 0)) {
         setActiveFilterKeys(new Set(['your-matches']));
       } else {
         setActiveFilterKeys(new Set(['all-organizations']));
       }
+      // Initial centering logic moved to useLayoutEffect
+    } else {
+      isInitialOpen.current = true; // Reset for next open
+      setPos({ x: null, y: null }); // Reset position state
     }
   }, [isOpen, hasUserConcerns, suggestedResources]);
 
+
   React.useLayoutEffect(() => {
-    if (!isOpen || pos.x !== null || !isInitialOpen.current) return;
+    if (isOpen && isInitialOpen.current && refModal.current && pos.x === null) { // only run if not already positioned by drag
+        const frame = requestAnimationFrame(() => {
+            if (!refModal.current) return;
+            const { width, height } = refModal.current.getBoundingClientRect();
+            const windowHeight = window.innerHeight;
+            const windowWidth = window.innerWidth;
+            const margin = 20; // Margin from viewport edges
 
-    const frame = requestAnimationFrame(() => {
-        if (!refModal.current) return;
-        const { width, height } = refModal.current.getBoundingClientRect();
-        const windowHeight = window.innerHeight;
-        const windowWidth = window.innerWidth;
-        const margin = 20;
+            if (width && height) { // Ensure dimensions are available
+                let newY = Math.max(margin, windowHeight / 2 - height / 2);
+                newY = Math.min(newY, windowHeight - height - margin); // Ensure it doesn't go off bottom
 
-        if (width && height) {
-            let newY = Math.max(margin, windowHeight / 2 - height / 2);
-            newY = Math.min(newY, windowHeight - height - margin);
+                let newX = Math.max(margin, windowWidth / 2 - width / 2);
+                newX = Math.min(newX, windowWidth - width - margin); // Ensure it doesn't go off right
 
-            setPos({
-                x: windowWidth / 2 - width / 2,
-                y: newY,
-            });
-            isInitialOpen.current = false;
-        }
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [isOpen, pos.x]);
-
-   React.useLayoutEffect(() => {
-    if (!isOpen) {
-      setPos({ x: null, y: null }); // Reset position when modal closes
-      isInitialOpen.current = true; // Allow re-centering on next open
-      return;
+                setPos({
+                    x: newX,
+                    y: newY,
+                });
+                isInitialOpen.current = false; // Mark as centered
+            }
+        });
+        return () => cancelAnimationFrame(frame);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, pos.x, isLoading]); // Re-run if isOpen changes or if pos.x gets reset or loading state changes
+
+
+   React.useLayoutEffect(() => { // Effect to keep modal within viewport during content changes
+    if (!isOpen || isInitialOpen.current) return; // Don't run if closed or initial centering is pending
     if (pos.x !== null && pos.y !== null && refModal.current) {
         const { width: currentWidth, height: currentHeight } = refModal.current.getBoundingClientRect();
         const windowWidth = window.innerWidth;
         const windowHeight = window.innerHeight;
-        const margin = 20;
+        const margin = 20; // Margin from viewport edges
 
         let newX = pos.x;
         let newY = pos.y;
 
-        if (currentWidth > 0) {
+        if (currentWidth > 0) { // Ensure width is positive
             if (newX < margin) newX = margin;
             if (newX + currentWidth > windowWidth - margin) {
                 newX = Math.max(margin, windowWidth - currentWidth - margin);
             }
         }
-        if (currentHeight > 0) {
+        if (currentHeight > 0) { // Ensure height is positive
              if (newY < margin) newY = margin;
              if (newY + currentHeight > windowHeight - margin) {
                 newY = Math.max(margin, windowHeight - currentHeight - margin);
             }
         }
+        // Only update position if it actually changed to prevent infinite loops
         if (Math.abs(newX - (pos.x || 0)) > 0.1 || Math.abs(newY - (pos.y || 0)) > 0.1 ) {
              setPos({ x: newX, y: newY });
         }
     }
-   }, [isOpen, pos.x, pos.y, isLoading, suggestedResources.length, activeFilterKeys]);
+   // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [isOpen, pos.x, pos.y, isLoading, suggestedResources.length, activeFilterKeys, refModal.current?.offsetHeight, refModal.current?.offsetWidth]);
 
 
   const onDown = React.useCallback((e: React.MouseEvent) => {
     if (!refHandle.current?.contains(e.target as Node) || !refModal.current) return;
+    isInitialOpen.current = false; // User is interacting, disable initial centering
 
-    if (pos.x === null || pos.y === null) {
+    if (pos.x === null || pos.y === null) { // If not already positioned by drag (e.g., first drag after CSS centering)
       const r = refModal.current.getBoundingClientRect();
       const newPos = { x: r.left, y: r.top };
       setPos(newPos);
       dragOffset.current = { x: e.clientX - newPos.x, y: e.clientY - newPos.y };
-      isInitialOpen.current = false;
     } else {
       dragOffset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
     }
@@ -249,7 +255,7 @@ export default function ResourceSuggestionsModal({
     let x = e.clientX - dragOffset.current.x;
     let y = e.clientY - dragOffset.current.y;
 
-    const margin = 5;
+    const margin = 5; // Minimal margin when dragging
     x = Math.max(margin, Math.min(x, vw - hW - margin));
     y = Math.max(margin, Math.min(y, vh - hH - margin));
 
@@ -284,7 +290,7 @@ export default function ResourceSuggestionsModal({
           iconsToLoad.add(resource.icon);
         }
       });
-      const defaultIcons = ['Dove', 'LibrarySquare', 'DollarSign', 'Eye', 'School', 'Home', 'Bed', 'Utensils', 'Medal', 'Hammer', 'Anchor', 'ListFilter', 'Tag', 'FlaskConical', 'Brain', 'BuildingIcon'];
+      const defaultIcons = ['Dove', 'LibrarySquare', 'DollarSign', 'Eye', 'School', 'Home', 'Bed', 'Utensils', 'Medal', 'Hammer', 'Anchor', 'ListFilter', 'Tag', 'FlaskConical', 'Brain', 'BuildingIcon', 'Wheelchair', 'PawPrint'];
       defaultIcons.forEach(icon => {
         if (!IconComponents[icon]) iconsToLoad.add(icon);
       });
@@ -355,7 +361,7 @@ export default function ResourceSuggestionsModal({
     const allBadgeTypesPresent = new Set<BadgeType>();
     suggestedResources.forEach(r => r.badges?.forEach(b => allBadgeTypesPresent.add(b)));
     Array.from(allBadgeTypesPresent)
-        .filter(b => !['Best Match', 'Top Match'].includes(b))
+        .filter(b => !['Best Match', 'Top Match'].includes(b)) // Exclude already handled special badges
         .sort((a,b) => (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99))
         .forEach(badgeType => {
             const count = suggestedResources.filter(r => r.badges?.includes(badgeType)).length;
@@ -376,7 +382,7 @@ export default function ResourceSuggestionsModal({
   }, [suggestedResources, uniqueCategories, uniqueOrgTypeTags, hasUserConcerns]);
 
   const displayedResources = React.useMemo(() => {
-    if (isLoading) return [];
+    if (isLoading) return []; // Return empty if loading, to prevent lag during computation
     let filtered = suggestedResources;
 
     if (activeFilterKeys.size > 0 && !activeFilterKeys.has('all-organizations')) {
@@ -395,6 +401,7 @@ export default function ResourceSuggestionsModal({
             });
         });
     }
+    // Virtualization could be implemented here if performance is still an issue with many cards
     return filtered;
 
   }, [isLoading, suggestedResources, activeFilterKeys]);
@@ -406,19 +413,20 @@ export default function ResourceSuggestionsModal({
         const isAllOrgsActive = newKeys.has('all-organizations');
 
         if (key === 'all-organizations') {
-            return new Set(['all-organizations']);
+            return new Set(['all-organizations']); // Selecting "All" deselects others
         }
 
         if (isAllOrgsActive) {
-            newKeys.delete('all-organizations');
+            newKeys.delete('all-organizations'); // If "All" was active, deselect it when a specific filter is chosen
         }
 
         if (newKeys.has(key)) {
-            newKeys.delete(key);
+            newKeys.delete(key); // Toggle off
         } else {
-            newKeys.add(key);
+            newKeys.add(key); // Toggle on
         }
 
+        // If no specific filters are active, revert to "All Organizations"
         if (newKeys.size === 0) {
             return new Set(['all-organizations']);
         }
@@ -431,14 +439,14 @@ export default function ResourceSuggestionsModal({
   };
 
 
-  const renderResourceCard = React.useCallback((resource: SuggestedResource, index: number) => {
+  const renderResourceCard = React.useCallback((resource: SuggestedResource) => {
     const Icon = IconComponents[resource.icon || 'Info'] || Info;
 
     const displayedBadges: BadgeType[] = (resource.badges || [])
         .sort((a, b) => (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99));
 
     return (
-        <Tooltip key={`${Array.from(activeFilterKeys).join('-')}-${index}-${resource.url}`}>
+        <Tooltip>
         <TooltipTrigger asChild>
             <Card className="shadow-lg hover:shadow-xl transition-shadow duration-200 bg-card/90 border-border/30 hover:border-primary/40 cursor-help rounded-lg overflow-hidden w-full animate-fadeIn">
             <CardHeader className="pb-2 pt-3 px-3 sm:px-4 bg-secondary/10">
@@ -454,8 +462,8 @@ export default function ResourceSuggestionsModal({
                             variant={badge === 'Best Match' || badge === 'Top Match' ? 'default' : 'outline'}
                             className={cn(
                                 "text-xs px-1.5 py-0.5 whitespace-nowrap font-medium flex items-center",
-                                badge === 'Best Match' && "bg-emerald-500/90 border-emerald-600 text-white dark:bg-emerald-600/80 dark:border-emerald-500 dark:text-emerald-50",
-                                badge === 'Top Match' && "bg-sky-500/90 border-sky-600 text-white dark:bg-sky-600/80 dark:border-sky-500 dark:text-sky-50",
+                                badge === 'Best Match' && "bg-emerald-600 border-emerald-700 text-emerald-50 dark:bg-emerald-500 dark:border-emerald-600 dark:text-emerald-100",
+                                badge === 'Top Match' && "bg-sky-600 border-sky-700 text-sky-50 dark:bg-sky-500 dark:border-sky-600 dark:text-sky-100",
                                 badge === 'High Impact' && "bg-rose-100 border-rose-400 text-rose-700 dark:bg-rose-700/30 dark:border-rose-600 dark:text-rose-300",
                                 badge === 'Broad Focus' && "bg-blue-100 border-blue-400 text-blue-700 dark:bg-blue-700/30 dark:border-blue-600 dark:text-blue-300",
                                 badge === 'Niche Focus' && "bg-indigo-100 border-indigo-400 text-indigo-700 dark:bg-indigo-700/30 dark:border-indigo-600 dark:text-indigo-300",
@@ -475,9 +483,9 @@ export default function ResourceSuggestionsModal({
                             Matches {resource.matchCount} concern{resource.matchCount !== 1 ? 's':''}
                         </Badge>
                     ): null}
-                     {(!resource.matchCount || resource.matchCount === 0) && displayedBadges.length === 0 && !resource.badges?.includes('General Interest') && (
+                     {(!resource.matchCount || resource.matchCount === 0) && displayedBadges.length === 0 && (
                         <Badge variant="outline" className="border-border text-muted-foreground bg-muted/30 text-xs px-1.5 py-0.5 whitespace-nowrap italic">
-                            No specific matches
+                            General Info
                         </Badge>
                     )}
                 </div>
@@ -504,7 +512,7 @@ export default function ResourceSuggestionsModal({
         </Tooltip>
     );
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [IconComponents, activeFilterKeys, BADGE_DISPLAY_PRIORITY_MAP]);
+  }, [IconComponents, BADGE_DISPLAY_PRIORITY_MAP]);
 
 
   return (
@@ -518,12 +526,12 @@ export default function ResourceSuggestionsModal({
         }
         className={cn(
             'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:rounded-lg',
-             pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
+             pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2', // Initial centering only if not dragged
             'data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut'
         )}
         onInteractOutside={e => drag && e.preventDefault()}
         onOpenAutoFocus={e => {
-            e.preventDefault();
+            e.preventDefault(); // Prevent default focus behavior
         }}
       >
         <div
@@ -562,12 +570,12 @@ export default function ResourceSuggestionsModal({
                                     onClick={() => handleFilterClick(bubble.key)}
                                     className={cn("rounded-full text-xs h-auto px-3 py-1.5 whitespace-nowrap transition-all duration-150 flex items-center gap-1.5",
                                         activeFilterKeys.has(bubble.key) ? "shadow-md ring-2 ring-primary/50" : "hover:bg-accent/70",
-                                        bubble.type === 'special' && activeFilterKeys.has(bubble.key) && 'bg-amber-500/20 border-amber-500 text-amber-700 dark:text-amber-300 dark:bg-amber-700/40 dark:border-amber-600',
-                                        bubble.type === 'badgeHighlight' && activeFilterKeys.has(bubble.key) && 'bg-emerald-500/20 border-emerald-600 text-emerald-700 dark:text-emerald-300 dark:bg-emerald-700/40 dark:border-emerald-600',
-                                        bubble.type === 'category' && activeFilterKeys.has(bubble.key) && 'bg-blue-500/20 border-blue-500 text-blue-700 dark:text-blue-300 dark:bg-blue-700/40 dark:border-blue-600',
-                                        bubble.type === 'orgType' && activeFilterKeys.has(bubble.key) && 'bg-purple-500/20 border-purple-500 text-purple-700 dark:text-purple-300 dark:bg-purple-700/40 dark:border-purple-600',
-                                        bubble.type === 'badgeGeneral' && activeFilterKeys.has(bubble.key) && 'bg-teal-500/20 border-teal-500 text-teal-700 dark:text-teal-300 dark:bg-teal-700/40 dark:border-teal-600'
-
+                                        bubble.key === 'your-matches' && activeFilterKeys.has(bubble.key) && 'bg-blue-500/90 border-blue-600 text-blue-50 dark:bg-blue-600/80 dark:border-blue-700 dark:text-blue-100',
+                                        bubble.key === 'all-organizations' && activeFilterKeys.has(bubble.key) && 'bg-slate-500/90 border-slate-600 text-slate-50 dark:bg-slate-600/80 dark:border-slate-700 dark:text-slate-100',
+                                        bubble.type === 'badgeHighlight' && activeFilterKeys.has(bubble.key) && 'bg-emerald-500/90 border-emerald-600 text-emerald-50 dark:bg-emerald-600/80 dark:border-emerald-700 dark:text-emerald-100',
+                                        bubble.type === 'category' && activeFilterKeys.has(bubble.key) && 'bg-indigo-500/90 border-indigo-600 text-indigo-50 dark:bg-indigo-600/80 dark:border-indigo-700 dark:text-indigo-100',
+                                        bubble.type === 'orgType' && activeFilterKeys.has(bubble.key) && 'bg-purple-500/90 border-purple-600 text-purple-50 dark:bg-purple-600/80 dark:border-purple-700 dark:text-purple-100',
+                                        bubble.type === 'badgeGeneral' && activeFilterKeys.has(bubble.key) && 'bg-teal-500/90 border-teal-600 text-teal-50 dark:bg-teal-600/80 dark:border-teal-700 dark:text-teal-100'
                                     )}
                                     title={`Filter by: ${bubble.label}`}
                                 >
@@ -607,7 +615,7 @@ export default function ResourceSuggestionsModal({
                 </div>
             ) : displayedResources.length > 0 ? (
                 <div className="space-y-3 sm:space-y-4">
-                    {displayedResources.map((resource, index) => renderResourceCard(resource, index))}
+                    {displayedResources.map((resource) => renderResourceCard(resource))}
                 </div>
             ) : (
                 <div className="text-center py-10 text-muted-foreground">
@@ -630,5 +638,7 @@ export default function ResourceSuggestionsModal({
     </Dialog>
   );
 }
+
+
 
 

@@ -21,8 +21,7 @@ interface ResourceDatabaseEntry {
   prominence?: 'high' | 'medium' | 'low';
   focusType?: 'broad' | 'niche';
   orgTypeTags?: ('grassroots' | 'research' | 'legal' | 'established' | 'activism' | 'think-tank' | 'direct-service')[];
-  // Field to help guide badge assignment for diversification
-  intendedBadgeProfile?: ('single-prominent' | 'double-diverse' | 'triple-focused')[];
+  intendedBadgeProfile?: ('single-prominent' | 'double-diverse' | 'triple-focused' | 'community-focused')[];
 }
 
 export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
@@ -397,7 +396,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     name: 'Electronic Frontier Foundation (EFF)',
     url: 'https://www.eff.org/',
     description: 'Defending civil liberties in the digital world. Works on issues of free speech, privacy, innovation, and consumer rights online.',
-    icon: 'ShieldCheck', // Re-using, maybe Wifi or Lock later
+    icon: 'ShieldCheck',
     mainCategory: 'Civil Rights & Social Justice',
     prominence: 'high',
     focusType: 'broad',
@@ -595,7 +594,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     name: 'Iraq and Afghanistan Veterans of America (IAVA)',
     url: 'https://iava.org/',
     description: 'The leading post-9/11 veteran empowerment organization (VEO) with the most diverse and rapidly growing membership in America.',
-    icon: 'ShieldCheck', // Re-using
+    icon: 'ShieldCheck',
     mainCategory: 'Veterans Affairs',
     prominence: 'medium',
     focusType: 'niche',
@@ -657,7 +656,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     name: 'RAICES',
     url: 'https://www.raicestexas.org/',
     description: 'A nonprofit agency that promotes justice by providing free and low-cost legal services to underserved immigrant children, families, and refugees.',
-    icon: 'Gavel', // Using Gavel as proxy for legal services
+    icon: 'Gavel',
     mainCategory: 'Immigration',
     prominence: 'medium',
     focusType: 'broad',
@@ -703,6 +702,67 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     orgTypeTags: ['established', 'research', 'direct-service'],
     advocacyTags: ['arts_funding_fund', 'cpb_fund', 'imls_fund', 'nea_fund', 'creative_economy'],
     intendedBadgeProfile: ['single-prominent'],
+  },
+  // Added Organizations
+  {
+    name: 'ASPCA (American Society for the Prevention of Cruelty to Animals)',
+    url: 'https://www.aspca.org/',
+    description: 'Works to save lives and secure compassionate treatment for animals across America.',
+    icon: 'PawPrint',
+    mainCategory: 'Animal Welfare',
+    prominence: 'high',
+    focusType: 'broad',
+    orgTypeTags: ['established', 'activism', 'direct-service'],
+    advocacyTags: ['animal_welfare', 'animal_protection_laws', 'anti_cruelty_fund', 'pet_adoption_support'],
+    intendedBadgeProfile: ['double-diverse'],
+  },
+  {
+    name: 'The Arc of the United States',
+    url: 'https://thearc.org/',
+    description: 'Promotes and protects the human rights of people with intellectual and developmental disabilities and actively supports their full inclusion and participation in the community.',
+    icon: 'Wheelchair',
+    mainCategory: 'Disability Rights',
+    prominence: 'high',
+    focusType: 'broad',
+    orgTypeTags: ['grassroots', 'established', 'legal'],
+    advocacyTags: ['disability_rights', 'inclusion_fund', 'medicaid_fund', 'social_security_review', 'education_equity'],
+    intendedBadgeProfile: ['triple-focused'],
+  },
+  {
+    name: 'Center on Budget and Policy Priorities (CBPP)',
+    url: 'https://www.cbpp.org/',
+    description: 'A nonpartisan research and policy institute pursuing federal and state policies designed to reduce poverty and inequality.',
+    icon: 'TrendingUp', // Used for economic focus
+    mainCategory: 'Economic Justice',
+    prominence: 'high',
+    focusType: 'broad',
+    orgTypeTags: ['research', 'data-driven', 'think-tank', 'established'],
+    advocacyTags: ['poverty_reduction', 'economic_inequality_cut', 'social_safety_net_fund', 'snap_fund', 'wic_fund', 'child_tax_credit_fund', 'housing_affordability', 'tax_fairness'],
+    intendedBadgeProfile: ['triple-focused'],
+  },
+  {
+    name: 'Brookings Institution',
+    url: 'https://www.brookings.edu/',
+    description: 'A nonprofit public policy organization committed to independent research and policy solutions.',
+    icon: 'BuildingIcon', // Generic for institution
+    mainCategory: 'Public Policy Research',
+    prominence: 'high',
+    focusType: 'broad',
+    orgTypeTags: ['research', 'established', 'think-tank'],
+    advocacyTags: ['public_policy_research', 'economic_policy_review', 'foreign_policy_review', 'social_policy_review', 'governance_reform'],
+    intendedBadgeProfile: ['double-diverse'],
+  },
+  {
+    name: 'American Enterprise Institute (AEI)',
+    url: 'https://www.aei.org/',
+    description: 'A conservative think tank that researches government, politics, economics, and social welfare.',
+    icon: 'LibrarySquare',
+    mainCategory: 'Public Policy Research',
+    prominence: 'high',
+    focusType: 'broad',
+    orgTypeTags: ['research', 'established', 'think-tank'],
+    advocacyTags: ['conservative_policy', 'free_enterprise', 'limited_government', 'economic_policy_review', 'national_security_fund'],
+    intendedBadgeProfile: ['double-diverse'],
   },
 ];
 
@@ -859,49 +919,44 @@ export function getItemAdvocacyTags(itemId: string, fundingAction: FundingAction
   if (itemSpecificTags) {
     itemSpecificTags.forEach(tag => tags.push(tag));
   } else if ((specificItemToActionTagMapping[itemId] || specificItemToActionTagMapping[idLower]) && !itemSpecificTags) {
-    // Default to a review tag if specific action tag not found but item is known (and not a general category policy tag)
     if(!tags.some(t => t.endsWith('_policy'))) {
         tags.push(`${itemId}_review`);
         tags.push(`${idLower}_review`);
     }
   }
 
-  // Fallback if no specific or general category tags were added for some reason
   if (tags.length === 0) {
-    tags.push(`${itemId}_${fundingAction}`); // e.g. some_new_item_fund
+    tags.push(`${itemId}_${fundingAction}`);
   }
-  return Array.from(new Set(tags)); // Ensure unique tags
+  return Array.from(new Set(tags));
 }
 
 export function getActionFromFundingLevel(level: FundingLevel): FundingAction {
-    if (level < -0.5) return 'slash'; // Covers -2 and -1
-    if (level > 0.5) return 'fund';   // Covers 1 and 2
-    return 'review';                 // Covers 0
+    if (level < -0.5) return 'slash';
+    if (level > 0.5) return 'fund';
+    return 'review';
 }
 
 export function generateMatchedReason(tag: string, originalConcernDescription: string, fundingAction: FundingAction): MatchedReason {
     let reasonType: MatchedReason['type'] = 'general';
-    let actionableTag = tag.replace(/_/g, ' '); // Basic cleaning for display
+    let actionableTag = tag.replace(/_/g, ' ');
 
-    // Determine reason type based on tag suffixes
     if (tag.endsWith('_cut') || tag.endsWith('_slash')) {
         reasonType = 'opposes';
-        actionableTag = actionableTag.replace(/ cut$| slash$/i, ''); // Remove suffix
+        actionableTag = actionableTag.replace(/ cut$| slash$/i, '');
     } else if (tag.endsWith('_fund')) {
         reasonType = 'supports';
-        actionableTag = actionableTag.replace(/ fund$/i, ''); // Remove suffix
+        actionableTag = actionableTag.replace(/ fund$/i, '');
     } else if (tag.endsWith('_review') || tag.endsWith('_reform')) {
         reasonType = 'reviews';
-        actionableTag = actionableTag.replace(/ review$| reform$/i, ''); // Remove suffix
+        actionableTag = actionableTag.replace(/ review$| reform$/i, '');
     }
 
-    // Attempt to make actionableTag more human-readable
     actionableTag = actionableTag
       .split(' ')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
     actionableTag = actionableTag.replace(/ Policy$/, '').replace(/ Reform$/, '').replace(/ Spending$/, '');
-
 
     const cleanedConcern = cleanItemDescription(originalConcernDescription);
     let userActionText = '';
@@ -913,79 +968,96 @@ export function generateMatchedReason(tag: string, originalConcernDescription: s
 
     return {
         type: reasonType,
-        description: `${actionableTag}`, // This is what the org does
-        originalConcern: `${userActionText} ${cleanedConcern}`, // This is what the user wants for the item
-        actionableTag: actionableTag.trim() // Cleaned tag for display
+        description: `${actionableTag}`,
+        originalConcern: `${userActionText} ${cleanedConcern}`,
+        actionableTag: actionableTag.trim()
     };
 }
 
-export const MAX_SUGGESTIONS = 50; // Max suggestions to show
-const MAX_BADGES_BASE = 2; // Base max badges
-const CHANCE_FOR_ONE_BADGE = 0.15; // ~15% of items get 1 badge
-const CHANCE_FOR_THREE_BADGES = 0.35; // ~35% of items get 3 badges
-// Remainder (50%) get 2 badges
+export const MAX_SUGGESTIONS = 50;
+export const MAX_BADGES_PER_RESOURCE = 3; // Max badges per resource
 
-export function assignBadgesToResource(resource: SuggestedResource, userConcernsSize: number, isBestMatch: boolean, isTopMatch: boolean): BadgeType[] {
-    const assignedBadges: Set<BadgeType> = new Set();
+// Refined Badge Assignment Logic
+export function assignBadgesToResource(
+  resource: SuggestedResource,
+  userConcernsSize: number,
+  isBestMatch: boolean,
+  isTopMatch: boolean,
+  otherResourcesWithBadges: Map<string, Set<BadgeType>> // Keep track of badges assigned to other resources
+): BadgeType[] {
+  const assignedBadges: Set<BadgeType> = new Set();
+  const potentialBadgesPool: BadgeType[] = [];
 
-    if (isBestMatch) assignedBadges.add('Best Match');
-    if (isTopMatch && !assignedBadges.has('Best Match')) assignedBadges.add('Top Match');
+  if (isBestMatch) assignedBadges.add('Best Match');
+  if (isTopMatch && !assignedBadges.has('Best Match')) assignedBadges.add('Top Match');
 
-    const potentialBadges: Set<BadgeType> = new Set();
-    if (resource.prominence === 'high' && (resource.matchCount || 0) > 0 && resource.score && resource.score > 2.0) {
-        potentialBadges.add('High Impact');
-    }
+  // Populate potential badges based on resource properties
+  if (resource.prominence === 'high') potentialBadgesPool.push('High Impact');
+  if (resource.focusType === 'broad') potentialBadgesPool.push('Broad Focus');
+  if (resource.focusType === 'niche') potentialBadgesPool.push('Niche Focus');
 
-    const orgTypeToBadgeMap: Partial<Record<NonNullable<typeof resource.orgTypeTags>[number], BadgeType>> = {
-        'legal': 'Legal Advocacy', 'data-driven': 'Data-Driven', 'grassroots': 'Grassroots Power',
-        'established': 'Established Voice', 'activism': 'High Impact',
-        'think-tank': resource.focusType === 'niche' ? 'Niche Focus' : 'Broad Focus',
-    };
+  const orgTypeToBadgeMap: Partial<Record<NonNullable<typeof resource.orgTypeTags>[number], BadgeType>> = {
+      'legal': 'Legal Advocacy', 'data-driven': 'Data-Driven', 'grassroots': 'Grassroots Power',
+      'established': 'Established Voice', 'activism': 'High Impact', // Activism can also imply High Impact
+      'think-tank': 'Data-Driven', // Think tanks are often data-driven
+      'direct-service': 'Community Pick', // Direct service often implies community pick
+  };
+  resource.orgTypeTags?.forEach(tag => {
+      if (orgTypeToBadgeMap[tag] && !potentialBadgesPool.includes(orgTypeToBadgeMap[tag]!)) {
+          potentialBadgesPool.push(orgTypeToBadgeMap[tag]!);
+      }
+  });
 
-    if (resource.orgTypeTags) {
-        for (const orgTag of resource.orgTypeTags) {
-            const badge = orgTypeToBadgeMap[orgTag];
-            if (badge) potentialBadges.add(badge);
-        }
-    }
-    if (resource.focusType === 'broad' && !potentialBadges.has('Broad Focus')) potentialBadges.add('Broad Focus');
-    if (resource.focusType === 'niche' && !potentialBadges.has('Niche Focus')) potentialBadges.add('Niche Focus');
+  // Filter out badges already assigned (Best/Top Match)
+  let availableBadges = potentialBadgesPool.filter(b => !assignedBadges.has(b));
 
-    const sortedPotentialBadges = Array.from(potentialBadges)
-        .filter(b => !assignedBadges.has(b)) // Don't re-add Best/Top
-        .sort((a, b) => (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99));
+  // Try to diversify badges based on what other resources have
+  const allAssignedBadgesCount = new Map<BadgeType, number>();
+  otherResourcesWithBadges.forEach(badges => {
+      badges.forEach(b => allAssignedBadgesCount.set(b, (allAssignedBadgesCount.get(b) || 0) + 1));
+  });
 
-    // Determine target number of badges for this resource
-    let targetBadgeCount = MAX_BADGES_BASE;
-    const randomFactor = Math.random();
-    if (randomFactor < CHANCE_FOR_ONE_BADGE) {
-        targetBadgeCount = 1;
-    } else if (randomFactor < CHANCE_FOR_ONE_BADGE + CHANCE_FOR_THREE_BADGES) {
-        targetBadgeCount = 3;
-    }
-    // Ensure Best/Top match badges don't prevent other badges if target is low
-    if (assignedBadges.size > 0 && targetBadgeCount <= assignedBadges.size) {
-        targetBadgeCount = assignedBadges.size + 1; // Allow at least one more if Best/Top already present
-    }
+  // Sort available badges: prioritize less common ones if this resource is a good fit
+  availableBadges.sort((a, b) => {
+    const countA = allAssignedBadgesCount.get(a) || 0;
+    const countB = allAssignedBadgesCount.get(b) || 0;
+    if (countA !== countB) return countA - countB; // Prioritize less used badges
+    return (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99); // Fallback to display priority
+  });
 
 
-    for (const badge of sortedPotentialBadges) {
-        if (assignedBadges.size >= targetBadgeCount) break;
-        assignedBadges.add(badge);
-    }
+  // Determine target number of *additional* badges (beyond Best/Top Match)
+  let targetAdditionalBadges = 0;
+  if (resource.intendedBadgeProfile?.includes('single-prominent') || Math.random() < 0.15) { // ~15% get 1 additional (or 0 if Best/Top assigned)
+      targetAdditionalBadges = 1;
+  } else if (resource.intendedBadgeProfile?.includes('triple-focused') || Math.random() < 0.35) { // ~35% get 3 additional
+      targetAdditionalBadges = 3;
+  } else { // ~50% get 2 additional
+      targetAdditionalBadges = 2;
+  }
+  // Adjust target if Best/Top already assigned, aiming for total around MAX_BADGES_PER_RESOURCE
+  targetAdditionalBadges = Math.max(0, Math.min(MAX_BADGES_PER_RESOURCE - assignedBadges.size, targetAdditionalBadges));
 
-    if (assignedBadges.size === 0 && ((resource.matchCount || 0) === 0 || userConcernsSize === 0)) {
-        assignedBadges.add('General Interest');
-    }
 
-    // If still under target and has matches, consider 'Community Pick'
-    if (assignedBadges.size < targetBadgeCount && (resource.matchCount || 0) > 0 &&
-        (resource.prominence === 'low' || resource.prominence === 'medium') &&
-        !assignedBadges.has('Community Pick') && Math.random() < 0.33) {
-        assignedBadges.add('Community Pick');
-    }
-    
-    return Array.from(assignedBadges)
-        .sort((a, b) => (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99))
-        .slice(0, Math.max(MAX_BADGES_BASE, targetBadgeCount)); // Ensure we don't exceed an absolute max if logic makes targetBadgeCount too high
+  for (const badge of availableBadges) {
+      if (assignedBadges.size >= MAX_BADGES_PER_RESOURCE || assignedBadges.size >= (isBestMatch || isTopMatch ? 1 : 0) + targetAdditionalBadges) break;
+      assignedBadges.add(badge);
+  }
+
+  // Fallback: If no specific badges assigned and no user matches, assign 'General Interest'
+  if (assignedBadges.size === 0 && ((resource.matchCount || 0) === 0 || userConcernsSize === 0)) {
+      assignedBadges.add('General Interest');
+  }
+
+  // If still under target and has matches and suitable profile, consider 'Community Pick'
+  if (assignedBadges.size < MAX_BADGES_PER_RESOURCE && assignedBadges.size < ((isBestMatch || isTopMatch ? 1 : 0) + targetAdditionalBadges) &&
+      (resource.matchCount || 0) > 0 &&
+      (resource.prominence === 'low' || resource.prominence === 'medium' || resource.intendedBadgeProfile?.includes('community-focused')) &&
+      !assignedBadges.has('Community Pick') && Math.random() < 0.33) {
+      assignedBadges.add('Community Pick');
+  }
+
+  return Array.from(assignedBadges)
+      .sort((a, b) => (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99))
+      .slice(0, MAX_BADGES_PER_RESOURCE);
 }

@@ -8,7 +8,7 @@
 import type { SelectedItem as UserSelectedItem } from '@/services/tax-spending';
 import type { Tone } from './email/types';
 import type { MatchedReason, BadgeType, SuggestedResource } from '@/types/resource-suggestions';
-import { RESOURCE_DATABASE, getItemAdvocacyTags, getActionFromFundingLevel, generateMatchedReason, MAX_SUGGESTIONS, assignBadgesToResource } from '@/lib/resource-suggestion-logic';
+import { RESOURCE_DATABASE, getItemAdvocacyTags, getActionFromFundingLevel, generateMatchedReason, MAX_SUGGESTIONS, assignBadgesToResource, MAX_BADGES_PER_RESOURCE } from '@/lib/resource-suggestion-logic';
 
 
 export async function suggestResources(
@@ -34,6 +34,8 @@ export async function suggestResources(
   let bestMatchAssignedThisRun = false;
   let topMatchCountThisRun = 0;
   const MAX_TOP_MATCHES_THIS_RUN = 2;
+  const otherResourcesWithBadges = new Map<string, Set<BadgeType>>();
+
 
   const scoredResources = RESOURCE_DATABASE.map(resource => {
     let score = 0;
@@ -121,21 +123,23 @@ export async function suggestResources(
         overallRelevanceReason = `${resource.name} advocates for fiscal responsibility, aligning with your interest in balancing the budget.`;
     }
 
-    // Determine if this resource is the best match or a top match for THIS suggestion run
     let isBestMatchForThisRun = false;
     let isTopMatchForThisRun = false;
     const hasHighMatchCount = resource.matchCount && resource.matchCount >= Math.max(1, Math.floor(userConcerns.size * 0.60));
 
     if (!bestMatchAssignedThisRun && hasHighMatchCount && resource.score > 3.5 && userConcerns.size > 0) {
         isBestMatchForThisRun = true;
-        bestMatchAssignedThisRun = true; // Mark as assigned for this run
+        bestMatchAssignedThisRun = true;
     }
     if (topMatchCountThisRun < MAX_TOP_MATCHES_THIS_RUN && !isBestMatchForThisRun && hasHighMatchCount && resource.score > 2.5 && userConcerns.size > 0) {
         isTopMatchForThisRun = true;
         topMatchCountThisRun++;
     }
 
-    const finalBadges = assignBadgesToResource(resource, userConcerns.size, isBestMatchForThisRun, isTopMatchForThisRun);
+    const finalBadges = assignBadgesToResource(resource, userConcerns.size, isBestMatchForThisRun, isTopMatchForThisRun, otherResourcesWithBadges);
+    if (finalBadges.length > 0) {
+        otherResourcesWithBadges.set(resource.url, new Set(finalBadges));
+    }
 
 
     suggestions.push({
@@ -156,3 +160,4 @@ export async function suggestResources(
   }
   return suggestions;
 }
+
