@@ -32,6 +32,18 @@ const importLucideIcon = async (iconName: string | undefined): Promise<React.Ele
   }
 };
 
+const BADGE_PRIORITY: BadgeType[] = [
+  'Best Match',
+  'Top Match',
+  'High Impact',
+  'Data-Driven',
+  'Legal Advocacy',
+  'Established Voice',
+  'Grassroots Power',
+  'Niche Focus',
+  'Broad Focus',
+  'Community Pick',
+];
 
 interface ResourceSuggestionsModalProps {
   isOpen: boolean;
@@ -41,7 +53,7 @@ interface ResourceSuggestionsModalProps {
   selectedItems: Map<string, SelectedItem>;
   balanceBudgetChecked: boolean;
   userTone: Tone;
-  hasUserConcerns: boolean; // New prop
+  hasUserConcerns: boolean;
 }
 
 const MatchedReasonTooltipContent = ({ reasons, resourceName }: { reasons: MatchedReason[], resourceName: string }) => {
@@ -122,7 +134,7 @@ export default function ResourceSuggestionsModal({
   hasUserConcerns,
 }: ResourceSuggestionsModalProps) {
   const [IconComponents, setIconComponents] = React.useState<Record<string, React.ElementType>>({});
-  const [activeFilterKeys, setActiveFilterKeys] = React.useState<Set<string>>(new Set());
+  const [activeFilterKeys, setActiveFilterKeys] = React.useState<Set<string>>(new Set(['all-organizations']));
 
 
   const [pos, setPos] = React.useState<{ x: number | null; y: number | null }>({ x: null, y: null });
@@ -137,18 +149,9 @@ export default function ResourceSuggestionsModal({
     if (!isOpen) {
       setPos({ x: null, y: null });
       isInitialOpen.current = true;
-      setActiveFilterKeys(new Set()); // Clear filters on close
-    } else {
-        // Set initial filters based on whether user has concerns
-        const initialFilters = new Set<string>();
-        if (hasUserConcerns) {
-             initialFilters.add('your-matches');
-        } else {
-             initialFilters.add('all-organizations');
-        }
-        setActiveFilterKeys(initialFilters);
+      setActiveFilterKeys(new Set(['all-organizations'])); // Reset filters on close to All Organizations
     }
-  }, [isOpen, hasUserConcerns]);
+  }, [isOpen]);
 
 
   React.useLayoutEffect(() => {
@@ -161,12 +164,11 @@ export default function ResourceSuggestionsModal({
         const windowWidth = window.innerWidth;
 
         if (width && height) {
-             // Calculate top position, ensuring it's not cut off at the bottom
              let newY = windowHeight / 2 - height / 2;
-             if (newY + height > windowHeight - 20) { // 20px buffer from bottom
+             if (newY + height > windowHeight - 20) {
                  newY = windowHeight - height - 20;
              }
-             if (newY < 20) { // 20px buffer from top
+             if (newY < 20) {
                  newY = 20;
              }
 
@@ -184,13 +186,13 @@ export default function ResourceSuggestionsModal({
   const onDown = React.useCallback((e: React.MouseEvent) => {
     if (!refHandle.current?.contains(e.target as Node) || !refModal.current) return;
 
-    if (pos.x === null) { // First drag after opening centred
+    if (pos.x === null) {
       const r = refModal.current.getBoundingClientRect();
       setPos({ x: r.left, y: r.top });
       dragOffset.current = { x: e.clientX - r.left, y: e.clientY - r.top };
-       isInitialOpen.current = false; // No longer initial open
-    } else { // Subsequent drags
-      if (pos.x !== null && pos.y !== null) { // Ensure pos.x and pos.y are not null
+       isInitialOpen.current = false;
+    } else {
+      if (pos.x !== null && pos.y !== null) {
         dragOffset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
       }
     }
@@ -200,13 +202,12 @@ export default function ResourceSuggestionsModal({
 
 
   const onMove = React.useCallback((e: MouseEvent) => {
-    if (!drag || !refModal.current || pos.x === null || pos.y === null ) return; // Check pos.y too
+    if (!drag || !refModal.current || pos.x === null || pos.y === null ) return;
     const { innerWidth: vw, innerHeight: vh } = window;
     const { width: hW, height: hH } = refModal.current.getBoundingClientRect();
     let x = e.clientX - dragOffset.current.x;
     let y = e.clientY - dragOffset.current.y;
 
-    // Keep modal within viewport boundaries (with a small margin)
     const margin = 5;
     x = Math.max(margin, Math.min(x, vw - hW - margin));
     y = Math.max(margin, Math.min(y, vh - hH - margin));
@@ -273,14 +274,11 @@ export default function ResourceSuggestionsModal({
         }
         const bestMatchesCount = suggestedResources.filter(r => r.badges?.includes('Best Match')).length;
         if (bestMatchesCount > 0) {
-             // Count actual number of 'Best Match' if it's one, or 'Top Match' if multiple
             const actualBestCount = suggestedResources.filter(r => r.badges?.includes('Best Match')).length;
             const actualTopCount = suggestedResources.filter(r => r.badges?.includes('Top Match')).length;
             if (actualBestCount === 1) {
                  bubbles.push({ key: 'best-matches', label: 'Best Match', count: 1 });
             } else if (actualTopCount > 0) {
-                // This logic might be tricky if 'Best Match' and 'Top Match' can coexist on same item
-                // For now, prioritize showing a "Top Matches" count if best match logic isn't exclusive
                 bubbles.push({ key: 'top-matches', label: 'Top Matches', count: actualTopCount });
             }
         }
@@ -301,37 +299,21 @@ export default function ResourceSuggestionsModal({
     if (isLoading) return [];
     let filtered = suggestedResources;
 
-    // Handle specific "meta" filters first
-    if (activeFilterKeys.has('your-matches')) {
-        filtered = filtered.filter(r => (r.matchCount || 0) > 0);
-    } else if (activeFilterKeys.has('best-matches')) { // Assumes 'best-matches' is for the single best
-        filtered = filtered.filter(r => r.badges?.includes('Best Match'));
-    } else if (activeFilterKeys.has('top-matches')) { // For multiple top matches
-        filtered = filtered.filter(r => r.badges?.includes('Top Match'));
-    }
-    // If 'all-organizations' is active, or no specific meta-filters are active, use the result so far.
-    // If specific meta-filters *were* active, 'filtered' already reflects that.
-
-    // Then, if any category filters are active, further refine the list.
-    const categoryFilters = Array.from(activeFilterKeys).filter(key =>
-        !['your-matches', 'best-matches', 'top-matches', 'all-organizations'].includes(key)
-    );
-
-    if (categoryFilters.length > 0) {
-        filtered = filtered.filter(r => categoryFilters.includes(r.mainCategory));
-    }
-
-    // If after all filters, the list is empty and "all-organizations" wasn't the *only* active filter,
-    // it implies a combination of specific filters yielded no results.
-    // In this case, if the user hasn't explicitly selected 'all-organizations', we might want to show all.
-    // However, current logic: if activeFilterKeys is not empty and doesn't include 'all-organizations',
-    // it means specific filters are on. If they yield no results, show no results.
     if (activeFilterKeys.size > 0 && !activeFilterKeys.has('all-organizations')) {
-        return filtered;
+        filtered = suggestedResources.filter(r => {
+            if (activeFilterKeys.has('your-matches') && (r.matchCount || 0) === 0) return false;
+            if (activeFilterKeys.has('best-matches') && !r.badges?.includes('Best Match')) return false;
+            if (activeFilterKeys.has('top-matches') && !r.badges?.includes('Top Match')) return false;
+            
+            const categoryFilters = Array.from(activeFilterKeys).filter(key =>
+                !['your-matches', 'best-matches', 'top-matches', 'all-organizations'].includes(key)
+            );
+            if (categoryFilters.length > 0 && !categoryFilters.includes(r.mainCategory)) return false;
+            
+            return true;
+        });
     }
-
-    // Default to all resources if no filters are active or 'all-organizations' is specifically selected.
-    return suggestedResources; // Or 'filtered' if 'all-organizations' was selected alongside others (though that's complex)
+    return filtered;
 
   }, [isLoading, suggestedResources, activeFilterKeys]);
 
@@ -341,25 +323,21 @@ export default function ResourceSuggestionsModal({
         const newKeys = new Set(prevKeys);
 
         if (key === 'all-organizations') {
-            // Selecting 'all-organizations' makes it the ONLY active filter.
             return new Set(['all-organizations']);
         }
 
-        // If adding a specific filter (not 'all-organizations'):
-        // 1. If 'all-organizations' is currently active, remove it.
         if (newKeys.has('all-organizations')) {
             newKeys.delete('all-organizations');
         }
-        // 2. Toggle the clicked filter.
+        
         if (newKeys.has(key)) {
             newKeys.delete(key);
         } else {
             newKeys.add(key);
         }
 
-        // 3. If after toggling, no filters are active, default to 'your-matches' (if concerns) or 'all-organizations'.
         if (newKeys.size === 0) {
-            return hasUserConcerns ? new Set(['your-matches']) : new Set(['all-organizations']);
+            return new Set(['all-organizations']);
         }
 
         return newKeys;
@@ -367,12 +345,25 @@ export default function ResourceSuggestionsModal({
   };
 
   const handleClearAllFilters = () => {
-      setActiveFilterKeys(hasUserConcerns ? new Set(['your-matches']) : new Set(['all-organizations']));
+      setActiveFilterKeys(new Set(['all-organizations']));
   };
 
 
   const renderResourceCard = (resource: SuggestedResource, index: number) => {
     const Icon = IconComponents[resource.icon || 'Info'] || Info;
+    
+    let currentBadges: BadgeType[] = [];
+    if (resource.badges) {
+        currentBadges = [...resource.badges].sort((a, b) => {
+            const indexA = BADGE_PRIORITY.indexOf(a);
+            const indexB = BADGE_PRIORITY.indexOf(b);
+            return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
+        });
+        if (currentBadges.length > 3) {
+            currentBadges = currentBadges.slice(0, 3);
+        }
+    }
+
     return (
         <Tooltip key={`${Array.from(activeFilterKeys).join('-')}-${index}-${resource.url}`}>
         <TooltipTrigger asChild>
@@ -384,7 +375,7 @@ export default function ResourceSuggestionsModal({
                     <span className="flex-1">{resource.name}</span>
                 </span>
                 <div className="flex items-center flex-shrink-0 gap-1 ml-auto flex-wrap justify-end">
-                    {resource.badges?.map(badge => (
+                    {currentBadges.map(badge => (
                         <Badge
                             key={badge}
                             variant={badge === 'Best Match' ? 'default' : 'secondary'}
@@ -392,13 +383,13 @@ export default function ResourceSuggestionsModal({
                                 "text-xs px-1.5 py-0.5 whitespace-nowrap font-medium",
                                 badge === 'Best Match' && "bg-green-600/20 border-green-500 text-green-700 dark:bg-green-700/30 dark:border-green-500 dark:text-green-300",
                                 badge === 'Top Match' && "bg-sky-600/20 border-sky-500 text-sky-700 dark:bg-sky-700/30 dark:border-sky-500 dark:text-sky-300",
-                                badge === 'High Impact' && "bg-rose-100 border-rose-400 text-rose-700 dark:bg-rose-700/30 dark:border-rose-600 dark:text-rose-300", // Changed color
-                                badge === 'Broad Focus' && "bg-blue-100 border-blue-400 text-blue-700 dark:bg-blue-700/30 dark:border-blue-600 dark:text-blue-300", // Changed color
-                                badge === 'Niche Focus' && "bg-indigo-100 border-indigo-400 text-indigo-700 dark:bg-indigo-700/30 dark:border-indigo-600 dark:text-indigo-300", // Changed color
+                                badge === 'High Impact' && "bg-rose-100 border-rose-400 text-rose-700 dark:bg-rose-700/30 dark:border-rose-600 dark:text-rose-300",
+                                badge === 'Broad Focus' && "bg-blue-100 border-blue-400 text-blue-700 dark:bg-blue-700/30 dark:border-blue-600 dark:text-blue-300",
+                                badge === 'Niche Focus' && "bg-indigo-100 border-indigo-400 text-indigo-700 dark:bg-indigo-700/30 dark:border-indigo-600 dark:text-indigo-300",
                                 badge === 'Community Pick' && "bg-teal-100 border-teal-400 text-teal-700 dark:bg-teal-700/30 dark:border-teal-600 dark:text-teal-300",
                                 badge === 'Grassroots Power' && "bg-lime-100 border-lime-400 text-lime-700 dark:bg-lime-700/30 dark:border-lime-600 dark:text-lime-300",
-                                badge === 'Data-Driven' && "bg-purple-100 border-purple-400 text-purple-700 dark:bg-purple-700/30 dark:border-purple-600 dark:text-purple-300", // Changed color
-                                badge === 'Legal Advocacy' && "bg-orange-100 border-orange-400 text-orange-700 dark:bg-orange-700/30 dark:border-orange-600 dark:text-orange-300", // Changed color
+                                badge === 'Data-Driven' && "bg-purple-100 border-purple-400 text-purple-700 dark:bg-purple-700/30 dark:border-purple-600 dark:text-purple-300",
+                                badge === 'Legal Advocacy' && "bg-orange-100 border-orange-400 text-orange-700 dark:bg-orange-700/30 dark:border-orange-600 dark:text-orange-300",
                                 badge === 'Established Voice' && "bg-slate-100 border-slate-400 text-slate-700 dark:bg-slate-700/30 dark:border-slate-600 dark:text-slate-300",
                             )}
                         >
@@ -409,7 +400,7 @@ export default function ResourceSuggestionsModal({
                          <Badge variant="outline" className="border-border text-muted-foreground bg-muted/30 text-xs px-1.5 py-0.5 whitespace-nowrap">
                             Matches {resource.matchCount} concern{resource.matchCount !== 1 ? 's':''}
                         </Badge>
-                    ) : resource.matchCount === 0 && (
+                    ) : (resource.matchCount === 0 && !currentBadges.some(b => ['Best Match', 'Top Match'].includes(b))) && ( // Show "General Interest" only if no match and not already a top/best
                          <Badge variant="outline" className="border-border text-muted-foreground/70 bg-muted/20 text-xs px-1.5 py-0.5 whitespace-nowrap italic">
                             General Interest
                         </Badge>
@@ -425,7 +416,7 @@ export default function ResourceSuggestionsModal({
                 size="sm"
                 asChild
                 className="p-0 h-auto text-primary hover:text-primary/80 text-xs sm:text-sm mt-1.5 font-medium"
-                onClick={(e) => e.stopPropagation()} // Prevent modal interaction when clicking link
+                onClick={(e) => e.stopPropagation()}
                 >
                 <a href={resource.url} target="_blank" rel="noopener noreferrer">
                     Visit Website <ExternalLink className="ml-1 h-3 w-3 sm:h-3.5 sm:w-3.5" />
@@ -451,19 +442,20 @@ export default function ResourceSuggestionsModal({
         }
         className={cn(
             'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:rounded-lg',
-             pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2', // Initial centering
+             pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
             'data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut'
         )}
         onInteractOutside={e => drag && e.preventDefault()}
         onOpenAutoFocus={e => {
             e.preventDefault();
+            // Set initial active filter based on concerns
             const initialFilters = new Set<string>();
-             if (hasUserConcerns) {
+            if (hasUserConcerns && suggestedResources.some(r => (r.matchCount || 0) > 0)) {
                 initialFilters.add('your-matches');
-             } else {
+            } else {
                 initialFilters.add('all-organizations');
-             }
-             setActiveFilterKeys(initialFilters);
+            }
+            setActiveFilterKeys(initialFilters);
         }}
       >
         <div
@@ -509,8 +501,7 @@ export default function ResourceSuggestionsModal({
                                 </Button>
                             )
                         ))}
-                        {/* Only show clear if specific (non-'all') filters are active */}
-                        {Array.from(activeFilterKeys).some(k => k !== 'all-organizations') && (
+                        {Array.from(activeFilterKeys).some(k => k !== 'all-organizations') && activeFilterKeys.size > 0 && (
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button
@@ -564,7 +555,6 @@ export default function ResourceSuggestionsModal({
   );
 }
 
-// Placeholder for Wifi icon
 const Wifi = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
@@ -573,3 +563,4 @@ const Wifi = (props: React.SVGProps<SVGSVGElement>) => (
     <line x1="12" y1="20" x2="12.01" y2="20"/>
   </svg>
 );
+
