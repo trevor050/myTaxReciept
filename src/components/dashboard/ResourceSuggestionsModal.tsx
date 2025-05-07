@@ -194,8 +194,9 @@ export default function ResourceSuggestionsModal({
   }, [isOpen, suggestedResources]);
 
 
-  const bestMatches = suggestedResources.filter(r => r.matchCount && r.matchCount >= 2);
-  const otherMatches = suggestedResources.filter(r => !bestMatches.includes(r));
+  const bestMatchThreshold = 2; // Define a threshold for "Best Match"
+  const bestMatches = suggestedResources.filter(r => r.matchCount && r.matchCount >= bestMatchThreshold);
+  const otherMatches = suggestedResources.filter(r => !bestMatches.includes(r) || (r.matchCount && r.matchCount < bestMatchThreshold));
 
 
   return (
@@ -255,22 +256,27 @@ export default function ResourceSuggestionsModal({
                   <div className="space-y-3">
                     {bestMatches.map((resource, index) => {
                         const Icon = IconComponents[resource.icon || 'Info'] || Info;
+                        const isTrulyBestMatch = resource.matchCount && resource.matchCount >= bestMatchThreshold;
                         return (
                           <Tooltip key={`best-${index}`}>
                             <TooltipTrigger asChild>
                               <Card className="shadow-lg hover:shadow-xl transition-shadow duration-200 bg-card/90 border-primary/30 hover:border-primary/50 cursor-help rounded-lg overflow-hidden">
                                 <CardHeader className="pb-2 pt-3 px-3 sm:px-4 bg-primary/5">
-                                  <CardTitle className="text-sm sm:text-base font-semibold flex items-center justify-between text-primary">
-                                    <span className="flex items-center gap-1.5 sm:gap-2">
-                                        <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                                        {resource.name}
-                                        <Badge variant="outline" className="ml-2 border-green-500 text-green-600 dark:text-green-400 bg-green-500/10 text-xs px-1.5 py-0.5">
-                                          <Sparkles className="h-3 w-3 mr-1" />Best Match
+                                   <CardTitle className="text-sm sm:text-base font-semibold flex items-start justify-between text-primary gap-2">
+                                    <span className="flex items-center gap-1.5 sm:gap-2 min-w-0"> {/* Min width 0 for wrapping */}
+                                        <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 mt-0.5" />
+                                        <span className="flex-1">{resource.name}</span> {/* Name can wrap */}
+                                    </span>
+                                    <div className="flex items-center flex-shrink-0 gap-1.5 sm:gap-2 ml-auto">
+                                        {isTrulyBestMatch && (
+                                            <Badge variant="outline" className="border-green-500 text-green-700 dark:text-green-400 bg-green-500/10 text-xs px-1.5 py-0.5 whitespace-nowrap">
+                                                <Sparkles className="h-3 w-3 mr-1" />Best Match
+                                            </Badge>
+                                        )}
+                                        <Badge variant="outline" className="border-border text-muted-foreground bg-muted/30 text-xs px-1.5 py-0.5 whitespace-nowrap">
+                                            Matches {resource.matchCount} concern{resource.matchCount !== 1 ? 's':''}
                                         </Badge>
-                                    </span>
-                                    <span className="text-xs font-medium text-primary/90 bg-primary/10 px-2 py-1 rounded-full">
-                                        Matches {resource.matchCount} concern{resource.matchCount !== 1 ? 's':''}
-                                    </span>
+                                    </div>
                                   </CardTitle>
                                 </CardHeader>
                                 <CardContent className="text-xs sm:text-sm space-y-1.5 px-3 sm:px-4 py-3">
@@ -308,15 +314,15 @@ export default function ResourceSuggestionsModal({
                             <TooltipTrigger asChild>
                               <Card className="shadow-md hover:shadow-lg transition-shadow duration-200 bg-card/70 border-border/40 hover:border-border/60 cursor-help rounded-lg overflow-hidden">
                                 <CardHeader className="pb-1.5 pt-2.5 px-3 sm:px-4 bg-secondary/20">
-                                  <CardTitle className="text-xs sm:text-sm font-medium flex items-center justify-between text-foreground/90">
-                                      <span className="flex items-center gap-1.5 sm:gap-2">
-                                          <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-muted-foreground" />
-                                          {resource.name}
+                                   <CardTitle className="text-xs sm:text-sm font-medium flex items-start justify-between text-foreground/90 gap-2">
+                                       <span className="flex items-center gap-1.5 sm:gap-2 min-w-0"> {/* Min width 0 for wrapping */}
+                                          <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-muted-foreground mt-0.5" />
+                                          <span className="flex-1">{resource.name}</span> {/* Name can wrap */}
                                       </span>
                                       {resource.matchCount && resource.matchCount > 0 && (
-                                        <span className="text-[10px] sm:text-xs font-normal text-muted-foreground/80 bg-accent/70 px-1.5 py-0.5 rounded-full">
+                                        <Badge variant="outline" className="border-border text-muted-foreground bg-muted/30 text-[10px] sm:text-xs px-1.5 py-0.5 whitespace-nowrap flex-shrink-0 ml-auto">
                                             Matches {resource.matchCount} concern{resource.matchCount !== 1 ? 's':''}
-                                        </span>
+                                        </Badge>
                                       )}
                                   </CardTitle>
                                 </CardHeader>

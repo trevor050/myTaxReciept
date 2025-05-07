@@ -6,7 +6,7 @@
  */
 
 import type { SelectedItem as UserSelectedItem } from '@/services/tax-spending';
-import { toneBucket, cleanItemDescription } from '@/services/email/utils';
+import { cleanItemDescription } from '@/services/email/utils'; // Removed toneBucket as it's passed in
 import type { Tone } from './email/types';
 
 
@@ -24,6 +24,8 @@ export interface SuggestedResource {
   icon?: string;
   matchCount?: number; // Number of user concerns this resource matches
   matchedReasons?: MatchedReason[]; // Detailed reasons for the match
+  // New field to explicitly mark as best match, or determine in component
+  isBestMatch?: boolean;
 }
 
 type FundingAction = 'slash' | 'fund' | 'review';
@@ -34,6 +36,8 @@ interface ResourceDatabaseEntry {
   description: string;
   icon?: string;
   advocacyTags: string[];
+  // Optional: add a size/prominence metric if we want "Largest Organization" type badges later
+  // prominence?: 'high' | 'medium' | 'low';
 }
 
 const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
@@ -436,7 +440,7 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     name: 'Center for Immigration Studies (CIS)',
     url: 'https://cis.org/',
     description: 'A non-profit research organization that advocates for reduced immigration levels. (Provides a counter-perspective to pro-immigration groups).',
-    icon: 'ArrowDownRightSquare',
+    icon: 'ArrowDownRightSquare', // Specific icon for this org
     advocacyTags: ['immigration_reduction', 'border_security_fund', 'deportations_border_fund', 'immigration_enforcement_fund', 'national_security_review'],
   },
   // Disaster Relief / Emergency Management
@@ -662,10 +666,9 @@ function generateMatchedReason(tag: string, originalConcernDescription: string, 
 
 export async function suggestResources(
   selectedItems: UserSelectedItem[],
-  aggressiveness: number,
+  userTone: Tone, // Pass the pre-calculated tone
   balanceBudgetChecked: boolean
 ): Promise<SuggestedResource[]> {
-  const userTone = toneBucket(aggressiveness);
   const suggestions: SuggestedResource[] = [];
   const suggestedUrls = new Set<string>();
 
@@ -682,18 +685,23 @@ export async function suggestResources(
      userConcerns.set('balance_budget', {action: 'review', itemDescription: 'Balancing the Budget', tags: budgetTags});
   }
 
+  const BEST_MATCH_THRESHOLD = 2; // Resources matching this many or more concerns are "Best Match"
 
   const scoredResources = RESOURCE_DATABASE.map(resource => {
     let score = 0;
-    const matchedReasonsSet = new Set<string>(); // Use a Set to store unique reason descriptions
+    const matchedReasonsSet = new Set<string>(); 
     const detailedMatchedReasons: MatchedReason[] = [];
+    let uniqueConcernMatchCount = 0;
+    const matchedConcernIds = new Set<string>();
 
-    userConcerns.forEach((concern) => {
+
+    userConcerns.forEach((concern, concernId) => {
+        let concernMatched = false;
         concern.tags.forEach(userTag => {
             if (resource.advocacyTags.includes(userTag)) {
-                score++;
+                score++; // Basic score increment for any tag match
                 const reason = generateMatchedReason(userTag, concern.itemDescription, concern.action);
-                if (!matchedReasonsSet.has(reason.description)) { // Ensure uniqueness by description
+                if (!matchedReasonsSet.has(reason.description)) { 
                     matchedReasonsSet.add(reason.description);
                     detailedMatchedReasons.push(reason);
                 }
@@ -702,35 +710,40 @@ export async function suggestResources(
                 } else if (userTag.includes('_review')) {
                     score +=1;
                 }
+                concernMatched = true;
             }
         });
+        if (concernMatched && !matchedConcernIds.has(concernId)) {
+            uniqueConcernMatchCount++;
+            matchedConcernIds.add(concernId);
+        }
     });
+    
 
-    return { ...resource, score, matchedReasons: detailedMatchedReasons, matchCount: detailedMatchedReasons.length };
+    return { ...resource, score, matchedReasons: detailedMatchedReasons, matchCount: uniqueConcernMatchCount };
   }).filter(r => r.score > 0)
     .sort((a, b) => {
         if (b.matchCount !== a.matchCount) {
-             return b.matchCount - a.matchCount; // Primary sort by number of distinct concerns matched
+             return b.matchCount - a.matchCount;
         }
-        return b.score - a.score; // Secondary sort by overall score
+        return b.score - a.score; 
     });
 
 
   for (const resource of scoredResources) {
-    if (suggestions.length >= 7) break; // Suggest up to 7 resources
+    if (suggestions.length >= 7) break; 
     if (suggestedUrls.has(resource.url)) continue;
 
-    let overallRelevanceReason = `Focuses on key areas related to your concerns.`; // Default
+    let overallRelevanceReason = `Focuses on key areas related to your concerns.`; 
     if (resource.matchedReasons && resource.matchedReasons.length > 0) {
-        // Create a more compelling summary
         const topReasonsSummary = resource.matchedReasons
-            .slice(0, 2) // Take top 2-3 distinct reasons
-            .map(r => r.actionableTag) // Use the 'actionableTag'
+            .slice(0, 2) 
+            .map(r => r.actionableTag) 
             .join(' and ');
 
-        if (userTone > 1) { // Stern or Angry
+        if (userTone > 1) { 
              overallRelevanceReason = `${resource.name} actively works on issues like ${topReasonsSummary}. They address ${resource.matchCount} of your concerns.`;
-        } else { // Polite or Concerned
+        } else { 
              overallRelevanceReason = `You might find ${resource.name} relevant as they focus on ${topReasonsSummary}, aligning with ${resource.matchCount} of your concerns.`;
         }
          if (balanceBudgetChecked && resource.advocacyTags.some(t => ['fiscal_responsibility', 'debt_reduction'].includes(t))) {
@@ -747,6 +760,7 @@ export async function suggestResources(
       icon: resource.icon,
       matchCount: resource.matchCount,
       matchedReasons: resource.matchedReasons,
+      isBestMatch: resource.matchCount >= BEST_MATCH_THRESHOLD, // Determine if it's a best match
     });
     suggestedUrls.add(resource.url);
   }
