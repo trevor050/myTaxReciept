@@ -29,7 +29,7 @@ export type BadgeType =
   | 'Data-Driven'
   | 'Legal Advocacy'
   | 'Established Voice'
-  | 'General Interest'; // Added General Interest
+  | 'General Interest';
 
 export interface SuggestedResource {
   name: string;
@@ -39,11 +39,11 @@ export interface SuggestedResource {
   icon?: string;
   matchCount?: number; // How many of the user's distinct concerns it matches
   matchedReasons?: MatchedReason[];
-  badges?: BadgeType[]; // Will contain all potential badges; modal will pick display ones
-  mainCategory: string; // For filtering in the modal
+  badges?: BadgeType[];
+  mainCategory: string;
   prominence?: 'high' | 'medium' | 'low';
   focusType?: 'broad' | 'niche';
-  orgTypeTags?: ('grassroots' | 'research' | 'legal' | 'established')[];
+  orgTypeTags?: ('grassroots' | 'research' | 'legal' | 'established' | 'activism' | 'think-tank' | 'direct-service')[];
 }
 
 type FundingAction = 'slash' | 'fund' | 'review';
@@ -53,15 +53,13 @@ interface ResourceDatabaseEntry {
   url: string;
   description: string;
   icon?: string;
-  advocacyTags: string[]; // Keywords representing what the org advocates for/against
-  mainCategory: string; // Broad category for filtering
-  prominence?: 'high' | 'medium' | 'low'; // Subjective measure of influence/size
-  focusType?: 'broad' | 'niche'; // Scope of issues covered
-  orgTypeTags?: ('grassroots' | 'research' | 'legal' | 'established')[]; // For new badge types
+  advocacyTags: string[];
+  mainCategory: string;
+  prominence?: 'high' | 'medium' | 'low';
+  focusType?: 'broad' | 'niche';
+  orgTypeTags?: ('grassroots' | 'research' | 'legal' | 'established' | 'activism' | 'think-tank' | 'direct-service')[];
 }
 
-// RESOURCE_DATABASE remains the same as provided in the previous turn.
-// For brevity, it's not repeated here but assumed to be the extensive list from before.
 const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
   // Peace & Demilitarization
   {
@@ -72,7 +70,7 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     mainCategory: 'Peace & Demilitarization',
     prominence: 'high',
     focusType: 'broad',
-    orgTypeTags: ['grassroots', 'established'],
+    orgTypeTags: ['grassroots', 'established', 'activism'],
     advocacyTags: ['peace', 'military_spending_cut', 'anti_war', 'israel_aid_cut', 'nuclear_disarmament', 'demilitarization', 'diplomacy_first', 'foreign_military_aid_cut', 'pentagon_cut', 'israel_wars_cut'],
   },
   {
@@ -83,7 +81,7 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     mainCategory: 'Peace & Social Justice',
     prominence: 'high',
     focusType: 'broad',
-    orgTypeTags: ['grassroots', 'established'],
+    orgTypeTags: ['grassroots', 'established', 'think-tank'],
     advocacyTags: ['peace', 'social_justice', 'diplomacy_fund', 'foreign_aid_reform', 'military_spending_cut', 'environmental_stewardship', 'human_rights', 'federal_prisons_review', 'criminal_justice_reform', 'pentagon_review'],
   },
   {
@@ -94,7 +92,7 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     mainCategory: 'Peace & Demilitarization',
     prominence: 'medium',
     focusType: 'broad',
-    orgTypeTags: ['grassroots'],
+    orgTypeTags: ['grassroots', 'think-tank'],
     advocacyTags: ['anti_war', 'diplomacy_fund', 'military_spending_cut', 'foreign_aid_fund', 'foreign_policy_reform', 'demilitarization', 'usaid_fund', 'israel_wars_review'],
   },
   {
@@ -105,7 +103,7 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     mainCategory: 'Peace & Demilitarization',
     prominence: 'medium',
     focusType: 'niche',
-    orgTypeTags: ['research', 'established'],
+    orgTypeTags: ['research', 'established', 'think-tank'],
     advocacyTags: ['nuclear_disarmament', 'national_security_reform', 'arms_control', 'nuclear_weapons_review', 'nuclear_weapons_cut', 'pentagon_review'],
   },
   // Middle East / Palestine
@@ -113,22 +111,22 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     name: 'US Campaign for Palestinian Rights (USCPR)',
     url: 'https://uscpr.org/',
     description: 'A national coalition working for Palestinian rights and an end to U.S. support for Israeli occupation.',
-    icon: 'Landmark',
+    icon: 'Landmark', // Using Landmark as proxy
     mainCategory: 'Human Rights & Regional Conflicts',
     prominence: 'high',
     focusType: 'niche',
-    orgTypeTags: ['grassroots'],
+    orgTypeTags: ['grassroots', 'activism'],
     advocacyTags: ['palestinian_rights', 'israel_aid_cut', 'middle_east_peace', 'human_rights', 'israel_wars_cut', 'foreign_military_aid_cut'],
   },
   {
     name: 'Jewish Voice for Peace (JVP)',
     url: 'https://www.jewishvoiceforpeace.org/',
     description: 'A progressive Jewish anti-Zionist organization working for peace, justice, and human rights.',
-    icon: 'Users', // Lucide UserGroup icon
+    icon: 'Users',
     mainCategory: 'Human Rights & Regional Conflicts',
     prominence: 'high',
     focusType: 'niche',
-    orgTypeTags: ['grassroots'],
+    orgTypeTags: ['grassroots', 'activism'],
     advocacyTags: ['palestinian_rights', 'israel_aid_cut', 'anti_war', 'social_justice', 'human_rights', 'israel_wars_cut'],
   },
   // Budget & Fiscal Responsibility
@@ -136,11 +134,11 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     name: 'National Priorities Project (Institute for Policy Studies)',
     url: 'https://nationalpriorities.org/',
     description: 'Analyzes and advocates for a federal budget that prioritizes peace, economic opportunity, and a healthy environment.',
-    icon: 'PieChart',
+    icon: 'PieChart', // Lucide PieChart
     mainCategory: 'Fiscal Responsibility',
     prominence: 'high',
     focusType: 'broad',
-    orgTypeTags: ['research', 'data-driven'],
+    orgTypeTags: ['research', 'data-driven', 'think-tank'],
     advocacyTags: ['budget_reform', 'military_spending_cut', 'social_spending_fund', 'tax_fairness', 'fiscal_responsibility', 'pentagon_review', 'interest_debt_review', 'pentagon_cut', 'f35_cut', 'nuclear_weapons_cut'],
   },
   {
@@ -173,7 +171,7 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     mainCategory: 'Fiscal Responsibility',
     prominence: 'high',
     focusType: 'broad',
-    orgTypeTags: ['research', 'established', 'data-driven'],
+    orgTypeTags: ['research', 'established', 'data-driven', 'think-tank'],
     advocacyTags: ['fiscal_responsibility', 'debt_reduction', 'budget_reform', 'entitlement_reform_review', 'interest_debt_review', 'tax_reform_review', 'medicare_review', 'medicaid_review', 'snap_review', 'child_tax_credit_review'],
   },
   // Health
@@ -185,7 +183,7 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     mainCategory: 'Healthcare',
     prominence: 'medium',
     focusType: 'niche',
-    orgTypeTags: ['grassroots'],
+    orgTypeTags: ['grassroots', 'think-tank'],
     advocacyTags: ['medicare_fund', 'medicaid_fund', 'healthcare_reform', 'single_payer', 'health_equity', 'nih_fund'],
   },
   {
@@ -196,7 +194,7 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     mainCategory: 'Healthcare',
     prominence: 'high',
     focusType: 'broad',
-    orgTypeTags: ['grassroots', 'established'],
+    orgTypeTags: ['grassroots', 'established', 'direct-service'],
     advocacyTags: ['mental_health_fund', 'substance_mental_health_fund', 'health_equity', 'cdc_fund', 'nih_fund', 'va_fund'],
   },
   // Environmental
@@ -219,7 +217,7 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     mainCategory: 'Environment & Energy',
     prominence: 'high',
     focusType: 'broad',
-    orgTypeTags: ['grassroots', 'established', 'legal'],
+    orgTypeTags: ['grassroots', 'established', 'legal', 'activism'],
     advocacyTags: ['environmental_protection', 'climate_action_fund', 'renewable_energy_fund', 'nps_fund', 'forest_service_fund', 'wilderness_protection', 'epa_fund', 'noaa_fund', 'public_lands_fund'],
   },
   {
@@ -275,7 +273,7 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     mainCategory: 'Science & Technology',
     prominence: 'medium',
     focusType: 'niche',
-    orgTypeTags: ['grassroots'],
+    orgTypeTags: ['grassroots', 'research'],
     advocacyTags: ['nasa_fund', 'science_fund', 'space_exploration', 'nsf_fund', 'nasa_review', 'nasa_spacex_review'],
   },
   {
@@ -286,7 +284,7 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     mainCategory: 'Science & Technology',
     prominence: 'high',
     focusType: 'broad',
-    orgTypeTags: ['research', 'data-driven', 'established'],
+    orgTypeTags: ['research', 'data-driven', 'established', 'think-tank'],
     advocacyTags: ['science_fund', 'environmental_protection', 'nuclear_weapons_review', 'scientific_integrity', 'climate_action_fund', 'sustainable_agriculture_fund', 'epa_review', 'nsf_review', 'food_safety_review'],
   },
   // General Government Oversight / Social Justice / Civil Rights
@@ -298,7 +296,7 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     mainCategory: 'Civil Rights & Social Justice',
     prominence: 'high',
     focusType: 'broad',
-    orgTypeTags: ['legal', 'established', 'grassroots'],
+    orgTypeTags: ['legal', 'established', 'grassroots', 'activism'],
     advocacyTags: ['civil_rights', 'civil_liberties', 'immigration_reform_review', 'criminal_justice_reform', 'government_accountability', 'deportations_border_review', 'federal_prisons_review', 'privacy_rights', 'nlrb_review', 'public_defenders_fund'],
   },
   {
@@ -316,22 +314,22 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     name: 'Brennan Center for Justice',
     url: 'https://www.brennancenter.org/',
     description: 'A nonpartisan law and policy institute that works to reform, revitalize, and when necessary, defend our country’s systems of democracy and justice.',
-    icon: 'LibrarySquare', // Lucide LibrarySquare
+    icon: 'LibrarySquare',
     mainCategory: 'Democracy & Governance',
     prominence: 'high',
     focusType: 'broad',
-    orgTypeTags: ['research', 'legal', 'established'],
+    orgTypeTags: ['research', 'legal', 'established', 'think-tank'],
     advocacyTags: ['democracy_reform', 'voting_rights', 'criminal_justice_reform', 'campaign_finance_reform', 'justice_system_review', 'federal_courts_review', 'public_defenders_fund', 'federal_prisons_reform'],
   },
   {
     name: 'Electronic Frontier Foundation (EFF)',
     url: 'https://www.eff.org/',
     description: 'Defending civil liberties in the digital world. Works on issues of free speech, privacy, innovation, and consumer rights online.',
-    icon: 'ShieldCheck', // Using ShieldCheck as a proxy for digital security/privacy
+    icon: 'ShieldCheck',
     mainCategory: 'Civil Rights & Social Justice',
     prominence: 'high',
     focusType: 'broad',
-    orgTypeTags: ['legal', 'research', 'established'],
+    orgTypeTags: ['legal', 'research', 'established', 'activism'],
     advocacyTags: ['digital_rights', 'privacy_rights', 'free_speech_online', 'surveillance_review', 'cfpb_review', 'tech_policy_reform', 'nasa_spacex_cut_review'],
   },
   {
@@ -398,7 +396,7 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     mainCategory: 'Education',
     prominence: 'high',
     focusType: 'broad',
-    orgTypeTags: ['grassroots', 'established'],
+    orgTypeTags: ['grassroots', 'established', 'direct-service'],
     advocacyTags: ['education_fund', 'k12_schools_fund', 'teacher_support', 'public_education', 'college_aid_fund', 'head_start_fund', 'dept_education_fund', 'imls_fund'],
   },
   // Housing & Homelessness
@@ -410,7 +408,7 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     mainCategory: 'Housing & Community',
     prominence: 'high',
     focusType: 'broad',
-    orgTypeTags: ['research', 'grassroots', 'established'],
+    orgTypeTags: ['research', 'grassroots', 'established', 'think-tank'],
     advocacyTags: ['housing_affordability', 'hud_fund', 'public_housing_fund', 'homelessness_prevention', 'rental_assistance_fund', 'usich_fund', 'liheap_fund', 'social_spending_fund'],
   },
   {
@@ -421,7 +419,7 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     mainCategory: 'Housing & Community',
     prominence: 'high',
     focusType: 'broad',
-    orgTypeTags: ['research', 'established'],
+    orgTypeTags: ['research', 'established', 'direct-service'],
     advocacyTags: ['homelessness_prevention', 'usich_fund', 'hud_fund', 'housing_first', 'rental_assistance_fund', 'public_housing_review', 'mental_health_fund'],
   },
   // Food & Agriculture
@@ -433,7 +431,7 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     mainCategory: 'Food & Agriculture',
     prominence: 'high',
     focusType: 'broad',
-    orgTypeTags: ['research', 'established'],
+    orgTypeTags: ['research', 'established', 'think-tank'],
     advocacyTags: ['snap_fund', 'wic_fund', 'school_lunch_fund', 'anti_hunger', 'food_security', 'child_tax_credit_fund', 'social_spending_fund'],
   },
   // Veterans
@@ -445,7 +443,7 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     mainCategory: 'Veterans Affairs',
     prominence: 'high',
     focusType: 'broad',
-    orgTypeTags: ['grassroots', 'established'],
+    orgTypeTags: ['grassroots', 'established', 'direct-service'],
     advocacyTags: ['veterans_affairs_fund', 'pact_act_fund', 'veteran_benefits', 'national_security_fund', 'pentagon_personnel_fund', 'va_fund', 'va_review'],
   },
   // Labor & Worker Rights
@@ -476,12 +474,57 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     name: 'American Immigration Council',
     url: 'https://www.americanimmigrationcouncil.org/',
     description: 'Works to strengthen America by shaping how America thinks about and acts towards immigrants and immigration.',
-    icon: 'Globe', // Re-using Globe, consider Users2 or Building
+    icon: 'Users',
     mainCategory: 'Immigration',
     prominence: 'medium',
     focusType: 'broad',
-    orgTypeTags: ['research', 'established'],
+    orgTypeTags: ['research', 'established', 'think-tank'],
     advocacyTags: ['immigration_reform_review', 'immigrant_rights', 'deportations_border_review', 'economic_contribution_immigrants', 'refugee_assistance_fund'],
+  },
+  // Additional Orgs for Diversity
+    {
+    name: 'Cato Institute',
+    url: 'https://www.cato.org/',
+    description: 'A public policy research organization—a think tank—dedicated to the principles of individual liberty, limited government, free markets, and peace.',
+    icon: 'LibrarySquare',
+    mainCategory: 'Fiscal Responsibility',
+    prominence: 'high',
+    focusType: 'broad',
+    orgTypeTags: ['think-tank', 'research', 'established'],
+    advocacyTags: ['limited_government', 'free_markets', 'individual_liberty', 'fiscal_responsibility', 'budget_reform', 'pentagon_review', 'tax_reform_review', 'entitlement_reform_review'],
+  },
+  {
+    name: 'The Heritage Foundation',
+    url: 'https://www.heritage.org/',
+    description: 'A research and educational institution whose mission is to formulate and promote conservative public policies based on the principles of free enterprise, limited government, individual freedom, traditional American values, and a strong national defense.',
+    icon: 'Landmark',
+    mainCategory: 'Fiscal Responsibility',
+    prominence: 'high',
+    focusType: 'broad',
+    orgTypeTags: ['think-tank', 'research', 'established'],
+    advocacyTags: ['conservative_policy', 'limited_government', 'free_enterprise', 'strong_national_defense', 'fiscal_responsibility', 'pentagon_fund', 'tax_reform_review', 'budget_reform'],
+  },
+  {
+    name: 'Demand Progress',
+    url: 'https://demandprogress.org/',
+    description: 'Fights for a more just and democratic world by organizing for progressive policy changes on issues of surveillance, money in politics, and corporate power.',
+    icon: 'Megaphone',
+    mainCategory: 'Democracy & Governance',
+    prominence: 'medium',
+    focusType: 'broad',
+    orgTypeTags: ['grassroots', 'activism'],
+    advocacyTags: ['democracy_reform', 'anti_surveillance', 'corporate_accountability', 'government_accountability', 'privacy_rights', 'cfpb_fund', 'nlrb_fund'],
+  },
+  {
+    name: 'Code Pink',
+    url: 'https://www.codepink.org/',
+    description: 'A women-led grassroots organization working to end U.S. wars and militarism, support peace and human rights initiatives, and redirect resources to healthcare, education, green jobs and other life-affirming programs.',
+    icon: 'Dove', // Assuming Dove exists, otherwise use HandHeart
+    mainCategory: 'Peace & Demilitarization',
+    prominence: 'medium',
+    focusType: 'broad',
+    orgTypeTags: ['grassroots', 'activism'],
+    advocacyTags: ['anti_war', 'peace', 'demilitarization', 'military_spending_cut', 'israel_aid_cut', 'diplomacy_fund', 'social_spending_fund', 'pentagon_cut', 'israel_wars_cut'],
   },
 ];
 
@@ -638,27 +681,25 @@ function getItemAdvocacyTags(itemId: string, fundingAction: FundingAction): stri
   if (itemSpecificTags) {
     itemSpecificTags.forEach(tag => tags.push(tag));
   } else if ((specificItemToActionTagMapping[itemId] || specificItemToActionTagMapping[idLower]) && !itemSpecificTags) {
-    // If the item ID exists but not the specific action, default to a review tag for that item
     tags.push(`${itemId}_review`);
     tags.push(`${idLower}_review`);
   }
 
   if (tags.length === 0) {
-    // Fallback if no other tags were generated
     tags.push(`${itemId}_${fundingAction}`);
   }
-  return Array.from(new Set(tags)); // Remove duplicates
+  return Array.from(new Set(tags));
 }
 
 function getActionFromFundingLevel(level: number): FundingAction {
-    if (level < -0.5) return 'slash'; // Corresponds to -2, -1
-    if (level > 0.5) return 'fund';   // Corresponds to 1, 2
-    return 'review';                  // Corresponds to 0
+    if (level < -0.5) return 'slash';
+    if (level > 0.5) return 'fund';
+    return 'review';
 }
 
 function generateMatchedReason(tag: string, originalConcernDescription: string, fundingAction: FundingAction): MatchedReason {
     let reasonType: MatchedReason['type'] = 'general';
-    let actionableTag = tag.replace(/_/g, ' '); // Default readable tag
+    let actionableTag = tag.replace(/_/g, ' ');
 
     if (tag.includes('_cut') || tag.includes('_slash')) {
         reasonType = 'opposes';
@@ -683,13 +724,11 @@ function generateMatchedReason(tag: string, originalConcernDescription: string, 
         type: reasonType,
         description: `${actionableTag}`,
         originalConcern: `${userActionText} ${cleanedConcern}`,
-        actionableTag: actionableTag.trim() // Trim for cleaner display
+        actionableTag: actionableTag.trim()
     };
 }
 
-const MAX_SUGGESTIONS = 25;
-const MAX_BEST_MATCHES = 1;
-const MAX_TOP_MATCHES = 2;
+const MAX_SUGGESTIONS = 30; // Increased max suggestions
 
 export async function suggestResources(
   selectedItems: UserSelectedItem[],
@@ -698,7 +737,6 @@ export async function suggestResources(
 ): Promise<SuggestedResource[]> {
   const suggestions: SuggestedResource[] = [];
   const suggestedUrls = new Set<string>();
-
   const userConcerns: Map<string, {action: FundingAction, itemDescription: string, tags: Set<string>}> = new Map();
 
   selectedItems.forEach(item => {
@@ -741,11 +779,12 @@ export async function suggestResources(
         }
     });
 
-    if (resource.prominence === 'high') score += 3;
-    else if (resource.prominence === 'medium') score += 1.5;
+    if (resource.prominence === 'high') score += 1.5; // Reduced prominence boost
+    else if (resource.prominence === 'medium') score += 0.75;
+
 
     if (balanceBudgetChecked && resource.advocacyTags.some(t => ['fiscal_responsibility', 'debt_reduction', 'budget_reform'].includes(t))) {
-        score += 2;
+        score += 1.5; // Slightly reduced boost for balance budget alignment
         if(!matchedConcernIds.has('balance_budget')) {
             uniqueConcernMatchCount++;
             matchedConcernIds.add('balance_budget');
@@ -758,12 +797,15 @@ export async function suggestResources(
         }
     }
 
-    // Adjusted scoring for orgTypeTags
-    if (resource.orgTypeTags?.includes('legal')) score += 0.75;
-    if (resource.orgTypeTags?.includes('data-driven')) score += 0.75;
-    if (resource.orgTypeTags?.includes('grassroots')) score += 0.5;
-    if (resource.orgTypeTags?.includes('established')) score += 0.25; // Slightly lower boost
-
+    resource.orgTypeTags?.forEach(tag => {
+        if (tag === 'legal') score += 0.5;
+        if (tag === 'data-driven') score += 0.5;
+        if (tag === 'grassroots') score += 0.3;
+        if (tag === 'established') score += 0.1;
+        if (tag === 'activism') score += 0.4;
+        if (tag === 'think-tank') score += 0.2;
+        if (tag === 'direct-service') score += 0.2;
+    });
 
     return { ...resource, score, matchedReasons: detailedMatchedReasons, matchCount: uniqueConcernMatchCount };
   }).filter(r => r.score > 0 || (userConcerns.size === 0 && balanceBudgetChecked && r.advocacyTags.some(t => ['fiscal_responsibility', 'debt_reduction'].includes(t))))
@@ -774,8 +816,6 @@ export async function suggestResources(
         return (prominenceOrder[a.prominence || 'low'] || 3) - (prominenceOrder[b.prominence || 'low'] || 3);
     });
 
-  let bestMatchAssigned = false;
-  let topMatchAssignedCount = 0;
 
   for (const resource of scoredResources) {
     if (suggestions.length >= MAX_SUGGESTIONS) break;
@@ -787,7 +827,7 @@ export async function suggestResources(
         const toneForRelevance = userToneValue > 66 ? "strongly aligns" : userToneValue > 33 ? "aligns well" : "may be of interest";
 
         overallRelevanceReason = `${resource.name} ${toneForRelevance} with your stated concern about ${topReason.originalConcern.toLowerCase()} through its work on ${topReason.actionableTag.toLowerCase()}.`;
-        if (resource.matchCount > 1) {
+        if (resource.matchCount && resource.matchCount > 1) {
            overallRelevanceReason += ` It also addresses ${resource.matchCount -1} other concern${resource.matchCount - 1 === 1 ? '' : 's'} you highlighted.`;
         }
         if (balanceBudgetChecked && resource.advocacyTags.some(t => ['fiscal_responsibility', 'debt_reduction'].includes(t)) && !topReason.originalConcern.toLowerCase().includes('budget')) {
@@ -797,28 +837,60 @@ export async function suggestResources(
         overallRelevanceReason = `${resource.name} advocates for fiscal responsibility, aligning with your interest in balancing the budget.`;
     }
 
-
+    // Refined Badge Assignment Logic
     const allPossibleBadges: BadgeType[] = [];
-    if (resource.matchCount >= Math.max(1, Math.floor(userConcerns.size * 0.6)) && resource.score > 3 && resource.prominence === 'high') {
+    // Best Match (only one)
+    if (suggestions.length === 0 && resource.matchCount && resource.matchCount >= Math.max(1, Math.floor(userConcerns.size * 0.75)) && resource.score > 4) {
         allPossibleBadges.push('Best Match');
     }
-    if (resource.matchCount >= Math.max(1, Math.floor(userConcerns.size * 0.4)) && resource.score > 2.5 && (resource.prominence === 'high' || resource.prominence === 'medium')) {
+    // Top Matches (max 2, and not if already Best Match)
+    else if (suggestions.filter(s => s.badges?.includes('Top Match')).length < 2 && !allPossibleBadges.includes('Best Match') &&
+             resource.matchCount && resource.matchCount >= Math.max(1, Math.floor(userConcerns.size * 0.5)) && resource.score > 3) {
         allPossibleBadges.push('Top Match');
     }
-    if (resource.prominence === 'high') allPossibleBadges.push('High Impact');
-    if (resource.focusType === 'broad') allPossibleBadges.push('Broad Focus');
-    if (resource.focusType === 'niche') allPossibleBadges.push('Niche Focus');
 
-    resource.orgTypeTags?.forEach(tag => {
-        if (tag === 'grassroots') allPossibleBadges.push('Grassroots Power');
-        if (tag === 'data-driven') allPossibleBadges.push('Data-Driven');
-        if (tag === 'legal') allPossibleBadges.push('Legal Advocacy');
-        if (tag === 'established') allPossibleBadges.push('Established Voice');
-    });
-    if ((resource.prominence === 'low' || resource.prominence === 'medium') && !allPossibleBadges.some(b => ['Best Match', 'Top Match', 'High Impact'].includes(b))) {
+    // High Impact: more selective - high prominence AND significant match count or score
+    if (resource.prominence === 'high' && (resource.matchCount && resource.matchCount > (userConcerns.size > 1 ? 1: 0) || resource.score > 3.5)) {
+      allPossibleBadges.push('High Impact');
+    }
+
+
+    // Assign other badges based on orgTypeTags, trying to limit total badges
+    const MAX_OTHER_BADGES = 2; // Max badges beyond Best/Top/High Impact
+    let otherBadgesCount = allPossibleBadges.filter(b => !['Best Match', 'Top Match', 'High Impact'].includes(b)).length;
+
+    const orgTypeToBadgeMap: Partial<Record<NonNullable<ResourceDatabaseEntry['orgTypeTags']>[number], BadgeType>> = {
+        'grassroots': 'Grassroots Power',
+        'data-driven': 'Data-Driven',
+        'legal': 'Legal Advocacy',
+        'established': 'Established Voice',
+        // 'activism', 'think-tank', 'direct-service' could also be mapped if desired
+    };
+
+    if (resource.orgTypeTags) {
+        for (const orgTag of resource.orgTypeTags) {
+            if (otherBadgesCount >= MAX_OTHER_BADGES) break;
+            const badge = orgTypeToBadgeMap[orgTag];
+            if (badge && !allPossibleBadges.includes(badge)) {
+                allPossibleBadges.push(badge);
+                otherBadgesCount++;
+            }
+        }
+    }
+
+    if (allPossibleBadges.length < MAX_OTHER_BADGES) { // Only add focus type if space
+        if (resource.focusType === 'broad' && !allPossibleBadges.includes('Broad Focus')) allPossibleBadges.push('Broad Focus');
+        else if (resource.focusType === 'niche' && !allPossibleBadges.includes('Niche Focus')) allPossibleBadges.push('Niche Focus');
+    }
+
+
+    // Community Pick if still few badges and not high prominence
+    if (allPossibleBadges.length < 2 && (resource.prominence === 'low' || resource.prominence === 'medium') && !allPossibleBadges.includes('Community Pick') ) {
         allPossibleBadges.push('Community Pick');
     }
-    if (resource.matchCount === 0 && allPossibleBadges.length === 0) {
+
+    // General Interest if absolutely no other badges assigned AND no matches
+    if (allPossibleBadges.length === 0 && (!resource.matchCount || resource.matchCount === 0)) {
         allPossibleBadges.push('General Interest');
     }
 
@@ -831,7 +903,7 @@ export async function suggestResources(
       icon: resource.icon,
       matchCount: resource.matchCount,
       matchedReasons: resource.matchedReasons,
-      badges: allPossibleBadges.length > 0 ? Array.from(new Set(allPossibleBadges)) : undefined,
+      badges: allPossibleBadges.length > 0 ? Array.from(new Set(allPossibleBadges)).slice(0,3) : undefined, // Hard limit to 3 badges max for display
       mainCategory: resource.mainCategory,
       prominence: resource.prominence,
       focusType: resource.focusType,
@@ -841,3 +913,5 @@ export async function suggestResources(
   }
   return suggestions;
 }
+
+    

@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription as CardDesc } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, MessageSquareQuote, PlusCircle, MinusCircle, Search, Sparkles, Trophy, Users as UsersIcon, Target, HandHeart, FilterX, Megaphone, Gavel, Landmark } from 'lucide-react';
+import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, MessageSquareQuote, PlusCircle, MinusCircle, Search, Sparkles, Trophy, Users as UsersIcon, Target, HandHeart, FilterX, Megaphone, Gavel, Landmark, Dove, LibrarySquare, DollarSign, Eye, School, Home, Bed, Utensils, Medal, Hammer, Anchor } from 'lucide-react';
 import type { SuggestedResource, MatchedReason, BadgeType } from '@/services/resource-suggestions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -21,12 +21,11 @@ import type { Tone } from '@/services/email/types';
 const importLucideIcon = async (iconName: string | undefined): Promise<React.ElementType | typeof Info> => {
   if (!iconName) return Info;
   try {
-    // Lucide icon names are typically PascalCase. This basic normalization helps.
     const normalizedIconName = iconName.charAt(0).toUpperCase() + iconName.slice(1).replace(/-([a-z])/g, (g) => g[1].toUpperCase());
-    // @ts-ignore TS doesn't know about dynamic imports for all lucide icons
+    // @ts-ignore
     const module = await import('lucide-react');
     // @ts-ignore
-    return module[normalizedIconName] || module[iconName] || Info; // Try normalized, then original, then fallback
+    return module[normalizedIconName] || module[iconName] || Info;
   } catch (error) {
     console.warn(`Failed to load icon: ${iconName}`, error);
     return Info;
@@ -119,7 +118,7 @@ const BadgeIcon = ({ badgeType }: { badgeType: BadgeType }) => {
         case 'Broad Focus': return <UsersIcon className="h-3 w-3 mr-1 text-blue-600 dark:text-blue-400" />;
         case 'Niche Focus': return <Target className="h-3 w-3 mr-1 text-indigo-600 dark:text-indigo-400" />;
         case 'Community Pick': return <HandHeart className="h-3 w-3 mr-1 text-teal-600 dark:text-teal-400" />;
-        case 'Grassroots Power': return <Megaphone className="h-3 w-3 mr-1 text-lime-600 dark:text-lime-400" />;
+        case 'Grassroots Power': return <Megaphone className="h-3 w-3 mr-1 text-lime-600 dark:text-lime-400" />; // Re-using Megaphone, consider Users or similar
         case 'Data-Driven': return <DatabaseIcon className="h-3 w-3 mr-1 text-indigo-600 dark:text-indigo-400" />;
         case 'Legal Advocacy': return <Gavel className="h-3 w-3 mr-1 text-rose-600 dark:text-rose-400" />;
         case 'Established Voice': return <Landmark className="h-3 w-3 mr-1 text-slate-600 dark:text-slate-400" />;
@@ -153,7 +152,7 @@ export default function ResourceSuggestionsModal({
     if (!isOpen) {
       setPos({ x: null, y: null });
       isInitialOpen.current = true;
-      setActiveFilterKeys(new Set(['all-organizations'])); // Reset filters on close to All Organizations
+      setActiveFilterKeys(new Set(['all-organizations']));
     }
   }, [isOpen]);
 
@@ -170,7 +169,7 @@ export default function ResourceSuggestionsModal({
         if (width && height) {
              let newY = windowHeight / 2 - height / 2;
              if (newY + height > windowHeight - 20) {
-                 newY = windowHeight - height - 20;
+                 newY = Math.max(20, windowHeight - height - 20); // Ensure it doesn't go off top if too tall
              }
              if (newY < 20) {
                  newY = 20;
@@ -190,7 +189,7 @@ export default function ResourceSuggestionsModal({
   const onDown = React.useCallback((e: React.MouseEvent) => {
     if (!refHandle.current?.contains(e.target as Node) || !refModal.current) return;
 
-    if (pos.x === null) {
+    if (pos.x === null && pos.y === null) { // Check both x and y
       const r = refModal.current.getBoundingClientRect();
       setPos({ x: r.left, y: r.top });
       dragOffset.current = { x: e.clientX - r.left, y: e.clientY - r.top };
@@ -247,6 +246,12 @@ export default function ResourceSuggestionsModal({
           iconsToLoad.add(resource.icon);
         }
       });
+      // Ensure specific icons are loaded if not dynamically determined
+      const defaultIcons = ['Dove', 'LibrarySquare', 'DollarSign', 'Eye', 'School', 'Home', 'Bed', 'Utensils', 'Medal', 'Hammer', 'Anchor'];
+      defaultIcons.forEach(icon => {
+        if (!IconComponents[icon]) iconsToLoad.add(icon);
+      });
+
 
       for (const iconName of iconsToLoad) {
         loaded[iconName] = await importLucideIcon(iconName);
@@ -269,33 +274,54 @@ export default function ResourceSuggestionsModal({
     return Array.from(categories).sort();
   }, [suggestedResources]);
 
+  const uniqueOrgTypeTags = React.useMemo(() => {
+    const tags = new Set<string>();
+    suggestedResources.forEach(r => r.orgTypeTags?.forEach(tag => tags.add(tag)));
+    return Array.from(tags).sort();
+  },[suggestedResources]);
+
+
   const filterBubbles = React.useMemo(() => {
     const bubbles = [];
-    if (hasUserConcerns) {
+     if (hasUserConcerns) {
         const yourMatchesCount = suggestedResources.filter(r => (r.matchCount || 0) > 0).length;
         if (yourMatchesCount > 0) {
-            bubbles.push({ key: 'your-matches', label: 'Your Matches', count: yourMatchesCount });
+            bubbles.push({ key: 'your-matches', label: 'Your Matches', count: yourMatchesCount, type: 'special' });
         }
         const bestMatchesCount = suggestedResources.filter(r => r.badges?.includes('Best Match')).length;
         if (bestMatchesCount > 0) {
-            bubbles.push({ key: 'best-matches', label: 'Best Match', count: bestMatchesCount });
+            bubbles.push({ key: 'best-matches', label: 'Best Match', count: bestMatchesCount, type: 'badge' });
         }
         const topMatchesCount = suggestedResources.filter(r => r.badges?.includes('Top Match')).length;
-        if (topMatchesCount > 0 && bestMatchesCount ===0) { // Only show Top Matches if no Best Match
-             bubbles.push({ key: 'top-matches', label: 'Top Matches', count: topMatchesCount });
+         if (topMatchesCount > 0 && !(activeFilterKeys.has('best-matches') && bestMatchesCount > 0)) {
+             bubbles.push({ key: 'top-matches', label: 'Top Matches', count: topMatchesCount, type: 'badge' });
         }
     }
-    bubbles.push({ key: 'all-organizations', label: 'All Organizations', count: suggestedResources.length });
+    bubbles.push({ key: 'all-organizations', label: 'All Organizations', count: suggestedResources.length, type: 'special' });
 
 
     uniqueCategories.forEach(cat => {
         const count = suggestedResources.filter(r => r.mainCategory === cat).length;
         if (count > 0) {
-             bubbles.push({ key: cat, label: cat, count });
+             bubbles.push({ key: `cat-${cat}`, label: cat, count, type: 'category' });
         }
     });
-    return bubbles;
-  }, [suggestedResources, uniqueCategories, hasUserConcerns]);
+
+    uniqueOrgTypeTags.forEach(tag => {
+        const count = suggestedResources.filter(r => r.orgTypeTags?.includes(tag as any)).length;
+        if (count > 0) {
+            const label = tag.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+            bubbles.push({ key: `orgtype-${tag}`, label, count, type: 'orgType' });
+        }
+    });
+
+    return bubbles.sort((a,b) => { // Sort special filters first, then by label
+        if (a.type === 'special' && b.type !== 'special') return -1;
+        if (a.type !== 'special' && b.type === 'special') return 1;
+        return a.label.localeCompare(b.label);
+    });
+
+  }, [suggestedResources, uniqueCategories, uniqueOrgTypeTags, hasUserConcerns, activeFilterKeys]);
 
   const displayedResources = React.useMemo(() => {
     if (isLoading) return [];
@@ -303,17 +329,14 @@ export default function ResourceSuggestionsModal({
 
     if (activeFilterKeys.size > 0 && !activeFilterKeys.has('all-organizations')) {
         filtered = suggestedResources.filter(r => {
-            let matchesOneFilter = false;
-            if (activeFilterKeys.has('your-matches') && (r.matchCount || 0) > 0) matchesOneFilter = true;
-            if (activeFilterKeys.has('best-matches') && r.badges?.includes('Best Match')) matchesOneFilter = true;
-            if (activeFilterKeys.has('top-matches') && r.badges?.includes('Top Match')) matchesOneFilter = true;
-            
-            const categoryFilters = Array.from(activeFilterKeys).filter(key =>
-                !['your-matches', 'best-matches', 'top-matches', 'all-organizations'].includes(key)
-            );
-            if (categoryFilters.length > 0 && categoryFilters.includes(r.mainCategory)) matchesOneFilter = true;
-            
-            return matchesOneFilter;
+            return Array.from(activeFilterKeys).every(key => {
+                if (key === 'your-matches') return (r.matchCount || 0) > 0;
+                if (key === 'best-matches') return r.badges?.includes('Best Match') || false;
+                if (key === 'top-matches') return r.badges?.includes('Top Match') || false;
+                if (key.startsWith('cat-')) return r.mainCategory === key.substring(4);
+                if (key.startsWith('orgtype-')) return r.orgTypeTags?.includes(key.substring(8) as any) || false;
+                return true; // Should not happen if key is not 'all-organizations'
+            });
         });
     }
     return filtered;
@@ -342,7 +365,6 @@ export default function ResourceSuggestionsModal({
         if (newKeys.size === 0) {
             return new Set(['all-organizations']);
         }
-
         return newKeys;
     });
   };
@@ -355,19 +377,17 @@ export default function ResourceSuggestionsModal({
   const renderResourceCard = (resource: SuggestedResource, index: number) => {
     const Icon = IconComponents[resource.icon || 'Info'] || Info;
     
-    // Select up to 2-3 most relevant badges based on priority
-    let displayedBadges: BadgeType[] = [];
-    if (resource.badges && resource.badges.length > 0) {
-        const sortedBadges = [...resource.badges].sort((a, b) => (BADGE_PRIORITY_MAP[a] || 99) - (BADGE_PRIORITY_MAP[b] || 99));
-        displayedBadges = sortedBadges.slice(0, Math.min(sortedBadges.length, 3)); // Max 3 badges
-
-        // Ensure "General Interest" is shown if no other prominent badges are available.
-        if (displayedBadges.length === 0 && resource.badges.includes('General Interest')) {
-            displayedBadges.push('General Interest');
-        } else if (displayedBadges.length < 2 && resource.badges.includes('General Interest') && !displayedBadges.some(b => ['Best Match', 'Top Match', 'High Impact'].includes(b))) {
-             if (!displayedBadges.includes('General Interest')) displayedBadges.push('General Interest');
-        }
-        // If after filtering, no badges, but matchCount > 0, add that as a pseudo-badge info
+    let displayedBadges: BadgeType[] = resource.badges || [];
+    if (displayedBadges.length > 3) {
+        // Prioritize Best Match, Top Match, High Impact, then others
+        const priorityOrder: BadgeType[] = ['Best Match', 'Top Match', 'High Impact'];
+        const priorityBadges = displayedBadges.filter(b => priorityOrder.includes(b))
+                               .sort((a,b) => priorityOrder.indexOf(a) - priorityOrder.indexOf(b));
+        const otherBadges = displayedBadges.filter(b => !priorityOrder.includes(b))
+                              .sort((a,b) => (BADGE_PRIORITY_MAP[a] || 99) - (BADGE_PRIORITY_MAP[b] || 99));
+        displayedBadges = [...priorityBadges, ...otherBadges].slice(0,3);
+    } else {
+        displayedBadges.sort((a,b) => (BADGE_PRIORITY_MAP[a] || 99) - (BADGE_PRIORITY_MAP[b] || 99));
     }
 
 
@@ -385,9 +405,9 @@ export default function ResourceSuggestionsModal({
                     {displayedBadges.map(badge => (
                         <Badge
                             key={badge}
-                            variant={badge === 'Best Match' ? 'default' : 'secondary'}
+                            variant={badge === 'Best Match' ? 'default' : (badge === 'Top Match' ? 'secondary' : 'outline')}
                             className={cn(
-                                "text-xs px-1.5 py-0.5 whitespace-nowrap font-medium",
+                                "text-xs px-1.5 py-0.5 whitespace-nowrap font-medium flex items-center",
                                 badge === 'Best Match' && "bg-green-600/20 border-green-500 text-green-700 dark:bg-green-700/30 dark:border-green-500 dark:text-green-300",
                                 badge === 'Top Match' && "bg-sky-600/20 border-sky-500 text-sky-700 dark:bg-sky-700/30 dark:border-sky-500 dark:text-sky-300",
                                 badge === 'High Impact' && "bg-rose-100 border-rose-400 text-rose-700 dark:bg-rose-700/30 dark:border-rose-600 dark:text-rose-300",
@@ -404,11 +424,16 @@ export default function ResourceSuggestionsModal({
                            <BadgeIcon badgeType={badge}/> {badge}
                         </Badge>
                     ))}
-                    {(resource.matchCount && resource.matchCount > 0 && displayedBadges.length === 0 && !resource.badges?.includes('General Interest')) ? ( // Show match count if no other badges displayed
+                    {(resource.matchCount && resource.matchCount > 0 && displayedBadges.length === 0 && !resource.badges?.includes('General Interest')) ? (
                          <Badge variant="outline" className="border-border text-muted-foreground bg-muted/30 text-xs px-1.5 py-0.5 whitespace-nowrap">
                             Matches {resource.matchCount} concern{resource.matchCount !== 1 ? 's':''}
                         </Badge>
                     ): null}
+                     {(!resource.matchCount || resource.matchCount === 0) && displayedBadges.length === 0 && !resource.badges?.includes('General Interest') && (
+                        <Badge variant="outline" className="border-border text-muted-foreground bg-muted/30 text-xs px-1.5 py-0.5 whitespace-nowrap italic">
+                            No specific matches found
+                        </Badge>
+                    )}
                 </div>
                 </CardTitle>
             </CardHeader>
@@ -452,7 +477,6 @@ export default function ResourceSuggestionsModal({
         onInteractOutside={e => drag && e.preventDefault()}
         onOpenAutoFocus={e => {
             e.preventDefault();
-            // Set initial active filter based on concerns
             const initialFilters = new Set<string>();
             if (hasUserConcerns && suggestedResources.some(r => (r.matchCount || 0) > 0)) {
                 initialFilters.add('your-matches');
@@ -501,7 +525,7 @@ export default function ResourceSuggestionsModal({
                                     )}
                                 >
                                     {bubble.label} ({bubble.count})
-                                    {activeFilterKeys.has(bubble.key) && <X className="h-3 w-3 opacity-70 hover:opacity-100" onClick={(e) => { e.stopPropagation(); handleFilterClick(bubble.key);}} />}
+                                    {activeFilterKeys.has(bubble.key) && bubble.key !== 'all-organizations' && <X className="h-3 w-3 opacity-70 hover:opacity-100 ml-1" onClick={(e) => { e.stopPropagation(); handleFilterClick(bubble.key);}} />}
                                 </Button>
                             )
                         ))}
@@ -558,3 +582,7 @@ export default function ResourceSuggestionsModal({
     </Dialog>
   );
 }
+
+    
+
+    
