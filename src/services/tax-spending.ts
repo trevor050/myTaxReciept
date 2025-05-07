@@ -285,9 +285,10 @@ export async function getTaxSpending(_location: Location, _taxAmount: number): P
 
 /**
  * Public function to generate the email. Calls the core logic from generator.ts.
+ * Ensures selectedItems passed to the generator include the category.
  */
 export function generateRepresentativeEmail(
-    selectedItems: SelectedItem[],
+    selectedItemsWithCategory: Array<SelectedItem & { category: string }>, // Expect items with category
     aggressiveness: number,
     userName: string,
     userLocation: string,
@@ -295,11 +296,10 @@ export function generateRepresentativeEmail(
 ): { subject: string; body: string } {
     // Pass arguments directly to the core generator function
     return generateRepresentativeEmailContent(
-        selectedItems,
+        selectedItemsWithCategory,
         aggressiveness,
         userName,
         userLocation,
         balanceBudgetPreference
     );
 }
-

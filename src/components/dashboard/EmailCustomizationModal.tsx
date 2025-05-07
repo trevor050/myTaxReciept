@@ -14,12 +14,26 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { GripVertical, Mail, X, Send, Lightbulb } from 'lucide-react'; // Added Lightbulb
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { GripVertical, Mail, X, Send, Lightbulb, BotMessageSquare, FileTextIcon, SearchIcon, MessagesSquareIcon, UserCircleIcon, ClipboardSignatureIcon, ChevronDownIcon, BrainCircuit } from 'lucide-react';
 
 import type { SelectedItem } from '@/services/tax-spending';
 import { generateRepresentativeEmail } from '@/services/tax-spending';
+import { generateAIPrompt, prepareItemsForAIPrompt } from '@/services/ai/prompt-generator'; // Updated import
+import type { AIModelOption } from '@/types/ai-models';
+import { AI_MODEL_OPTIONS } from '@/types/ai-models';
 import { mapSliderToFundingLevel } from '@/lib/funding-utils';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+
 
 const fundingLevels = [
   { value: -2, label: 'Slash Heavily',      color: 'bg-red-600  dark:bg-red-500' },
@@ -42,9 +56,12 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
   const [drag, setDrag] = useState(false);
   const dragOffset = useRef({x:0,y:0});
   const isInitialOpen = useRef(true);
+  const { toast } = useToast();
 
   const refModal = useRef<HTMLDivElement>(null);
   const refHandle= useRef<HTMLDivElement>(null);
+
+  const [selectedGenerator, setSelectedGenerator] = useState<string>("template");
 
   useLayoutEffect(()=>{
       if (!isOpen) {
@@ -75,11 +92,12 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
   const onDown = useCallback((e:React.MouseEvent)=>{
     if(!refHandle.current?.contains(e.target as Node) || !refModal.current) return;
 
-    if(pos.x===null){
+    if(pos.x===null || pos.y === null || isInitialOpen.current){ // Check pos.y too
       const r = refModal.current.getBoundingClientRect();
-      setPos({x:r.left,y:r.top});
-      dragOffset.current = {x:e.clientX-r.left,y:e.clientY-r.top};
-       isInitialOpen.current = false;
+      const newPos = {x:r.left,y:r.top};
+      setPos(newPos);
+      dragOffset.current = {x:e.clientX - newPos.x, y:e.clientY - newPos.y};
+      isInitialOpen.current = false; // Ensure this is set
     } else {
       dragOffset.current = {x:e.clientX-pos.x,y:e.clientY-pos.y};
     }
@@ -93,10 +111,11 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
     const {width:hW,height:hH}=refModal.current.getBoundingClientRect();
     let x=e.clientX-dragOffset.current.x;
     let y=e.clientY-dragOffset.current.y;
-    x=Math.max(0,Math.min(x,vw-hW));
-    y=Math.max(0,Math.min(y,vh-hH));
+    const margin = 5; // Small margin to prevent going completely off-screen
+    x=Math.max(margin,Math.min(x,vw-hW-margin));
+    y=Math.max(margin,Math.min(y,vh-hH-margin));
     setPos({x,y});
-  },[drag, pos]);
+  },[drag, pos.x, pos.y]);
 
   const stopDrag = useCallback(()=>{
     setDrag(false);
@@ -118,8 +137,8 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
   const fdet = (s:number)=> fundingLevels.find(f=>f.value===mapSliderToFundingLevel(s))??fundingLevels[2];
   const selected = React.useMemo(()=>Array.from(initialSelectedItems.values()),[initialSelectedItems]);
 
-  const handleGenerateEmail = () => {
-    const finalSelectedItems: SelectedItem[] = Array.from(itemFundingLevels.entries()).map(([id, sliderValue]) => {
+  const handleGenerateEmail = async () => {
+    const finalSelectedItemsWithCategoryForTemplate: (SelectedItem & {category: string})[] = Array.from(itemFundingLevels.entries()).map(([id, sliderValue]) => {
        const originalItem = initialSelectedItems.get(id);
        return {
             id,
@@ -129,15 +148,57 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
         };
     });
 
-    const {subject, body} = generateRepresentativeEmail(
-        finalSelectedItems,
-        aggressiveness,
-        userName,
-        userLocation,
-        balanceBudgetChecked
-    );
-    window.location.href=`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    const itemsForAIPrompt = prepareItemsForAIPrompt(initialSelectedItems, itemFundingLevels);
+
+
+    if (selectedGenerator === 'template') {
+        const {subject, body} = generateRepresentativeEmail(
+            finalSelectedItemsWithCategoryForTemplate,
+            aggressiveness,
+            userName,
+            userLocation,
+            balanceBudgetChecked
+        );
+        window.location.href=`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    } else {
+        const aiModel = AI_MODEL_OPTIONS.find(m => m.id === selectedGenerator);
+        if (aiModel) {
+            const prompt = await generateAIPrompt( // Await the async function
+                itemsForAIPrompt,
+                aggressiveness,
+                userName,
+                userLocation,
+                balanceBudgetChecked
+            );
+            try {
+                await navigator.clipboard.writeText(prompt);
+                toast({
+                    title: "Prompt Copied!",
+                    description: `Paste the prompt into ${aiModel.name} to generate your email. Opening ${aiModel.name}...`,
+                    duration: 5000,
+                });
+                window.open(aiModel.url.replace('<YOUR_PROMPT>', encodeURIComponent(prompt)), '_blank');
+            } catch (err) {
+                 toast({
+                    title: "Copy Failed",
+                    description: "Could not copy prompt. Please try manually. Opening AI service...",
+                    variant: "destructive",
+                });
+                console.error('Failed to copy prompt: ', err);
+                window.open(aiModel.url.replace('<YOUR_PROMPT>', encodeURIComponent(prompt)), '_blank');
+            }
+        }
+    }
     onEmailGenerated();
+  };
+
+  const AILogos: Record<string, React.ElementType> = {
+    chatgpt: BotMessageSquare,
+    claude: FileTextIcon,
+    perplexity: SearchIcon,
+    bing: MessagesSquareIcon,
+    you: UserCircleIcon,
+    template: ClipboardSignatureIcon,
   };
 
 
@@ -168,10 +229,10 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
             <GripVertical className='h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground shrink-0' />
             <div className='space-y-0 sm:space-y-0.5'>
               <DialogTitle className='text-base sm:text-lg md:text-xl font-semibold flex items-center gap-1.5 sm:gap-2'>
-                <Mail className='h-4 w-4 sm:h-5 sm:w-5 text-primary'/> Customize Your Email
+                <Mail className='h-4 w-4 sm:h-5 sm:w-5 text-primary'/> Customize Your Message
               </DialogTitle>
               <DialogDescription className='text-xs sm:text-sm text-muted-foreground'>
-                Adjust tone, priorities, and provide your info.
+                Adjust tone, priorities, provide info, and choose your generator.
               </DialogDescription>
             </div>
           </div>
@@ -261,24 +322,66 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
            </div>
         </ScrollArea>
 
-        <DialogFooter className='flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-between px-4 py-3 sm:px-6 sm:py-4 border-t bg-card/95 sticky bottom-0 z-10 rounded-b-lg'>
+        <DialogFooter className='flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-between items-center px-4 py-3 sm:px-6 sm:py-4 border-t bg-card/95 sticky bottom-0 z-10 rounded-b-lg'>
           <DialogClose asChild><Button variant='outline' className='w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10'>Cancel</Button></DialogClose>
-          <div className="flex flex-col-reverse sm:flex-row sm:items-center gap-2">
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
             <Button
                 variant="secondary"
                 onClick={onSuggestResources}
-                disabled={!canSuggestResources} // Use the new prop here
+                disabled={!userName || !userLocation || (selected.length === 0 && !balanceBudgetChecked)} // Disable if no name/location or no concerns/budget pref
                 className='w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10'
             >
                 <Lightbulb className='mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4'/> Further Actions
             </Button>
-            <Button
-                disabled={!userName || !userLocation}
-                onClick={handleGenerateEmail}
-                className='w-full sm:w-auto bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 text-primary-foreground dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800 text-xs sm:text-sm h-9 sm:h-10'
-            >
-                <Send className='mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4'/> Generate & Open Email
-            </Button>
+            <div className="flex items-center gap-0.5 w-full sm:w-auto">
+              <Button
+                  disabled={!userName || !userLocation}
+                  onClick={handleGenerateEmail}
+                  className='flex-grow sm:flex-none bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 text-primary-foreground dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800 text-xs sm:text-sm h-9 sm:h-10 rounded-l-md rounded-r-none'
+              >
+                  <Send className='mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4'/> Generate Message
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="default"
+                    size="icon"
+                    className="h-9 w-9 sm:h-10 sm:w-10 rounded-l-none rounded-r-md shrink-0 bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 text-primary-foreground dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800"
+                  >
+                    <BrainCircuit className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="sr-only">Choose Generator</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64 sm:w-72">
+                  <DropdownMenuLabel className="text-xs">Choose Generator</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuRadioGroup value={selectedGenerator} onValueChange={setSelectedGenerator}>
+                    {AI_MODEL_OPTIONS.map((model) => {
+                      const IconComponent = AILogos[model.id] || BrainCircuit;
+                      return (
+                        <DropdownMenuRadioItem key={model.id} value={model.id} className="text-xs sm:text-sm leading-snug">
+                          <div className="flex items-start gap-2">
+                            <IconComponent className="h-4 w-4 mt-0.5 text-muted-foreground"/>
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-medium">{model.name}</span>
+                                {model.tag && (
+                                  <span className={cn(
+                                    "text-[9px] sm:text-[10px] font-semibold px-1 py-0.5 rounded-sm",
+                                    model.tagColor || "bg-accent text-accent-foreground"
+                                  )}>{model.tag}</span>
+                                )}
+                              </div>
+                              <p className="text-muted-foreground text-[10px] sm:text-xs">{model.description}</p>
+                            </div>
+                          </div>
+                        </DropdownMenuRadioItem>
+                      );
+                    })}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </DialogFooter>
       </DialogContent>
@@ -291,11 +394,12 @@ interface EmailCustomizationModalProps{
   onOpenChange:(b:boolean)=>void;
   onEmailGenerated: () => void;
   onSuggestResources: () => void;
-  canSuggestResources: boolean; // New prop to control button disable state
-  selectedItems:Map<string,SelectedItem>;
+  canSuggestResources: boolean; // This prop name seems to match the disabling logic used, keep it
+  selectedItems:Map<string,SelectedItem>; // This should include category
   balanceBudgetChecked:boolean;taxAmount:number;
   aggressiveness:number;setAggressiveness:(n:number)=>void;
   itemFundingLevels:Map<string,number>;setItemFundingLevels:(m:Map<string,number>)=>void;
   userName:string;setUserName:(s:string)=>void;
   userLocation:string;setUserLocation:(s:string)=>void;
 }
+

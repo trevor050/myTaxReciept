@@ -17,8 +17,8 @@ import TaxBreakdownDashboard from '@/components/dashboard/TaxBreakdownDashboard'
 import FloatingEmailButton from '@/components/dashboard/FloatingEmailButton';
 import EmailCustomizationModal from '@/components/dashboard/EmailCustomizationModal';
 import ResourceSuggestionsModal from '@/components/dashboard/ResourceSuggestionsModal';
-import EnterHourlyWageModal from '@/components/dashboard/EnterHourlyWageModal'; // Import new modal
-import type { SuggestedResource } from '@/services/resource-suggestions';
+import EnterHourlyWageModal from '@/components/dashboard/EnterHourlyWageModal';
+import type { SuggestedResource } from '@/types/resource-suggestions';
 import { suggestResources } from '@/services/resource-suggestions';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -300,12 +300,20 @@ export default function Home() {
   };
 
   const handleOpenEmailModal = () => {
+     // Prepare selected items with their categories for the modal
+     const itemsForModal = new Map<string, SelectedItem>();
+     selectedEmailItems.forEach((item, key) => {
+         // The item in selectedEmailItems should already have its category from TaxBreakdownDashboard
+         itemsForModal.set(key, { ...item });
+     });
+
      setItemFundingLevels(new Map(
-       Array.from(selectedEmailItems.entries()).map(([id, item]) => [
+       Array.from(itemsForModal.entries()).map(([id, item]) => [
          id,
          itemFundingLevels.get(id) ?? mapFundingLevelToSlider(item.fundingLevel)
        ])
      ));
+     setSelectedEmailItems(itemsForModal); // Ensure modal uses items with categories
      setIsEmailModalOpen(true);
   };
 
@@ -324,8 +332,16 @@ export default function Home() {
 
     setIsSuggestingResources(true);
     try {
-        const itemsArray = Array.from(selectedEmailItems.values());
-        const suggestions = await suggestResources(itemsArray, aggressiveness, balanceBudgetChecked);
+        // Ensure items passed to suggestResources have categories
+        const itemsArrayForSuggestions: SelectedItem[] = Array.from(selectedEmailItems.values())
+            .map(item => ({
+                id: item.id,
+                description: item.description,
+                fundingLevel: item.fundingLevel,
+                category: item.category, // Ensure category is included
+            }));
+
+        const suggestions = await suggestResources(itemsArrayForSuggestions, aggressiveness, balanceBudgetChecked);
         setSuggestedResources(suggestions);
         if (suggestions.length > 0) {
             setIsEmailModalOpen(false); // Close email modal if open
@@ -365,7 +381,7 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center justify-center p-2 sm:p-4 md:p-8 bg-gradient-to-br from-background via-secondary/5 to-background relative">
        <div className={`w-full ${step === 'dashboard' ? 'max-w-full md:max-w-4xl lg:max-w-5xl' : 'max-w-full sm:max-w-md md:max-w-2xl'} mx-auto space-y-1 sm:space-y-2 transition-all duration-300 ease-in-out z-10`}>
         <div className="flex justify-start items-center min-h-[36px] sm:min-h-[40px] px-1 sm:px-0">
-            {step !== 'location' ? ( // Show back button on all steps except the first
+            {step !== 'location' ? (
               <Button
                 variant="ghost"
                 size="sm"
@@ -433,9 +449,9 @@ export default function Home() {
             isOpen={isEmailModalOpen}
             onOpenChange={setIsEmailModalOpen}
             onEmailGenerated={handleEmailGenerated}
-            onSuggestResources={handleShowResourceSuggestions} // Pass the handler
-            canSuggestResources={hasConcernsForSuggestions} // Pass the condition
-            selectedItems={selectedEmailItems}
+            onSuggestResources={handleShowResourceSuggestions}
+            canSuggestResources={hasConcernsForSuggestions}
+            selectedItems={selectedEmailItems} // This should be Map<string, SelectedItem & { category: string } potentially
             balanceBudgetChecked={balanceBudgetChecked}
             taxAmount={taxAmount ?? estimatedMedianTax}
             aggressiveness={aggressiveness}
@@ -455,7 +471,7 @@ export default function Home() {
             isLoading={isSuggestingResources}
             selectedItems={selectedEmailItems}
             balanceBudgetChecked={balanceBudgetChecked}
-            userTone={toneBucket(aggressiveness)} // Pass toneBucket result
+            userTone={toneBucket(aggressiveness)}
             hasUserConcerns={hasConcernsForSuggestions}
         />
 
@@ -467,4 +483,3 @@ export default function Home() {
     </main>
   );
 }
-
