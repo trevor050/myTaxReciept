@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -69,7 +68,7 @@ export default function Home() {
   // State for resource suggestions modal and data
   const [suggestedResources, setSuggestedResources] = useState<SuggestedResource[]>([]);
   const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
-  const [isSuggestingResources, setIsSuggestingResources] = useState(false); // Corrected state setter name
+  const [isSuggestingResources, setIsSuggestingResources] = useState(false);
 
   // State for pre-calculated perspectives
   const [dashboardPerspectives, setDashboardPerspectives] = useState<DashboardPerspectives | null>(null);
@@ -311,8 +310,9 @@ export default function Home() {
     if (selectedEmailItems.size === 0 && !balanceBudgetChecked) {
         toast({
             title: "No Concerns Selected",
-            description: "Please select some spending items or the 'Balance Budget' option to get relevant suggestions.",
-            variant: "default"
+            description: "To receive tailored suggestions for further action, please first select some spending items that concern you or indicate your preference for balancing the budget. You can do this on the main dashboard by checking the boxes next to specific programs.",
+            variant: "default",
+            duration: 7000 // Longer duration for more detailed message
         });
         return;
     }
@@ -328,16 +328,18 @@ export default function Home() {
         } else {
             toast({
                 title: "No Specific Suggestions Found",
-                description: "We couldn't find specific organizations for your exact combination of concerns. Consider broadening your search or contacting your representatives directly.",
-                variant: "default"
+                description: "While we couldn't pinpoint organizations for your exact combination of concerns right now, remember that contacting your representatives directly with the email you've generated is a powerful way to make your voice heard. You can also research broader advocacy groups related to your general interests.",
+                variant: "default",
+                duration: 9000 // Longer duration
             });
         }
     } catch (error) {
         console.error("Error fetching resource suggestions:", error);
         toast({
             title: "Suggestion Error",
-            description: "Could not fetch resource suggestions at this time. Please try again later.",
+            description: "Could not fetch resource suggestions at this time. Please try again later. In the meantime, you can still use the generated email to contact your officials.",
             variant: "destructive",
+            duration: 7000
         });
     } finally {
         setIsSuggestingResources(false);
@@ -425,7 +427,8 @@ export default function Home() {
                 setIsEmailModalOpen(isOpenModal);
                 // If modal is closing AND (items were selected OR budget checked), offer suggestions
                 if (!isOpenModal && (selectedEmailItems.size > 0 || balanceBudgetChecked)) {
-                    handleShowResourceSuggestions();
+                    // Delay slightly to ensure modal is fully closed before opening another
+                    setTimeout(() => handleShowResourceSuggestions(), 150);
                 }
             }}
             selectedItems={selectedEmailItems} // Pass the stored selected items
@@ -452,4 +455,3 @@ export default function Home() {
     </main>
   );
 }
-
