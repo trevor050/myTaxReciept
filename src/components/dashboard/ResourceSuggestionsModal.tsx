@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription as CardDesc } from '@/components/ui/card'; // Aliased CardDescription
-import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, CheckCircle, AlertCircle, Search, MinusCircle, PlusCircle, MessageSquareQuote } from 'lucide-react';
+import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, MessageSquareQuote, PlusCircle, MinusCircle, Search } from 'lucide-react'; // Added MessageSquareQuote, PlusCircle, MinusCircle, Search
 import type { SuggestedResource, MatchedReason } from '@/services/resource-suggestions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -19,8 +19,6 @@ import type { Tone } from '@/services/email/types';
 const importLucideIcon = async (iconName: string | undefined): Promise<React.ElementType | typeof Info> => {
   if (!iconName) return Info;
   try {
-    // Ensure first letter is uppercase, rest lowercase for direct mapping if that's the convention.
-    // Or handle specific name variations if lucide-react uses a different casing.
     const normalizedIconName = iconName.charAt(0).toUpperCase() + iconName.slice(1);
     const module = await import('lucide-react');
     // @ts-ignore TS doesn't know about dynamic imports for all lucide icons
@@ -49,7 +47,7 @@ const MatchedReasonTooltipContent = ({ reasons, resourceName }: { reasons: Match
   return (
     <TooltipContent side="top" align="start" className="max-w-xs bg-popover p-3 shadow-xl rounded-lg border text-popover-foreground animate-scaleIn z-[60]">
       <p className="font-semibold mb-2 text-sm text-foreground">How {resourceName} aligns with your concerns:</p>
-      <ul className="space-y-2 text-xs list-none">
+      <ul className="space-y-2 text-xs list-none max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
         {reasons.map((reason, index) => {
           let prefix = "Addresses";
           let icon = <MessageSquareQuote className="inline-block mr-1.5 h-3.5 w-3.5 text-muted-foreground" />;
@@ -90,7 +88,6 @@ export default function ResourceSuggestionsModal({
   onOpenChange,
   suggestedResources,
   isLoading,
-  // selectedItems, balanceBudgetChecked, userTone // These are now used by suggestResources directly if needed
 }: ResourceSuggestionsModalProps) {
   const [IconComponents, setIconComponents] = React.useState<Record<string, React.ElementType>>({});
 
@@ -128,30 +125,29 @@ export default function ResourceSuggestionsModal({
 
   const onDown = React.useCallback((e: React.MouseEvent) => {
     if (!refHandle.current?.contains(e.target as Node) || !refModal.current) return;
-    if (pos.x === null) { // First drag, calculate offset from current visual position
+    if (pos.x === null) { 
       const r = refModal.current.getBoundingClientRect();
-      setPos({ x: r.left, y: r.top }); // Set position to current, disabling CSS centering
+      setPos({ x: r.left, y: r.top }); 
       dragOffset.current = { x: e.clientX - r.left, y: e.clientY - r.top };
-      isInitialOpen.current = false; // No longer initial open
-    } else { // Subsequent drags
+      isInitialOpen.current = false; 
+    } else { 
       dragOffset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
     }
     setDrag(true);
-    document.body.style.userSelect = 'none'; // Prevent text selection during drag
+    document.body.style.userSelect = 'none'; 
   }, [pos]);
 
 
   const onMove = React.useCallback((e: MouseEvent) => {
-    if (!drag || !refModal.current || pos.x === null ) return; // Check pos.x for null
+    if (!drag || !refModal.current || pos.x === null ) return; 
     const { innerWidth: vw, innerHeight: vh } = window;
     const { width: hW, height: hH } = refModal.current.getBoundingClientRect();
     let x = e.clientX - dragOffset.current.x;
     let y = e.clientY - dragOffset.current.y;
-    // Constrain to viewport
     x = Math.max(0, Math.min(x, vw - hW));
     y = Math.max(0, Math.min(y, vh - hH));
     setPos({ x, y });
-  }, [drag, pos.x]); // Added pos.x to dependency array
+  }, [drag, pos.x]); 
 
   const stopDrag = React.useCallback(() => {
     setDrag(false);
@@ -212,11 +208,11 @@ export default function ResourceSuggestionsModal({
         }
         className={cn(
             'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-2xl flex-col border bg-background shadow-lg sm:rounded-lg',
-            pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2', // CSS Centering
+            pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2', 
             'data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut'
         )}
-        onInteractOutside={e => drag && e.preventDefault()} // Prevent closing while dragging
-        onOpenAutoFocus={e => e.preventDefault()} // Prevent auto-focus on first element
+        onInteractOutside={e => drag && e.preventDefault()} 
+        onOpenAutoFocus={e => e.preventDefault()} 
       >
         <div
             ref={refHandle}
@@ -227,7 +223,7 @@ export default function ResourceSuggestionsModal({
             <GripVertical className='h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground shrink-0' />
             <div className='space-y-0 sm:space-y-0.5'>
               <DialogTitle className='text-base sm:text-lg md:text-xl font-semibold flex items-center gap-1.5 sm:gap-2 text-primary'>
-                <LinkIcon className="h-4 w-4 sm:h-5 sm:w-5" /> {/* Use primary color for title icon */}
+                <LinkIcon className="h-4 w-4 sm:h-5 sm:w-5" /> 
                 Take Further Action
               </DialogTitle>
               <DialogDescription className='text-xs sm:text-sm text-muted-foreground'>
@@ -254,7 +250,7 @@ export default function ResourceSuggestionsModal({
             <div className="space-y-6">
               {bestMatches.length > 0 && (
                 <div>
-                  <h3 className="text-base font-semibold mb-3 text-primary border-b pb-1.5">🌟 Best Matches:</h3>
+                  <h3 className="text-sm font-semibold mb-3 text-green-600 dark:text-green-400 border-b border-green-500/30 pb-1.5">Best Matches:</h3>
                   <div className="space-y-3">
                     {bestMatches.map((resource, index) => {
                         const Icon = IconComponents[resource.icon || 'Info'] || Info;

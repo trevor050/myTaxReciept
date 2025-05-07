@@ -14,7 +14,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { GripVertical, Mail, X, Send } from 'lucide-react';
+import { GripVertical, Mail, X, Send, Lightbulb } from 'lucide-react'; // Added Lightbulb
 
 import type { SelectedItem } from '@/services/tax-spending';
 import { generateRepresentativeEmail } from '@/services/tax-spending';
@@ -31,7 +31,7 @@ const fundingLevels = [
 
 export default function EmailCustomizationModal (p: EmailCustomizationModalProps) {
   const {
-    isOpen, onOpenChange, onEmailGenerated, // Added onEmailGenerated
+    isOpen, onOpenChange, onEmailGenerated, onSuggestResources, // Added onSuggestResources
     selectedItems: initialSelectedItems,
     balanceBudgetChecked, aggressiveness, setAggressiveness,
     itemFundingLevels, setItemFundingLevels,
@@ -117,6 +117,29 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
   const tone = (v:number)=>v<=15?'Kind':v<=40?'Concerned':v<=75?'Stern':'Angry';
   const fdet = (s:number)=> fundingLevels.find(f=>f.value===mapSliderToFundingLevel(s))??fundingLevels[2];
   const selected = React.useMemo(()=>Array.from(initialSelectedItems.values()),[initialSelectedItems]);
+
+  const handleGenerateEmail = () => {
+    const finalSelectedItems: SelectedItem[] = Array.from(itemFundingLevels.entries()).map(([id, sliderValue]) => {
+       const originalItem = initialSelectedItems.get(id);
+       return {
+            id,
+            description: originalItem?.description || 'Unknown Item',
+            category: originalItem?.category || 'Unknown Category',
+            fundingLevel: mapSliderToFundingLevel(sliderValue)
+        };
+    });
+
+    const {subject, body} = generateRepresentativeEmail(
+        finalSelectedItems,
+        aggressiveness,
+        userName,
+        userLocation,
+        balanceBudgetChecked
+    );
+    window.location.href=`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    onEmailGenerated();
+  };
+
 
   return(
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -238,35 +261,25 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
            </div>
         </ScrollArea>
 
-        <DialogFooter className='flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:space-x-2 px-4 py-3 sm:px-6 sm:py-4 border-t bg-card/95 sticky bottom-0 z-10 sm:justify-between rounded-b-lg'>
+        <DialogFooter className='flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-between px-4 py-3 sm:px-6 sm:py-4 border-t bg-card/95 sticky bottom-0 z-10 rounded-b-lg'>
           <DialogClose asChild><Button variant='outline' className='w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10'>Cancel</Button></DialogClose>
-          <Button
-            disabled={!userName || !userLocation}
-            onClick={()=>{
-              const finalSelectedItems: SelectedItem[] = Array.from(itemFundingLevels.entries()).map(([id, sliderValue]) => {
-                 const originalItem = initialSelectedItems.get(id);
-                 return {
-                      id,
-                      description: originalItem?.description || 'Unknown Item',
-                      category: originalItem?.category || 'Unknown Category',
-                      fundingLevel: mapSliderToFundingLevel(sliderValue)
-                  };
-              });
-
-              const {subject, body} = generateRepresentativeEmail(
-                  finalSelectedItems,
-                  aggressiveness,
-                  userName,
-                  userLocation,
-                  balanceBudgetChecked
-              );
-              window.location.href=`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-              onEmailGenerated(); // Call the new callback
-            }}
-            className='w-full sm:w-auto bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 text-primary-foreground dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800 text-xs sm:text-sm h-9 sm:h-10'
-          >
-            <Send className='mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4'/> Generate & Open Email
-          </Button>
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center gap-2">
+            <Button
+                variant="secondary"
+                onClick={onSuggestResources}
+                disabled={!userName || !userLocation || (selectedItems.size === 0 && !balanceBudgetChecked)}
+                className='w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10'
+            >
+                <Lightbulb className='mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4'/> Further Actions
+            </Button>
+            <Button
+                disabled={!userName || !userLocation}
+                onClick={handleGenerateEmail}
+                className='w-full sm:w-auto bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 text-primary-foreground dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800 text-xs sm:text-sm h-9 sm:h-10'
+            >
+                <Send className='mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4'/> Generate & Open Email
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -276,7 +289,8 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
 interface EmailCustomizationModalProps{
   isOpen:boolean;
   onOpenChange:(b:boolean)=>void;
-  onEmailGenerated: () => void; // New callback prop
+  onEmailGenerated: () => void;
+  onSuggestResources: () => void; // New callback prop for suggesting resources
   selectedItems:Map<string,SelectedItem>;
   balanceBudgetChecked:boolean;taxAmount:number;
   aggressiveness:number;setAggressiveness:(n:number)=>void;

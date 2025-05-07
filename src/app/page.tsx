@@ -63,7 +63,7 @@ export default function Home() {
   const [suggestedResources, setSuggestedResources] = useState<SuggestedResource[]>([]);
   const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
   const [isSuggestingResources, setIsSuggestingResources] = useState(false);
-  // Removed showResourceSuggestionButton state
+
 
   const [dashboardPerspectives, setDashboardPerspectives] = useState<DashboardPerspectives | null>(null);
   const [isMobileView, setIsMobileView] = useState(false);
@@ -109,7 +109,6 @@ export default function Home() {
        setUserLocationText('');
        setSuggestedResources([]);
        setIsResourceModalOpen(false);
-       // showResourceSuggestionButton was removed
        setDashboardPerspectives(null);
     }
      if (step === 'hourlyWage' && isGoingBack) {
@@ -303,6 +302,7 @@ export default function Home() {
         const suggestions = await suggestResources(itemsArray, aggressiveness, balanceBudgetChecked);
         setSuggestedResources(suggestions);
         if (suggestions.length > 0) {
+            setIsEmailModalOpen(false); // Close email modal if open
             setIsResourceModalOpen(true);
         } else {
             toast({
@@ -326,10 +326,9 @@ export default function Home() {
   };
 
   const handleEmailGenerated = () => {
-    setIsEmailModalOpen(false); // Close the email modal
-    // Automatically trigger resource suggestions if concerns were selected
+    setIsEmailModalOpen(false); 
     if (selectedEmailItems.size > 0 || balanceBudgetChecked) {
-        handleShowResourceSuggestions();
+        handleShowResourceSuggestions(); 
     }
   };
 
@@ -389,7 +388,6 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        {/* "Take Further Action" Button - was removed. Resource modal now opens automatically. */}
 
         <footer className="mt-4 sm:mt-6 text-center text-muted-foreground/60 text-[10px] sm:text-xs px-2 sm:px-4 md:px-0 relative pb-16 sm:pb-6">
              Powered by publicly available data and community resources. Data is estimated and for informational purposes. Verify with official sources.
@@ -406,6 +404,7 @@ export default function Home() {
             isOpen={isEmailModalOpen}
             onOpenChange={setIsEmailModalOpen}
             onEmailGenerated={handleEmailGenerated} 
+            onSuggestResources={handleShowResourceSuggestions} // Pass the handler
             selectedItems={selectedEmailItems}
             balanceBudgetChecked={balanceBudgetChecked}
             taxAmount={taxAmount ?? estimatedMedianTax}
