@@ -9,7 +9,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription as CardDesc } from '@/components/ui/card'; // Aliased CardDescription
-import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, MessageSquareQuote, PlusCircle, MinusCircle, Search } from 'lucide-react'; // Added MessageSquareQuote, PlusCircle, MinusCircle, Search
+import { Badge } from '@/components/ui/badge'; // Import Badge component
+import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, MessageSquareQuote, PlusCircle, MinusCircle, Search, Sparkles } from 'lucide-react'; // Added Sparkles for Best Match
 import type { SuggestedResource, MatchedReason } from '@/services/resource-suggestions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -125,21 +126,21 @@ export default function ResourceSuggestionsModal({
 
   const onDown = React.useCallback((e: React.MouseEvent) => {
     if (!refHandle.current?.contains(e.target as Node) || !refModal.current) return;
-    if (pos.x === null) { 
+    if (pos.x === null) {
       const r = refModal.current.getBoundingClientRect();
-      setPos({ x: r.left, y: r.top }); 
+      setPos({ x: r.left, y: r.top });
       dragOffset.current = { x: e.clientX - r.left, y: e.clientY - r.top };
-      isInitialOpen.current = false; 
-    } else { 
+      isInitialOpen.current = false;
+    } else {
       dragOffset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
     }
     setDrag(true);
-    document.body.style.userSelect = 'none'; 
+    document.body.style.userSelect = 'none';
   }, [pos]);
 
 
   const onMove = React.useCallback((e: MouseEvent) => {
-    if (!drag || !refModal.current || pos.x === null ) return; 
+    if (!drag || !refModal.current || pos.x === null ) return;
     const { innerWidth: vw, innerHeight: vh } = window;
     const { width: hW, height: hH } = refModal.current.getBoundingClientRect();
     let x = e.clientX - dragOffset.current.x;
@@ -147,7 +148,7 @@ export default function ResourceSuggestionsModal({
     x = Math.max(0, Math.min(x, vw - hW));
     y = Math.max(0, Math.min(y, vh - hH));
     setPos({ x, y });
-  }, [drag, pos.x]); 
+  }, [drag, pos.x]);
 
   const stopDrag = React.useCallback(() => {
     setDrag(false);
@@ -208,11 +209,11 @@ export default function ResourceSuggestionsModal({
         }
         className={cn(
             'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-2xl flex-col border bg-background shadow-lg sm:rounded-lg',
-            pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2', 
+            pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
             'data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut'
         )}
-        onInteractOutside={e => drag && e.preventDefault()} 
-        onOpenAutoFocus={e => e.preventDefault()} 
+        onInteractOutside={e => drag && e.preventDefault()}
+        onOpenAutoFocus={e => e.preventDefault()}
       >
         <div
             ref={refHandle}
@@ -223,7 +224,7 @@ export default function ResourceSuggestionsModal({
             <GripVertical className='h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground shrink-0' />
             <div className='space-y-0 sm:space-y-0.5'>
               <DialogTitle className='text-base sm:text-lg md:text-xl font-semibold flex items-center gap-1.5 sm:gap-2 text-primary'>
-                <LinkIcon className="h-4 w-4 sm:h-5 sm:w-5" /> 
+                <LinkIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                 Take Further Action
               </DialogTitle>
               <DialogDescription className='text-xs sm:text-sm text-muted-foreground'>
@@ -250,7 +251,7 @@ export default function ResourceSuggestionsModal({
             <div className="space-y-6">
               {bestMatches.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold mb-3 text-green-600 dark:text-green-400 border-b border-green-500/30 pb-1.5">Best Matches:</h3>
+                  <h3 className="text-sm font-semibold mb-3 text-foreground border-b border-border/30 pb-1.5">Best Matches:</h3>
                   <div className="space-y-3">
                     {bestMatches.map((resource, index) => {
                         const Icon = IconComponents[resource.icon || 'Info'] || Info;
@@ -263,6 +264,9 @@ export default function ResourceSuggestionsModal({
                                     <span className="flex items-center gap-1.5 sm:gap-2">
                                         <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
                                         {resource.name}
+                                        <Badge variant="outline" className="ml-2 border-green-500 text-green-600 dark:text-green-400 bg-green-500/10 text-xs px-1.5 py-0.5">
+                                          <Sparkles className="h-3 w-3 mr-1" />Best Match
+                                        </Badge>
                                     </span>
                                     <span className="text-xs font-medium text-primary/90 bg-primary/10 px-2 py-1 rounded-full">
                                         Matches {resource.matchCount} concern{resource.matchCount !== 1 ? 's':''}
