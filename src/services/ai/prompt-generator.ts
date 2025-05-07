@@ -4,7 +4,7 @@
  * @fileOverview Generates prompts for AI models to draft emails based on user input.
  */
 
-import type { SelectedItem as UserSelectedItem } from '@/services/tax-spending'; // Assuming this type includes category
+import type { SelectedItem as UserSelectedItem } from '@/services/tax-spending';
 import { mapSliderToFundingLevel } from '@/lib/funding-utils';
 
 // Helper to describe funding levels textually
@@ -29,12 +29,12 @@ const getToneDescription = (aggressiveness: number): string => {
 }
 
 export async function generateAIPrompt(
-  selectedItemsWithSliderValues: { id: string; description: string; category: string; sliderValue: number }[],
+  selectedItemsWithSliderValues: { id: string; description: string; category: string; sliderValue: number }[] | ArrayLike<{ id: string; description: string; category: string; sliderValue: number }>,
   aggressiveness: number, // 0-100 slider value
   userName: string,
   userLocation: string,
   balanceBudgetPreference: boolean
-): Promise<string> { // Ensure the function is async and returns a Promise<string>
+): Promise<string> {
   let prompt = `You are an AI assistant helping a user draft an email to their elected representative regarding federal budget priorities. Please generate ONLY the body of the email.
 
 The user's details are:
@@ -48,8 +48,20 @@ On a scale of 0 (most Kind/Polite) to 100 (most Angry/Demanding), the user selec
 The user has expressed the following concerns about specific federal spending items, grouped by category:
 `;
 
+  let finalItemsToProcess: { id: string; description: string; category: string; sliderValue: number }[];
+
+  if (Array.isArray(selectedItemsWithSliderValues)) {
+    finalItemsToProcess = selectedItemsWithSliderValues;
+  } else if (selectedItemsWithSliderValues && typeof selectedItemsWithSliderValues === 'object' && typeof (selectedItemsWithSliderValues as any).length === 'number') {
+    // Attempt to convert array-like object to array
+    finalItemsToProcess = Array.from(selectedItemsWithSliderValues as ArrayLike<{ id: string; description: string; category: string; sliderValue: number }>);
+  } else {
+    console.error("generateAIPrompt: selectedItemsWithSliderValues is not iterable or is of an unexpected type", selectedItemsWithSliderValues);
+    finalItemsToProcess = []; // Default to empty array to prevent crash, though this indicates a deeper issue.
+  }
+
   const itemsByCategory: Record<string, { id: string; description: string; category: string; sliderValue: number }[]> = {};
-  selectedItemsWithSliderValues.forEach(item => {
+  finalItemsToProcess.forEach(item => {
     const categoryKey = item.category || 'Other Specific Programs';
     if (!itemsByCategory[categoryKey]) {
         itemsByCategory[categoryKey] = [];
@@ -67,7 +79,7 @@ The user has expressed the following concerns about specific federal spending it
   });
 
 
-  if (selectedItemsWithSliderValues.length === 0 && !balanceBudgetPreference) {
+  if (finalItemsToProcess.length === 0 && !balanceBudgetPreference) {
     prompt += "\nThe user has not selected any specific items for funding changes but may have general thoughts on the budget process.\n";
   }
 
@@ -87,7 +99,7 @@ Generate only the email body. Do not include a subject line.
   return prompt;
 }
 
-// This function would ideally be part of EmailCustomizationModal logic before calling generateAIPrompt
+// This function is called from EmailCustomizationModal to prepare the data for generateAIPrompt
 export async function prepareItemsForAIPrompt(
     initialSelectedItems: Map<string, UserSelectedItem>, // Original selections with category
     itemFundingLevels: Map<string, number> // Map of item.id to sliderValue (0-100)
@@ -97,9 +109,9 @@ export async function prepareItemsForAIPrompt(
         const originalItem = initialSelectedItems.get(id);
         if (originalItem) {
             itemsForPrompt.push({
-                id: originalItem.id, // Ensure the ID is the original item's ID
+                id: originalItem.id,
                 description: originalItem.description,
-                category: originalItem.category, // Make sure category is present
+                category: originalItem.category,
                 sliderValue: sliderValue,
             });
         }

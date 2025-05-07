@@ -25,9 +25,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { GripVertical, Mail, X, Send, Lightbulb, BotMessageSquare, FileTextIcon, SearchIcon, MessagesSquareIcon, UserCircleIcon, ClipboardSignatureIcon, ChevronDownIcon, BrainCircuit } from 'lucide-react';
 
-import type { SelectedItem } from '@/services/tax-spending';
-import { generateRepresentativeEmail } from '@/services/tax-spending';
-import { generateAIPrompt, prepareItemsForAIPrompt } from '@/services/ai/prompt-generator'; // Updated import
+import type { SelectedItem as UserSelectedItem } from '@/services/tax-spending';
+import { generateRepresentativeEmailContent } from '@/services/email/generator';
+import { generateAIPrompt, prepareItemsForAIPrompt } from '@/services/ai/prompt-generator';
 import type { AIModelOption } from '@/types/ai-models';
 import { AI_MODEL_OPTIONS } from '@/types/ai-models';
 import { mapSliderToFundingLevel } from '@/lib/funding-utils';
@@ -45,10 +45,10 @@ const fundingLevels = [
 
 export default function EmailCustomizationModal (p: EmailCustomizationModalProps) {
   const {
-    isOpen, onOpenChange, onEmailGenerated, onSuggestResources, canSuggestResources,
-    selectedItems: initialSelectedItems,
+    isOpen, onOpenChange, onEmailGenerated, onSuggestResources,
+    selectedItems: initialSelectedItems, // This is Map<string, UserSelectedItem>
     balanceBudgetChecked, aggressiveness, setAggressiveness,
-    itemFundingLevels, setItemFundingLevels,
+    itemFundingLevels, setItemFundingLevels, // This is Map<string, number>
     userName, setUserName, userLocation, setUserLocation,
   } = p;
 
@@ -92,12 +92,12 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
   const onDown = useCallback((e:React.MouseEvent)=>{
     if(!refHandle.current?.contains(e.target as Node) || !refModal.current) return;
 
-    if(pos.x===null || pos.y === null || isInitialOpen.current){ // Check pos.y too
+    if(pos.x===null || pos.y === null || isInitialOpen.current){
       const r = refModal.current.getBoundingClientRect();
       const newPos = {x:r.left,y:r.top};
       setPos(newPos);
       dragOffset.current = {x:e.clientX - newPos.x, y:e.clientY - newPos.y};
-      isInitialOpen.current = false; // Ensure this is set
+      isInitialOpen.current = false;
     } else {
       dragOffset.current = {x:e.clientX-pos.x,y:e.clientY-pos.y};
     }
@@ -106,12 +106,12 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
   },[pos]);
 
   const onMove = useCallback((e:MouseEvent)=>{
-    if(!drag||!refModal.current || pos.x === null || pos.y === null) return; // Check pos.y too
+    if(!drag||!refModal.current || pos.x === null || pos.y === null) return;
     const {innerWidth:vw,innerHeight:vh}=window;
     const {width:hW,height:hH}=refModal.current.getBoundingClientRect();
     let x=e.clientX-dragOffset.current.x;
     let y=e.clientY-dragOffset.current.y;
-    const margin = 5; // Small margin to prevent going completely off-screen
+    const margin = 5;
     x=Math.max(margin,Math.min(x,vw-hW-margin));
     y=Math.max(margin,Math.min(y,vh-hH-margin));
     setPos({x,y});
@@ -135,25 +135,28 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
 
   const tone = (v:number)=>v<=15?'Kind':v<=40?'Concerned':v<=75?'Stern':'Angry';
   const fdet = (s:number)=> fundingLevels.find(f=>f.value===mapSliderToFundingLevel(s))??fundingLevels[2];
-  const selected = React.useMemo(()=>Array.from(initialSelectedItems.values()),[initialSelectedItems]);
+  const selectedArray = React.useMemo(() => Array.from(initialSelectedItems.values()), [initialSelectedItems]);
+
 
   const handleGenerateEmail = async () => {
-    const finalSelectedItemsWithCategoryForTemplate: (SelectedItem & {category: string})[] = Array.from(itemFundingLevels.entries()).map(([id, sliderValue]) => {
-       const originalItem = initialSelectedItems.get(id);
+    // Prepare items for the standard template generator
+    const finalSelectedItemsWithCategoryForTemplate: (UserSelectedItem & { category: string })[] = Array.from(itemFundingLevels.entries()).map(([id, sliderValue]) => {
+       const originalItem = initialSelectedItems.get(id); // initialSelectedItems is Map<string, UserSelectedItem>
        return {
             id,
             description: originalItem?.description || 'Unknown Item',
-            category: originalItem?.category || 'Unknown Category',
-            fundingLevel: mapSliderToFundingLevel(sliderValue)
+            category: originalItem?.category || 'Unknown Category', // Ensure category is here
+            fundingLevel: mapSliderToFundingLevel(sliderValue) // This is the -2 to 2 value
         };
     });
 
-    const itemsForAIPrompt = prepareItemsForAIPrompt(initialSelectedItems, itemFundingLevels);
+    // Prepare items specifically for the AI prompt generator (needs sliderValue 0-100)
+    const itemsForAIGen = await prepareItemsForAIPrompt(initialSelectedItems, itemFundingLevels);
 
 
     if (selectedGenerator === 'template') {
-        const {subject, body} = generateRepresentativeEmail(
-            finalSelectedItemsWithCategoryForTemplate,
+        const {subject, body} = generateRepresentativeEmailContent( // Use generateRepresentativeEmailContent from generator.ts
+            finalSelectedItemsWithCategoryForTemplate, // This needs to match the expected type
             aggressiveness,
             userName,
             userLocation,
@@ -163,8 +166,8 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
     } else {
         const aiModel = AI_MODEL_OPTIONS.find(m => m.id === selectedGenerator);
         if (aiModel) {
-            const prompt = await generateAIPrompt( // Await the async function
-                itemsForAIPrompt,
+            const prompt = await generateAIPrompt(
+                itemsForAIGen, // Pass items with 0-100 sliderValue
                 aggressiveness,
                 userName,
                 userLocation,
@@ -213,7 +216,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
         }
         className={cn(
           'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:rounded-lg',
-          pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2', // Initial centering only
+          pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
           'data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut'
         )}
         onInteractOutside={e=>drag&&e.preventDefault()}
@@ -274,11 +277,11 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                 </div>
               </div>
 
-              {selected.length > 0 && (
+              {selectedArray.length > 0 && (
                 <div className='space-y-4 sm:space-y-6'>
                   <h3 className='text-sm sm:text-lg font-semibold border-b pb-1.5 sm:pb-2'>Adjust Funding Priorities</h3>
-                  {selected.map(item => {
-                    const sliderValue = itemFundingLevels.get(item.id) ?? 50;
+                  {selectedArray.map(item => {
+                    const sliderValue = itemFundingLevels.get(item.id) ?? 50; // Default to 50 (neutral)
                     const det = fdet(sliderValue);
                     return (
                       <div key={item.id} className='space-y-1.5 sm:space-y-2 border p-3 sm:p-4 rounded-md shadow-sm bg-card/50'>
@@ -328,7 +331,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
             <Button
                 variant="secondary"
                 onClick={onSuggestResources}
-                disabled={!userName || !userLocation || (selected.length === 0 && !balanceBudgetChecked)} // Disable if no name/location or no concerns/budget pref
+                disabled={selectedArray.length === 0 && !balanceBudgetChecked}
                 className='w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10'
             >
                 <Lightbulb className='mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4'/> Further Actions
@@ -394,12 +397,11 @@ interface EmailCustomizationModalProps{
   onOpenChange:(b:boolean)=>void;
   onEmailGenerated: () => void;
   onSuggestResources: () => void;
-  canSuggestResources: boolean; // This prop name seems to match the disabling logic used, keep it
-  selectedItems:Map<string,SelectedItem>; // This should include category
-  balanceBudgetChecked:boolean;taxAmount:number;
+  selectedItems: Map<string, UserSelectedItem>; // Changed this from SelectedItem to UserSelectedItem from tax-spending
+  balanceBudgetChecked:boolean;
+  taxAmount:number; // Assuming taxAmount is always passed now
   aggressiveness:number;setAggressiveness:(n:number)=>void;
   itemFundingLevels:Map<string,number>;setItemFundingLevels:(m:Map<string,number>)=>void;
   userName:string;setUserName:(s:string)=>void;
   userLocation:string;setUserLocation:(s:string)=>void;
 }
-
