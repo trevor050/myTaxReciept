@@ -1,3 +1,4 @@
+
 // src/app/page.tsx
 'use client';
 
@@ -308,9 +309,10 @@ export default function Home() {
      setIsEmailModalOpen(true);
   };
 
+  const hasConcernsForSuggestions = selectedEmailItems.size > 0 || balanceBudgetChecked;
 
   const handleShowResourceSuggestions = async () => {
-    if (selectedEmailItems.size === 0 && !balanceBudgetChecked) {
+    if (!hasConcernsForSuggestions) {
         toast({
             title: "No Concerns Selected",
             description: "To receive tailored suggestions for further action, please first select some spending items that concern you or indicate your preference for balancing the budget. You can do this on the main dashboard by checking the boxes next to specific programs.",
@@ -351,9 +353,7 @@ export default function Home() {
 
   const handleEmailGenerated = () => {
     setIsEmailModalOpen(false);
-    // Automatically trigger resource suggestions if items were selected or budget was checked
-    if (selectedEmailItems.size > 0 || balanceBudgetChecked) {
-        // Slight delay to allow email client to open smoothly before modal transition
+    if (hasConcernsForSuggestions) {
         setTimeout(() => {
             handleShowResourceSuggestions();
         }, 300);
@@ -433,7 +433,8 @@ export default function Home() {
             isOpen={isEmailModalOpen}
             onOpenChange={setIsEmailModalOpen}
             onEmailGenerated={handleEmailGenerated}
-            onSuggestResources={handleShowResourceSuggestions}
+            onSuggestResources={handleShowResourceSuggestions} // Pass the handler
+            canSuggestResources={hasConcernsForSuggestions} // Pass the condition
             selectedItems={selectedEmailItems}
             balanceBudgetChecked={balanceBudgetChecked}
             taxAmount={taxAmount ?? estimatedMedianTax}
@@ -455,7 +456,7 @@ export default function Home() {
             selectedItems={selectedEmailItems}
             balanceBudgetChecked={balanceBudgetChecked}
             userTone={toneBucket(aggressiveness)} // Pass toneBucket result
-            hasUserConcerns={selectedEmailItems.size > 0 || balanceBudgetChecked}
+            hasUserConcerns={hasConcernsForSuggestions}
         />
 
         <EnterHourlyWageModal

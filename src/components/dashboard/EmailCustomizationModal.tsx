@@ -31,7 +31,7 @@ const fundingLevels = [
 
 export default function EmailCustomizationModal (p: EmailCustomizationModalProps) {
   const {
-    isOpen, onOpenChange, onEmailGenerated, onSuggestResources, // Added onSuggestResources
+    isOpen, onOpenChange, onEmailGenerated, onSuggestResources, canSuggestResources,
     selectedItems: initialSelectedItems,
     balanceBudgetChecked, aggressiveness, setAggressiveness,
     itemFundingLevels, setItemFundingLevels,
@@ -88,7 +88,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
   },[pos]);
 
   const onMove = useCallback((e:MouseEvent)=>{
-    if(!drag||!refModal.current || pos.x === null) return;
+    if(!drag||!refModal.current || pos.x === null || pos.y === null) return; // Check pos.y too
     const {innerWidth:vw,innerHeight:vh}=window;
     const {width:hW,height:hH}=refModal.current.getBoundingClientRect();
     let x=e.clientX-dragOffset.current.x;
@@ -96,7 +96,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
     x=Math.max(0,Math.min(x,vw-hW));
     y=Math.max(0,Math.min(y,vh-hH));
     setPos({x,y});
-  },[drag, pos.x]);
+  },[drag, pos]);
 
   const stopDrag = useCallback(()=>{
     setDrag(false);
@@ -146,13 +146,13 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
       <DialogContent
         ref={refModal}
         style={
-            pos.x !== null
+            pos.x !== null && pos.y !== null
             ? { left: pos.x, top: pos.y, transform: 'none' }
             : undefined
         }
         className={cn(
           'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:rounded-lg',
-          pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
+          pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2', // Initial centering only
           'data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut'
         )}
         onInteractOutside={e=>drag&&e.preventDefault()}
@@ -267,7 +267,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
             <Button
                 variant="secondary"
                 onClick={onSuggestResources}
-                disabled={initialSelectedItems.size === 0 && !balanceBudgetChecked}
+                disabled={!canSuggestResources} // Use the new prop here
                 className='w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10'
             >
                 <Lightbulb className='mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4'/> Further Actions
@@ -290,7 +290,8 @@ interface EmailCustomizationModalProps{
   isOpen:boolean;
   onOpenChange:(b:boolean)=>void;
   onEmailGenerated: () => void;
-  onSuggestResources: () => void; // New callback prop for suggesting resources
+  onSuggestResources: () => void;
+  canSuggestResources: boolean; // New prop to control button disable state
   selectedItems:Map<string,SelectedItem>;
   balanceBudgetChecked:boolean;taxAmount:number;
   aggressiveness:number;setAggressiveness:(n:number)=>void;
@@ -298,5 +299,3 @@ interface EmailCustomizationModalProps{
   userName:string;setUserName:(s:string)=>void;
   userLocation:string;setUserLocation:(s:string)=>void;
 }
-
-    
