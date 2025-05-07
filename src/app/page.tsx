@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useState, useEffect } from 'react';
 import type { Location, TaxSpending, SelectedItem } from '@/services/tax-spending';
 import { getTaxSpending } from '@/services/tax-spending';
-import { guessStateFromZip, getAverageTaxForState } from '@/lib/zip-to-state'; // Corrected import
+import { guessStateFromZip, getAverageTaxForState } from '@/lib/zip-to-state'; 
 import { mapFundingLevelToSlider } from '@/lib/funding-utils';
 import { toneBucket } from '@/services/email/utils'; 
 
@@ -42,7 +42,7 @@ export default function Home() {
   const [location, setLocation] = useState<Location | null>(null);
   const [taxAmount, setTaxAmount] = useState<number | null>(null);
   const [hourlyWage, setHourlyWage] = useState<number | null>(null);
-  const [taxSpending, setTaxSpending] = useState<TaxSpending[]>([]);
+  const [taxSpending, setTaxSpending] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const [animationClass, setAnimationClass] = useState('animate-slideInUp');
@@ -50,22 +50,22 @@ export default function Home() {
   const [showEmailAction, setShowEmailAction] = useState(false);
   const [emailActionCount, setEmailActionCount] = useState(0);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
-  const [selectedEmailItems, setSelectedEmailItems] = useState<Map<string, SelectedItem>>(new Map());
+  const [selectedEmailItems, setSelectedEmailItems] = useState(new Map());
   const [balanceBudgetChecked, setBalanceBudgetChecked] = useState(false);
 
-  const [aggressiveness, setAggressiveness] = useState<number>(50);
-  const [itemFundingLevels, setItemFundingLevels] = useState<Map<string, number>>(new Map());
+  const [aggressiveness, setAggressiveness] = useState(50);
+  const [itemFundingLevels, setItemFundingLevels] = useState(new Map());
   const [userName, setUserName] = useState('');
   const [userLocationText, setUserLocationText] = useState('');
 
-  const [estimatedMedianTax, setEstimatedMedianTax] = useState<number>(NATIONAL_MEDIAN_FEDERAL_TAX);
+  const [estimatedMedianTax, setEstimatedMedianTax] = useState(NATIONAL_MEDIAN_FEDERAL_TAX);
 
-  const [suggestedResources, setSuggestedResources] = useState<SuggestedResource[]>([]);
+  const [suggestedResources, setSuggestedResources] = useState([]);
   const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
   const [isSuggestingResources, setIsSuggestingResources] = useState(false);
 
 
-  const [dashboardPerspectives, setDashboardPerspectives] = useState<DashboardPerspectives | null>(null);
+  const [dashboardPerspectives, setDashboardPerspectives] = useState(null);
   const [isMobileView, setIsMobileView] = useState(false);
 
   useEffect(() => {
@@ -168,7 +168,7 @@ export default function Home() {
        setTaxSpending(spendingData);
 
         const maxPerspectiveItems = isMobileView ? 3 : 5;
-        const newChartPerspectives: Record<string, PerspectiveData> = {};
+        const newChartPerspectives = {};
         spendingData.forEach(item => {
             const spendingAmount = (item.percentage / 100) * finalTaxAmount;
             newChartPerspectives[item.category] = {
@@ -177,7 +177,7 @@ export default function Home() {
             };
         });
 
-        const newAccordionPerspectives: Record<string, PerspectiveData> = {};
+        const newAccordionPerspectives = {};
         spendingData.forEach(category => {
             const categoryAmount = (category.percentage / 100) * finalTaxAmount;
             newAccordionPerspectives[category.id || category.category] = {
@@ -193,7 +193,7 @@ export default function Home() {
             });
         });
 
-        const newTotalPerspectiveData: PerspectiveData = {
+        const newTotalPerspectiveData = {
             currency: generateCurrencyPerspectiveList(finalTaxAmount, maxPerspectiveItems + 2),
             time: wage ? generateCombinedPerspectiveList((finalTaxAmount / wage) * 60, maxPerspectiveItems + 2) : null,
         };
@@ -299,10 +299,11 @@ export default function Home() {
     setIsSuggestingResources(true);
     try {
         const itemsArray = Array.from(selectedEmailItems.values());
+        // Pass the aggressiveness slider value (0-100)
         const suggestions = await suggestResources(itemsArray, aggressiveness, balanceBudgetChecked);
         setSuggestedResources(suggestions);
         if (suggestions.length > 0) {
-            setIsEmailModalOpen(false); // Close email modal if open
+            setIsEmailModalOpen(false); 
             setIsResourceModalOpen(true);
         } else {
             toast({
@@ -327,6 +328,7 @@ export default function Home() {
 
   const handleEmailGenerated = () => {
     setIsEmailModalOpen(false); 
+    // Automatically trigger resource suggestions if items were selected or budget was checked
     if (selectedEmailItems.size > 0 || balanceBudgetChecked) {
         handleShowResourceSuggestions(); 
     }
@@ -335,7 +337,7 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-2 sm:p-4 md:p-8 bg-gradient-to-br from-background via-secondary/5 to-background relative">
-       <div className={`w-full ${step === 'dashboard' ? 'max-w-full md:max-w-4xl' : 'max-w-full sm:max-w-md md:max-w-2xl'} mx-auto space-y-1 sm:space-y-2 transition-all duration-300 ease-in-out z-10`}>
+       <div className={`w-full ${step === 'dashboard' ? 'max-w-full md:max-w-4xl lg:max-w-5xl' : 'max-w-full sm:max-w-md md:max-w-2xl'} mx-auto space-y-1 sm:space-y-2 transition-all duration-300 ease-in-out z-10`}>
         <div className="flex justify-start items-center min-h-[36px] sm:min-h-[40px] px-1 sm:px-0">
             {step !== 'location' && step !== 'dashboard' ? (
               <Button
@@ -404,7 +406,7 @@ export default function Home() {
             isOpen={isEmailModalOpen}
             onOpenChange={setIsEmailModalOpen}
             onEmailGenerated={handleEmailGenerated} 
-            onSuggestResources={handleShowResourceSuggestions} // Pass the handler
+            onSuggestResources={handleShowResourceSuggestions} 
             selectedItems={selectedEmailItems}
             balanceBudgetChecked={balanceBudgetChecked}
             taxAmount={taxAmount ?? estimatedMedianTax}

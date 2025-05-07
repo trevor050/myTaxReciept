@@ -11,7 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription as CardDesc } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, MessageSquareQuote, PlusCircle, MinusCircle, Search, Sparkles, Trophy, Users as UsersIcon, Target } from 'lucide-react';
+import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, MessageSquareQuote, PlusCircle, MinusCircle, Search, Sparkles, Trophy, Users as UsersIcon, Target, HandHeart } from 'lucide-react';
 import type { SuggestedResource, MatchedReason, BadgeType } from '@/services/resource-suggestions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -22,8 +22,9 @@ const importLucideIcon = async (iconName: string | undefined): Promise<React.Ele
   if (!iconName) return Info;
   try {
     const normalizedIconName = iconName.charAt(0).toUpperCase() + iconName.slice(1);
-    const module = await import('lucide-react');
     // @ts-ignore TS doesn't know about dynamic imports for all lucide icons
+    const module = await import('lucide-react'); 
+    // @ts-ignore
     return module[normalizedIconName] || Info;
   } catch (error) {
     console.warn(`Failed to load icon: ${iconName}`, error);
@@ -49,37 +50,39 @@ const MatchedReasonTooltipContent = ({ reasons, resourceName }: { reasons: Match
   return (
     <TooltipContent side="top" align="start" className="max-w-xs bg-popover p-3 shadow-xl rounded-lg border text-popover-foreground animate-scaleIn z-[60]">
       <p className="font-semibold mb-2 text-sm text-foreground">How {resourceName} aligns with your concerns:</p>
-      <ul className="space-y-2 text-xs list-none max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
-        {reasons.map((reason, index) => {
-          let prefix = "Addresses";
-          let icon = <MessageSquareQuote className="inline-block mr-1.5 h-3.5 w-3.5 text-muted-foreground" />;
-          let actionColor = "text-foreground";
+      <ScrollArea className="max-h-48 pr-2 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+        <ul className="space-y-2 text-xs list-none">
+            {reasons.map((reason, index) => {
+            let prefix = "Addresses";
+            let icon = <MessageSquareQuote className="inline-block mr-1.5 h-3.5 w-3.5 text-muted-foreground" />;
+            let actionColor = "text-foreground";
 
-          if (reason.type === 'supports') {
-            prefix = "Supports";
-            icon = <PlusCircle className="inline-block mr-1.5 h-3.5 w-3.5 text-green-500" />;
-            actionColor = "text-green-600 dark:text-green-400";
-          } else if (reason.type === 'opposes') {
-            prefix = "Opposes";
-            icon = <MinusCircle className="inline-block mr-1.5 h-3.5 w-3.5 text-red-500" />;
-            actionColor = "text-red-600 dark:text-red-400";
-          } else if (reason.type === 'reviews') {
-             prefix = "Advocates for review of";
-             icon = <Search className="inline-block mr-1.5 h-3.5 w-3.5 text-blue-500" />;
-             actionColor = "text-blue-600 dark:text-blue-400";
-          }
-          return (
-            <li key={index} className="flex items-start gap-1">
-              {icon}
-              <div>
-                <strong className={`font-medium ${actionColor}`}>{prefix}:</strong>
-                <span className="text-muted-foreground ml-1">{reason.actionableTag}</span>
-                <p className="text-foreground/70 text-[10px] pl-1 italic mt-0.5">(Related to your concern about: {reason.originalConcern})</p>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+            if (reason.type === 'supports') {
+                prefix = "Supports";
+                icon = <PlusCircle className="inline-block mr-1.5 h-3.5 w-3.5 text-green-500" />;
+                actionColor = "text-green-600 dark:text-green-400";
+            } else if (reason.type === 'opposes') {
+                prefix = "Opposes";
+                icon = <MinusCircle className="inline-block mr-1.5 h-3.5 w-3.5 text-red-500" />;
+                actionColor = "text-red-600 dark:text-red-400";
+            } else if (reason.type === 'reviews') {
+                prefix = "Advocates for review of";
+                icon = <Search className="inline-block mr-1.5 h-3.5 w-3.5 text-blue-500" />;
+                actionColor = "text-blue-600 dark:text-blue-400";
+            }
+            return (
+                <li key={index} className="flex items-start gap-1">
+                {icon}
+                <div>
+                    <strong className={`font-medium ${actionColor}`}>{prefix}:</strong>
+                    <span className="text-muted-foreground ml-1">{reason.actionableTag}</span>
+                    <p className="text-foreground/70 text-[10px] pl-1 italic mt-0.5">(Related to your concern about: {reason.originalConcern})</p>
+                </div>
+                </li>
+            );
+            })}
+        </ul>
+      </ScrollArea>
     </TooltipContent>
   );
 };
@@ -87,7 +90,7 @@ const MatchedReasonTooltipContent = ({ reasons, resourceName }: { reasons: Match
 const BadgeIcon = ({ badgeType }: { badgeType: BadgeType }) => {
     switch (badgeType) {
         case 'Best Match': return <Trophy className="h-3 w-3 mr-1" />;
-        case 'High Impact': return <Sparkles className="h-3 w-3 mr-1" />; // Re-using Sparkles for High Impact
+        case 'High Impact': return <Sparkles className="h-3 w-3 mr-1" />;
         case 'Broad Focus': return <UsersIcon className="h-3 w-3 mr-1" />;
         case 'Niche Focus': return <Target className="h-3 w-3 mr-1" />;
         case 'Community Pick': return <HandHeart className="h-3 w-3 mr-1" />;
@@ -286,7 +289,7 @@ export default function ResourceSuggestionsModal({
             : undefined
         }
         className={cn(
-            'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:rounded-lg', // Increased max-w
+            'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:rounded-lg', 
             pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
             'data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut'
         )}
