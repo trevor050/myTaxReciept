@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, Sector } from 'recharts'; // Renamed PieChart to RechartsPieChart, Added Sector
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label'; // Import Label
+import { Label } from '@/components/ui/label';
 
 // --- Import ALL potentially used Lucide icons ---
 import {
@@ -22,9 +22,9 @@ import {
     BrainCircuit, Luggage, CalendarDays, HelpingHand, MountainSnow, ClipboardCheck,
     PaintRoller, PenTool, Move, Languages, Gamepad2, Trees, ShoppingBasket, Flower2,
     GlassWater, Package, Bus, Croissant, Beer, Ticket, Truck, Martini, Grape, Shirt, Backpack, Headphones, Tent, Tablet, Theater, Bike, Watch, Home, Laptop, Smartphone, ShoppingBag, CircleDot, Pizza, Sandwich, Bed, PersonStanding, Armchair, Fish, Phone,
-    Medal, Gavel, FileText, Leaf, Mountain, Vote, Rocket, FlaskConical, Microscope, School, Radio, LibrarySquare, Search, SearchCheck, // Added SearchCheck
-    type LucideIcon, Anchor, CloudSun, Eye, Lightbulb, Palette, ShieldAlert, Siren, TramFront, PieChart as LucidePieChart, Activity, Banknote, TrendingUp, Brain, // Added more specific icons
-    ArrowDownRightSquare // Added for CIS resource suggestion
+    Medal, Gavel, FileText, Leaf, Mountain, Vote, Rocket, FlaskConical, Microscope, School, Radio, LibrarySquare, Search, SearchCheck,
+    type LucideIcon, Anchor, CloudSun, Eye, Lightbulb, Palette, ShieldAlert, Siren, TramFront, PieChart as LucidePieChart, Activity, Banknote, TrendingUp, Brain,
+    ArrowDownRightSquare
 } from 'lucide-react';
 // --- End Lucide Icon Imports ---
 
@@ -37,14 +37,14 @@ import {
 } from "@/components/ui/accordion"
 import {
     TooltipProvider,
-    Tooltip as ShadTooltip, // Renamed ShadCN Tooltip to avoid conflict with RechartsTooltip
+    Tooltip as ShadTooltip,
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { cn } from '@/lib/utils';
 import type { CombinedPerspective } from '@/lib/time-perspective';
 import type { CombinedCurrencyPerspective } from '@/lib/currency-perspective';
-import type { DashboardPerspectives, PerspectiveData } from '@/types/perspective'; // Import new types
+import type { DashboardPerspectives } from '@/types/perspective';
 
 
 interface TaxBreakdownDashboardProps {
@@ -57,7 +57,8 @@ interface TaxBreakdownDashboardProps {
     selectedItems: Map<string, SelectedItem>,
     balanceBudgetChecked: boolean
   ) => void;
-  perspectives: DashboardPerspectives | null; // Accept pre-calculated perspectives
+  perspectives: DashboardPerspectives | null;
+  onOpenEnterHourlyWageModal: () => void; // New prop
 }
 
 // Use CSS variables for colors defined in globals.css
@@ -87,7 +88,7 @@ const iconComponents: { [key: string]: LucideIcon } = {
     // Map UserTie usage to PersonStanding (placeholder)
     UserTie: PersonStanding,
 
-    // Main Category Icons - Ensuring specific mapping for all 14 categories + Government + Housing and Community
+    // Main Category Icons
     "Health": HeartPulse,
     "War and Weapons": ShieldCheck,
     "Interest on Debt": TrendingDown,
@@ -95,20 +96,17 @@ const iconComponents: { [key: string]: LucideIcon } = {
     "Unemployment and Labor": Briefcase,
     "Education": GraduationCap,
     "Food and Agriculture": Wheat,
-    "Government": Landmark, // Added Government mapping
-    "Housing and Community": Building, // Changed from Home to Building for distinction
+    "Government": Landmark,
+    "Housing and Community": Building,
     "Energy and Environment": Sprout,
     "International Affairs": Globe,
     "Law Enforcement": Gavel,
     "Transportation": Train,
     "Science": Atom,
-    // Fallback/General Icons - already part of the initial import list
     HelpCircle, Info, Scale, Crosshair, Megaphone, CheckSquare, AlertTriangle,
-    // Resource Suggestion Icons
-    Anchor, CloudSun, Eye, FlaskConical, LibrarySquare, Lightbulb, Palette, PieChart: LucidePieChart, Radio, Rocket, SearchCheck, ShieldAlert, Siren, TramFront, Vote, Banknote, Activity, FileText, Leaf, Mountain, Search, // Added more specific icons
-    // Specific to resource list (ensure they are imported)
-    Brain, // For NAMI
-    ArrowDownRightSquare, // For CIS
+    Anchor, CloudSun, Eye, FlaskConical, LibrarySquare, Lightbulb, Palette, PieChart: LucidePieChart, Radio, Rocket, SearchCheck, ShieldAlert, Siren, TramFront, Vote, Banknote, Activity, FileText, Leaf, Mountain, Search,
+    Brain,
+    ArrowDownRightSquare,
 };
 
 const DefaultIcon = HelpCircle;
@@ -117,44 +115,51 @@ const DefaultIcon = HelpCircle;
 // --- Tooltip Components ---
 const CustomPieTooltip = ({ active, payload, totalAmount, hourlyWage, displayMode, perspectiveData, isMobile }: any) => {
   if (active && payload && payload.length && perspectiveData) {
-    const data = payload[0].payload; // data here is for the specific pie slice
-    const iconKey = data.category; // Use category name for icon lookup
+    const data = payload[0].payload;
+    const iconKey = data.category;
     const CategoryIconComponent = iconComponents[iconKey] || DefaultIcon;
 
     let displayValue: string;
     let perspectiveList: (CombinedPerspective | CombinedCurrencyPerspective)[] | null = null;
     let perspectiveTitle = '';
 
-    if (displayMode === 'time' && hourlyWage) {
+    const currentCategoryPerspective = perspectiveData[data.category];
+
+    if (displayMode === 'time' && hourlyWage && currentCategoryPerspective?.time) {
         const spendingAmount = (data.percentage / 100) * totalAmount;
         const hoursWorked = spendingAmount / hourlyWage;
         const totalMinutes = hoursWorked * 60;
         displayValue = formatTime(totalMinutes);
-        perspectiveList = perspectiveData.time;
+        perspectiveList = currentCategoryPerspective.time;
         perspectiveTitle = 'In this time, you could have:';
-    } else {
+    } else if (currentCategoryPerspective?.currency) {
         const spendingAmount = (data.percentage / 100) * totalAmount;
         displayValue = formatCurrency(spendingAmount);
-        perspectiveList = perspectiveData.currency;
+        perspectiveList = currentCategoryPerspective.currency;
         perspectiveTitle = 'With this amount, you could buy:';
+    } else {
+      // Fallback if perspective data is missing for some reason
+      const spendingAmount = (data.percentage / 100) * totalAmount;
+      displayValue = displayMode === 'time' && hourlyWage ? formatTime(((spendingAmount / hourlyWage) * 60)) : formatCurrency(spendingAmount);
+      perspectiveTitle = displayMode === 'time' && hourlyWage ? 'Equivalent work time:' : 'Equivalent spending:';
     }
 
+
     const content = (
-        <div className="rounded-lg border bg-popover p-2 sm:p-2.5 text-popover-foreground shadow-lg animate-scaleIn text-[10px] sm:text-xs max-w-[160px] sm:max-w-[220px]"> {/* Adjusted padding and font size for mobile */}
-             <div className="flex items-center justify-between mb-0.5 sm:mb-1 gap-1 sm:gap-2"> {/* Adjusted spacing for mobile */}
+        <div className="rounded-lg border bg-popover p-2 sm:p-2.5 text-popover-foreground shadow-lg animate-scaleIn text-[10px] sm:text-xs max-w-[160px] sm:max-w-[220px]">
+             <div className="flex items-center justify-between mb-0.5 sm:mb-1 gap-1 sm:gap-2">
                  <span className="font-medium flex items-center gap-1 sm:gap-1.5 truncate">
-                    <CategoryIconComponent className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground shrink-0" /> {/* Adjusted icon size for mobile */}
+                    <CategoryIconComponent className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground shrink-0" />
                     {data.category}
                  </span>
                 <span className="font-mono text-muted-foreground shrink-0">{data.percentage.toFixed(1)}%</span>
             </div>
-             <div className="font-semibold text-xs sm:text-sm md:text-base cursor-default text-left"> {/* Adjusted font size for mobile */}
+             <div className="font-semibold text-xs sm:text-sm md:text-base cursor-default text-left">
                 {displayValue}
              </div>
         </div>
     );
 
-    // On mobile, the perspective content is shown inside the main tooltip, no separate hover needed
     if (isMobile) {
         return (
             <div className="rounded-lg border bg-popover p-2 sm:p-2.5 text-popover-foreground shadow-lg animate-scaleIn text-[10px] sm:text-xs max-w-[200px] sm:max-w-[280px]">
@@ -189,7 +194,6 @@ const CustomPieTooltip = ({ active, payload, totalAmount, hourlyWage, displayMod
         );
     }
 
-    // Desktop hover tooltip
     return (
         <ShadTooltip>
             <TooltipTrigger asChild>
@@ -228,7 +232,7 @@ const PerspectiveTooltipContent = ({ perspectiveList, title }: { perspectiveList
     );
 };
 
-const ItemInfoTooltipContent = ({ subItem }: { subItem: TaxSpendingSubItem }) => { // Removed isMobile as it's handled by TooltipProvider
+const ItemInfoTooltipContent = ({ subItem }: { subItem: TaxSpendingSubItem }) => {
     return (
         <TooltipContent side="top" align="center" className="max-w-[200px] sm:max-w-sm text-xs sm:text-sm bg-popover border shadow-xl p-2.5 sm:p-3 rounded-lg animate-scaleIn z-50">
             <p className="font-semibold mb-1 sm:mb-1.5 text-popover-foreground">{subItem.description}</p>
@@ -326,8 +330,7 @@ const formatTime = (totalMinutes: number | null | undefined): string => {
 
 async function getFormattedNationalDebt(): Promise<string> {
     try {
-        // Using a static value as per instructions to avoid API calls
-        const debtAmount = 34600000000000; // Example: $34.6 Trillion
+        const debtAmount = 34600000000000;
         if (isNaN(debtAmount)) {
             return 'currently over $34 trillion';
         }
@@ -349,7 +352,8 @@ export default function TaxBreakdownDashboard({
   hourlyWage,
   taxSpending,
   onSelectionChange,
-  perspectives, // Use the prop
+  perspectives,
+  onOpenEnterHourlyWageModal,
 }: TaxBreakdownDashboardProps) {
 
   const [selectedItems, setSelectedItems] = useState<Map<string, SelectedItem>>(new Map());
@@ -382,7 +386,7 @@ export default function TaxBreakdownDashboard({
         const count = selectedItems.size + (balanceBudgetChecked ? 1 : 0);
         onSelectionChange(count > 0, count, selectedItems, balanceBudgetChecked);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedItems, balanceBudgetChecked]); // Removed onSelectionChange from dependencies as it's a stable function prop
+    }, [selectedItems, balanceBudgetChecked]);
 
    const handleCheckboxChange = (checked: boolean | 'indeterminate', item: TaxSpendingSubItem) => {
         const newSelectedItems = new Map(selectedItems);
@@ -407,47 +411,52 @@ export default function TaxBreakdownDashboard({
     percentage: item.percentage,
   }));
 
-  const responsivePieHeight = isMobileView ? 280 : 320; // Slightly increased for mobile top margin
-  const responsiveOuterRadius = isMobileView ? 70 : (isClient && window.innerWidth < 768 ? 80 : 100); // Adjusted mobile radius
-  const responsiveInnerRadius = isMobileView ? 40 : (isClient && window.innerWidth < 768 ? 50 : 65); // Adjusted mobile radius
+  const responsivePieHeight = isMobileView ? 280 : 320;
+  const responsiveOuterRadius = isMobileView ? 70 : (isClient && window.innerWidth < 768 ? 80 : 100);
+  const responsiveInnerRadius = isMobileView ? 40 : (isClient && window.innerWidth < 768 ? 50 : 65);
+
+  const handleDisplayModeToggle = (mode: 'currency' | 'time') => {
+    if (mode === 'time' && hourlyWage === null) {
+        onOpenEnterHourlyWageModal();
+    } else {
+        setDisplayMode(mode);
+    }
+  };
 
 
   return (
     <TooltipProvider delayDuration={isMobileView ? 0 : 200}>
-        <div className="space-y-6 sm:space-y-10 animate-fadeIn relative pb-10"> {/* Adjusted spacing for mobile */}
-            <div className="text-center space-y-0.5 sm:space-y-1 mb-1 sm:mb-2 relative"> {/* Adjusted spacing for mobile and bottom margin */}
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-foreground">{currentYear ? `${currentYear} ` : ''}Federal Income Tax Receipt</h1> {/* Adjusted font size for mobile */}
-                <p className="text-base sm:text-lg text-muted-foreground">Based on your estimated <span className="font-semibold text-foreground">{formatCurrency(taxAmount)}</span> payment.</p> {/* Adjusted font size for mobile */}
+        <div className="space-y-6 sm:space-y-10 animate-fadeIn relative pb-10">
+            <div className="text-center space-y-0.5 sm:space-y-1 mb-1 sm:mb-2 relative">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-foreground">{currentYear ? `${currentYear} ` : ''}Federal Income Tax Receipt</h1>
+                <p className="text-base sm:text-lg text-muted-foreground">Based on your estimated <span className="font-semibold text-foreground">{formatCurrency(taxAmount)}</span> payment.</p>
                 <p className="text-xs text-muted-foreground/70">Next Filing Due: {dueDateDisplay}</p>
             </div>
 
 
-            {/* Currency/Time Toggle Button */}
-             {hourlyWage !== null && (
-                 <div className="flex justify-center items-center my-3 sm:my-4"> {/* Adjusted margin */}
-                    <Label htmlFor="display-mode-toggle" className="text-xs font-medium text-muted-foreground mr-2 sm:mr-3">View as:</Label> {/* Adjusted margin */}
-                    <div className="flex items-center space-x-1 sm:space-x-2 bg-muted p-0.5 sm:p-1 rounded-full shadow-sm"> {/* Added shadow */}
-                        <Button
-                            variant={displayMode === 'currency' ? 'default' : 'ghost'}
-                            size="sm"
-                            onClick={() => setDisplayMode('currency')}
-                            className={cn("rounded-full px-2.5 py-1 sm:px-3 sm:py-1.5 h-7 sm:h-8 text-[10px] sm:text-xs transition-all duration-200", displayMode === 'currency' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:bg-accent/80')}
-                            aria-pressed={displayMode === 'currency'}
-                        >
-                            <DollarSign className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5" /> Currency {/* Adjusted icon size and margin */}
-                        </Button>
-                        <Button
-                             variant={displayMode === 'time' ? 'default' : 'ghost'}
-                             size="sm"
-                             onClick={() => setDisplayMode('time')}
-                             className={cn("rounded-full px-2.5 py-1 sm:px-3 sm:py-1.5 h-7 sm:h-8 text-[10px] sm:text-xs transition-all duration-200", displayMode === 'time' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:bg-accent/80')}
-                             aria-pressed={displayMode === 'time'}
-                        >
-                            <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5" /> Time Worked {/* Adjusted icon size and margin */}
-                        </Button>
-                    </div>
+             <div className="flex justify-center items-center my-3 sm:my-4">
+                <Label htmlFor="display-mode-toggle" className="text-xs font-medium text-muted-foreground mr-2 sm:mr-3">View as:</Label>
+                <div className="flex items-center space-x-1 sm:space-x-2 bg-muted p-0.5 sm:p-1 rounded-full shadow-sm">
+                    <Button
+                        variant={displayMode === 'currency' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => handleDisplayModeToggle('currency')}
+                        className={cn("rounded-full px-2.5 py-1 sm:px-3 sm:py-1.5 h-7 sm:h-8 text-[10px] sm:text-xs transition-all duration-200", displayMode === 'currency' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:bg-accent/80')}
+                        aria-pressed={displayMode === 'currency'}
+                    >
+                        <DollarSign className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5" /> Currency
+                    </Button>
+                    <Button
+                         variant={displayMode === 'time' ? 'default' : 'ghost'}
+                         size="sm"
+                         onClick={() => handleDisplayModeToggle('time')}
+                         className={cn("rounded-full px-2.5 py-1 sm:px-3 sm:py-1.5 h-7 sm:h-8 text-[10px] sm:text-xs transition-all duration-200", displayMode === 'time' && hourlyWage !== null ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:bg-accent/80')}
+                         aria-pressed={displayMode === 'time' && hourlyWage !== null}
+                    >
+                        <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5" /> Time Worked
+                    </Button>
                 </div>
-            )}
+            </div>
 
             <Alert className="mb-6 sm:mb-8 shadow-sm rounded-lg border border-primary/20 bg-primary/5 text-foreground animate-fadeIn delay-500 duration-3000">
                  <Megaphone className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 stroke-primary" />
@@ -465,7 +474,7 @@ export default function TaxBreakdownDashboard({
              <h2 className="text-lg sm:text-xl font-semibold text-center mb-3 sm:mb-4">Spending Overview</h2>
 
                   <ResponsiveContainer width="100%" height={responsivePieHeight}>
-                    <RechartsPieChart margin={{ top: isMobileView ? 25 : 5, right: 5, bottom: 5, left: 5 }}> {/* Increased top margin for mobile */}
+                    <RechartsPieChart margin={{ top: isMobileView ? 25 : 5, right: 5, bottom: 5, left: 5 }}>
                       <Pie
                         data={chartData}
                         cx="50%"
@@ -478,7 +487,7 @@ export default function TaxBreakdownDashboard({
                         dataKey="percentage"
                         nameKey="category"
                         activeIndex={activePieIndex ?? undefined}
-                        activeShape={({ cx, cy, innerRadius: ir, outerRadius: or, startAngle, endAngle, fill, payload: piePayload }) => ( // Corrected activeShape destructuring
+                        activeShape={({ cx, cy, innerRadius: ir, outerRadius: or, startAngle, endAngle, fill }) => (
                             <g>
                                 <Sector
                                     cx={cx}
@@ -506,20 +515,19 @@ export default function TaxBreakdownDashboard({
                         ))}
                       </Pie>
                        <RechartsTooltip
-                         content={({ active, payload }) => {
-                            const currentPayload = payload && payload.length ? payload[0].payload : null;
-                            // Determine if the tooltip should be shown based on hover (desktop) or activePieIndex (mobile)
+                         content={({ active, payload: tooltipPayload }) => { // Renamed payload to tooltipPayload
+                            const currentPayload = tooltipPayload && tooltipPayload.length ? tooltipPayload[0].payload : null;
                             const shouldShowTooltip = active || (isMobileView && activePieIndex !== null && currentPayload?.category === chartData[activePieIndex ?? -1]?.category);
 
                             if (shouldShowTooltip && currentPayload && perspectives?.chart) {
                                 return (
                                     <CustomPieTooltip
-                                        active={true} // Always pass active as true if we decided to show it
-                                        payload={payload}
+                                        active={true}
+                                        payload={tooltipPayload}
                                         totalAmount={taxAmount}
                                         hourlyWage={hourlyWage}
                                         displayMode={displayMode}
-                                        perspectiveData={perspectives.chart[currentPayload.category] || { currency: null, time: null }}
+                                        perspectiveData={perspectives.chart}
                                         isMobile={isMobileView}
                                     />
                                 );
@@ -543,7 +551,7 @@ export default function TaxBreakdownDashboard({
                     <CardDescription className="text-muted-foreground text-[10px] sm:text-xs md:text-sm">Select items you believe need funding adjustments or prioritize balancing the budget.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
-                     <Accordion type="multiple" className="w-full" defaultValue={[]}> {/* Start with all items collapsed */}
+                     <Accordion type="multiple" className="w-full" defaultValue={[]}>
                         {taxSpending.map((item, index) => {
                             const categoryAmount = (item.percentage / 100) * taxAmount;
                             const CategoryIconComponent = iconComponents[item.category] || DefaultIcon;
@@ -555,17 +563,21 @@ export default function TaxBreakdownDashboard({
                             let categoryPerspectiveList: (CombinedPerspective | CombinedCurrencyPerspective)[] | null = null;
                             let categoryPerspectiveTitle = '';
 
-                            if (displayMode === 'time' && hourlyWage) {
+                            if (displayMode === 'time' && hourlyWage && currentCategoryPerspective?.time) {
                                 const hoursWorked = categoryAmount / hourlyWage;
                                 const totalMinutes = hoursWorked * 60;
                                 categoryDisplayValue = formatTime(totalMinutes);
                                 categoryPerspectiveList = currentCategoryPerspective.time;
                                 categoryPerspectiveTitle = 'In this time, you could have:';
-                            } else {
+                            } else if (currentCategoryPerspective?.currency) {
                                 categoryDisplayValue = formatCurrency(categoryAmount);
                                 categoryPerspectiveList = currentCategoryPerspective.currency;
                                 categoryPerspectiveTitle = 'With this amount, you could buy:';
+                            } else {
+                               categoryDisplayValue = displayMode === 'time' && hourlyWage ? formatTime(((categoryAmount / hourlyWage) * 60)) : formatCurrency(categoryAmount);
+                               categoryPerspectiveTitle = displayMode === 'time' && hourlyWage ? 'Equivalent work time:' : 'Equivalent spending:';
                             }
+
 
                             return (
                                  <AccordionItem value={`item-${index}`} key={item.id || index} className="border-b border-border/40 last:border-b-0 group">
@@ -619,22 +631,25 @@ export default function TaxBreakdownDashboard({
                                                 {item.subItems!.map((subItem) => {
                                                     const subItemAmount = subItem.amountPerDollar * taxAmount;
                                                     const isSelected = selectedItems.has(subItem.id);
-                                                    const currentSubItemPerspective = perspectives?.accordion[subItem.id] || { currency: null, time: null };
+                                                    const currentSubItemPerspectiveData = perspectives?.accordion[subItem.id] || { currency: null, time: null };
 
                                                     let subItemDisplayValue: string;
                                                     let subItemPerspectiveList: (CombinedPerspective | CombinedCurrencyPerspective)[] | null = null;
                                                     let subItemPerspectiveTitle = '';
 
-                                                    if (displayMode === 'time' && hourlyWage) {
+                                                    if (displayMode === 'time' && hourlyWage && currentSubItemPerspectiveData?.time) {
                                                         const hoursWorked = subItemAmount / hourlyWage;
                                                         const totalMinutes = hoursWorked * 60;
                                                         subItemDisplayValue = formatTime(totalMinutes);
-                                                        subItemPerspectiveList = currentSubItemPerspective.time;
+                                                        subItemPerspectiveList = currentSubItemPerspectiveData.time;
                                                         subItemPerspectiveTitle = 'In this time, you could have:';
-                                                    } else {
+                                                    } else if (currentSubItemPerspectiveData?.currency) {
                                                         subItemDisplayValue = formatCurrency(subItemAmount);
-                                                        subItemPerspectiveList = currentSubItemPerspective.currency;
+                                                        subItemPerspectiveList = currentSubItemPerspectiveData.currency;
                                                         subItemPerspectiveTitle = 'With this amount, you could buy:';
+                                                    } else {
+                                                       subItemDisplayValue = displayMode === 'time' && hourlyWage ? formatTime(((subItemAmount / hourlyWage) * 60)) : formatCurrency(subItemAmount);
+                                                       subItemPerspectiveTitle = displayMode === 'time' && hourlyWage ? 'Equivalent work time:' : 'Equivalent spending:';
                                                     }
 
                                                     return (
@@ -723,5 +738,3 @@ export default function TaxBreakdownDashboard({
   );
 }
 
-
-    

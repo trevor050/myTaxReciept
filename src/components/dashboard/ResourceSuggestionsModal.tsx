@@ -7,7 +7,7 @@ import {
   DialogFooter, DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'; // Added ScrollBar
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription as CardDesc } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, MessageSquareQuote, PlusCircle, MinusCircle, Search, Sparkles, Trophy, Users as UsersIcon, Target, HandHeart } from 'lucide-react';
@@ -40,16 +40,16 @@ interface ResourceSuggestionsModalProps {
   selectedItems: Map<string, SelectedItem>;
   balanceBudgetChecked: boolean;
   userTone: Tone;
+  hasUserConcerns: boolean; // New prop
 }
 
 const MatchedReasonTooltipContent = ({ reasons, resourceName }: { reasons: MatchedReason[], resourceName: string }) => {
   if (!reasons || reasons.length === 0) {
-    return <TooltipContent><p>No specific matching reasons found.</p></TooltipContent>;
+    return <TooltipContent><p>This resource broadly relates to areas of public interest.</p></TooltipContent>;
   }
   return (
     <TooltipContent side="top" align="start" className="max-w-xs bg-popover p-3 shadow-xl rounded-lg border text-popover-foreground animate-scaleIn z-[60]">
       <p className="font-semibold mb-2 text-sm text-foreground">How {resourceName} aligns with your concerns:</p>
-      {/* Apply custom scrollbar class and ensure max-h is appropriate */}
       <ScrollArea className="max-h-48 pr-2 tooltip-scrollbar">
         <ul className="space-y-2 text-xs list-none">
             {reasons.map((reason, index) => {
@@ -104,10 +104,11 @@ export default function ResourceSuggestionsModal({
   onOpenChange,
   suggestedResources,
   isLoading,
-  userTone // Pass userTone
+  userTone,
+  hasUserConcerns,
 }: ResourceSuggestionsModalProps) {
   const [IconComponents, setIconComponents] = React.useState<Record<string, React.ElementType>>({});
-  const [activeFilterKey, setActiveFilterKey] = React.useState<string | null>('best-matches');
+  const [activeFilterKey, setActiveFilterKey] = React.useState<string | null>(hasUserConcerns ? 'best-matches' : null);
 
 
   const [pos, setPos] = React.useState<{ x: number | null; y: number | null }>({ x: null, y: null });
@@ -122,9 +123,13 @@ export default function ResourceSuggestionsModal({
     if (!isOpen) {
       setPos({ x: null, y: null });
       isInitialOpen.current = true;
-      setActiveFilterKey("best-matches"); // Reset filter on close
+       setActiveFilterKey(hasUserConcerns ? "best-matches" : null); // Reset filter on close based on concerns
+    } else {
+      // Reset filter on open if no concerns, or stick to best-matches if there are concerns
+      setActiveFilterKey(hasUserConcerns ? (activeFilterKey || "best-matches") : null);
     }
-  }, [isOpen]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, hasUserConcerns]);
 
   React.useLayoutEffect(() => {
     if (!isOpen || pos.x !== null || !isInitialOpen.current) return;
@@ -220,36 +225,46 @@ export default function ResourceSuggestionsModal({
   }, [suggestedResources]);
 
   const filterBubbles = React.useMemo(() => {
-    const bestMatchesCount = suggestedResources.filter(r => r.badges?.includes('Best Match')).length;
-    const allRelevantCount = suggestedResources.filter(r => (r.matchCount || 0) > 0).length;
+    const bubbles = [];
+    if (hasUserConcerns) {
+        const bestMatchesCount = suggestedResources.filter(r => r.badges?.includes('Best Match')).length;
+        if (bestMatchesCount > 0) {
+            bubbles.push({ key: 'best-matches', label: 'Best Matches', count: bestMatchesCount });
+        }
+        const allRelevantCount = suggestedResources.filter(r => (r.matchCount || 0) > 0).length;
+         if (allRelevantCount > 0 && (!bestMatchesCount || allRelevantCount > bestMatchesCount)) { // Avoid redundant "All Relevant" if it's same as Best
+            bubbles.push({ key: 'all-relevant', label: 'All Relevant', count: allRelevantCount });
+        }
+    } else {
+         bubbles.push({ key: 'all-organizations', label: 'All Organizations', count: suggestedResources.length });
+    }
 
-    const bubbles = [
-      { key: 'best-matches', label: 'Best Matches', count: bestMatchesCount },
-      { key: 'all-relevant', label: 'All Relevant', count: allRelevantCount },
-    ];
     uniqueCategories.forEach(cat => {
         const count = suggestedResources.filter(r => r.mainCategory === cat).length;
-        if (count > 0) { // Only add category bubble if there are resources in it
+        if (count > 0) {
              bubbles.push({ key: cat, label: cat, count });
         }
     });
     return bubbles;
-  }, [suggestedResources, uniqueCategories]);
+  }, [suggestedResources, uniqueCategories, hasUserConcerns]);
 
   const displayedResources = React.useMemo(() => {
     if (isLoading) return [];
-    if (activeFilterKey === null || activeFilterKey === 'all-relevant') {
+    if (activeFilterKey === null || activeFilterKey === 'all-organizations') {
+      return suggestedResources; // Show all if no filter or if "All Organizations" selected
+    }
+    if (activeFilterKey === 'all-relevant' && hasUserConcerns) {
       return suggestedResources.filter(r => (r.matchCount || 0) > 0);
     }
-    if (activeFilterKey === 'best-matches') {
+    if (activeFilterKey === 'best-matches' && hasUserConcerns) {
       return suggestedResources.filter(r => r.badges?.includes('Best Match'));
     }
     return suggestedResources.filter(r => r.mainCategory === activeFilterKey);
-  }, [isLoading, suggestedResources, activeFilterKey]);
+  }, [isLoading, suggestedResources, activeFilterKey, hasUserConcerns]);
 
   const handleFilterClick = (key: string) => {
     if (activeFilterKey === key) {
-      setActiveFilterKey(null); // Deselect if already active, shows "all relevant"
+      setActiveFilterKey(hasUserConcerns ? 'all-relevant' : null); // Deselect to "all relevant" or "all orgs"
     } else {
       setActiveFilterKey(key);
     }
@@ -295,7 +310,7 @@ export default function ResourceSuggestionsModal({
             </CardHeader>
             <CardContent className="text-xs sm:text-sm space-y-1.5 px-3 sm:px-4 py-3">
                 <CardDesc className="text-muted-foreground leading-relaxed line-clamp-2 sm:line-clamp-3 mb-1">{resource.description}</CardDesc>
-                <p className="text-foreground/80 italic text-[10px] sm:text-xs"><strong className="font-medium text-foreground/90">Why it's relevant:</strong> {resource.overallRelevance}</p>
+                <p className="text-foreground/80 italic text-[10px] sm:text-xs"><strong className="font-medium text-foreground/90">Why it might be relevant:</strong> {resource.overallRelevance}</p>
                 <Button
                 variant="link"
                 size="sm"
@@ -330,7 +345,15 @@ export default function ResourceSuggestionsModal({
             'data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut'
         )}
         onInteractOutside={e => drag && e.preventDefault()}
-        onOpenAutoFocus={e => e.preventDefault()}
+        onOpenAutoFocus={e => {
+            e.preventDefault();
+             // If opening and no concerns, reset filter to show all organizations
+            if (!hasUserConcerns) {
+                setActiveFilterKey(null);
+            } else if (!activeFilterKey) { // If there are concerns but no active filter, default to best-matches
+                 setActiveFilterKey('best-matches');
+            }
+        }}
       >
         <div
             ref={refHandle}
@@ -345,7 +368,7 @@ export default function ResourceSuggestionsModal({
                 Explore Further Actions
               </DialogTitle>
               <DialogDescription className='text-xs sm:text-sm text-muted-foreground'>
-                Discover organizations aligned with your concerns. Use filters to narrow results.
+                 {hasUserConcerns ? "Discover organizations aligned with your concerns. Use filters to narrow results." : "Explore organizations working on various federal policy issues."}
               </DialogDescription>
             </div>
           </div>
@@ -360,18 +383,32 @@ export default function ResourceSuggestionsModal({
             <ScrollArea className="w-full whitespace-nowrap rounded-md">
                 <div className="flex space-x-2 p-1 items-center">
                     {filterBubbles.map(bubble => (
-                        bubble.count > 0 && ( // Only render bubble if it has items
+                        bubble.count > 0 && (
                             <Button
                                 key={bubble.key}
                                 variant={activeFilterKey === bubble.key ? 'default' : 'outline'}
                                 size="sm"
                                 onClick={() => handleFilterClick(bubble.key)}
-                                className="rounded-full text-xs h-auto px-3 py-1.5 whitespace-nowrap"
+                                className={cn("rounded-full text-xs h-auto px-3 py-1.5 whitespace-nowrap transition-all duration-150",
+                                   activeFilterKey === bubble.key ? "shadow-md ring-2 ring-primary/50" : "hover:bg-accent/70"
+                                )}
                             >
                                 {bubble.label} ({bubble.count})
+                                {activeFilterKey === bubble.key && <X className="ml-1.5 h-3 w-3" />}
                             </Button>
                         )
                     ))}
+                     {activeFilterKey !== null && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setActiveFilterKey(hasUserConcerns ? 'all-relevant' : null)}
+                            className="rounded-full text-xs h-auto px-2 py-1 text-muted-foreground hover:text-foreground"
+                            title="Clear current filter"
+                        >
+                            <X className="h-3.5 w-3.5" />
+                        </Button>
+                    )}
                 </div>
                 <ScrollBar orientation="horizontal" className="h-2" />
             </ScrollArea>
@@ -391,8 +428,13 @@ export default function ResourceSuggestionsModal({
           ) : (
             <div className="text-center py-10 text-muted-foreground">
               <Info className="h-10 w-10 mx-auto mb-3 text-primary/70" />
-              <p className="text-sm">No specific resources matched your current filter.</p>
-              <p className="text-xs mt-1">Try a different filter or broaden your search by selecting "All Relevant" or deselecting the current filter.</p>
+              <p className="text-sm">{activeFilterKey ? `No specific resources matched the "${activeFilterKey}" filter.` : "No resources found."}</p>
+              <p className="text-xs mt-1">
+                {activeFilterKey && hasUserConcerns ? 'Try a different filter, "All Relevant", or clear the filter to see all organizations.' :
+                 activeFilterKey && !hasUserConcerns ? 'Try a different filter or clear the filter to see all organizations.' :
+                 'Resources may not be available for this combination.'
+                }
+              </p>
             </div>
           )}
           </TooltipProvider>
@@ -407,3 +449,4 @@ export default function ResourceSuggestionsModal({
     </Dialog>
   );
 }
+

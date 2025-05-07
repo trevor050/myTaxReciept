@@ -5,9 +5,9 @@ import * as React from 'react';
 import { useState, useEffect } from 'react';
 import type { Location, TaxSpending, SelectedItem } from '@/services/tax-spending';
 import { getTaxSpending } from '@/services/tax-spending';
-import { guessStateFromZip, getAverageTaxForState } from '@/lib/zip-to-state'; 
+import { guessStateFromZip, getAverageTaxForState } from '@/lib/zip-to-state';
 import { mapFundingLevelToSlider } from '@/lib/funding-utils';
-import { toneBucket } from '@/services/email/utils'; 
+import { toneBucket } from '@/services/email/utils';
 
 import LocationStep from '@/components/onboarding/LocationStep';
 import TaxAmountStep from '@/components/onboarding/TaxAmountStep';
@@ -16,15 +16,16 @@ import TaxBreakdownDashboard from '@/components/dashboard/TaxBreakdownDashboard'
 import FloatingEmailButton from '@/components/dashboard/FloatingEmailButton';
 import EmailCustomizationModal from '@/components/dashboard/EmailCustomizationModal';
 import ResourceSuggestionsModal from '@/components/dashboard/ResourceSuggestionsModal';
+import EnterHourlyWageModal from '@/components/dashboard/EnterHourlyWageModal'; // Import new modal
 import type { SuggestedResource } from '@/services/resource-suggestions';
 import { suggestResources } from '@/services/resource-suggestions';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react'; 
+import { ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ThemeToggle from '@/components/ThemeToggle';
-import type { DashboardPerspectives, PerspectiveData } from '@/types/perspective';
+import type { DashboardPerspectives } from '@/types/perspective';
 import { generateCurrencyPerspectiveList } from '@/lib/currency-perspective';
 import { generateCombinedPerspectiveList } from '@/lib/time-perspective';
 
@@ -42,7 +43,7 @@ export default function Home() {
   const [location, setLocation] = useState<Location | null>(null);
   const [taxAmount, setTaxAmount] = useState<number | null>(null);
   const [hourlyWage, setHourlyWage] = useState<number | null>(null);
-  const [taxSpending, setTaxSpending] = useState([]);
+  const [taxSpending, setTaxSpending] = useState<TaxSpending[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const [animationClass, setAnimationClass] = useState('animate-slideInUp');
@@ -50,23 +51,26 @@ export default function Home() {
   const [showEmailAction, setShowEmailAction] = useState(false);
   const [emailActionCount, setEmailActionCount] = useState(0);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
-  const [selectedEmailItems, setSelectedEmailItems] = useState(new Map());
+  const [selectedEmailItems, setSelectedEmailItems] = useState<Map<string, SelectedItem>>(new Map());
   const [balanceBudgetChecked, setBalanceBudgetChecked] = useState(false);
 
   const [aggressiveness, setAggressiveness] = useState(50);
-  const [itemFundingLevels, setItemFundingLevels] = useState(new Map());
+  const [itemFundingLevels, setItemFundingLevels] = useState<Map<string, number>>(new Map());
   const [userName, setUserName] = useState('');
   const [userLocationText, setUserLocationText] = useState('');
 
   const [estimatedMedianTax, setEstimatedMedianTax] = useState(NATIONAL_MEDIAN_FEDERAL_TAX);
 
-  const [suggestedResources, setSuggestedResources] = useState([]);
+  const [suggestedResources, setSuggestedResources] = useState<SuggestedResource[]>([]);
   const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
   const [isSuggestingResources, setIsSuggestingResources] = useState(false);
 
 
-  const [dashboardPerspectives, setDashboardPerspectives] = useState(null);
+  const [dashboardPerspectives, setDashboardPerspectives] = useState<DashboardPerspectives | null>(null);
   const [isMobileView, setIsMobileView] = useState(false);
+
+  const [isEnterHourlyWageModalOpen, setIsEnterHourlyWageModalOpen] = useState(false);
+
 
   useEffect(() => {
     const checkMobile = () => setIsMobileView(window.innerWidth < 768);
@@ -110,9 +114,13 @@ export default function Home() {
        setSuggestedResources([]);
        setIsResourceModalOpen(false);
        setDashboardPerspectives(null);
+       // Reset hourly wage only if going back from dashboard to a step before hourly wage
+       if (nextStep !== 'hourlyWage') {
+         setHourlyWage(null);
+       }
     }
      if (step === 'hourlyWage' && isGoingBack) {
-        setTaxAmount(null);
+        setTaxAmount(null); // Keep tax amount if just going back from hourly to tax
         setHourlyWage(null);
      }
      if (step === 'tax' && isGoingBack) {
@@ -126,6 +134,45 @@ export default function Home() {
       setStep(nextStep);
       setAnimationClass(isGoingBack ? 'animate-slideInDown' : 'animate-slideInUp');
     }, 300);
+  };
+
+  const generatePerspectives = (currentTaxAmount: number, currentHourlyWage: number | null, currentTaxSpending: TaxSpending[]) => {
+    const maxPerspectiveItems = isMobileView ? 3 : 5;
+    const newChartPerspectives: DashboardPerspectives['chart'] = {};
+    currentTaxSpending.forEach(item => {
+        const spendingAmount = (item.percentage / 100) * currentTaxAmount;
+        newChartPerspectives[item.category] = {
+            currency: generateCurrencyPerspectiveList(spendingAmount, maxPerspectiveItems),
+            time: currentHourlyWage ? generateCombinedPerspectiveList((spendingAmount / currentHourlyWage) * 60, maxPerspectiveItems) : null,
+        };
+    });
+
+    const newAccordionPerspectives: DashboardPerspectives['accordion'] = {};
+    currentTaxSpending.forEach(category => {
+        const categoryAmount = (category.percentage / 100) * currentTaxAmount;
+        newAccordionPerspectives[category.id || category.category] = {
+            currency: generateCurrencyPerspectiveList(categoryAmount, maxPerspectiveItems + 2),
+            time: currentHourlyWage ? generateCombinedPerspectiveList((categoryAmount / currentHourlyWage) * 60, maxPerspectiveItems + 2) : null,
+        };
+        category.subItems?.forEach(subItem => {
+            const subItemAmount = subItem.amountPerDollar * currentTaxAmount;
+             newAccordionPerspectives[subItem.id] = {
+                currency: generateCurrencyPerspectiveList(subItemAmount, maxPerspectiveItems),
+                time: currentHourlyWage ? generateCombinedPerspectiveList((subItemAmount / currentHourlyWage) * 60, maxPerspectiveItems) : null,
+            };
+        });
+    });
+
+    const newTotalPerspectiveData: DashboardPerspectives['total'] = {
+        currency: generateCurrencyPerspectiveList(currentTaxAmount, maxPerspectiveItems + 2),
+        time: currentHourlyWage ? generateCombinedPerspectiveList((currentTaxAmount / currentHourlyWage) * 60, maxPerspectiveItems + 2) : null,
+    };
+
+    setDashboardPerspectives({
+        chart: newChartPerspectives,
+        accordion: newAccordionPerspectives,
+        total: newTotalPerspectiveData,
+    });
   };
 
 
@@ -159,51 +206,14 @@ export default function Home() {
 
      toast({
           title: wage ? 'Hourly Wage Set' : 'Hourly Wage Skipped',
-          description: wage ? `Calculating breakdown based on $${wage.toFixed(2)}/hour.` : 'Time perspective feature will be disabled.',
+          description: wage ? `Calculating breakdown based on $${wage.toFixed(2)}/hour.` : 'Time perspective feature will be disabled initially.',
      });
 
      try {
        await new Promise(resolve => setTimeout(resolve, 400)); // Simulate loading
        const spendingData = await getTaxSpending(currentLocation, finalTaxAmount);
        setTaxSpending(spendingData);
-
-        const maxPerspectiveItems = isMobileView ? 3 : 5;
-        const newChartPerspectives = {};
-        spendingData.forEach(item => {
-            const spendingAmount = (item.percentage / 100) * finalTaxAmount;
-            newChartPerspectives[item.category] = {
-                currency: generateCurrencyPerspectiveList(spendingAmount, maxPerspectiveItems),
-                time: wage ? generateCombinedPerspectiveList((spendingAmount / wage) * 60, maxPerspectiveItems) : null,
-            };
-        });
-
-        const newAccordionPerspectives = {};
-        spendingData.forEach(category => {
-            const categoryAmount = (category.percentage / 100) * finalTaxAmount;
-            newAccordionPerspectives[category.id || category.category] = {
-                currency: generateCurrencyPerspectiveList(categoryAmount, maxPerspectiveItems + 2),
-                time: wage ? generateCombinedPerspectiveList((categoryAmount / wage) * 60, maxPerspectiveItems + 2) : null,
-            };
-            category.subItems?.forEach(subItem => {
-                const subItemAmount = subItem.amountPerDollar * finalTaxAmount;
-                 newAccordionPerspectives[subItem.id] = {
-                    currency: generateCurrencyPerspectiveList(subItemAmount, maxPerspectiveItems),
-                    time: wage ? generateCombinedPerspectiveList((subItemAmount / wage) * 60, maxPerspectiveItems) : null,
-                };
-            });
-        });
-
-        const newTotalPerspectiveData = {
-            currency: generateCurrencyPerspectiveList(finalTaxAmount, maxPerspectiveItems + 2),
-            time: wage ? generateCombinedPerspectiveList((finalTaxAmount / wage) * 60, maxPerspectiveItems + 2) : null,
-        };
-
-        setDashboardPerspectives({
-            chart: newChartPerspectives,
-            accordion: newAccordionPerspectives,
-            total: newTotalPerspectiveData,
-        });
-
+       generatePerspectives(finalTaxAmount, wage, spendingData);
        navigateToStep('dashboard');
      } catch (error) {
        console.error('Error fetching tax spending:', error);
@@ -216,6 +226,20 @@ export default function Home() {
        setIsLoading(false);
      }
    };
+
+  const handleHourlyWageSubmitFromModal = (wage: number) => {
+    setHourlyWage(wage);
+    setIsLoading(true);
+    toast({
+        title: 'Hourly Wage Set',
+        description: `Recalculating time perspectives based on $${wage.toFixed(2)}/hour.`,
+    });
+    if (taxAmount && taxSpending.length > 0) {
+        generatePerspectives(taxAmount, wage, taxSpending);
+    }
+    setIsEnterHourlyWageModalOpen(false);
+    setIsLoading(false);
+  };
 
 
   const handleBack = () => {
@@ -299,11 +323,10 @@ export default function Home() {
     setIsSuggestingResources(true);
     try {
         const itemsArray = Array.from(selectedEmailItems.values());
-        // Pass the aggressiveness slider value (0-100)
         const suggestions = await suggestResources(itemsArray, aggressiveness, balanceBudgetChecked);
         setSuggestedResources(suggestions);
         if (suggestions.length > 0) {
-            setIsEmailModalOpen(false); 
+            setIsEmailModalOpen(false); // Close email modal if open
             setIsResourceModalOpen(true);
         } else {
             toast({
@@ -327,10 +350,13 @@ export default function Home() {
   };
 
   const handleEmailGenerated = () => {
-    setIsEmailModalOpen(false); 
+    setIsEmailModalOpen(false);
     // Automatically trigger resource suggestions if items were selected or budget was checked
     if (selectedEmailItems.size > 0 || balanceBudgetChecked) {
-        handleShowResourceSuggestions(); 
+        // Slight delay to allow email client to open smoothly before modal transition
+        setTimeout(() => {
+            handleShowResourceSuggestions();
+        }, 300);
     }
   };
 
@@ -339,7 +365,7 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center justify-center p-2 sm:p-4 md:p-8 bg-gradient-to-br from-background via-secondary/5 to-background relative">
        <div className={`w-full ${step === 'dashboard' ? 'max-w-full md:max-w-4xl lg:max-w-5xl' : 'max-w-full sm:max-w-md md:max-w-2xl'} mx-auto space-y-1 sm:space-y-2 transition-all duration-300 ease-in-out z-10`}>
         <div className="flex justify-start items-center min-h-[36px] sm:min-h-[40px] px-1 sm:px-0">
-            {step !== 'location' && step !== 'dashboard' ? (
+            {step !== 'location' ? ( // Show back button on all steps except the first
               <Button
                 variant="ghost"
                 size="sm"
@@ -383,6 +409,7 @@ export default function Home() {
                             taxSpending={taxSpending}
                             onSelectionChange={handleDashboardSelectionChange}
                             perspectives={dashboardPerspectives}
+                            onOpenEnterHourlyWageModal={() => setIsEnterHourlyWageModalOpen(true)}
                          />
                      )
                  )}
@@ -405,8 +432,8 @@ export default function Home() {
        <EmailCustomizationModal
             isOpen={isEmailModalOpen}
             onOpenChange={setIsEmailModalOpen}
-            onEmailGenerated={handleEmailGenerated} 
-            onSuggestResources={handleShowResourceSuggestions} 
+            onEmailGenerated={handleEmailGenerated}
+            onSuggestResources={handleShowResourceSuggestions}
             selectedItems={selectedEmailItems}
             balanceBudgetChecked={balanceBudgetChecked}
             taxAmount={taxAmount ?? estimatedMedianTax}
@@ -427,8 +454,16 @@ export default function Home() {
             isLoading={isSuggestingResources}
             selectedItems={selectedEmailItems}
             balanceBudgetChecked={balanceBudgetChecked}
-            userTone={toneBucket(aggressiveness)}
+            userTone={toneBucket(aggressiveness)} // Pass toneBucket result
+            hasUserConcerns={selectedEmailItems.size > 0 || balanceBudgetChecked}
+        />
+
+        <EnterHourlyWageModal
+            isOpen={isEnterHourlyWageModalOpen}
+            onOpenChange={setIsEnterHourlyWageModalOpen}
+            onSubmit={handleHourlyWageSubmitFromModal}
         />
     </main>
   );
 }
+
