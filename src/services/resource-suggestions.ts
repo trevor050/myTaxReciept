@@ -8,7 +8,7 @@
 import type { SelectedItem as UserSelectedItem } from '@/services/tax-spending';
 import type { Tone } from './email/types';
 import type { MatchedReason, BadgeType, SuggestedResource } from '@/types/resource-suggestions';
-import { RESOURCE_DATABASE, getItemAdvocacyTags, getActionFromFundingLevel, generateMatchedReason, MAX_SUGGESTIONS, assignBadgesToResource, MAX_BADGES_PER_RESOURCE } from '@/lib/resource-suggestion-logic';
+import { RESOURCE_DATABASE, getItemAdvocacyTags, getActionFromFundingLevel, generateMatchedReason, MAX_SUGGESTIONS, assignBadgesToResource, MAX_BADGES_PER_RESOURCE, BADGE_DISPLAY_PRIORITY_MAP } from '@/lib/resource-suggestion-logic';
 
 
 export async function suggestResources(
@@ -31,9 +31,6 @@ export async function suggestResources(
      userConcerns.set('balance_budget', {action: 'review', itemDescription: 'Balancing the Budget & Reducing National Debt', tags: budgetTags});
   }
 
-  let bestMatchAssignedThisRun = false;
-  let topMatchCountThisRun = 0;
-  const MAX_TOP_MATCHES_THIS_RUN = 2;
   const otherResourcesWithBadges = new Map<string, Set<BadgeType>>();
 
 
@@ -97,11 +94,34 @@ export async function suggestResources(
   })
   .filter(r => r.score > 0 || (userConcerns.size === 0 && balanceBudgetChecked && r.advocacyTags.some(t => ['fiscal_responsibility', 'debt_reduction'].includes(t))))
   .sort((a, b) => {
+    // Primary sort: number of unique concerns matched (descending)
     if (b.matchCount !== a.matchCount) return (b.matchCount || 0) - (a.matchCount || 0);
+    // Secondary sort: overall score (descending)
     if (b.score !== a.score) return b.score - a.score;
+    // Tertiary sort: prominence (high > medium > low)
     const prominenceOrder = { 'high': 1, 'medium': 2, 'low': 3 };
     return (prominenceOrder[a.prominence || 'low'] || 3) - (prominenceOrder[b.prominence || 'low'] || 3);
   });
+
+  let bestMatchResource: SuggestedResource | null = null;
+  const topMatchResources: SuggestedResource[] = [];
+  const MAX_TOP_MATCHES = 2;
+
+  // First pass: identify Best Match and Top Matches
+  if (scoredResources.length > 0 && userConcerns.size > 0) {
+      // Best Match: Highest score and highest match count (already sorted this way)
+      bestMatchResource = scoredResources[0];
+
+      // Top Matches: Next N resources that also have high relevance
+      for (let i = 1; i < scoredResources.length && topMatchResources.length < MAX_TOP_MATCHES; i++) {
+          const resource = scoredResources[i];
+          // Define criteria for being a "Top Match" - e.g., high match count and good score
+          const isStrongCandidate = (resource.matchCount || 0) >= Math.max(1, Math.floor(userConcerns.size * 0.5)) && resource.score > 2.0;
+          if (isStrongCandidate) {
+              topMatchResources.push(resource);
+          }
+      }
+  }
 
 
   for (const resource of scoredResources) {
@@ -123,24 +143,13 @@ export async function suggestResources(
         overallRelevanceReason = `${resource.name} advocates for fiscal responsibility, aligning with your interest in balancing the budget.`;
     }
 
-    let isBestMatchForThisRun = false;
-    let isTopMatchForThisRun = false;
-    const hasHighMatchCount = resource.matchCount && resource.matchCount >= Math.max(1, Math.floor(userConcerns.size * 0.60));
+    const isBestMatch = bestMatchResource?.url === resource.url;
+    const isTopMatch = topMatchResources.some(tm => tm.url === resource.url);
 
-    if (!bestMatchAssignedThisRun && hasHighMatchCount && resource.score > 3.5 && userConcerns.size > 0) {
-        isBestMatchForThisRun = true;
-        bestMatchAssignedThisRun = true;
-    }
-    if (topMatchCountThisRun < MAX_TOP_MATCHES_THIS_RUN && !isBestMatchForThisRun && hasHighMatchCount && resource.score > 2.5 && userConcerns.size > 0) {
-        isTopMatchForThisRun = true;
-        topMatchCountThisRun++;
-    }
-
-    const finalBadges = assignBadgesToResource(resource, userConcerns.size, isBestMatchForThisRun, isTopMatchForThisRun, otherResourcesWithBadges);
+    const finalBadges = assignBadgesToResource(resource, userConcerns.size, isBestMatch, isTopMatch, otherResourcesWithBadges);
     if (finalBadges.length > 0) {
         otherResourcesWithBadges.set(resource.url, new Set(finalBadges));
     }
-
 
     suggestions.push({
       name: resource.name,
@@ -155,6 +164,7 @@ export async function suggestResources(
       prominence: resource.prominence,
       focusType: resource.focusType,
       orgTypeTags: resource.orgTypeTags,
+      intendedBadgeProfile: resource.intendedBadgeProfile,
     });
     suggestedUrls.add(resource.url);
   }

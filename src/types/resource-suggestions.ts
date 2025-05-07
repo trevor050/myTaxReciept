@@ -37,6 +37,7 @@ export interface SuggestedResource {
   prominence?: 'high' | 'medium' | 'low';
   focusType?: 'broad' | 'niche';
   orgTypeTags?: ('grassroots' | 'research' | 'legal' | 'established' | 'activism' | 'think-tank' | 'direct-service')[];
+  intendedBadgeProfile?: ('single-prominent' | 'double-diverse' | 'triple-focused' | 'community-focused')[]; // Hint for badge assignment
 }
 
 // Priority map for displaying badges, lower numbers are higher priority
@@ -53,3 +54,4 @@ export const BADGE_DISPLAY_PRIORITY_MAP: Record<BadgeType, number> = {
   'Broad Focus': 10,
   'General Interest': 11,
 };
+

@@ -103,7 +103,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     name: 'Jewish Voice for Peace (JVP)',
     url: 'https://www.jewishvoiceforpeace.org/',
     description: 'A progressive Jewish anti-Zionist organization working for peace, justice, and human rights.',
-    icon: 'Users',
+    icon: 'Users', // Using Users as a proxy icon for group
     mainCategory: 'Human Rights & Regional Conflicts',
     prominence: 'high',
     focusType: 'niche',
@@ -396,7 +396,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     name: 'Electronic Frontier Foundation (EFF)',
     url: 'https://www.eff.org/',
     description: 'Defending civil liberties in the digital world. Works on issues of free speech, privacy, innovation, and consumer rights online.',
-    icon: 'ShieldCheck',
+    icon: 'ShieldCheck', // Using ShieldCheck as a proxy, could also be 'Lock' or similar
     mainCategory: 'Civil Rights & Social Justice',
     prominence: 'high',
     focusType: 'broad',
@@ -632,7 +632,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     name: 'National Immigration Law Center (NILC)',
     url: 'https://www.nilc.org/',
     description: 'Dedicated to defending and advancing the rights of immigrants with low income.',
-    icon: 'Anchor',
+    icon: 'Anchor', // Anchor icon for a sense of stability/support
     mainCategory: 'Immigration',
     prominence: 'medium',
     focusType: 'broad',
@@ -644,7 +644,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     name: 'American Immigration Council',
     url: 'https://www.americanimmigrationcouncil.org/',
     description: 'Works to strengthen America by shaping how America thinks about and acts towards immigrants and immigration.',
-    icon: 'Users',
+    icon: 'Users', // Users icon for community/people focus
     mainCategory: 'Immigration',
     prominence: 'medium',
     focusType: 'broad',
@@ -708,7 +708,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     name: 'ASPCA (American Society for the Prevention of Cruelty to Animals)',
     url: 'https://www.aspca.org/',
     description: 'Works to save lives and secure compassionate treatment for animals across America.',
-    icon: 'PawPrint',
+    icon: 'PawPrint', // PawPrint icon
     mainCategory: 'Animal Welfare',
     prominence: 'high',
     focusType: 'broad',
@@ -720,7 +720,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     name: 'The Arc of the United States',
     url: 'https://thearc.org/',
     description: 'Promotes and protects the human rights of people with intellectual and developmental disabilities and actively supports their full inclusion and participation in the community.',
-    icon: 'Wheelchair',
+    icon: 'Wheelchair', // Wheelchair icon
     mainCategory: 'Disability Rights',
     prominence: 'high',
     focusType: 'broad',
@@ -983,13 +983,18 @@ export function assignBadgesToResource(
   userConcernsSize: number,
   isBestMatch: boolean,
   isTopMatch: boolean,
-  otherResourcesWithBadges: Map<string, Set<BadgeType>> // Keep track of badges assigned to other resources
+  otherResourcesWithBadges: Map<string, Set<BadgeType>>
 ): BadgeType[] {
   const assignedBadges: Set<BadgeType> = new Set();
   const potentialBadgesPool: BadgeType[] = [];
 
+  // Prioritize Best Match and Top Match if flags are set
   if (isBestMatch) assignedBadges.add('Best Match');
-  if (isTopMatch && !assignedBadges.has('Best Match')) assignedBadges.add('Top Match');
+  // Add Top Match only if it's not already Best Match and we haven't hit max special badges
+  if (isTopMatch && !assignedBadges.has('Best Match')) {
+    assignedBadges.add('Top Match');
+  }
+
 
   // Populate potential badges based on resource properties
   if (resource.prominence === 'high') potentialBadgesPool.push('High Impact');
@@ -1028,36 +1033,49 @@ export function assignBadgesToResource(
 
   // Determine target number of *additional* badges (beyond Best/Top Match)
   let targetAdditionalBadges = 0;
-  if (resource.intendedBadgeProfile?.includes('single-prominent') || Math.random() < 0.15) { // ~15% get 1 additional (or 0 if Best/Top assigned)
+  const randomFactor = Math.random();
+  if (resource.intendedBadgeProfile?.includes('single-prominent') || randomFactor < 0.15) { // ~15% get 1 additional
       targetAdditionalBadges = 1;
-  } else if (resource.intendedBadgeProfile?.includes('triple-focused') || Math.random() < 0.35) { // ~35% get 3 additional
+  } else if (resource.intendedBadgeProfile?.includes('triple-focused') || randomFactor < 0.50) { // ~35% (15+35) get 3 additional
       targetAdditionalBadges = 3;
   } else { // ~50% get 2 additional
       targetAdditionalBadges = 2;
   }
+
   // Adjust target if Best/Top already assigned, aiming for total around MAX_BADGES_PER_RESOURCE
-  targetAdditionalBadges = Math.max(0, Math.min(MAX_BADGES_PER_RESOURCE - assignedBadges.size, targetAdditionalBadges));
+  // Ensure we don't exceed MAX_BADGES_PER_RESOURCE
+  targetAdditionalBadges = Math.min(MAX_BADGES_PER_RESOURCE - assignedBadges.size, targetAdditionalBadges);
 
 
   for (const badge of availableBadges) {
-      if (assignedBadges.size >= MAX_BADGES_PER_RESOURCE || assignedBadges.size >= (isBestMatch || isTopMatch ? 1 : 0) + targetAdditionalBadges) break;
+      if (assignedBadges.size >= MAX_BADGES_PER_RESOURCE) break; // Stop if max total badges reached
+      if (assignedBadges.size >= ( (assignedBadges.has('Best Match') || assignedBadges.has('Top Match')) ? 1:0) + targetAdditionalBadges && targetAdditionalBadges > 0) break; // Stop if additional target met
+
+      // Avoid assigning "High Impact" if "Best Match" or "Top Match" is already present, unless it's the only option
+      if (badge === 'High Impact' && (assignedBadges.has('Best Match') || assignedBadges.has('Top Match')) && availableBadges.filter(b => !assignedBadges.has(b)).length > 1) {
+          continue;
+      }
       assignedBadges.add(badge);
   }
+
 
   // Fallback: If no specific badges assigned and no user matches, assign 'General Interest'
   if (assignedBadges.size === 0 && ((resource.matchCount || 0) === 0 || userConcernsSize === 0)) {
       assignedBadges.add('General Interest');
   }
 
-  // If still under target and has matches and suitable profile, consider 'Community Pick'
-  if (assignedBadges.size < MAX_BADGES_PER_RESOURCE && assignedBadges.size < ((isBestMatch || isTopMatch ? 1 : 0) + targetAdditionalBadges) &&
+
+  // If still under target and has matches and suitable profile, consider 'Community Pick' as a last resort if space
+  if (assignedBadges.size < MAX_BADGES_PER_RESOURCE &&
+      assignedBadges.size < (( (assignedBadges.has('Best Match') || assignedBadges.has('Top Match')) ? 1 : 0) + targetAdditionalBadges) &&
       (resource.matchCount || 0) > 0 &&
       (resource.prominence === 'low' || resource.prominence === 'medium' || resource.intendedBadgeProfile?.includes('community-focused')) &&
-      !assignedBadges.has('Community Pick') && Math.random() < 0.33) {
+      !assignedBadges.has('Community Pick') && Math.random() < 0.33 && targetAdditionalBadges > 0) { // Only add if we were aiming for more badges
       assignedBadges.add('Community Pick');
   }
 
+
   return Array.from(assignedBadges)
       .sort((a, b) => (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99))
-      .slice(0, MAX_BADGES_PER_RESOURCE);
+      .slice(0, MAX_BADGES_PER_RESOURCE); // Enforce max badges strictly at the end
 }
