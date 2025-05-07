@@ -235,3 +235,20 @@ body {
 .scrollbar-track-transparent::-webkit-scrollbar-track {
     background-color: transparent;
 }
+
+/* Scrollbar for tooltips (more visible against popover background) */
+.tooltip-scrollbar::-webkit-scrollbar {
+    width: 6px; /* Thinner for tooltips */
+    height: 6px;
+}
+.tooltip-scrollbar::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.7); /* More visible thumb */
+    border-radius: 6px;
+    border: 1px solid hsl(var(--popover)); /* Border matches popover background */
+}
+.tooltip-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--foreground) / 0.6); /* Darker on hover */
+}
+.tooltip-scrollbar::-webkit-scrollbar-track {
+    background-color: hsl(var(--popover)); /* Track matches popover background */
+}

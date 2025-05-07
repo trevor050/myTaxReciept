@@ -7,10 +7,9 @@ import {
   DialogFooter, DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'; // Added ScrollBar
 import { Card, CardContent, CardHeader, CardTitle, CardDescription as CardDesc } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, MessageSquareQuote, PlusCircle, MinusCircle, Search, Sparkles, Trophy, Users as UsersIcon, Target, HandHeart } from 'lucide-react';
 import type { SuggestedResource, MatchedReason, BadgeType } from '@/services/resource-suggestions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -23,7 +22,7 @@ const importLucideIcon = async (iconName: string | undefined): Promise<React.Ele
   try {
     const normalizedIconName = iconName.charAt(0).toUpperCase() + iconName.slice(1);
     // @ts-ignore TS doesn't know about dynamic imports for all lucide icons
-    const module = await import('lucide-react'); 
+    const module = await import('lucide-react');
     // @ts-ignore
     return module[normalizedIconName] || Info;
   } catch (error) {
@@ -50,7 +49,8 @@ const MatchedReasonTooltipContent = ({ reasons, resourceName }: { reasons: Match
   return (
     <TooltipContent side="top" align="start" className="max-w-xs bg-popover p-3 shadow-xl rounded-lg border text-popover-foreground animate-scaleIn z-[60]">
       <p className="font-semibold mb-2 text-sm text-foreground">How {resourceName} aligns with your concerns:</p>
-      <ScrollArea className="max-h-48 pr-2 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+      {/* Apply custom scrollbar class and ensure max-h is appropriate */}
+      <ScrollArea className="max-h-48 pr-2 tooltip-scrollbar">
         <ul className="space-y-2 text-xs list-none">
             {reasons.map((reason, index) => {
             let prefix = "Addresses";
@@ -104,9 +104,11 @@ export default function ResourceSuggestionsModal({
   onOpenChange,
   suggestedResources,
   isLoading,
+  userTone // Pass userTone
 }: ResourceSuggestionsModalProps) {
   const [IconComponents, setIconComponents] = React.useState<Record<string, React.ElementType>>({});
-  const [activeTab, setActiveTab] = React.useState<string>("best-matches");
+  const [activeFilterKey, setActiveFilterKey] = React.useState<string | null>('best-matches');
+
 
   const [pos, setPos] = React.useState<{ x: number | null; y: number | null }>({ x: null, y: null });
   const [drag, setDrag] = React.useState(false);
@@ -120,13 +122,12 @@ export default function ResourceSuggestionsModal({
     if (!isOpen) {
       setPos({ x: null, y: null });
       isInitialOpen.current = true;
-      setActiveTab("best-matches"); // Reset tab on close
+      setActiveFilterKey("best-matches"); // Reset filter on close
     }
   }, [isOpen]);
 
   React.useLayoutEffect(() => {
     if (!isOpen || pos.x !== null || !isInitialOpen.current) return;
-
     const frame = requestAnimationFrame(() => {
       if (!refModal.current) return;
       const { width, height } = refModal.current.getBoundingClientRect();
@@ -141,13 +142,14 @@ export default function ResourceSuggestionsModal({
     return () => cancelAnimationFrame(frame);
   }, [isOpen, pos.x]);
 
+
   const onDown = React.useCallback((e: React.MouseEvent) => {
     if (!refHandle.current?.contains(e.target as Node) || !refModal.current) return;
     if (pos.x === null) {
       const r = refModal.current.getBoundingClientRect();
       setPos({ x: r.left, y: r.top });
       dragOffset.current = { x: e.clientX - r.left, y: e.clientY - r.top };
-      isInitialOpen.current = false;
+       isInitialOpen.current = false;
     } else {
       dragOffset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
     }
@@ -210,20 +212,54 @@ export default function ResourceSuggestionsModal({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, suggestedResources]);
 
-  const bestMatches = suggestedResources.filter(r => r.badges?.includes('Best Match'));
-  const otherResources = suggestedResources.filter(r => !r.badges?.includes('Best Match'));
 
-  const categories = React.useMemo(() => {
-    const uniqueCategories = new Set<string>();
-    otherResources.forEach(r => uniqueCategories.add(r.mainCategory));
-    return Array.from(uniqueCategories).sort();
-  }, [otherResources]);
+  const uniqueCategories = React.useMemo(() => {
+    const categories = new Set<string>();
+    suggestedResources.forEach(r => categories.add(r.mainCategory));
+    return Array.from(categories).sort();
+  }, [suggestedResources]);
+
+  const filterBubbles = React.useMemo(() => {
+    const bestMatchesCount = suggestedResources.filter(r => r.badges?.includes('Best Match')).length;
+    const allRelevantCount = suggestedResources.filter(r => (r.matchCount || 0) > 0).length;
+
+    const bubbles = [
+      { key: 'best-matches', label: 'Best Matches', count: bestMatchesCount },
+      { key: 'all-relevant', label: 'All Relevant', count: allRelevantCount },
+    ];
+    uniqueCategories.forEach(cat => {
+        const count = suggestedResources.filter(r => r.mainCategory === cat).length;
+        if (count > 0) { // Only add category bubble if there are resources in it
+             bubbles.push({ key: cat, label: cat, count });
+        }
+    });
+    return bubbles;
+  }, [suggestedResources, uniqueCategories]);
+
+  const displayedResources = React.useMemo(() => {
+    if (isLoading) return [];
+    if (activeFilterKey === null || activeFilterKey === 'all-relevant') {
+      return suggestedResources.filter(r => (r.matchCount || 0) > 0);
+    }
+    if (activeFilterKey === 'best-matches') {
+      return suggestedResources.filter(r => r.badges?.includes('Best Match'));
+    }
+    return suggestedResources.filter(r => r.mainCategory === activeFilterKey);
+  }, [isLoading, suggestedResources, activeFilterKey]);
+
+  const handleFilterClick = (key: string) => {
+    if (activeFilterKey === key) {
+      setActiveFilterKey(null); // Deselect if already active, shows "all relevant"
+    } else {
+      setActiveFilterKey(key);
+    }
+  };
 
 
-  const renderResourceCard = (resource: SuggestedResource, index: number, type: 'best' | 'other') => {
+  const renderResourceCard = (resource: SuggestedResource, index: number) => {
     const Icon = IconComponents[resource.icon || 'Info'] || Info;
     return (
-        <Tooltip key={`${type}-${index}`}>
+        <Tooltip key={`${activeFilterKey}-${index}-${resource.url}`}>
         <TooltipTrigger asChild>
             <Card className="shadow-lg hover:shadow-xl transition-shadow duration-200 bg-card/90 border-border/30 hover:border-primary/40 cursor-help rounded-lg overflow-hidden w-full animate-fadeIn">
             <CardHeader className="pb-2 pt-3 px-3 sm:px-4 bg-secondary/10">
@@ -239,11 +275,11 @@ export default function ResourceSuggestionsModal({
                             variant={badge === 'Best Match' ? 'default' : 'secondary'}
                             className={cn(
                                 "text-xs px-1.5 py-0.5 whitespace-nowrap",
-                                badge === 'Best Match' && "bg-green-500/20 border-green-500/50 text-green-700 dark:text-green-400",
-                                badge === 'High Impact' && "bg-blue-500/20 border-blue-500/50 text-blue-700 dark:text-blue-400",
-                                badge === 'Broad Focus' && "bg-purple-500/20 border-purple-500/50 text-purple-700 dark:text-purple-400",
-                                badge === 'Niche Focus' && "bg-orange-500/20 border-orange-500/50 text-orange-700 dark:text-orange-400",
-                                badge === 'Community Pick' && "bg-teal-500/20 border-teal-500/50 text-teal-700 dark:text-teal-400",
+                                badge === 'Best Match' && "bg-green-100 border-green-400 text-green-700 dark:bg-green-700/30 dark:border-green-600 dark:text-green-300",
+                                badge === 'High Impact' && "bg-blue-100 border-blue-400 text-blue-700 dark:bg-blue-700/30 dark:border-blue-600 dark:text-blue-300",
+                                badge === 'Broad Focus' && "bg-purple-100 border-purple-400 text-purple-700 dark:bg-purple-700/30 dark:border-purple-600 dark:text-purple-300",
+                                badge === 'Niche Focus' && "bg-orange-100 border-orange-400 text-orange-700 dark:bg-orange-700/30 dark:border-orange-600 dark:text-orange-300",
+                                badge === 'Community Pick' && "bg-teal-100 border-teal-400 text-teal-700 dark:bg-teal-700/30 dark:border-teal-600 dark:text-teal-300",
                             )}
                         >
                            <BadgeIcon badgeType={badge}/> {badge}
@@ -289,7 +325,7 @@ export default function ResourceSuggestionsModal({
             : undefined
         }
         className={cn(
-            'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:rounded-lg', 
+            'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:rounded-lg',
             pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
             'data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut'
         )}
@@ -309,7 +345,7 @@ export default function ResourceSuggestionsModal({
                 Explore Further Actions
               </DialogTitle>
               <DialogDescription className='text-xs sm:text-sm text-muted-foreground'>
-                Discover organizations aligned with your concerns.
+                Discover organizations aligned with your concerns. Use filters to narrow results.
               </DialogDescription>
             </div>
           </div>
@@ -320,56 +356,43 @@ export default function ResourceSuggestionsModal({
           </DialogClose>
         </div>
 
+        <div className="px-2 py-2 sm:px-4 sm:py-3 border-b">
+            <ScrollArea className="w-full whitespace-nowrap rounded-md">
+                <div className="flex space-x-2 p-1 items-center">
+                    {filterBubbles.map(bubble => (
+                        bubble.count > 0 && ( // Only render bubble if it has items
+                            <Button
+                                key={bubble.key}
+                                variant={activeFilterKey === bubble.key ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => handleFilterClick(bubble.key)}
+                                className="rounded-full text-xs h-auto px-3 py-1.5 whitespace-nowrap"
+                            >
+                                {bubble.label} ({bubble.count})
+                            </Button>
+                        )
+                    ))}
+                </div>
+                <ScrollBar orientation="horizontal" className="h-2" />
+            </ScrollArea>
+        </div>
 
-        <ScrollArea className="flex-1 overflow-y-auto px-1 py-1 sm:px-2 sm:py-2 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+        <ScrollArea className="flex-1 overflow-y-auto px-2 py-2 sm:px-4 sm:py-4 tooltip-scrollbar">
           <TooltipProvider delayDuration={100}>
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
               <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
               <p className="text-sm">Finding relevant resources...</p>
             </div>
-          ) : suggestedResources.length > 0 ? (
-             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full p-2 sm:p-4">
-                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1 mb-4 h-auto flex-wrap justify-start">
-                    <TabsTrigger value="best-matches" className="text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Best Matches ({bestMatches.length})</TabsTrigger>
-                    <TabsTrigger value="all-organizations" className="text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">All ({otherResources.length})</TabsTrigger>
-                    {categories.map(category => (
-                        <TabsTrigger key={category} value={category} className="text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                            {category} ({otherResources.filter(r => r.mainCategory === category).length})
-                        </TabsTrigger>
-                    ))}
-                </TabsList>
-
-                <TabsContent value="best-matches">
-                    {bestMatches.length > 0 ? (
-                        <div className="space-y-3 sm:space-y-4">
-                            {bestMatches.map((resource, index) => renderResourceCard(resource, index, 'best'))}
-                        </div>
-                    ) : (
-                         <div className="text-center py-6 text-muted-foreground">
-                            <Info className="h-8 w-8 mx-auto mb-2 text-primary/70" />
-                            <p className="text-xs sm:text-sm">No standout "Best Matches" right now. Try the 'All Organizations' tab or broaden your concerns.</p>
-                         </div>
-                    )}
-                </TabsContent>
-                <TabsContent value="all-organizations">
-                     <div className="space-y-3 sm:space-y-4">
-                        {otherResources.map((resource, index) => renderResourceCard(resource, index, 'other'))}
-                    </div>
-                </TabsContent>
-                {categories.map(category => (
-                    <TabsContent key={category} value={category}>
-                        <div className="space-y-3 sm:space-y-4">
-                        {otherResources.filter(r => r.mainCategory === category).map((resource, index) => renderResourceCard(resource, index, 'other'))}
-                        </div>
-                    </TabsContent>
-                ))}
-            </Tabs>
+          ) : displayedResources.length > 0 ? (
+             <div className="space-y-3 sm:space-y-4">
+                {displayedResources.map((resource, index) => renderResourceCard(resource, index))}
+            </div>
           ) : (
             <div className="text-center py-10 text-muted-foreground">
               <Info className="h-10 w-10 mx-auto mb-3 text-primary/70" />
-              <p className="text-sm">No specific resources matched all your concerns.</p>
-              <p className="text-xs mt-1">Consider broadening your search or contacting your representatives directly with the email you generated.</p>
+              <p className="text-sm">No specific resources matched your current filter.</p>
+              <p className="text-xs mt-1">Try a different filter or broaden your search by selecting "All Relevant" or deselecting the current filter.</p>
             </div>
           )}
           </TooltipProvider>
