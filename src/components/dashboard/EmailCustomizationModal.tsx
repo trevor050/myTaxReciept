@@ -267,7 +267,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
             <Button
                 variant="secondary"
                 onClick={onSuggestResources}
-                disabled={!userName || !userLocation || (selectedItems.size === 0 && !balanceBudgetChecked)}
+                disabled={!userName || !userLocation || (initialSelectedItems.size === 0 && !balanceBudgetChecked)}
                 className='w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10'
             >
                 <Lightbulb className='mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4'/> Further Actions
