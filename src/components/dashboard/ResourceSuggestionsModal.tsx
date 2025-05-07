@@ -162,80 +162,67 @@ export default function ResourceSuggestionsModal({
       } else {
         setActiveFilterKeys(new Set(['all-organizations']));
       }
-      // Initial centering logic moved to useLayoutEffect
     } else {
-      isInitialOpen.current = true; // Reset for next open
-      setPos({ x: null, y: null }); // Reset position state
+      isInitialOpen.current = true;
+      setPos({ x: null, y: null });
     }
   }, [isOpen, hasUserConcerns, suggestedResources]);
 
 
   React.useLayoutEffect(() => {
-    if (isOpen && isInitialOpen.current && refModal.current && pos.x === null) { // only run if not already positioned by drag
-        const frame = requestAnimationFrame(() => {
-            if (!refModal.current) return;
-            const { width, height } = refModal.current.getBoundingClientRect();
-            const windowHeight = window.innerHeight;
-            const windowWidth = window.innerWidth;
-            const margin = 20; // Margin from viewport edges
+    if (!isOpen || pos.x !== null || !isInitialOpen.current) return;
 
-            if (width && height) { // Ensure dimensions are available
-                let newY = Math.max(margin, windowHeight / 2 - height / 2);
-                newY = Math.min(newY, windowHeight - height - margin); // Ensure it doesn't go off bottom
-
-                let newX = Math.max(margin, windowWidth / 2 - width / 2);
-                newX = Math.min(newX, windowWidth - width - margin); // Ensure it doesn't go off right
-
-                setPos({
-                    x: newX,
-                    y: newY,
-                });
-                isInitialOpen.current = false; // Mark as centered
-            }
-        });
-        return () => cancelAnimationFrame(frame);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, pos.x, isLoading]); // Re-run if isOpen changes or if pos.x gets reset or loading state changes
+    const frame = requestAnimationFrame(() => {
+        if (!refModal.current) return;
+        const { width, height } = refModal.current.getBoundingClientRect();
+        if (width && height) { // Ensure dimensions are available
+            setPos({
+                x: window.innerWidth / 2 - width / 2,
+                y: window.innerHeight / 2 - height / 2,
+            });
+            isInitialOpen.current = false;
+        }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [isOpen, pos.x]);
 
 
-   React.useLayoutEffect(() => { // Effect to keep modal within viewport during content changes
-    if (!isOpen || isInitialOpen.current) return; // Don't run if closed or initial centering is pending
+   React.useLayoutEffect(() => {
+    if (!isOpen || isInitialOpen.current) return;
     if (pos.x !== null && pos.y !== null && refModal.current) {
         const { width: currentWidth, height: currentHeight } = refModal.current.getBoundingClientRect();
         const windowWidth = window.innerWidth;
         const windowHeight = window.innerHeight;
-        const margin = 20; // Margin from viewport edges
+        const margin = 20;
 
         let newX = pos.x;
         let newY = pos.y;
 
-        if (currentWidth > 0) { // Ensure width is positive
+        if (currentWidth > 0) {
             if (newX < margin) newX = margin;
             if (newX + currentWidth > windowWidth - margin) {
                 newX = Math.max(margin, windowWidth - currentWidth - margin);
             }
         }
-        if (currentHeight > 0) { // Ensure height is positive
+        if (currentHeight > 0) {
              if (newY < margin) newY = margin;
              if (newY + currentHeight > windowHeight - margin) {
                 newY = Math.max(margin, windowHeight - currentHeight - margin);
             }
         }
-        // Only update position if it actually changed to prevent infinite loops
-        if (Math.abs(newX - (pos.x || 0)) > 0.1 || Math.abs(newY - (pos.y || 0)) > 0.1 ) {
+        // Only update if significantly different to avoid infinite loops
+        if (Math.abs(newX - (pos.x || 0)) > 1 || Math.abs(newY - (pos.y || 0)) > 1 ) {
              setPos({ x: newX, y: newY });
         }
     }
-   // eslint-disable-next-line react-hooks/exhaustive-deps
-   }, [isOpen, pos.x, pos.y, isLoading, suggestedResources.length, activeFilterKeys, refModal.current?.offsetHeight, refModal.current?.offsetWidth]);
+   }, [isOpen, pos.x, pos.y, isLoading, suggestedResources.length, activeFilterKeys]); // Removed modal offsetHeight/offsetWidth as dependencies
 
 
   const onDown = React.useCallback((e: React.MouseEvent) => {
     if (!refHandle.current?.contains(e.target as Node) || !refModal.current) return;
-    isInitialOpen.current = false; // User is interacting, disable initial centering
+    isInitialOpen.current = false;
 
-    if (pos.x === null || pos.y === null) { // If not already positioned by drag (e.g., first drag after CSS centering)
+    if (pos.x === null || pos.y === null) {
       const r = refModal.current.getBoundingClientRect();
       const newPos = { x: r.left, y: r.top };
       setPos(newPos);
@@ -255,7 +242,7 @@ export default function ResourceSuggestionsModal({
     let x = e.clientX - dragOffset.current.x;
     let y = e.clientY - dragOffset.current.y;
 
-    const margin = 5; // Minimal margin when dragging
+    const margin = 5;
     x = Math.max(margin, Math.min(x, vw - hW - margin));
     y = Math.max(margin, Math.min(y, vh - hH - margin));
 
@@ -382,7 +369,7 @@ export default function ResourceSuggestionsModal({
   }, [suggestedResources, uniqueCategories, uniqueOrgTypeTags, hasUserConcerns]);
 
   const displayedResources = React.useMemo(() => {
-    if (isLoading) return []; // Return empty if loading, to prevent lag during computation
+    if (isLoading) return [];
     let filtered = suggestedResources;
 
     if (activeFilterKeys.size > 0 && !activeFilterKeys.has('all-organizations')) {
@@ -401,7 +388,6 @@ export default function ResourceSuggestionsModal({
             });
         });
     }
-    // Virtualization could be implemented here if performance is still an issue with many cards
     return filtered;
 
   }, [isLoading, suggestedResources, activeFilterKeys]);
@@ -413,20 +399,19 @@ export default function ResourceSuggestionsModal({
         const isAllOrgsActive = newKeys.has('all-organizations');
 
         if (key === 'all-organizations') {
-            return new Set(['all-organizations']); // Selecting "All" deselects others
+            return new Set(['all-organizations']);
         }
 
         if (isAllOrgsActive) {
-            newKeys.delete('all-organizations'); // If "All" was active, deselect it when a specific filter is chosen
+            newKeys.delete('all-organizations');
         }
 
         if (newKeys.has(key)) {
-            newKeys.delete(key); // Toggle off
+            newKeys.delete(key);
         } else {
-            newKeys.add(key); // Toggle on
+            newKeys.add(key);
         }
 
-        // If no specific filters are active, revert to "All Organizations"
         if (newKeys.size === 0) {
             return new Set(['all-organizations']);
         }
@@ -462,10 +447,10 @@ export default function ResourceSuggestionsModal({
                             variant={badge === 'Best Match' || badge === 'Top Match' ? 'default' : 'outline'}
                             className={cn(
                                 "text-xs px-1.5 py-0.5 whitespace-nowrap font-medium flex items-center",
-                                badge === 'Best Match' && "bg-emerald-600 border-emerald-700 text-emerald-50 dark:bg-emerald-500 dark:border-emerald-600 dark:text-emerald-100",
-                                badge === 'Top Match' && "bg-sky-600 border-sky-700 text-sky-50 dark:bg-sky-500 dark:border-sky-600 dark:text-sky-100",
+                                badge === 'Best Match' && "bg-green-600 border-green-700 text-green-50 dark:bg-green-500 dark:border-green-600 dark:text-green-100",
+                                badge === 'Top Match' && "bg-blue-600 border-blue-700 text-blue-50 dark:bg-blue-500 dark:border-blue-600 dark:text-blue-100",
                                 badge === 'High Impact' && "bg-rose-100 border-rose-400 text-rose-700 dark:bg-rose-700/30 dark:border-rose-600 dark:text-rose-300",
-                                badge === 'Broad Focus' && "bg-blue-100 border-blue-400 text-blue-700 dark:bg-blue-700/30 dark:border-blue-600 dark:text-blue-300",
+                                badge === 'Broad Focus' && "bg-sky-100 border-sky-400 text-sky-700 dark:bg-sky-700/30 dark:border-sky-600 dark:text-sky-300",
                                 badge === 'Niche Focus' && "bg-indigo-100 border-indigo-400 text-indigo-700 dark:bg-indigo-700/30 dark:border-indigo-600 dark:text-indigo-300",
                                 badge === 'Community Pick' && "bg-teal-100 border-teal-400 text-teal-700 dark:bg-teal-700/30 dark:border-teal-600 dark:text-teal-300",
                                 badge === 'Grassroots Power' && "bg-lime-100 border-lime-400 text-lime-700 dark:bg-lime-700/30 dark:border-lime-600 dark:text-lime-300",
@@ -526,12 +511,12 @@ export default function ResourceSuggestionsModal({
         }
         className={cn(
             'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:rounded-lg',
-             pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2', // Initial centering only if not dragged
+             pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
             'data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut'
         )}
         onInteractOutside={e => drag && e.preventDefault()}
         onOpenAutoFocus={e => {
-            e.preventDefault(); // Prevent default focus behavior
+            e.preventDefault();
         }}
       >
         <div
@@ -570,8 +555,8 @@ export default function ResourceSuggestionsModal({
                                     onClick={() => handleFilterClick(bubble.key)}
                                     className={cn("rounded-full text-xs h-auto px-3 py-1.5 whitespace-nowrap transition-all duration-150 flex items-center gap-1.5",
                                         activeFilterKeys.has(bubble.key) ? "shadow-md ring-2 ring-primary/50" : "hover:bg-accent/70",
-                                        bubble.key === 'your-matches' && activeFilterKeys.has(bubble.key) && 'bg-blue-500/90 border-blue-600 text-blue-50 dark:bg-blue-600/80 dark:border-blue-700 dark:text-blue-100',
-                                        bubble.key === 'all-organizations' && activeFilterKeys.has(bubble.key) && 'bg-slate-500/90 border-slate-600 text-slate-50 dark:bg-slate-600/80 dark:border-slate-700 dark:text-slate-100',
+                                        bubble.key === 'your-matches' && activeFilterKeys.has(bubble.key) && 'bg-primary border-primary/70 text-primary-foreground dark:bg-purple-600/80 dark:border-purple-700 dark:text-purple-100',
+                                        bubble.key === 'all-organizations' && activeFilterKeys.has(bubble.key) && 'bg-muted-foreground/80 border-muted-foreground text-background dark:bg-slate-600/80 dark:border-slate-700 dark:text-slate-100',
                                         bubble.type === 'badgeHighlight' && activeFilterKeys.has(bubble.key) && 'bg-emerald-500/90 border-emerald-600 text-emerald-50 dark:bg-emerald-600/80 dark:border-emerald-700 dark:text-emerald-100',
                                         bubble.type === 'category' && activeFilterKeys.has(bubble.key) && 'bg-indigo-500/90 border-indigo-600 text-indigo-50 dark:bg-indigo-600/80 dark:border-indigo-700 dark:text-indigo-100',
                                         bubble.type === 'orgType' && activeFilterKeys.has(bubble.key) && 'bg-purple-500/90 border-purple-600 text-purple-50 dark:bg-purple-600/80 dark:border-purple-700 dark:text-purple-100',
@@ -638,6 +623,8 @@ export default function ResourceSuggestionsModal({
     </Dialog>
   );
 }
+
+
 
 
 
