@@ -1,4 +1,3 @@
-
 // src/components/dashboard/ResourceSuggestionsModal.tsx
 'use client';
 
@@ -11,12 +10,28 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription as CardDesc } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, MessageSquareQuote, PlusCircle, MinusCircle, Search, Sparkles, Trophy, Users as UsersIcon, Target, HandHeart, FilterX, Megaphone, Gavel, Landmark, Dove, LibrarySquare, DollarSign, Eye, School, Home, Bed, Utensils, Medal, Hammer, Anchor } from 'lucide-react';
+import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, MessageSquareQuote, PlusCircle, MinusCircle, Search, Sparkles, Trophy, Users as UsersIcon, Target, HandHeart, FilterX, Megaphone, Gavel, Landmark, Dove, LibrarySquare, DollarSign, Eye, School, Home, Bed, Utensils, Medal, Hammer, Anchor, ListFilter, Tag, FlaskConical, Brain, Building as BuildingIcon, Star } from 'lucide-react';
 import type { SuggestedResource, MatchedReason, BadgeType } from '@/services/resource-suggestions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { SelectedItem } from '@/services/tax-spending';
 import type { Tone } from '@/services/email/types';
+
+
+const BADGE_DISPLAY_PRIORITY_MAP: Record<BadgeType, number> = {
+  'Best Match': 1,
+  'Top Match': 2,
+  'High Impact': 3,
+  'Data-Driven': 4,
+  'Legal Advocacy': 5,
+  'Established Voice': 6,
+  'Grassroots Power': 7,
+  'Community Pick': 8,
+  'Niche Focus': 9,
+  'Broad Focus': 10,
+  'General Interest': 11,
+};
+
 
 const importLucideIcon = async (iconName: string | undefined): Promise<React.ElementType | typeof Info> => {
   if (!iconName) return Info;
@@ -30,20 +45,6 @@ const importLucideIcon = async (iconName: string | undefined): Promise<React.Ele
     console.warn(`Failed to load icon: ${iconName}`, error);
     return Info;
   }
-};
-
-const BADGE_PRIORITY_MAP: Record<BadgeType, number> = {
-  'Best Match': 1,
-  'Top Match': 2,
-  'High Impact': 3,
-  'Data-Driven': 4,
-  'Legal Advocacy': 5,
-  'Established Voice': 6,
-  'Grassroots Power': 7,
-  'Niche Focus': 8,
-  'Broad Focus': 9,
-  'Community Pick': 10,
-  'General Interest': 11,
 };
 
 
@@ -102,6 +103,7 @@ const MatchedReasonTooltipContent = ({ reasons, resourceName }: { reasons: Match
   );
 };
 
+// Using an inline SVG for Database as it's not in Lucide
 const DatabaseIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <ellipse cx="12" cy="5" rx="9" ry="3"/>
@@ -109,6 +111,7 @@ const DatabaseIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
   </svg>
 );
+
 
 const BadgeIcon = ({ badgeType }: { badgeType: BadgeType }) => {
     switch (badgeType) {
@@ -118,13 +121,31 @@ const BadgeIcon = ({ badgeType }: { badgeType: BadgeType }) => {
         case 'Broad Focus': return <UsersIcon className="h-3 w-3 mr-1 text-blue-600 dark:text-blue-400" />;
         case 'Niche Focus': return <Target className="h-3 w-3 mr-1 text-indigo-600 dark:text-indigo-400" />;
         case 'Community Pick': return <HandHeart className="h-3 w-3 mr-1 text-teal-600 dark:text-teal-400" />;
-        case 'Grassroots Power': return <Megaphone className="h-3 w-3 mr-1 text-lime-600 dark:text-lime-400" />; // Re-using Megaphone, consider Users or similar
-        case 'Data-Driven': return <DatabaseIcon className="h-3 w-3 mr-1 text-indigo-600 dark:text-indigo-400" />;
-        case 'Legal Advocacy': return <Gavel className="h-3 w-3 mr-1 text-rose-600 dark:text-rose-400" />;
+        case 'Grassroots Power': return <UsersIcon className="h-3 w-3 mr-1 text-lime-600 dark:text-lime-400" />;
+        case 'Data-Driven': return <DatabaseIcon className="h-3 w-3 mr-1 text-purple-600 dark:text-purple-400" />;
+        case 'Legal Advocacy': return <Gavel className="h-3 w-3 mr-1 text-orange-600 dark:text-orange-400" />;
         case 'Established Voice': return <Landmark className="h-3 w-3 mr-1 text-slate-600 dark:text-slate-400" />;
         case 'General Interest': return <Info className="h-3 w-3 mr-1 text-gray-500 dark:text-gray-400" />;
         default: return null;
     }
+};
+
+const FilterBubbleIcon = ({ filterKey, filterType }: { filterKey: string, filterType: string | undefined }) => {
+    if (filterKey === 'your-matches') return <Sparkles className="h-3.5 w-3.5" />;
+    if (filterKey === 'best-matches') return <Trophy className="h-3.5 w-3.5" />;
+    if (filterKey === 'top-matches') return <Star className="h-3.5 w-3.5" />;
+    if (filterKey === 'all-organizations') return <ListFilter className="h-3.5 w-3.5" />;
+    if (filterType === 'category') return <Tag className="h-3.5 w-3.5 opacity-70" />;
+    if (filterType === 'orgType') {
+        if (filterKey.includes('grassroots')) return <UsersIcon className="h-3.5 w-3.5 opacity-70" />;
+        if (filterKey.includes('research')) return <FlaskConical className="h-3.5 w-3.5 opacity-70" />;
+        if (filterKey.includes('legal')) return <Gavel className="h-3.5 w-3.5 opacity-70" />;
+        if (filterKey.includes('established')) return <BuildingIcon className="h-3.5 w-3.5 opacity-70" />;
+        if (filterKey.includes('activism')) return <Megaphone className="h-3.5 w-3.5 opacity-70" />;
+        if (filterKey.includes('think-tank')) return <Brain className="h-3.5 w-3.5 opacity-70" />;
+        if (filterKey.includes('direct-service')) return <HandHeart className="h-3.5 w-3.5 opacity-70" />;
+    }
+    return null;
 };
 
 
@@ -152,52 +173,69 @@ export default function ResourceSuggestionsModal({
     if (!isOpen) {
       setPos({ x: null, y: null });
       isInitialOpen.current = true;
-      setActiveFilterKeys(new Set(['all-organizations']));
+      if (hasUserConcerns && suggestedResources.some(r => (r.matchCount || 0) > 0)) {
+        setActiveFilterKeys(new Set(['your-matches']));
+      } else {
+        setActiveFilterKeys(new Set(['all-organizations']));
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, hasUserConcerns, suggestedResources]);
 
 
   React.useLayoutEffect(() => {
-    if (!isOpen || pos.x !== null || !isInitialOpen.current) return;
+    if (!isOpen) return;
 
-    const frame = requestAnimationFrame(() => {
+    if (isInitialOpen.current && pos.x === null && refModal.current) {
+      const frame = requestAnimationFrame(() => {
         if (!refModal.current) return;
         const { width, height } = refModal.current.getBoundingClientRect();
         const windowHeight = window.innerHeight;
         const windowWidth = window.innerWidth;
 
         if (width && height) {
-             let newY = windowHeight / 2 - height / 2;
-             if (newY + height > windowHeight - 20) {
-                 newY = Math.max(20, windowHeight - height - 20); // Ensure it doesn't go off top if too tall
-             }
-             if (newY < 20) {
-                 newY = 20;
-             }
+          let newY = Math.max(20, windowHeight / 2 - height / 2);
+          newY = Math.min(newY, windowHeight - height - 20);
 
-            setPos({
-                x: windowWidth / 2 - width / 2,
-                y: newY,
-            });
-            isInitialOpen.current = false;
+          setPos({
+            x: windowWidth / 2 - width / 2,
+            y: newY,
+          });
+          isInitialOpen.current = false;
         }
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [isOpen, pos.x]);
+      });
+      return () => cancelAnimationFrame(frame);
+    } else if (!isInitialOpen.current && pos.x !== null && pos.y !== null && refModal.current) {
+      const { height: currentHeight } = refModal.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const topMargin = 20;
+      const bottomMargin = 20;
+
+      let newY = pos.y;
+      if (newY < topMargin) {
+        newY = topMargin;
+      }
+      if (newY + currentHeight > windowHeight - bottomMargin) {
+        newY = Math.max(topMargin, windowHeight - currentHeight - bottomMargin);
+      }
+
+      if (newY !== pos.y) {
+        setPos(prevPos => ({ ...prevPos, y: newY }));
+      }
+    }
+  }, [isOpen, pos.x, pos.y, isLoading, suggestedResources.length]); // Keep suggestedResources.length to react to content changes
 
 
   const onDown = React.useCallback((e: React.MouseEvent) => {
     if (!refHandle.current?.contains(e.target as Node) || !refModal.current) return;
 
-    if (pos.x === null && pos.y === null) { // Check both x and y
+    if (pos.x === null || pos.y === null) {
       const r = refModal.current.getBoundingClientRect();
-      setPos({ x: r.left, y: r.top });
-      dragOffset.current = { x: e.clientX - r.left, y: e.clientY - r.top };
+      const newPos = { x: r.left, y: r.top };
+      setPos(newPos);
+      dragOffset.current = { x: e.clientX - newPos.x, y: e.clientY - newPos.y };
        isInitialOpen.current = false;
     } else {
-      if (pos.x !== null && pos.y !== null) {
-        dragOffset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
-      }
+      dragOffset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
     }
     setDrag(true);
     document.body.style.userSelect = 'none';
@@ -246,8 +284,7 @@ export default function ResourceSuggestionsModal({
           iconsToLoad.add(resource.icon);
         }
       });
-      // Ensure specific icons are loaded if not dynamically determined
-      const defaultIcons = ['Dove', 'LibrarySquare', 'DollarSign', 'Eye', 'School', 'Home', 'Bed', 'Utensils', 'Medal', 'Hammer', 'Anchor'];
+      const defaultIcons = ['Dove', 'LibrarySquare', 'DollarSign', 'Eye', 'School', 'Home', 'Bed', 'Utensils', 'Medal', 'Hammer', 'Anchor', 'ListFilter', 'Tag', 'FlaskConical', 'Brain', 'BuildingIcon'];
       defaultIcons.forEach(icon => {
         if (!IconComponents[icon]) iconsToLoad.add(icon);
       });
@@ -290,11 +327,11 @@ export default function ResourceSuggestionsModal({
         }
         const bestMatchesCount = suggestedResources.filter(r => r.badges?.includes('Best Match')).length;
         if (bestMatchesCount > 0) {
-            bubbles.push({ key: 'best-matches', label: 'Best Match', count: bestMatchesCount, type: 'badge' });
+            bubbles.push({ key: 'best-matches', label: 'Best Match', count: bestMatchesCount, type: 'badgeHighlight' });
         }
         const topMatchesCount = suggestedResources.filter(r => r.badges?.includes('Top Match')).length;
-         if (topMatchesCount > 0 && !(activeFilterKeys.has('best-matches') && bestMatchesCount > 0)) {
-             bubbles.push({ key: 'top-matches', label: 'Top Matches', count: topMatchesCount, type: 'badge' });
+         if (topMatchesCount > 0 ) {
+             bubbles.push({ key: 'top-matches', label: 'Top Matches', count: topMatchesCount, type: 'badgeHighlight' });
         }
     }
     bubbles.push({ key: 'all-organizations', label: 'All Organizations', count: suggestedResources.length, type: 'special' });
@@ -315,13 +352,28 @@ export default function ResourceSuggestionsModal({
         }
     });
 
-    return bubbles.sort((a,b) => { // Sort special filters first, then by label
-        if (a.type === 'special' && b.type !== 'special') return -1;
-        if (a.type !== 'special' && b.type === 'special') return 1;
+    const allBadgeTypesPresent = new Set<BadgeType>();
+    suggestedResources.forEach(r => r.badges?.forEach(b => allBadgeTypesPresent.add(b)));
+    Array.from(allBadgeTypesPresent)
+        .filter(b => !['Best Match', 'Top Match'].includes(b))
+        .sort((a,b) => (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99))
+        .forEach(badgeType => {
+            const count = suggestedResources.filter(r => r.badges?.includes(badgeType)).length;
+            if (count > 0) {
+                bubbles.push({ key: `badge-${badgeType.toLowerCase().replace(/\s+/g, '-')}`, label: badgeType, count, type: 'badgeGeneral' });
+            }
+    });
+
+
+    return bubbles.sort((a,b) => {
+        const typeOrder = { 'special': 1, 'badgeHighlight': 2, 'category': 3, 'orgType': 4, 'badgeGeneral': 5 };
+        const orderA = typeOrder[a.type as keyof typeof typeOrder] || 6;
+        const orderB = typeOrder[b.type as keyof typeof typeOrder] || 6;
+        if (orderA !== orderB) return orderA - orderB;
         return a.label.localeCompare(b.label);
     });
 
-  }, [suggestedResources, uniqueCategories, uniqueOrgTypeTags, hasUserConcerns, activeFilterKeys]);
+  }, [suggestedResources, uniqueCategories, uniqueOrgTypeTags, hasUserConcerns]);
 
   const displayedResources = React.useMemo(() => {
     if (isLoading) return [];
@@ -335,7 +387,11 @@ export default function ResourceSuggestionsModal({
                 if (key === 'top-matches') return r.badges?.includes('Top Match') || false;
                 if (key.startsWith('cat-')) return r.mainCategory === key.substring(4);
                 if (key.startsWith('orgtype-')) return r.orgTypeTags?.includes(key.substring(8) as any) || false;
-                return true; // Should not happen if key is not 'all-organizations'
+                if (key.startsWith('badge-')) {
+                    const badgeKey = key.substring(6).replace(/-/g, ' ');
+                    return r.badges?.some(b => b.toLowerCase() === badgeKey) || false;
+                }
+                return true;
             });
         });
     }
@@ -347,15 +403,16 @@ export default function ResourceSuggestionsModal({
   const handleFilterClick = (key: string) => {
     setActiveFilterKeys(prevKeys => {
         const newKeys = new Set(prevKeys);
+        const isAllOrgsActive = newKeys.has('all-organizations');
 
         if (key === 'all-organizations') {
             return new Set(['all-organizations']);
         }
 
-        if (newKeys.has('all-organizations')) {
+        if (isAllOrgsActive) {
             newKeys.delete('all-organizations');
         }
-        
+
         if (newKeys.has(key)) {
             newKeys.delete(key);
         } else {
@@ -376,19 +433,10 @@ export default function ResourceSuggestionsModal({
 
   const renderResourceCard = (resource: SuggestedResource, index: number) => {
     const Icon = IconComponents[resource.icon || 'Info'] || Info;
-    
-    let displayedBadges: BadgeType[] = resource.badges || [];
-    if (displayedBadges.length > 3) {
-        // Prioritize Best Match, Top Match, High Impact, then others
-        const priorityOrder: BadgeType[] = ['Best Match', 'Top Match', 'High Impact'];
-        const priorityBadges = displayedBadges.filter(b => priorityOrder.includes(b))
-                               .sort((a,b) => priorityOrder.indexOf(a) - priorityOrder.indexOf(b));
-        const otherBadges = displayedBadges.filter(b => !priorityOrder.includes(b))
-                              .sort((a,b) => (BADGE_PRIORITY_MAP[a] || 99) - (BADGE_PRIORITY_MAP[b] || 99));
-        displayedBadges = [...priorityBadges, ...otherBadges].slice(0,3);
-    } else {
-        displayedBadges.sort((a,b) => (BADGE_PRIORITY_MAP[a] || 99) - (BADGE_PRIORITY_MAP[b] || 99));
-    }
+
+    const displayedBadges: BadgeType[] = (resource.badges || [])
+        .sort((a, b) => (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99))
+        .slice(0, 2); // Max 2 badges displayed
 
 
     return (
@@ -401,15 +449,15 @@ export default function ResourceSuggestionsModal({
                     <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 mt-0.5 text-primary" />
                     <span className="flex-1">{resource.name}</span>
                 </span>
-                <div className="flex items-center flex-shrink-0 gap-1 ml-auto flex-wrap justify-end">
+                <div className="flex items-center flex-shrink-0 gap-1 ml-auto flex-wrap justify-end max-w-[60%]">
                     {displayedBadges.map(badge => (
                         <Badge
                             key={badge}
                             variant={badge === 'Best Match' ? 'default' : (badge === 'Top Match' ? 'secondary' : 'outline')}
                             className={cn(
                                 "text-xs px-1.5 py-0.5 whitespace-nowrap font-medium flex items-center",
-                                badge === 'Best Match' && "bg-green-600/20 border-green-500 text-green-700 dark:bg-green-700/30 dark:border-green-500 dark:text-green-300",
-                                badge === 'Top Match' && "bg-sky-600/20 border-sky-500 text-sky-700 dark:bg-sky-700/30 dark:border-sky-500 dark:text-sky-300",
+                                badge === 'Best Match' && "bg-amber-500/90 border-amber-600 text-white dark:bg-amber-600 dark:border-amber-500 dark:text-amber-50",
+                                badge === 'Top Match' && "bg-sky-500/90 border-sky-600 text-white dark:bg-sky-600 dark:border-sky-500 dark:text-sky-50",
                                 badge === 'High Impact' && "bg-rose-100 border-rose-400 text-rose-700 dark:bg-rose-700/30 dark:border-rose-600 dark:text-rose-300",
                                 badge === 'Broad Focus' && "bg-blue-100 border-blue-400 text-blue-700 dark:bg-blue-700/30 dark:border-blue-600 dark:text-blue-300",
                                 badge === 'Niche Focus' && "bg-indigo-100 border-indigo-400 text-indigo-700 dark:bg-indigo-700/30 dark:border-indigo-600 dark:text-indigo-300",
@@ -477,13 +525,6 @@ export default function ResourceSuggestionsModal({
         onInteractOutside={e => drag && e.preventDefault()}
         onOpenAutoFocus={e => {
             e.preventDefault();
-            const initialFilters = new Set<string>();
-            if (hasUserConcerns && suggestedResources.some(r => (r.matchCount || 0) > 0)) {
-                initialFilters.add('your-matches');
-            } else {
-                initialFilters.add('all-organizations');
-            }
-            setActiveFilterKeys(initialFilters);
         }}
       >
         <div
@@ -510,8 +551,8 @@ export default function ResourceSuggestionsModal({
           </DialogClose>
         </div>
         <TooltipProvider delayDuration={100}>
-            <div className="px-2 py-2 sm:px-4 sm:py-3 border-b sticky top-0 bg-background/80 backdrop-blur-sm z-10">
-                <ScrollArea className="w-full whitespace-nowrap rounded-md">
+            <div className="px-2 py-2 sm:px-4 sm:py-3 border-b sticky top-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-between gap-2">
+                <ScrollArea className="w-full whitespace-nowrap rounded-md flex-grow">
                     <div className="flex space-x-2 p-1 items-center">
                         {filterBubbles.map(bubble => (
                             bubble.count > 0 && (
@@ -520,35 +561,43 @@ export default function ResourceSuggestionsModal({
                                     variant={activeFilterKeys.has(bubble.key) ? 'default' : 'outline'}
                                     size="sm"
                                     onClick={() => handleFilterClick(bubble.key)}
-                                    className={cn("rounded-full text-xs h-auto px-3 py-1.5 whitespace-nowrap transition-all duration-150 flex items-center gap-1",
-                                    activeFilterKeys.has(bubble.key) ? "shadow-md ring-2 ring-primary/50" : "hover:bg-accent/70"
+                                    className={cn("rounded-full text-xs h-auto px-3 py-1.5 whitespace-nowrap transition-all duration-150 flex items-center gap-1.5",
+                                        activeFilterKeys.has(bubble.key) ? "shadow-md ring-2 ring-primary/50" : "hover:bg-accent/70",
+                                        bubble.type === 'special' && activeFilterKeys.has(bubble.key) && 'bg-amber-500/20 border-amber-500 text-amber-700 dark:bg-amber-600/30 dark:border-amber-500 dark:text-amber-200',
+                                        bubble.type === 'badgeHighlight' && activeFilterKeys.has(bubble.key) && 'bg-green-500/20 border-green-500 text-green-700 dark:bg-green-600/30 dark:border-green-500 dark:text-green-200',
+                                        bubble.type === 'category' && activeFilterKeys.has(bubble.key) && 'bg-blue-500/20 border-blue-500 text-blue-700 dark:bg-blue-600/30 dark:border-blue-500 dark:text-blue-200',
+                                        bubble.type === 'orgType' && activeFilterKeys.has(bubble.key) && 'bg-purple-500/20 border-purple-500 text-purple-700 dark:bg-purple-600/30 dark:border-purple-500 dark:text-purple-200',
+                                        bubble.type === 'badgeGeneral' && activeFilterKeys.has(bubble.key) && 'bg-teal-500/20 border-teal-500 text-teal-700 dark:bg-teal-600/30 dark:border-teal-500 dark:text-teal-200'
+
                                     )}
+                                    title={`Filter by: ${bubble.label}`}
                                 >
+                                    <FilterBubbleIcon filterKey={bubble.key} filterType={bubble.type} />
                                     {bubble.label} ({bubble.count})
-                                    {activeFilterKeys.has(bubble.key) && bubble.key !== 'all-organizations' && <X className="h-3 w-3 opacity-70 hover:opacity-100 ml-1" onClick={(e) => { e.stopPropagation(); handleFilterClick(bubble.key);}} />}
+                                    {activeFilterKeys.has(bubble.key) && bubble.key !== 'all-organizations' && <X className="h-3 w-3 opacity-70 hover:opacity-100 ml-1 cursor-pointer" onClick={(e) => { e.stopPropagation(); handleFilterClick(bubble.key);}} />}
                                 </Button>
                             )
                         ))}
-                        {Array.from(activeFilterKeys).some(k => k !== 'all-organizations') && activeFilterKeys.size > 0 && (
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={handleClearAllFilters}
-                                        className="rounded-full h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-destructive/10 ml-1"
-                                        title="Clear all active filters"
-                                    >
-                                        <FilterX className="h-4 w-4" />
-                                        <span className="sr-only">Clear Filters</span>
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Clear all filters</p></TooltipContent>
-                            </Tooltip>
-                        )}
                     </div>
-                    <ScrollBar orientation="horizontal" className="h-2" />
+                    <ScrollBar orientation="horizontal" className="h-2 mt-1" />
                 </ScrollArea>
+                 {Array.from(activeFilterKeys).some(k => k !== 'all-organizations') && activeFilterKeys.size > 0 && (
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={handleClearAllFilters}
+                                className="rounded-full h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-destructive/10 flex-shrink-0"
+                                title="Clear all active filters"
+                            >
+                                <FilterX className="h-4 w-4" />
+                                <span className="sr-only">Clear Filters</span>
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>Clear all filters</p></TooltipContent>
+                    </Tooltip>
+                )}
             </div>
 
             <ScrollArea className="flex-1 overflow-y-auto px-2 py-2 sm:px-4 sm:py-4 tooltip-scrollbar">
@@ -582,7 +631,3 @@ export default function ResourceSuggestionsModal({
     </Dialog>
   );
 }
-
-    
-
-    
