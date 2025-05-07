@@ -1,3 +1,4 @@
+
 // src/components/dashboard/ResourceSuggestionsModal.tsx
 'use client';
 
@@ -11,26 +12,12 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription as CardDesc } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, MessageSquareQuote, PlusCircle, MinusCircle, Search, Sparkles, Trophy, Users as UsersIcon, Target, HandHeart, FilterX, Megaphone, Gavel, Landmark, Dove, LibrarySquare, DollarSign, Eye, School, Home, Bed, Utensils, Medal, Hammer, Anchor, ListFilter, Tag, FlaskConical, Brain, Building as BuildingIcon, Star } from 'lucide-react';
-import type { SuggestedResource, MatchedReason, BadgeType } from '@/services/resource-suggestions';
+import type { SuggestedResource, MatchedReason, BadgeType } from '@/types/resource-suggestions';
+import { BADGE_DISPLAY_PRIORITY_MAP } from '@/types/resource-suggestions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { SelectedItem } from '@/services/tax-spending';
 import type { Tone } from '@/services/email/types';
-
-
-const BADGE_DISPLAY_PRIORITY_MAP: Record<BadgeType, number> = {
-  'Best Match': 1,
-  'Top Match': 2,
-  'High Impact': 3,
-  'Data-Driven': 4,
-  'Legal Advocacy': 5,
-  'Established Voice': 6,
-  'Grassroots Power': 7,
-  'Community Pick': 8,
-  'Niche Focus': 9,
-  'Broad Focus': 10,
-  'General Interest': 11,
-};
 
 
 const importLucideIcon = async (iconName: string | undefined): Promise<React.ElementType | typeof Info> => {
@@ -169,9 +156,8 @@ export default function ResourceSuggestionsModal({
   const refModal = React.useRef<HTMLDivElement>(null);
   const refHandle = React.useRef<HTMLDivElement>(null);
 
-  React.useLayoutEffect(() => {
+  React.useEffect(() => {
     if (!isOpen) {
-      setPos({ x: null, y: null });
       isInitialOpen.current = true;
       if (hasUserConcerns && suggestedResources.some(r => (r.matchCount || 0) > 0)) {
         setActiveFilterKeys(new Set(['your-matches']));
@@ -181,48 +167,63 @@ export default function ResourceSuggestionsModal({
     }
   }, [isOpen, hasUserConcerns, suggestedResources]);
 
-
   React.useLayoutEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || pos.x !== null || !isInitialOpen.current) return;
 
-    if (isInitialOpen.current && pos.x === null && refModal.current) {
-      const frame = requestAnimationFrame(() => {
+    const frame = requestAnimationFrame(() => {
         if (!refModal.current) return;
         const { width, height } = refModal.current.getBoundingClientRect();
         const windowHeight = window.innerHeight;
         const windowWidth = window.innerWidth;
+        const margin = 20;
 
         if (width && height) {
-          let newY = Math.max(20, windowHeight / 2 - height / 2);
-          newY = Math.min(newY, windowHeight - height - 20);
+            let newY = Math.max(margin, windowHeight / 2 - height / 2);
+            newY = Math.min(newY, windowHeight - height - margin);
 
-          setPos({
-            x: windowWidth / 2 - width / 2,
-            y: newY,
-          });
-          isInitialOpen.current = false;
+            setPos({
+                x: windowWidth / 2 - width / 2,
+                y: newY,
+            });
+            isInitialOpen.current = false;
         }
-      });
-      return () => cancelAnimationFrame(frame);
-    } else if (!isInitialOpen.current && pos.x !== null && pos.y !== null && refModal.current) {
-      const { height: currentHeight } = refModal.current.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-      const topMargin = 20;
-      const bottomMargin = 20;
+    });
 
-      let newY = pos.y;
-      if (newY < topMargin) {
-        newY = topMargin;
-      }
-      if (newY + currentHeight > windowHeight - bottomMargin) {
-        newY = Math.max(topMargin, windowHeight - currentHeight - bottomMargin);
-      }
+    return () => cancelAnimationFrame(frame);
+  }, [isOpen, pos.x]);
 
-      if (newY !== pos.y) {
-        setPos(prevPos => ({ ...prevPos, y: newY }));
-      }
+   React.useLayoutEffect(() => {
+    if (!isOpen) {
+      setPos({ x: null, y: null }); // Reset position when modal closes
+      isInitialOpen.current = true; // Allow re-centering on next open
+      return;
     }
-  }, [isOpen, pos.x, pos.y, isLoading, suggestedResources.length]); // Keep suggestedResources.length to react to content changes
+    if (pos.x !== null && pos.y !== null && refModal.current) {
+        const { width: currentWidth, height: currentHeight } = refModal.current.getBoundingClientRect();
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const margin = 20;
+
+        let newX = pos.x;
+        let newY = pos.y;
+
+        if (currentWidth > 0) {
+            if (newX < margin) newX = margin;
+            if (newX + currentWidth > windowWidth - margin) {
+                newX = Math.max(margin, windowWidth - currentWidth - margin);
+            }
+        }
+        if (currentHeight > 0) {
+             if (newY < margin) newY = margin;
+             if (newY + currentHeight > windowHeight - margin) {
+                newY = Math.max(margin, windowHeight - currentHeight - margin);
+            }
+        }
+        if (Math.abs(newX - (pos.x || 0)) > 0.1 || Math.abs(newY - (pos.y || 0)) > 0.1 ) {
+             setPos({ x: newX, y: newY });
+        }
+    }
+   }, [isOpen, pos.x, pos.y, isLoading, suggestedResources.length, activeFilterKeys]);
 
 
   const onDown = React.useCallback((e: React.MouseEvent) => {
@@ -233,7 +234,7 @@ export default function ResourceSuggestionsModal({
       const newPos = { x: r.left, y: r.top };
       setPos(newPos);
       dragOffset.current = { x: e.clientX - newPos.x, y: e.clientY - newPos.y };
-       isInitialOpen.current = false;
+      isInitialOpen.current = false;
     } else {
       dragOffset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
     }
@@ -355,7 +356,7 @@ export default function ResourceSuggestionsModal({
     const allBadgeTypesPresent = new Set<BadgeType>();
     suggestedResources.forEach(r => r.badges?.forEach(b => allBadgeTypesPresent.add(b)));
     Array.from(allBadgeTypesPresent)
-        .filter(b => !['Best Match', 'Top Match'].includes(b))
+        .filter(b => !['Best Match', 'Top Match'].includes(b)) 
         .sort((a,b) => (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99))
         .forEach(badgeType => {
             const count = suggestedResources.filter(r => r.badges?.includes(badgeType)).length;
@@ -381,7 +382,7 @@ export default function ResourceSuggestionsModal({
 
     if (activeFilterKeys.size > 0 && !activeFilterKeys.has('all-organizations')) {
         filtered = suggestedResources.filter(r => {
-            return Array.from(activeFilterKeys).every(key => {
+            return Array.from(activeFilterKeys).some(key => {
                 if (key === 'your-matches') return (r.matchCount || 0) > 0;
                 if (key === 'best-matches') return r.badges?.includes('Best Match') || false;
                 if (key === 'top-matches') return r.badges?.includes('Top Match') || false;
@@ -391,7 +392,7 @@ export default function ResourceSuggestionsModal({
                     const badgeKey = key.substring(6).replace(/-/g, ' ');
                     return r.badges?.some(b => b.toLowerCase() === badgeKey) || false;
                 }
-                return true;
+                return false;
             });
         });
     }
@@ -431,13 +432,11 @@ export default function ResourceSuggestionsModal({
   };
 
 
-  const renderResourceCard = (resource: SuggestedResource, index: number) => {
+  const renderResourceCard = React.useCallback((resource: SuggestedResource, index: number) => {
     const Icon = IconComponents[resource.icon || 'Info'] || Info;
 
     const displayedBadges: BadgeType[] = (resource.badges || [])
-        .sort((a, b) => (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99))
-        .slice(0, 2); // Max 2 badges displayed
-
+        .sort((a, b) => (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99));
 
     return (
         <Tooltip key={`${Array.from(activeFilterKeys).join('-')}-${index}-${resource.url}`}>
@@ -456,7 +455,7 @@ export default function ResourceSuggestionsModal({
                             variant={badge === 'Best Match' ? 'default' : (badge === 'Top Match' ? 'secondary' : 'outline')}
                             className={cn(
                                 "text-xs px-1.5 py-0.5 whitespace-nowrap font-medium flex items-center",
-                                badge === 'Best Match' && "bg-amber-500/90 border-amber-600 text-white dark:bg-amber-600 dark:border-amber-500 dark:text-amber-50",
+                                badge === 'Best Match' && "bg-green-500/90 border-green-600 text-white dark:bg-green-600 dark:border-green-500 dark:text-green-50",
                                 badge === 'Top Match' && "bg-sky-500/90 border-sky-600 text-white dark:bg-sky-600 dark:border-sky-500 dark:text-sky-50",
                                 badge === 'High Impact' && "bg-rose-100 border-rose-400 text-rose-700 dark:bg-rose-700/30 dark:border-rose-600 dark:text-rose-300",
                                 badge === 'Broad Focus' && "bg-blue-100 border-blue-400 text-blue-700 dark:bg-blue-700/30 dark:border-blue-600 dark:text-blue-300",
@@ -479,7 +478,7 @@ export default function ResourceSuggestionsModal({
                     ): null}
                      {(!resource.matchCount || resource.matchCount === 0) && displayedBadges.length === 0 && !resource.badges?.includes('General Interest') && (
                         <Badge variant="outline" className="border-border text-muted-foreground bg-muted/30 text-xs px-1.5 py-0.5 whitespace-nowrap italic">
-                            No specific matches found
+                            No specific matches
                         </Badge>
                     )}
                 </div>
@@ -505,7 +504,8 @@ export default function ResourceSuggestionsModal({
         <MatchedReasonTooltipContent reasons={resource.matchedReasons || []} resourceName={resource.name}/>
         </Tooltip>
     );
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [IconComponents, activeFilterKeys, BADGE_DISPLAY_PRIORITY_MAP]);
 
 
   return (
@@ -563,11 +563,11 @@ export default function ResourceSuggestionsModal({
                                     onClick={() => handleFilterClick(bubble.key)}
                                     className={cn("rounded-full text-xs h-auto px-3 py-1.5 whitespace-nowrap transition-all duration-150 flex items-center gap-1.5",
                                         activeFilterKeys.has(bubble.key) ? "shadow-md ring-2 ring-primary/50" : "hover:bg-accent/70",
-                                        bubble.type === 'special' && activeFilterKeys.has(bubble.key) && 'bg-amber-500/20 border-amber-500 text-amber-700 dark:bg-amber-600/30 dark:border-amber-500 dark:text-amber-200',
-                                        bubble.type === 'badgeHighlight' && activeFilterKeys.has(bubble.key) && 'bg-green-500/20 border-green-500 text-green-700 dark:bg-green-600/30 dark:border-green-500 dark:text-green-200',
-                                        bubble.type === 'category' && activeFilterKeys.has(bubble.key) && 'bg-blue-500/20 border-blue-500 text-blue-700 dark:bg-blue-600/30 dark:border-blue-500 dark:text-blue-200',
-                                        bubble.type === 'orgType' && activeFilterKeys.has(bubble.key) && 'bg-purple-500/20 border-purple-500 text-purple-700 dark:bg-purple-600/30 dark:border-purple-500 dark:text-purple-200',
-                                        bubble.type === 'badgeGeneral' && activeFilterKeys.has(bubble.key) && 'bg-teal-500/20 border-teal-500 text-teal-700 dark:bg-teal-600/30 dark:border-teal-500 dark:text-teal-200'
+                                        bubble.type === 'special' && activeFilterKeys.has(bubble.key) && 'bg-amber-500/20 border-amber-500 text-amber-700 dark:text-amber-300 dark:bg-amber-700/40 dark:border-amber-600',
+                                        bubble.type === 'badgeHighlight' && activeFilterKeys.has(bubble.key) && 'bg-green-500/20 border-green-500 text-green-700 dark:text-green-300 dark:bg-green-700/40 dark:border-green-600',
+                                        bubble.type === 'category' && activeFilterKeys.has(bubble.key) && 'bg-blue-500/20 border-blue-500 text-blue-700 dark:text-blue-300 dark:bg-blue-700/40 dark:border-blue-600',
+                                        bubble.type === 'orgType' && activeFilterKeys.has(bubble.key) && 'bg-purple-500/20 border-purple-500 text-purple-700 dark:text-purple-300 dark:bg-purple-700/40 dark:border-purple-600',
+                                        bubble.type === 'badgeGeneral' && activeFilterKeys.has(bubble.key) && 'bg-teal-500/20 border-teal-500 text-teal-700 dark:text-teal-300 dark:bg-teal-700/40 dark:border-teal-600'
 
                                     )}
                                     title={`Filter by: ${bubble.label}`}
@@ -631,3 +631,4 @@ export default function ResourceSuggestionsModal({
     </Dialog>
   );
 }
+
