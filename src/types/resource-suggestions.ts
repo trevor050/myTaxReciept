@@ -14,6 +14,7 @@ export interface MatchedReason {
 export type BadgeType =
   | 'Best Match'
   | 'Top Match'
+  | 'Your Match' // Added new badge type
   | 'High Impact'
   | 'Broad Focus'
   | 'Niche Focus'
@@ -44,14 +45,15 @@ export interface SuggestedResource {
 export const BADGE_DISPLAY_PRIORITY_MAP: Record<BadgeType, number> = {
   'Best Match': 1,
   'Top Match': 2,
-  'High Impact': 3,
-  'Data-Driven': 4,
-  'Legal Advocacy': 5,
-  'Established Voice': 6,
-  'Grassroots Power': 7,
-  'Community Pick': 8,
-  'Niche Focus': 9,
-  'Broad Focus': 10,
-  'General Interest': 11,
+  'Your Match': 3, // Added "Your Match" with priority
+  'High Impact': 4,
+  'Data-Driven': 5,
+  'Legal Advocacy': 6,
+  'Established Voice': 7,
+  'Grassroots Power': 8,
+  'Community Pick': 9,
+  'Niche Focus': 10,
+  'Broad Focus': 11,
+  'General Interest': 12,
 };
 

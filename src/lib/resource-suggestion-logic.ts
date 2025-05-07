@@ -7,7 +7,9 @@
 import { cleanItemDescription } from '@/services/email/utils';
 import type { FundingLevel } from '@/services/email/types';
 import type { MatchedReason, BadgeType, SuggestedResource } from '@/types/resource-suggestions';
-import { BADGE_DISPLAY_PRIORITY_MAP } from '@/types/resource-suggestions';
+import { BADGE_DISPLAY_PRIORITY_MAP } from '@/types/resource-suggestions'; // Already imported, now also export
+
+export { BADGE_DISPLAY_PRIORITY_MAP }; // Export it
 
 export type FundingAction = 'slash' | 'fund' | 'review';
 
@@ -744,7 +746,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     name: 'Brookings Institution',
     url: 'https://www.brookings.edu/',
     description: 'A nonprofit public policy organization committed to independent research and policy solutions.',
-    icon: 'BuildingIcon', // Generic for institution
+    icon: 'Building', // Generic for institution
     mainCategory: 'Public Policy Research',
     prominence: 'high',
     focusType: 'broad',
@@ -983,29 +985,28 @@ export function assignBadgesToResource(
   userConcernsSize: number,
   isBestMatch: boolean,
   isTopMatch: boolean,
+  isYourMatch: boolean,
   otherResourcesWithBadges: Map<string, Set<BadgeType>>
 ): BadgeType[] {
   const assignedBadges: Set<BadgeType> = new Set();
-  const potentialBadgesPool: BadgeType[] = [];
 
-  // Prioritize Best Match and Top Match if flags are set
+  // Prioritize specific match-based badges
   if (isBestMatch) assignedBadges.add('Best Match');
-  // Add Top Match only if it's not already Best Match and we haven't hit max special badges
-  if (isTopMatch && !assignedBadges.has('Best Match')) {
-    assignedBadges.add('Top Match');
+  if (isTopMatch && !assignedBadges.has('Best Match')) assignedBadges.add('Top Match');
+  if (isYourMatch && !assignedBadges.has('Best Match') && !assignedBadges.has('Top Match')) {
+    assignedBadges.add('Your Match');
   }
 
-
-  // Populate potential badges based on resource properties
+  // Pool of potential descriptive badges
+  const potentialBadgesPool: BadgeType[] = [];
   if (resource.prominence === 'high') potentialBadgesPool.push('High Impact');
   if (resource.focusType === 'broad') potentialBadgesPool.push('Broad Focus');
   if (resource.focusType === 'niche') potentialBadgesPool.push('Niche Focus');
 
   const orgTypeToBadgeMap: Partial<Record<NonNullable<typeof resource.orgTypeTags>[number], BadgeType>> = {
       'legal': 'Legal Advocacy', 'data-driven': 'Data-Driven', 'grassroots': 'Grassroots Power',
-      'established': 'Established Voice', 'activism': 'High Impact', // Activism can also imply High Impact
-      'think-tank': 'Data-Driven', // Think tanks are often data-driven
-      'direct-service': 'Community Pick', // Direct service often implies community pick
+      'established': 'Established Voice', 'activism': 'High Impact',
+      'think-tank': 'Data-Driven', 'direct-service': 'Community Pick',
   };
   resource.orgTypeTags?.forEach(tag => {
       if (orgTypeToBadgeMap[tag] && !potentialBadgesPool.includes(orgTypeToBadgeMap[tag]!)) {
@@ -1013,69 +1014,44 @@ export function assignBadgesToResource(
       }
   });
 
-  // Filter out badges already assigned (Best/Top Match)
-  let availableBadges = potentialBadgesPool.filter(b => !assignedBadges.has(b));
+  // Filter out badges already assigned or those that would duplicate ranked match types
+  let availableDescriptiveBadges = potentialBadgesPool.filter(b => !assignedBadges.has(b) && b !== 'Best Match' && b !== 'Top Match' && b !== 'Your Match');
 
-  // Try to diversify badges based on what other resources have
+  // Count how many times other badges are used to promote diversity
   const allAssignedBadgesCount = new Map<BadgeType, number>();
   otherResourcesWithBadges.forEach(badges => {
       badges.forEach(b => allAssignedBadgesCount.set(b, (allAssignedBadgesCount.get(b) || 0) + 1));
   });
 
-  // Sort available badges: prioritize less common ones if this resource is a good fit
-  availableBadges.sort((a, b) => {
+  availableDescriptiveBadges.sort((a, b) => {
     const countA = allAssignedBadgesCount.get(a) || 0;
     const countB = allAssignedBadgesCount.get(b) || 0;
-    if (countA !== countB) return countA - countB; // Prioritize less used badges
-    return (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99); // Fallback to display priority
+    if (countA !== countB) return countA - countB;
+    return (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99);
   });
 
-
-  // Determine target number of *additional* badges (beyond Best/Top Match)
-  let targetAdditionalBadges = 0;
-  const randomFactor = Math.random();
-  if (resource.intendedBadgeProfile?.includes('single-prominent') || randomFactor < 0.15) { // ~15% get 1 additional
-      targetAdditionalBadges = 1;
-  } else if (resource.intendedBadgeProfile?.includes('triple-focused') || randomFactor < 0.50) { // ~35% (15+35) get 3 additional
-      targetAdditionalBadges = 3;
-  } else { // ~50% get 2 additional
-      targetAdditionalBadges = 2;
+  // Fill remaining badge slots up to MAX_BADGES_PER_RESOURCE
+  for (const badge of availableDescriptiveBadges) {
+    if (assignedBadges.size >= MAX_BADGES_PER_RESOURCE) break;
+    assignedBadges.add(badge);
   }
 
-  // Adjust target if Best/Top already assigned, aiming for total around MAX_BADGES_PER_RESOURCE
-  // Ensure we don't exceed MAX_BADGES_PER_RESOURCE
-  targetAdditionalBadges = Math.min(MAX_BADGES_PER_RESOURCE - assignedBadges.size, targetAdditionalBadges);
-
-
-  for (const badge of availableBadges) {
-      if (assignedBadges.size >= MAX_BADGES_PER_RESOURCE) break; // Stop if max total badges reached
-      if (assignedBadges.size >= ( (assignedBadges.has('Best Match') || assignedBadges.has('Top Match')) ? 1:0) + targetAdditionalBadges && targetAdditionalBadges > 0) break; // Stop if additional target met
-
-      // Avoid assigning "High Impact" if "Best Match" or "Top Match" is already present, unless it's the only option
-      if (badge === 'High Impact' && (assignedBadges.has('Best Match') || assignedBadges.has('Top Match')) && availableBadges.filter(b => !assignedBadges.has(b)).length > 1) {
-          continue;
-      }
-      assignedBadges.add(badge);
-  }
-
-
-  // Fallback: If no specific badges assigned and no user matches, assign 'General Interest'
+  // Fallback: If no badges assigned (e.g. no matches, no prominent features)
   if (assignedBadges.size === 0 && ((resource.matchCount || 0) === 0 || userConcernsSize === 0)) {
       assignedBadges.add('General Interest');
   }
 
-
-  // If still under target and has matches and suitable profile, consider 'Community Pick' as a last resort if space
-  if (assignedBadges.size < MAX_BADGES_PER_RESOURCE &&
-      assignedBadges.size < (( (assignedBadges.has('Best Match') || assignedBadges.has('Top Match')) ? 1 : 0) + targetAdditionalBadges) &&
-      (resource.matchCount || 0) > 0 &&
-      (resource.prominence === 'low' || resource.prominence === 'medium' || resource.intendedBadgeProfile?.includes('community-focused')) &&
-      !assignedBadges.has('Community Pick') && Math.random() < 0.33 && targetAdditionalBadges > 0) { // Only add if we were aiming for more badges
-      assignedBadges.add('Community Pick');
+  // If only match-based badges assigned and there's space, try to add one descriptive badge
+  if ((assignedBadges.has('Best Match') || assignedBadges.has('Top Match') || assignedBadges.has('Your Match')) &&
+      assignedBadges.size < MAX_BADGES_PER_RESOURCE &&
+      availableDescriptiveBadges.length > 0 &&
+      !Array.from(assignedBadges).some(b => availableDescriptiveBadges.includes(b))) {
+    assignedBadges.add(availableDescriptiveBadges[0]); // Add the most diverse/relevant descriptive one
   }
 
 
   return Array.from(assignedBadges)
-      .sort((a, b) => (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99))
-      .slice(0, MAX_BADGES_PER_RESOURCE); // Enforce max badges strictly at the end
+      .sort((a, b) => (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99));
+      // Strict slicing to MAX_BADGES_PER_RESOURCE happens in the calling function if needed after this.
 }
+

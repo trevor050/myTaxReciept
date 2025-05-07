@@ -1,3 +1,4 @@
+
 // src/components/dashboard/ResourceSuggestionsModal.tsx
 'use client';
 
@@ -10,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription as CardDesc } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, MessageSquareQuote, PlusCircle, MinusCircle, Search, Sparkles, Trophy, Users as UsersIcon, Target, HandHeart, FilterX, Megaphone, Gavel, Landmark, Dove, LibrarySquare, DollarSign, Eye, School, Home, Bed, Utensils, Medal, Hammer, Anchor, ListFilter, Tag, FlaskConical, Brain, Building as BuildingIcon, Star, Wheelchair, PawPrint } from 'lucide-react';
+import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, MessageSquareQuote, PlusCircle, MinusCircle, Search, Sparkles, Trophy, Users as UsersIcon, Target, HandHeart, FilterX, Megaphone, Gavel, Landmark, Dove, LibrarySquare, DollarSign, Eye, School, Home, Bed, Utensils, Medal, Hammer, Anchor, ListFilter, Tag, FlaskConical, Brain, Building as BuildingIcon, Star, Wheelchair, PawPrint, CheckCircle } from 'lucide-react';
 import type { SuggestedResource, MatchedReason, BadgeType } from '@/types/resource-suggestions';
 import { BADGE_DISPLAY_PRIORITY_MAP } from '@/types/resource-suggestions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -103,6 +104,7 @@ const BadgeIcon = ({ badgeType }: { badgeType: BadgeType }) => {
     switch (badgeType) {
         case 'Best Match': return <Trophy className="h-3 w-3 mr-1" />;
         case 'Top Match': return <Sparkles className="h-3 w-3 mr-1" />;
+        case 'Your Match': return <CheckCircle className="h-3 w-3 mr-1" />;
         case 'High Impact': return <Megaphone className="h-3 w-3 mr-1 text-rose-600 dark:text-rose-400" />;
         case 'Broad Focus': return <UsersIcon className="h-3 w-3 mr-1 text-blue-600 dark:text-blue-400" />;
         case 'Niche Focus': return <Target className="h-3 w-3 mr-1 text-indigo-600 dark:text-indigo-400" />;
@@ -144,7 +146,7 @@ export default function ResourceSuggestionsModal({
   hasUserConcerns,
 }: ResourceSuggestionsModalProps) {
   const [IconComponents, setIconComponents] = React.useState<Record<string, React.ElementType>>({});
-  const [activeFilterKeys, setActiveFilterKeys] = React.useState<Set<string>>(new Set(['all-organizations']));
+  const [activeFilterKeys, setActiveFilterKeys] = React.useState<Set<string>>(new Set(['your-matches']));
 
 
   const [pos, setPos] = React.useState<{ x: number | null; y: number | null }>({ x: null, y: null });
@@ -157,7 +159,8 @@ export default function ResourceSuggestionsModal({
 
   React.useEffect(() => {
     if (isOpen) {
-      if (hasUserConcerns && suggestedResources.some(r => (r.matchCount || 0) > 0)) {
+      // Start with 'your-matches' if there are concerns, otherwise 'all-organizations'
+      if (hasUserConcerns && suggestedResources.some(r => (r.matchCount || 0) > 0 || r.badges?.includes('Best Match') || r.badges?.includes('Top Match') || r.badges?.includes('Your Match'))) {
         setActiveFilterKeys(new Set(['your-matches']));
       } else {
         setActiveFilterKeys(new Set(['all-organizations']));
@@ -170,69 +173,80 @@ export default function ResourceSuggestionsModal({
 
 
   React.useLayoutEffect(() => {
+    // Only center if modal is open, not yet positioned, and it's the initial open
     if (!isOpen || pos.x !== null || !isInitialOpen.current) return;
 
     const frame = requestAnimationFrame(() => {
         if (!refModal.current) return;
         const { width, height } = refModal.current.getBoundingClientRect();
-        if (width && height) { // Ensure dimensions are available
+        // Ensure dimensions are available before calculating position
+        if (width && height) {
             setPos({
                 x: window.innerWidth / 2 - width / 2,
                 y: window.innerHeight / 2 - height / 2,
             });
-            isInitialOpen.current = false;
+            isInitialOpen.current = false; // Mark as no longer initial open for this instance
         }
     });
     return () => cancelAnimationFrame(frame);
-  }, [isOpen, pos.x]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, pos.x]); // Depend on isOpen and pos.x to re-evaluate if needed
 
 
    React.useLayoutEffect(() => {
-    if (!isOpen || isInitialOpen.current) return;
-    if (pos.x !== null && pos.y !== null && refModal.current) {
-        const { width: currentWidth, height: currentHeight } = refModal.current.getBoundingClientRect();
-        const windowWidth = window.innerWidth;
-        const windowHeight = window.innerHeight;
-        const margin = 20;
+    // This effect ensures the modal stays within viewport boundaries after initial centering or if content changes size
+    if (!isOpen || isInitialOpen.current || !refModal.current || pos.x === null || pos.y === null) return;
 
-        let newX = pos.x;
-        let newY = pos.y;
+    const { width: currentWidth, height: currentHeight } = refModal.current.getBoundingClientRect();
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    const margin = 20; // Small margin from viewport edges
 
-        if (currentWidth > 0) {
-            if (newX < margin) newX = margin;
-            if (newX + currentWidth > windowWidth - margin) {
-                newX = Math.max(margin, windowWidth - currentWidth - margin);
-            }
-        }
-        if (currentHeight > 0) {
-             if (newY < margin) newY = margin;
-             if (newY + currentHeight > windowHeight - margin) {
-                newY = Math.max(margin, windowHeight - currentHeight - margin);
-            }
-        }
-        // Only update if significantly different to avoid infinite loops
-        if (Math.abs(newX - (pos.x || 0)) > 1 || Math.abs(newY - (pos.y || 0)) > 1 ) {
-             setPos({ x: newX, y: newY });
+    let newX = pos.x;
+    let newY = pos.y;
+
+    let positionChanged = false;
+
+    if (currentWidth > 0) {
+        if (newX < margin) { newX = margin; positionChanged = true; }
+        if (newX + currentWidth > windowWidth - margin) {
+            newX = Math.max(margin, windowWidth - currentWidth - margin);
+            positionChanged = true;
         }
     }
-   }, [isOpen, pos.x, pos.y, isLoading, suggestedResources.length, activeFilterKeys]); // Removed modal offsetHeight/offsetWidth as dependencies
+    if (currentHeight > 0) {
+         if (newY < margin) { newY = margin; positionChanged = true; }
+         if (newY + currentHeight > windowHeight - margin) {
+            newY = Math.max(margin, windowHeight - currentHeight - margin);
+            positionChanged = true;
+        }
+    }
+    // Only update if position actually needed to change to avoid potential loops
+    if (positionChanged && (Math.abs(newX - (pos.x || 0)) > 1 || Math.abs(newY - (pos.y || 0)) > 1 )) {
+         setPos({ x: newX, y: newY });
+    }
+   // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [isOpen, pos.x, pos.y, isLoading, suggestedResources.length, activeFilterKeys, refModal.current?.offsetWidth, refModal.current?.offsetHeight]); // Re-run if key dimensions/states change
 
 
   const onDown = React.useCallback((e: React.MouseEvent) => {
     if (!refHandle.current?.contains(e.target as Node) || !refModal.current) return;
-    isInitialOpen.current = false;
 
-    if (pos.x === null || pos.y === null) {
+    // On first drag, capture current visual position from getBoundingClientRect
+    // This correctly handles cases where it was centered by CSS transforms.
+    if (pos.x === null || pos.y === null || isInitialOpen.current) {
       const r = refModal.current.getBoundingClientRect();
       const newPos = { x: r.left, y: r.top };
-      setPos(newPos);
+      setPos(newPos); // This sets the style to use left/top and transform: none
       dragOffset.current = { x: e.clientX - newPos.x, y: e.clientY - newPos.y };
     } else {
+      // If already positioned via state, use existing pos for offset calculation
       dragOffset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
     }
+    isInitialOpen.current = false; // No longer initial open after first interaction/positioning
     setDrag(true);
     document.body.style.userSelect = 'none';
-  }, [pos]);
+  }, [pos, isInitialOpen]);
 
 
   const onMove = React.useCallback((e: MouseEvent) => {
@@ -242,7 +256,7 @@ export default function ResourceSuggestionsModal({
     let x = e.clientX - dragOffset.current.x;
     let y = e.clientY - dragOffset.current.y;
 
-    const margin = 5;
+    const margin = 5; // Minimal margin to keep it on screen
     x = Math.max(margin, Math.min(x, vw - hW - margin));
     y = Math.max(margin, Math.min(y, vh - hH - margin));
 
@@ -277,7 +291,7 @@ export default function ResourceSuggestionsModal({
           iconsToLoad.add(resource.icon);
         }
       });
-      const defaultIcons = ['Dove', 'LibrarySquare', 'DollarSign', 'Eye', 'School', 'Home', 'Bed', 'Utensils', 'Medal', 'Hammer', 'Anchor', 'ListFilter', 'Tag', 'FlaskConical', 'Brain', 'BuildingIcon', 'Wheelchair', 'PawPrint'];
+      const defaultIcons = ['Dove', 'LibrarySquare', 'DollarSign', 'Eye', 'School', 'Home', 'Bed', 'Utensils', 'Medal', 'Hammer', 'Anchor', 'ListFilter', 'Tag', 'FlaskConical', 'Brain', 'Building', 'Wheelchair', 'PawPrint', 'CheckCircle'];
       defaultIcons.forEach(icon => {
         if (!IconComponents[icon]) iconsToLoad.add(icon);
       });
@@ -314,7 +328,7 @@ export default function ResourceSuggestionsModal({
   const filterBubbles = React.useMemo(() => {
     const bubbles = [];
      if (hasUserConcerns) {
-        const yourMatchesCount = suggestedResources.filter(r => (r.matchCount || 0) > 0).length;
+        const yourMatchesCount = suggestedResources.filter(r => (r.matchCount || 0) > 0 || r.badges?.includes('Best Match') || r.badges?.includes('Top Match') || r.badges?.includes('Your Match')).length;
         if (yourMatchesCount > 0) {
             bubbles.push({ key: 'your-matches', label: 'Your Matches', count: yourMatchesCount, type: 'special' });
         }
@@ -348,7 +362,7 @@ export default function ResourceSuggestionsModal({
     const allBadgeTypesPresent = new Set<BadgeType>();
     suggestedResources.forEach(r => r.badges?.forEach(b => allBadgeTypesPresent.add(b)));
     Array.from(allBadgeTypesPresent)
-        .filter(b => !['Best Match', 'Top Match'].includes(b)) // Exclude already handled special badges
+        .filter(b => !['Best Match', 'Top Match', 'Your Match'].includes(b)) // Exclude already handled special badges
         .sort((a,b) => (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99))
         .forEach(badgeType => {
             const count = suggestedResources.filter(r => r.badges?.includes(badgeType)).length;
@@ -375,7 +389,7 @@ export default function ResourceSuggestionsModal({
     if (activeFilterKeys.size > 0 && !activeFilterKeys.has('all-organizations')) {
         filtered = suggestedResources.filter(r => {
             return Array.from(activeFilterKeys).some(key => {
-                if (key === 'your-matches') return (r.matchCount || 0) > 0;
+                if (key === 'your-matches') return (r.matchCount || 0) > 0 || r.badges?.includes('Best Match') || r.badges?.includes('Top Match') || r.badges?.includes('Your Match');
                 if (key === 'best-matches') return r.badges?.includes('Best Match') || false;
                 if (key === 'top-matches') return r.badges?.includes('Top Match') || false;
                 if (key.startsWith('cat-')) return r.mainCategory === key.substring(4);
@@ -444,13 +458,14 @@ export default function ResourceSuggestionsModal({
                     {displayedBadges.map(badge => (
                         <Badge
                             key={badge}
-                            variant={badge === 'Best Match' || badge === 'Top Match' ? 'default' : 'outline'}
+                            variant={badge === 'Best Match' || badge === 'Top Match' || badge === 'Your Match' ? 'default' : 'outline'}
                             className={cn(
                                 "text-xs px-1.5 py-0.5 whitespace-nowrap font-medium flex items-center",
-                                badge === 'Best Match' && "bg-green-600 border-green-700 text-green-50 dark:bg-green-500 dark:border-green-600 dark:text-green-100",
-                                badge === 'Top Match' && "bg-blue-600 border-blue-700 text-blue-50 dark:bg-blue-500 dark:border-blue-600 dark:text-blue-100",
+                                badge === 'Best Match' && "bg-amber-500 border-amber-600 text-amber-50 dark:bg-amber-500 dark:border-amber-600 dark:text-amber-100",
+                                badge === 'Top Match' && "bg-sky-500 border-sky-600 text-sky-50 dark:bg-sky-500 dark:border-sky-600 dark:text-sky-100",
+                                badge === 'Your Match' && "bg-green-500 border-green-600 text-green-50 dark:bg-green-500 dark:border-green-600 dark:text-green-100",
                                 badge === 'High Impact' && "bg-rose-100 border-rose-400 text-rose-700 dark:bg-rose-700/30 dark:border-rose-600 dark:text-rose-300",
-                                badge === 'Broad Focus' && "bg-sky-100 border-sky-400 text-sky-700 dark:bg-sky-700/30 dark:border-sky-600 dark:text-sky-300",
+                                badge === 'Broad Focus' && "bg-blue-100 border-blue-400 text-blue-700 dark:bg-blue-700/30 dark:border-blue-600 dark:text-blue-300",
                                 badge === 'Niche Focus' && "bg-indigo-100 border-indigo-400 text-indigo-700 dark:bg-indigo-700/30 dark:border-indigo-600 dark:text-indigo-300",
                                 badge === 'Community Pick' && "bg-teal-100 border-teal-400 text-teal-700 dark:bg-teal-700/30 dark:border-teal-600 dark:text-teal-300",
                                 badge === 'Grassroots Power' && "bg-lime-100 border-lime-400 text-lime-700 dark:bg-lime-700/30 dark:border-lime-600 dark:text-lime-300",
@@ -463,7 +478,7 @@ export default function ResourceSuggestionsModal({
                            <BadgeIcon badgeType={badge}/> {badge}
                         </Badge>
                     ))}
-                    {(resource.matchCount && resource.matchCount > 0 && displayedBadges.length === 0 && !resource.badges?.includes('General Interest')) ? (
+                    {(resource.matchCount && resource.matchCount > 0 && !resource.badges?.some(b => ['Best Match', 'Top Match', 'Your Match'].includes(b)) && !resource.badges?.includes('General Interest')) ? (
                          <Badge variant="outline" className="border-border text-muted-foreground bg-muted/30 text-xs px-1.5 py-0.5 whitespace-nowrap">
                             Matches {resource.matchCount} concern{resource.matchCount !== 1 ? 's':''}
                         </Badge>
@@ -506,17 +521,17 @@ export default function ResourceSuggestionsModal({
         ref={refModal}
         style={
             pos.x !== null && pos.y !== null
-            ? { left: pos.x, top: pos.y, transform: 'none' }
-            : undefined
+            ? { left: pos.x, top: pos.y, transform: 'none' } // Apply absolute positioning once calculated
+            : undefined // Initially rely on CSS centering
         }
         className={cn(
             'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:rounded-lg',
-             pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
+             pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2', // CSS centering before JS positioning
             'data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut'
         )}
         onInteractOutside={e => drag && e.preventDefault()}
         onOpenAutoFocus={e => {
-            e.preventDefault();
+            e.preventDefault(); // Prevent auto-focus on first element, allowing drag handle to be focused
         }}
       >
         <div
@@ -555,9 +570,10 @@ export default function ResourceSuggestionsModal({
                                     onClick={() => handleFilterClick(bubble.key)}
                                     className={cn("rounded-full text-xs h-auto px-3 py-1.5 whitespace-nowrap transition-all duration-150 flex items-center gap-1.5",
                                         activeFilterKeys.has(bubble.key) ? "shadow-md ring-2 ring-primary/50" : "hover:bg-accent/70",
-                                        bubble.key === 'your-matches' && activeFilterKeys.has(bubble.key) && 'bg-primary border-primary/70 text-primary-foreground dark:bg-purple-600/80 dark:border-purple-700 dark:text-purple-100',
-                                        bubble.key === 'all-organizations' && activeFilterKeys.has(bubble.key) && 'bg-muted-foreground/80 border-muted-foreground text-background dark:bg-slate-600/80 dark:border-slate-700 dark:text-slate-100',
-                                        bubble.type === 'badgeHighlight' && activeFilterKeys.has(bubble.key) && 'bg-emerald-500/90 border-emerald-600 text-emerald-50 dark:bg-emerald-600/80 dark:border-emerald-700 dark:text-emerald-100',
+                                        bubble.key === 'your-matches' && activeFilterKeys.has(bubble.key) && 'bg-primary border-primary/70 text-primary-foreground dark:bg-purple-600 dark:border-purple-700 dark:text-purple-100',
+                                        bubble.key === 'all-organizations' && activeFilterKeys.has(bubble.key) && 'bg-slate-600 border-slate-700 text-slate-100 dark:bg-slate-500 dark:border-slate-600 dark:text-slate-50',
+                                        bubble.key === 'best-matches' && activeFilterKeys.has(bubble.key) && 'bg-amber-500 border-amber-600 text-amber-50 dark:bg-amber-500 dark:border-amber-600 dark:text-amber-100',
+                                        bubble.key === 'top-matches' && activeFilterKeys.has(bubble.key) && 'bg-sky-500 border-sky-600 text-sky-50 dark:bg-sky-500 dark:border-sky-600 dark:text-sky-100',
                                         bubble.type === 'category' && activeFilterKeys.has(bubble.key) && 'bg-indigo-500/90 border-indigo-600 text-indigo-50 dark:bg-indigo-600/80 dark:border-indigo-700 dark:text-indigo-100',
                                         bubble.type === 'orgType' && activeFilterKeys.has(bubble.key) && 'bg-purple-500/90 border-purple-600 text-purple-50 dark:bg-purple-600/80 dark:border-purple-700 dark:text-purple-100',
                                         bubble.type === 'badgeGeneral' && activeFilterKeys.has(bubble.key) && 'bg-teal-500/90 border-teal-600 text-teal-50 dark:bg-teal-600/80 dark:border-teal-700 dark:text-teal-100'
@@ -623,9 +639,4 @@ export default function ResourceSuggestionsModal({
     </Dialog>
   );
 }
-
-
-
-
-
 
