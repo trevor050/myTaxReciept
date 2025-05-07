@@ -8,9 +8,9 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, CheckCircle, AlertCircle, Search } from 'lucide-react';
-import type { SuggestedResource, MatchedReason } from '@/services/resource-suggestions'; // Updated import
+import { Card, CardContent, CardHeader, CardTitle, CardDescription as CardDesc } from '@/components/ui/card'; // Aliased CardDescription
+import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, CheckCircle, AlertCircle, Search, MinusCircle, PlusCircle, MessageSquareQuote } from 'lucide-react';
+import type { SuggestedResource, MatchedReason } from '@/services/resource-suggestions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { SelectedItem } from '@/services/tax-spending';
@@ -19,9 +19,11 @@ import type { Tone } from '@/services/email/types';
 const importLucideIcon = async (iconName: string | undefined): Promise<React.ElementType | typeof Info> => {
   if (!iconName) return Info;
   try {
+    // Ensure first letter is uppercase, rest lowercase for direct mapping if that's the convention.
+    // Or handle specific name variations if lucide-react uses a different casing.
     const normalizedIconName = iconName.charAt(0).toUpperCase() + iconName.slice(1);
     const module = await import('lucide-react');
-    // @ts-ignore
+    // @ts-ignore TS doesn't know about dynamic imports for all lucide icons
     return module[normalizedIconName] || Info;
   } catch (error) {
     console.warn(`Failed to load icon: ${iconName}`, error);
@@ -35,9 +37,9 @@ interface ResourceSuggestionsModalProps {
   onOpenChange: (isOpen: boolean) => void;
   suggestedResources: SuggestedResource[];
   isLoading: boolean;
-  selectedItems: Map<string, SelectedItem>; // For context in relevance
-  balanceBudgetChecked: boolean; // For context
-  userTone: Tone; // For context
+  selectedItems: Map<string, SelectedItem>;
+  balanceBudgetChecked: boolean;
+  userTone: Tone;
 }
 
 const MatchedReasonTooltipContent = ({ reasons, resourceName }: { reasons: MatchedReason[], resourceName: string }) => {
@@ -45,26 +47,35 @@ const MatchedReasonTooltipContent = ({ reasons, resourceName }: { reasons: Match
     return <TooltipContent><p>No specific matching reasons found.</p></TooltipContent>;
   }
   return (
-    <TooltipContent side="top" align="center" className="max-w-xs bg-popover p-3 shadow-xl rounded-lg border text-popover-foreground animate-scaleIn z-[60]">
-      <p className="font-semibold mb-2 text-sm">How {resourceName} aligns with your concerns:</p>
-      <ul className="space-y-1.5 text-xs list-disc list-inside">
+    <TooltipContent side="top" align="start" className="max-w-xs bg-popover p-3 shadow-xl rounded-lg border text-popover-foreground animate-scaleIn z-[60]">
+      <p className="font-semibold mb-2 text-sm text-foreground">How {resourceName} aligns with your concerns:</p>
+      <ul className="space-y-2 text-xs list-none">
         {reasons.map((reason, index) => {
           let prefix = "Addresses";
-          let icon = <Info className="inline-block mr-1.5 h-3.5 w-3.5 text-muted-foreground" />;
+          let icon = <MessageSquareQuote className="inline-block mr-1.5 h-3.5 w-3.5 text-muted-foreground" />;
+          let actionColor = "text-foreground";
+
           if (reason.type === 'supports') {
             prefix = "Supports";
-            icon = <CheckCircle className="inline-block mr-1.5 h-3.5 w-3.5 text-green-500" />;
+            icon = <PlusCircle className="inline-block mr-1.5 h-3.5 w-3.5 text-green-500" />;
+            actionColor = "text-green-600 dark:text-green-400";
           } else if (reason.type === 'opposes') {
             prefix = "Opposes";
-            icon = <AlertCircle className="inline-block mr-1.5 h-3.5 w-3.5 text-red-500" />;
+            icon = <MinusCircle className="inline-block mr-1.5 h-3.5 w-3.5 text-red-500" />;
+            actionColor = "text-red-600 dark:text-red-400";
           } else if (reason.type === 'reviews') {
              prefix = "Advocates for review of";
-             icon = <Search className="inline-block mr-1.5 h-3.5 w-3.5 text-blue-500" />
+             icon = <Search className="inline-block mr-1.5 h-3.5 w-3.5 text-blue-500" />;
+             actionColor = "text-blue-600 dark:text-blue-400";
           }
           return (
-            <li key={index} className="flex items-start">
+            <li key={index} className="flex items-start gap-1">
               {icon}
-              <span><strong>{prefix}:</strong> {reason.description}</span>
+              <div>
+                <strong className={`font-medium ${actionColor}`}>{prefix}:</strong>
+                <span className="text-muted-foreground ml-1">{reason.actionableTag}</span>
+                <p className="text-foreground/70 text-[10px] pl-1 italic mt-0.5">(Related to your concern about: {reason.originalConcern})</p>
+              </div>
             </li>
           );
         })}
@@ -117,28 +128,30 @@ export default function ResourceSuggestionsModal({
 
   const onDown = React.useCallback((e: React.MouseEvent) => {
     if (!refHandle.current?.contains(e.target as Node) || !refModal.current) return;
-    if (pos.x === null) {
+    if (pos.x === null) { // First drag, calculate offset from current visual position
       const r = refModal.current.getBoundingClientRect();
-      setPos({ x: r.left, y: r.top });
+      setPos({ x: r.left, y: r.top }); // Set position to current, disabling CSS centering
       dragOffset.current = { x: e.clientX - r.left, y: e.clientY - r.top };
-      isInitialOpen.current = false;
-    } else {
+      isInitialOpen.current = false; // No longer initial open
+    } else { // Subsequent drags
       dragOffset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
     }
     setDrag(true);
-    document.body.style.userSelect = 'none';
+    document.body.style.userSelect = 'none'; // Prevent text selection during drag
   }, [pos]);
 
+
   const onMove = React.useCallback((e: MouseEvent) => {
-    if (!drag || !refModal.current || pos.x === null) return;
+    if (!drag || !refModal.current || pos.x === null ) return; // Check pos.x for null
     const { innerWidth: vw, innerHeight: vh } = window;
     const { width: hW, height: hH } = refModal.current.getBoundingClientRect();
     let x = e.clientX - dragOffset.current.x;
     let y = e.clientY - dragOffset.current.y;
+    // Constrain to viewport
     x = Math.max(0, Math.min(x, vw - hW));
     y = Math.max(0, Math.min(y, vh - hH));
     setPos({ x, y });
-  }, [drag, pos.x]);
+  }, [drag, pos.x]); // Added pos.x to dependency array
 
   const stopDrag = React.useCallback(() => {
     setDrag(false);
@@ -184,7 +197,7 @@ export default function ResourceSuggestionsModal({
   }, [isOpen, suggestedResources]);
 
 
-  const bestMatches = suggestedResources.filter(r => r.matchCount && r.matchCount >= 2); // Example: 2+ matches is "best"
+  const bestMatches = suggestedResources.filter(r => r.matchCount && r.matchCount >= 2);
   const otherMatches = suggestedResources.filter(r => !bestMatches.includes(r));
 
 
@@ -199,11 +212,11 @@ export default function ResourceSuggestionsModal({
         }
         className={cn(
             'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-2xl flex-col border bg-background shadow-lg sm:rounded-lg',
-            pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
+            pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2', // CSS Centering
             'data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut'
         )}
-        onInteractOutside={e => drag && e.preventDefault()}
-        onOpenAutoFocus={e => e.preventDefault()}
+        onInteractOutside={e => drag && e.preventDefault()} // Prevent closing while dragging
+        onOpenAutoFocus={e => e.preventDefault()} // Prevent auto-focus on first element
       >
         <div
             ref={refHandle}
@@ -213,8 +226,8 @@ export default function ResourceSuggestionsModal({
           <div className='flex items-center gap-2 sm:gap-3 pointer-events-none'>
             <GripVertical className='h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground shrink-0' />
             <div className='space-y-0 sm:space-y-0.5'>
-              <DialogTitle className='text-base sm:text-lg md:text-xl font-semibold flex items-center gap-1.5 sm:gap-2'>
-                <LinkIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <DialogTitle className='text-base sm:text-lg md:text-xl font-semibold flex items-center gap-1.5 sm:gap-2 text-primary'>
+                <LinkIcon className="h-4 w-4 sm:h-5 sm:w-5" /> {/* Use primary color for title icon */}
                 Take Further Action
               </DialogTitle>
               <DialogDescription className='text-xs sm:text-sm text-muted-foreground'>
@@ -241,33 +254,33 @@ export default function ResourceSuggestionsModal({
             <div className="space-y-6">
               {bestMatches.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold mb-2 text-primary">Best Matches:</h3>
+                  <h3 className="text-base font-semibold mb-3 text-primary border-b pb-1.5">🌟 Best Matches:</h3>
                   <div className="space-y-3">
                     {bestMatches.map((resource, index) => {
                         const Icon = IconComponents[resource.icon || 'Info'] || Info;
                         return (
                           <Tooltip key={`best-${index}`}>
                             <TooltipTrigger asChild>
-                              <Card className="shadow-md hover:shadow-lg transition-shadow duration-200 bg-card/80 border-border/50 cursor-help">
-                                <CardHeader className="pb-2 pt-3 px-3 sm:px-4">
+                              <Card className="shadow-lg hover:shadow-xl transition-shadow duration-200 bg-card/90 border-primary/30 hover:border-primary/50 cursor-help rounded-lg overflow-hidden">
+                                <CardHeader className="pb-2 pt-3 px-3 sm:px-4 bg-primary/5">
                                   <CardTitle className="text-sm sm:text-base font-semibold flex items-center justify-between text-primary">
                                     <span className="flex items-center gap-1.5 sm:gap-2">
                                         <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
                                         {resource.name}
                                     </span>
-                                    <span className="text-xs font-normal text-muted-foreground bg-accent px-1.5 py-0.5 rounded-full">
+                                    <span className="text-xs font-medium text-primary/90 bg-primary/10 px-2 py-1 rounded-full">
                                         Matches {resource.matchCount} concern{resource.matchCount !== 1 ? 's':''}
                                     </span>
                                   </CardTitle>
                                 </CardHeader>
-                                <CardContent className="text-xs sm:text-sm space-y-1 px-3 sm:px-4 pb-3">
-                                  <p className="text-muted-foreground leading-relaxed line-clamp-2 sm:line-clamp-3">{resource.description}</p>
-                                  <p className="text-foreground/80 italic text-[10px] sm:text-xs"><strong className="font-medium text-foreground/90">Overall Relevance:</strong> {resource.overallRelevance}</p>
+                                <CardContent className="text-xs sm:text-sm space-y-1.5 px-3 sm:px-4 py-3">
+                                  <CardDesc className="text-muted-foreground leading-relaxed line-clamp-2 sm:line-clamp-3 mb-1">{resource.description}</CardDesc>
+                                  <p className="text-foreground/80 italic text-[10px] sm:text-xs"><strong className="font-medium text-foreground/90">Why it's relevant:</strong> {resource.overallRelevance}</p>
                                   <Button
                                     variant="link"
                                     size="sm"
                                     asChild
-                                    className="p-0 h-auto text-primary hover:text-primary/80 text-xs sm:text-sm mt-1"
+                                    className="p-0 h-auto text-primary hover:text-primary/80 text-xs sm:text-sm mt-1.5 font-medium"
                                   >
                                     <a href={resource.url} target="_blank" rel="noopener noreferrer">
                                       Visit Website <ExternalLink className="ml-1 h-3 w-3 sm:h-3.5 sm:w-3.5" />
@@ -286,15 +299,15 @@ export default function ResourceSuggestionsModal({
 
               {otherMatches.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold mt-6 mb-2 text-muted-foreground">Other Suggestions:</h3>
+                  <h3 className="text-sm font-semibold mt-6 mb-3 text-muted-foreground border-b pb-1.5">Other Suggestions:</h3>
                    <div className="space-y-3">
                     {otherMatches.map((resource, index) => {
                         const Icon = IconComponents[resource.icon || 'Info'] || Info;
                         return (
                           <Tooltip key={`other-${index}`}>
                             <TooltipTrigger asChild>
-                              <Card className="shadow-sm hover:shadow-md transition-shadow duration-200 bg-card/60 border-border/40 cursor-help">
-                                <CardHeader className="pb-1.5 pt-2.5 px-3 sm:px-4">
+                              <Card className="shadow-md hover:shadow-lg transition-shadow duration-200 bg-card/70 border-border/40 hover:border-border/60 cursor-help rounded-lg overflow-hidden">
+                                <CardHeader className="pb-1.5 pt-2.5 px-3 sm:px-4 bg-secondary/20">
                                   <CardTitle className="text-xs sm:text-sm font-medium flex items-center justify-between text-foreground/90">
                                       <span className="flex items-center gap-1.5 sm:gap-2">
                                           <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-muted-foreground" />
@@ -307,14 +320,14 @@ export default function ResourceSuggestionsModal({
                                       )}
                                   </CardTitle>
                                 </CardHeader>
-                                <CardContent className="text-[10px] sm:text-xs space-y-1 px-3 sm:px-4 pb-2.5">
-                                  <p className="text-muted-foreground leading-normal line-clamp-2">{resource.description}</p>
-                                   <p className="text-foreground/70 italic text-[9px] sm:text-[10px]"><strong className="font-medium text-foreground/80">Overall Relevance:</strong> {resource.overallRelevance}</p>
+                                <CardContent className="text-[10px] sm:text-xs space-y-1 px-3 sm:px-4 py-2.5">
+                                  <CardDesc className="text-muted-foreground leading-normal line-clamp-2 mb-1">{resource.description}</CardDesc>
+                                   <p className="text-foreground/70 italic text-[9px] sm:text-[10px]"><strong className="font-medium text-foreground/80">Why it's relevant:</strong> {resource.overallRelevance}</p>
                                   <Button
                                     variant="link"
                                     size="sm"
                                     asChild
-                                    className="p-0 h-auto text-primary/90 hover:text-primary/70 text-[10px] sm:text-xs mt-0.5"
+                                    className="p-0 h-auto text-primary/90 hover:text-primary/70 text-[10px] sm:text-xs mt-1 font-medium"
                                   >
                                     <a href={resource.url} target="_blank" rel="noopener noreferrer">
                                       Visit Website <ExternalLink className="ml-1 h-2.5 w-2.5 sm:h-3 sm:w-3" />
@@ -341,7 +354,7 @@ export default function ResourceSuggestionsModal({
           </TooltipProvider>
         </ScrollArea>
 
-        <DialogFooter className="flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-between px-4 py-3 sm:px-6 sm:py-4 border-t bg-card/95 rounded-b-lg">
+        <DialogFooter className="flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end px-4 py-3 sm:px-6 sm:py-4 border-t bg-card/95 rounded-b-lg">
           <DialogClose asChild>
             <Button variant="outline" className="w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10">Close</Button>
           </DialogClose>
@@ -350,5 +363,3 @@ export default function ResourceSuggestionsModal({
     </Dialog>
   );
 }
-
-    

@@ -6,14 +6,15 @@
  */
 
 import type { SelectedItem as UserSelectedItem } from '@/services/tax-spending';
-import { toneBucket } from '@/services/email/utils';
+import { toneBucket, cleanItemDescription } from '@/services/email/utils';
 import type { Tone } from './email/types';
 
 
 export interface MatchedReason {
   type: 'supports' | 'opposes' | 'reviews' | 'general'; // Type of match
-  description: string; // e.g., "military spending", "Israel aid"
+  description: string; // e.g., "funding for military spending", "review of Israel aid"
   originalConcern: string; // e.g. "Pentagon - Cut Significantly" or "Balancing the Budget"
+  actionableTag: string; // e.g. "cutting Pentagon spending"
 }
 export interface SuggestedResource {
   name: string;
@@ -608,14 +609,16 @@ function getItemAdvocacyTags(itemId: string, fundingAction: FundingAction): stri
   if (itemSpecificTags) {
     itemSpecificTags.forEach(tag => tags.push(tag));
   } else if ((specificItemToActionTagMapping[itemId] || specificItemToActionTagMapping[idLower]) && !itemSpecificTags) {
+    // If the item ID exists but not the specific action, default to a review tag for that item
     tags.push(`${itemId}_review`);
     tags.push(`${idLower}_review`);
   }
 
   if (tags.length === 0) {
+    // Fallback if no other tags were generated
     tags.push(`${itemId}_${fundingAction}`);
   }
-  return Array.from(new Set(tags));
+  return Array.from(new Set(tags)); // Remove duplicates
 }
 
 function getActionFromFundingLevel(level: number): FundingAction {
@@ -624,19 +627,35 @@ function getActionFromFundingLevel(level: number): FundingAction {
     return 'review';
 }
 
-function generateMatchedReason(tag: string, itemDescription: string, action: FundingAction): MatchedReason {
+function generateMatchedReason(tag: string, originalConcernDescription: string, fundingAction: FundingAction): MatchedReason {
     let reasonType: MatchedReason['type'] = 'general';
-    if (tag.includes('_cut') || tag.includes('_slash')) reasonType = 'opposes';
-    else if (tag.includes('_fund')) reasonType = 'supports';
-    else if (tag.includes('_review')) reasonType = 'reviews';
+    let actionableTag = tag.replace(/_/g, ' '); // Default readable tag
 
-    // Make tag more readable for description
-    const readableTag = tag.replace(/_/g, ' ').replace(/ fund| cut| review| slash/i, '');
+    if (tag.includes('_cut') || tag.includes('_slash')) {
+        reasonType = 'opposes';
+        actionableTag = `cutting ${actionableTag.replace(/ cut| slash/i, '')}`;
+    } else if (tag.includes('_fund')) {
+        reasonType = 'supports';
+        actionableTag = `funding ${actionableTag.replace(/ fund/i, '')}`;
+    } else if (tag.includes('_review') || tag.includes('_reform')) {
+        reasonType = 'reviews';
+        actionableTag = `reviewing ${actionableTag.replace(/ review| reform/i, '')}`;
+    }
+
+    // Make the original concern more direct
+    const cleanedConcern = cleanItemDescription(originalConcernDescription); // Clean it for consistency
+    let userActionText = '';
+    switch (fundingAction) {
+        case 'slash': userActionText = 'slashing funding for'; break;
+        case 'fund': userActionText = 'increasing funding for'; break;
+        case 'review': userActionText = 'reviewing spending on'; break;
+    }
 
     return {
         type: reasonType,
-        description: `${readableTag} (related to your concern about ${itemDescription})`,
-        originalConcern: `${itemDescription} - ${action}`
+        description: `${actionableTag}`, // Main part of the reason
+        originalConcern: `${userActionText} ${cleanedConcern}`, // More direct original concern
+        actionableTag: actionableTag // The specific part of the tag
     };
 }
 
@@ -666,37 +685,34 @@ export async function suggestResources(
 
   const scoredResources = RESOURCE_DATABASE.map(resource => {
     let score = 0;
-    const matchedReasons: MatchedReason[] = [];
-    let primaryMatchStrength = 0;
+    const matchedReasonsSet = new Set<string>(); // Use a Set to store unique reason descriptions
+    const detailedMatchedReasons: MatchedReason[] = [];
 
     userConcerns.forEach((concern) => {
         concern.tags.forEach(userTag => {
             if (resource.advocacyTags.includes(userTag)) {
                 score++;
-                matchedReasons.push(generateMatchedReason(userTag, concern.itemDescription, concern.action));
-                if (userTag.includes('_cut') || userTag.includes('_fund') || userTag.includes('_review')) {
-                    score +=1; // Specific actions get more weight
-                    primaryMatchStrength +=2;
-                } else if (userTag.includes('policy') || userTag.includes('reform')) {
-                    primaryMatchStrength +=1;
+                const reason = generateMatchedReason(userTag, concern.itemDescription, concern.action);
+                if (!matchedReasonsSet.has(reason.description)) { // Ensure uniqueness by description
+                    matchedReasonsSet.add(reason.description);
+                    detailedMatchedReasons.push(reason);
+                }
+                if (userTag.includes('_cut') || userTag.includes('_fund') || userTag.includes('_slash')) {
+                    score +=2; // Specific actions get more weight
+                } else if (userTag.includes('_review')) {
+                    score +=1;
                 }
             }
         });
     });
 
-    // Deduplicate matchedReasons by description
-    const uniqueMatchedReasons = Array.from(new Map(matchedReasons.map(reason => [reason.description, reason])).values());
-
-    return { ...resource, score, matchedReasons: uniqueMatchedReasons, primaryMatchStrength, matchCount: uniqueMatchedReasons.length };
+    return { ...resource, score, matchedReasons: detailedMatchedReasons, matchCount: detailedMatchedReasons.length };
   }).filter(r => r.score > 0)
     .sort((a, b) => {
-        if (b.primaryMatchStrength !== a.primaryMatchStrength) {
-            return b.primaryMatchStrength - a.primaryMatchStrength;
-        }
         if (b.matchCount !== a.matchCount) {
-             return b.matchCount - a.matchCount;
+             return b.matchCount - a.matchCount; // Primary sort by number of distinct concerns matched
         }
-        return b.score - a.score;
+        return b.score - a.score; // Secondary sort by overall score
     });
 
 
@@ -704,18 +720,21 @@ export async function suggestResources(
     if (suggestions.length >= 7) break; // Suggest up to 7 resources
     if (suggestedUrls.has(resource.url)) continue;
 
-    let overallRelevanceReason = `Focuses on ${resource.advocacyTags.slice(0,1).join(', ').replace(/_/g, ' ')}, aligning with some of your concerns.`;
-    if (resource.matchCount && resource.matchCount > 0) {
-        const topReason = resource.matchedReasons && resource.matchedReasons.length > 0 ? resource.matchedReasons[0].description : resource.advocacyTags[0].replace(/_/g, ' ');
-        const actionVerb = resource.matchedReasons && resource.matchedReasons.length > 0 ? resource.matchedReasons[0].type : 'addresses';
+    let overallRelevanceReason = `Focuses on key areas related to your concerns.`; // Default
+    if (resource.matchedReasons && resource.matchedReasons.length > 0) {
+        // Create a more compelling summary
+        const topReasonsSummary = resource.matchedReasons
+            .slice(0, 2) // Take top 2-3 distinct reasons
+            .map(r => r.actionableTag) // Use the 'actionableTag'
+            .join(' and ');
 
         if (userTone > 1) { // Stern or Angry
-             overallRelevanceReason = `${resource.name} ${actionVerb} issues like ${topReason}. They align with ${resource.matchCount} of your expressed concerns.`;
+             overallRelevanceReason = `${resource.name} actively works on issues like ${topReasonsSummary}. They address ${resource.matchCount} of your concerns.`;
         } else { // Polite or Concerned
-             overallRelevanceReason = `${resource.name}'s work on ${topReason} may be of interest. They align with ${resource.matchCount} of your expressed concerns.`;
+             overallRelevanceReason = `You might find ${resource.name} relevant as they focus on ${topReasonsSummary}, aligning with ${resource.matchCount} of your concerns.`;
         }
          if (balanceBudgetChecked && resource.advocacyTags.some(t => ['fiscal_responsibility', 'debt_reduction'].includes(t))) {
-            overallRelevanceReason += ` They also focus on fiscal responsibility.`;
+            overallRelevanceReason += ` They also advocate for fiscal responsibility.`;
         }
     }
 
@@ -734,5 +753,3 @@ export async function suggestResources(
 
   return suggestions;
 }
-
-    

@@ -7,7 +7,7 @@ import type { Location, TaxSpending, SelectedItem } from '@/services/tax-spendin
 import { getTaxSpending } from '@/services/tax-spending';
 import { guessStateFromZip, getAverageTaxForState } from '@/lib/zip-to-state'; // Corrected import
 import { mapFundingLevelToSlider } from '@/lib/funding-utils';
-import { toneBucket } from '@/services/email/utils'; // Added import for toneBucket
+import { toneBucket } from '@/services/email/utils'; 
 
 import LocationStep from '@/components/onboarding/LocationStep';
 import TaxAmountStep from '@/components/onboarding/TaxAmountStep';
@@ -21,13 +21,12 @@ import { suggestResources } from '@/services/resource-suggestions';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Mail, Rocket, Loader2 } from 'lucide-react'; // Added Loader2 for new button
+import { ArrowLeft } from 'lucide-react'; 
 import { useToast } from '@/hooks/use-toast';
 import ThemeToggle from '@/components/ThemeToggle';
 import type { DashboardPerspectives, PerspectiveData } from '@/types/perspective';
 import { generateCurrencyPerspectiveList } from '@/lib/currency-perspective';
 import { generateCombinedPerspectiveList } from '@/lib/time-perspective';
-import { cn } from '@/lib/utils';
 
 
 type AppStep = 'location' | 'tax' | 'hourlyWage' | 'dashboard';
@@ -64,7 +63,7 @@ export default function Home() {
   const [suggestedResources, setSuggestedResources] = useState<SuggestedResource[]>([]);
   const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
   const [isSuggestingResources, setIsSuggestingResources] = useState(false);
-  const [showResourceSuggestionButton, setShowResourceSuggestionButton] = useState(false); // New state
+  // Removed showResourceSuggestionButton state
 
   const [dashboardPerspectives, setDashboardPerspectives] = useState<DashboardPerspectives | null>(null);
   const [isMobileView, setIsMobileView] = useState(false);
@@ -110,7 +109,7 @@ export default function Home() {
        setUserLocationText('');
        setSuggestedResources([]);
        setIsResourceModalOpen(false);
-       setShowResourceSuggestionButton(false); // Reset this button visibility
+       // showResourceSuggestionButton was removed
        setDashboardPerspectives(null);
     }
      if (step === 'hourlyWage' && isGoingBack) {
@@ -165,7 +164,7 @@ export default function Home() {
      });
 
      try {
-       await new Promise(resolve => setTimeout(resolve, 400));
+       await new Promise(resolve => setTimeout(resolve, 400)); // Simulate loading
        const spendingData = await getTaxSpending(currentLocation, finalTaxAmount);
        setTaxSpending(spendingData);
 
@@ -273,7 +272,6 @@ export default function Home() {
         setAggressiveness(50);
         setUserName('');
         setUserLocationText('');
-        setShowResourceSuggestionButton(false); // Hide if selection becomes empty
      }
   };
 
@@ -285,14 +283,6 @@ export default function Home() {
        ])
      ));
      setIsEmailModalOpen(true);
-  };
-
-  const handleEmailGenerated = () => {
-    // This function is called from EmailCustomizationModal after email is "generated"
-    setIsEmailModalOpen(false); // Close the email modal
-    if (selectedEmailItems.size > 0 || balanceBudgetChecked) {
-        setShowResourceSuggestionButton(true); // Show the "Take Further Action" button
-    }
   };
 
 
@@ -332,6 +322,14 @@ export default function Home() {
         });
     } finally {
         setIsSuggestingResources(false);
+    }
+  };
+
+  const handleEmailGenerated = () => {
+    setIsEmailModalOpen(false); // Close the email modal
+    // Automatically trigger resource suggestions if concerns were selected
+    if (selectedEmailItems.size > 0 || balanceBudgetChecked) {
+        handleShowResourceSuggestions();
     }
   };
 
@@ -391,28 +389,7 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        {/* "Take Further Action" Button - appears after email modal use */}
-        {step === 'dashboard' && showResourceSuggestionButton && (
-             <div className="mt-4 sm:mt-6 flex justify-center">
-                <Button
-                    onClick={handleShowResourceSuggestions}
-                    variant="outline"
-                    className={cn(
-                        "text-sm sm:text-base border-primary/60 text-primary hover:bg-primary/10 hover:border-primary shadow-md transition-all hover:scale-105 active:scale-95",
-                        isSuggestingResources && "opacity-70 cursor-not-allowed"
-                    )}
-                    disabled={isSuggestingResources}
-                    size="lg"
-                >
-                    {isSuggestingResources ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                        <Rocket className="mr-2 h-4 w-4" />
-                    )}
-                    Take Further Action
-                </Button>
-            </div>
-        )}
+        {/* "Take Further Action" Button - was removed. Resource modal now opens automatically. */}
 
         <footer className="mt-4 sm:mt-6 text-center text-muted-foreground/60 text-[10px] sm:text-xs px-2 sm:px-4 md:px-0 relative pb-16 sm:pb-6">
              Powered by publicly available data and community resources. Data is estimated and for informational purposes. Verify with official sources.
@@ -427,8 +404,8 @@ export default function Home() {
 
        <EmailCustomizationModal
             isOpen={isEmailModalOpen}
-            onOpenChange={setIsEmailModalOpen} // Directly sets open state
-            onEmailGenerated={handleEmailGenerated} // New callback
+            onOpenChange={setIsEmailModalOpen}
+            onEmailGenerated={handleEmailGenerated} 
             selectedItems={selectedEmailItems}
             balanceBudgetChecked={balanceBudgetChecked}
             taxAmount={taxAmount ?? estimatedMedianTax}
