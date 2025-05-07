@@ -1,8 +1,7 @@
-
 // src/components/dashboard/ResourceSuggestionsModal.tsx
 'use client';
 
-import * as React from 'react';
+import * as React from 'react'; // Ensure this is correct
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
   DialogFooter, DialogClose,
@@ -158,53 +157,49 @@ export default function ResourceSuggestionsModal({
   const refHandle = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    if (isOpen) {
-      // Start with 'your-matches' if there are concerns, otherwise 'all-organizations'
-      if (hasUserConcerns && suggestedResources.some(r => (r.matchCount || 0) > 0 || r.badges?.includes('Best Match') || r.badges?.includes('Top Match') || r.badges?.includes('Your Match'))) {
-        setActiveFilterKeys(new Set(['your-matches']));
-      } else {
-        setActiveFilterKeys(new Set(['all-organizations']));
-      }
-    } else {
+    // Preload resources if the modal is open and suggestions are available
+    if (isOpen && suggestedResources.length > 0) {
+       // Default to 'your-matches' if user has concerns and there are matches
+       // Otherwise, default to 'all-organizations'
+       if (hasUserConcerns && suggestedResources.some(r => (r.matchCount || 0) > 0 || r.badges?.some(b => ['Best Match', 'Top Match', 'Your Match'].includes(b)))) {
+            setActiveFilterKeys(new Set(['your-matches']));
+       } else {
+            setActiveFilterKeys(new Set(['all-organizations']));
+       }
+    } else if (!isOpen) {
       isInitialOpen.current = true;
-      setPos({ x: null, y: null });
+      setPos({ x: null, y: null }); // Reset position when modal closes
     }
   }, [isOpen, hasUserConcerns, suggestedResources]);
 
 
   React.useLayoutEffect(() => {
-    // Only center if modal is open, not yet positioned, and it's the initial open
     if (!isOpen || pos.x !== null || !isInitialOpen.current) return;
-
     const frame = requestAnimationFrame(() => {
-        if (!refModal.current) return;
-        const { width, height } = refModal.current.getBoundingClientRect();
-        // Ensure dimensions are available before calculating position
-        if (width && height) {
-            setPos({
-                x: window.innerWidth / 2 - width / 2,
-                y: window.innerHeight / 2 - height / 2,
-            });
-            isInitialOpen.current = false; // Mark as no longer initial open for this instance
-        }
+      if (!refModal.current) return;
+      const { width, height } = refModal.current.getBoundingClientRect();
+      if (width && height) {
+        setPos({
+          x: window.innerWidth / 2 - width / 2,
+          y: window.innerHeight / 2 - height / 2,
+        });
+        isInitialOpen.current = false;
+      }
     });
     return () => cancelAnimationFrame(frame);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, pos.x]); // Depend on isOpen and pos.x to re-evaluate if needed
+  }, [isOpen, pos.x]);
 
 
    React.useLayoutEffect(() => {
-    // This effect ensures the modal stays within viewport boundaries after initial centering or if content changes size
     if (!isOpen || isInitialOpen.current || !refModal.current || pos.x === null || pos.y === null) return;
 
     const { width: currentWidth, height: currentHeight } = refModal.current.getBoundingClientRect();
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
-    const margin = 20; // Small margin from viewport edges
+    const margin = 20;
 
     let newX = pos.x;
     let newY = pos.y;
-
     let positionChanged = false;
 
     if (currentWidth > 0) {
@@ -221,29 +216,23 @@ export default function ResourceSuggestionsModal({
             positionChanged = true;
         }
     }
-    // Only update if position actually needed to change to avoid potential loops
     if (positionChanged && (Math.abs(newX - (pos.x || 0)) > 1 || Math.abs(newY - (pos.y || 0)) > 1 )) {
          setPos({ x: newX, y: newY });
     }
-   // eslint-disable-next-line react-hooks/exhaustive-deps
-   }, [isOpen, pos.x, pos.y, isLoading, suggestedResources.length, activeFilterKeys, refModal.current?.offsetWidth, refModal.current?.offsetHeight]); // Re-run if key dimensions/states change
+   }, [isOpen, pos.x, pos.y, isLoading, suggestedResources.length, activeFilterKeys, refModal.current?.offsetWidth, refModal.current?.offsetHeight]);
 
 
   const onDown = React.useCallback((e: React.MouseEvent) => {
     if (!refHandle.current?.contains(e.target as Node) || !refModal.current) return;
-
-    // On first drag, capture current visual position from getBoundingClientRect
-    // This correctly handles cases where it was centered by CSS transforms.
     if (pos.x === null || pos.y === null || isInitialOpen.current) {
       const r = refModal.current.getBoundingClientRect();
       const newPos = { x: r.left, y: r.top };
-      setPos(newPos); // This sets the style to use left/top and transform: none
+      setPos(newPos);
       dragOffset.current = { x: e.clientX - newPos.x, y: e.clientY - newPos.y };
     } else {
-      // If already positioned via state, use existing pos for offset calculation
       dragOffset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
     }
-    isInitialOpen.current = false; // No longer initial open after first interaction/positioning
+    isInitialOpen.current = false;
     setDrag(true);
     document.body.style.userSelect = 'none';
   }, [pos, isInitialOpen]);
@@ -255,11 +244,9 @@ export default function ResourceSuggestionsModal({
     const { width: hW, height: hH } = refModal.current.getBoundingClientRect();
     let x = e.clientX - dragOffset.current.x;
     let y = e.clientY - dragOffset.current.y;
-
-    const margin = 5; // Minimal margin to keep it on screen
+    const margin = 5;
     x = Math.max(margin, Math.min(x, vw - hW - margin));
     y = Math.max(margin, Math.min(y, vh - hH - margin));
-
     setPos({ x, y });
   }, [drag, pos.x, pos.y]);
 
@@ -308,8 +295,7 @@ export default function ResourceSuggestionsModal({
     if (isOpen && suggestedResources.length > 0) {
       loadIcons();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, suggestedResources]);
+  }, [isOpen, suggestedResources, IconComponents]);
 
 
   const uniqueCategories = React.useMemo(() => {
@@ -384,25 +370,27 @@ export default function ResourceSuggestionsModal({
 
   const displayedResources = React.useMemo(() => {
     if (isLoading) return [];
-    let filtered = suggestedResources;
-
-    if (activeFilterKeys.size > 0 && !activeFilterKeys.has('all-organizations')) {
-        filtered = suggestedResources.filter(r => {
-            return Array.from(activeFilterKeys).some(key => {
-                if (key === 'your-matches') return (r.matchCount || 0) > 0 || r.badges?.includes('Best Match') || r.badges?.includes('Top Match') || r.badges?.includes('Your Match');
-                if (key === 'best-matches') return r.badges?.includes('Best Match') || false;
-                if (key === 'top-matches') return r.badges?.includes('Top Match') || false;
-                if (key.startsWith('cat-')) return r.mainCategory === key.substring(4);
-                if (key.startsWith('orgtype-')) return r.orgTypeTags?.includes(key.substring(8) as any) || false;
-                if (key.startsWith('badge-')) {
-                    const badgeKey = key.substring(6).replace(/-/g, ' ');
-                    return r.badges?.some(b => b.toLowerCase() === badgeKey) || false;
-                }
-                return false;
-            });
-        });
+    
+    // If 'all-organizations' is the only active filter or no filters are active (implicitly all), show all
+    if (activeFilterKeys.has('all-organizations') || activeFilterKeys.size === 0) {
+        return suggestedResources;
     }
-    return filtered;
+
+    // Otherwise, apply active filters
+    return suggestedResources.filter(r => {
+        return Array.from(activeFilterKeys).some(key => {
+            if (key === 'your-matches') return (r.matchCount || 0) > 0 || r.badges?.includes('Best Match') || r.badges?.includes('Top Match') || r.badges?.includes('Your Match');
+            if (key === 'best-matches') return r.badges?.includes('Best Match') || false;
+            if (key === 'top-matches') return r.badges?.includes('Top Match') || false;
+            if (key.startsWith('cat-')) return r.mainCategory === key.substring(4);
+            if (key.startsWith('orgtype-')) return r.orgTypeTags?.includes(key.substring(8) as any) || false;
+            if (key.startsWith('badge-')) {
+                const badgeKey = key.substring(6).replace(/-/g, ' ');
+                return r.badges?.some(b => b.toLowerCase() === badgeKey) || false;
+            }
+            return false;
+        });
+    });
 
   }, [isLoading, suggestedResources, activeFilterKeys]);
 
@@ -413,19 +401,22 @@ export default function ResourceSuggestionsModal({
         const isAllOrgsActive = newKeys.has('all-organizations');
 
         if (key === 'all-organizations') {
-            return new Set(['all-organizations']);
+            return new Set(['all-organizations']); // If "All Organizations" is clicked, it becomes the only active filter
         }
 
+        // If "All Organizations" was active and another filter is clicked, deactivate "All Organizations"
         if (isAllOrgsActive) {
             newKeys.delete('all-organizations');
         }
 
+        // Toggle the clicked filter
         if (newKeys.has(key)) {
             newKeys.delete(key);
         } else {
             newKeys.add(key);
         }
 
+        // If no filters are active after toggling, default back to "All Organizations"
         if (newKeys.size === 0) {
             return new Set(['all-organizations']);
         }
@@ -511,7 +502,6 @@ export default function ResourceSuggestionsModal({
         <MatchedReasonTooltipContent reasons={resource.matchedReasons || []} resourceName={resource.name}/>
         </Tooltip>
     );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [IconComponents, BADGE_DISPLAY_PRIORITY_MAP]);
 
 
@@ -521,17 +511,17 @@ export default function ResourceSuggestionsModal({
         ref={refModal}
         style={
             pos.x !== null && pos.y !== null
-            ? { left: pos.x, top: pos.y, transform: 'none' } // Apply absolute positioning once calculated
-            : undefined // Initially rely on CSS centering
+            ? { left: pos.x, top: pos.y, transform: 'none' }
+            : undefined
         }
         className={cn(
             'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:rounded-lg',
-             pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2', // CSS centering before JS positioning
+             pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
             'data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut'
         )}
         onInteractOutside={e => drag && e.preventDefault()}
         onOpenAutoFocus={e => {
-            e.preventDefault(); // Prevent auto-focus on first element, allowing drag handle to be focused
+            e.preventDefault();
         }}
       >
         <div
@@ -570,10 +560,10 @@ export default function ResourceSuggestionsModal({
                                     onClick={() => handleFilterClick(bubble.key)}
                                     className={cn("rounded-full text-xs h-auto px-3 py-1.5 whitespace-nowrap transition-all duration-150 flex items-center gap-1.5",
                                         activeFilterKeys.has(bubble.key) ? "shadow-md ring-2 ring-primary/50" : "hover:bg-accent/70",
-                                        bubble.key === 'your-matches' && activeFilterKeys.has(bubble.key) && 'bg-primary border-primary/70 text-primary-foreground dark:bg-purple-600 dark:border-purple-700 dark:text-purple-100',
+                                        bubble.key === 'your-matches' && activeFilterKeys.has(bubble.key) && 'bg-sky-500 border-sky-600 text-sky-50 dark:bg-sky-600 dark:border-sky-700 dark:text-sky-100', // Changed from primary
                                         bubble.key === 'all-organizations' && activeFilterKeys.has(bubble.key) && 'bg-slate-600 border-slate-700 text-slate-100 dark:bg-slate-500 dark:border-slate-600 dark:text-slate-50',
                                         bubble.key === 'best-matches' && activeFilterKeys.has(bubble.key) && 'bg-amber-500 border-amber-600 text-amber-50 dark:bg-amber-500 dark:border-amber-600 dark:text-amber-100',
-                                        bubble.key === 'top-matches' && activeFilterKeys.has(bubble.key) && 'bg-sky-500 border-sky-600 text-sky-50 dark:bg-sky-500 dark:border-sky-600 dark:text-sky-100',
+                                        bubble.key === 'top-matches' && activeFilterKeys.has(bubble.key) && 'bg-green-500 border-green-600 text-green-50 dark:bg-green-500 dark:border-green-600 dark:text-green-100', // Changed from sky
                                         bubble.type === 'category' && activeFilterKeys.has(bubble.key) && 'bg-indigo-500/90 border-indigo-600 text-indigo-50 dark:bg-indigo-600/80 dark:border-indigo-700 dark:text-indigo-100',
                                         bubble.type === 'orgType' && activeFilterKeys.has(bubble.key) && 'bg-purple-500/90 border-purple-600 text-purple-50 dark:bg-purple-600/80 dark:border-purple-700 dark:text-purple-100',
                                         bubble.type === 'badgeGeneral' && activeFilterKeys.has(bubble.key) && 'bg-teal-500/90 border-teal-600 text-teal-50 dark:bg-teal-600/80 dark:border-teal-700 dark:text-teal-100'
@@ -639,4 +629,3 @@ export default function ResourceSuggestionsModal({
     </Dialog>
   );
 }
-
