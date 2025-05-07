@@ -8,7 +8,7 @@
 import type { SelectedItem as UserSelectedItem } from '@/services/tax-spending';
 import type { Tone } from './email/types';
 import type { MatchedReason, BadgeType, SuggestedResource } from '@/types/resource-suggestions';
-import { BADGE_DISPLAY_PRIORITY_MAP } from '@/types/resource-suggestions'; // Corrected import path
+import { BADGE_DISPLAY_PRIORITY_MAP } from '@/types/resource-suggestions';
 import { RESOURCE_DATABASE, getItemAdvocacyTags, getActionFromFundingLevel, generateMatchedReason, MAX_SUGGESTIONS, assignBadgesToResource, MAX_BADGES_PER_RESOURCE } from '@/lib/resource-suggestion-logic';
 
 
@@ -96,7 +96,8 @@ export async function suggestResources(
 
     return { ...resource, score, matchedReasons: detailedMatchedReasons, matchCount: uniqueConcernMatchCount };
   })
-  .filter(r => (r.matchCount || 0) > 0 || (userConcerns.size === 0 && balanceBudgetChecked && r.advocacyTags.some(t => ['fiscal_responsibility', 'debt_reduction'].includes(t))) || userConcerns.size === 0)
+  // Removed the filter that was causing "All Organizations" to be incorrectly limited
+  // .filter(r => (r.matchCount || 0) > 0 || (userConcerns.size === 0 && balanceBudgetChecked && r.advocacyTags.some(t => ['fiscal_responsibility', 'debt_reduction'].includes(t))) || userConcerns.size === 0)
   .sort((a, b) => {
     // Primary sort: number of unique concerns matched (descending)
     if ((b.matchCount || 0) !== (a.matchCount || 0)) return (b.matchCount || 0) - (a.matchCount || 0);
@@ -118,10 +119,9 @@ export async function suggestResources(
     let isTopMatch = false;
     let isYourMatch = false;
 
-    // Assign ranked badges only if there are user concerns or budget preference is checked
     const qualifiesForRankedBadge = (resource.matchCount || 0) > 0 || (balanceBudgetChecked && resource.advocacyTags.some(t => ['fiscal_responsibility', 'debt_reduction'].includes(t)));
 
-    if (qualifiesForRankedBadge) {
+    if (qualifiesForRankedBadge && userConcerns.size > 0) { // Only assign ranked badges if there are actual user concerns
         if (index < BEST_MATCH_COUNT) {
             isBestMatch = true;
         } else if (index < BEST_MATCH_COUNT + TOP_MATCH_COUNT) {
@@ -130,7 +130,6 @@ export async function suggestResources(
             isYourMatch = true;
         }
     }
-    // Get initial badges including ranked ones
     const initialBadges = assignBadgesToResource(resource, userConcerns.size, isBestMatch, isTopMatch, isYourMatch, otherResourcesWithBadges);
     return { ...resource, badges: initialBadges };
   });
@@ -155,7 +154,6 @@ export async function suggestResources(
         overallRelevanceReason = `${resource.name} advocates for fiscal responsibility, aligning with your interest in balancing the budget.`;
     }
 
-    // Ensure final badges list respects MAX_BADGES_PER_RESOURCE and priority
     const finalBadges = (resource.badges || [])
         .sort((a,b) => (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99))
         .slice(0, MAX_BADGES_PER_RESOURCE);
@@ -184,4 +182,3 @@ export async function suggestResources(
   }
   return suggestions;
 }
-
