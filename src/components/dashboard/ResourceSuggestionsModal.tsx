@@ -8,10 +8,11 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription as CardDesc } from '@/components/ui/card'; // Aliased CardDescription
-import { Badge } from '@/components/ui/badge'; // Import Badge component
-import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, MessageSquareQuote, PlusCircle, MinusCircle, Search, Sparkles } from 'lucide-react'; // Added Sparkles for Best Match
-import type { SuggestedResource, MatchedReason } from '@/services/resource-suggestions';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription as CardDesc } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, MessageSquareQuote, PlusCircle, MinusCircle, Search, Sparkles, Trophy, Users as UsersIcon, Target } from 'lucide-react';
+import type { SuggestedResource, MatchedReason, BadgeType } from '@/services/resource-suggestions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { SelectedItem } from '@/services/tax-spending';
@@ -83,6 +84,17 @@ const MatchedReasonTooltipContent = ({ reasons, resourceName }: { reasons: Match
   );
 };
 
+const BadgeIcon = ({ badgeType }: { badgeType: BadgeType }) => {
+    switch (badgeType) {
+        case 'Best Match': return <Trophy className="h-3 w-3 mr-1" />;
+        case 'High Impact': return <Sparkles className="h-3 w-3 mr-1" />; // Re-using Sparkles for High Impact
+        case 'Broad Focus': return <UsersIcon className="h-3 w-3 mr-1" />;
+        case 'Niche Focus': return <Target className="h-3 w-3 mr-1" />;
+        case 'Community Pick': return <HandHeart className="h-3 w-3 mr-1" />;
+        default: return null;
+    }
+};
+
 
 export default function ResourceSuggestionsModal({
   isOpen,
@@ -91,6 +103,7 @@ export default function ResourceSuggestionsModal({
   isLoading,
 }: ResourceSuggestionsModalProps) {
   const [IconComponents, setIconComponents] = React.useState<Record<string, React.ElementType>>({});
+  const [activeTab, setActiveTab] = React.useState<string>("best-matches");
 
   const [pos, setPos] = React.useState<{ x: number | null; y: number | null }>({ x: null, y: null });
   const [drag, setDrag] = React.useState(false);
@@ -104,6 +117,7 @@ export default function ResourceSuggestionsModal({
     if (!isOpen) {
       setPos({ x: null, y: null });
       isInitialOpen.current = true;
+      setActiveTab("best-matches"); // Reset tab on close
     }
   }, [isOpen]);
 
@@ -193,10 +207,73 @@ export default function ResourceSuggestionsModal({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, suggestedResources]);
 
+  const bestMatches = suggestedResources.filter(r => r.badges?.includes('Best Match'));
+  const otherResources = suggestedResources.filter(r => !r.badges?.includes('Best Match'));
 
-  const bestMatchThreshold = 2; // Define a threshold for "Best Match"
-  const bestMatches = suggestedResources.filter(r => r.matchCount && r.matchCount >= bestMatchThreshold);
-  const otherMatches = suggestedResources.filter(r => !bestMatches.includes(r) || (r.matchCount && r.matchCount < bestMatchThreshold));
+  const categories = React.useMemo(() => {
+    const uniqueCategories = new Set<string>();
+    otherResources.forEach(r => uniqueCategories.add(r.mainCategory));
+    return Array.from(uniqueCategories).sort();
+  }, [otherResources]);
+
+
+  const renderResourceCard = (resource: SuggestedResource, index: number, type: 'best' | 'other') => {
+    const Icon = IconComponents[resource.icon || 'Info'] || Info;
+    return (
+        <Tooltip key={`${type}-${index}`}>
+        <TooltipTrigger asChild>
+            <Card className="shadow-lg hover:shadow-xl transition-shadow duration-200 bg-card/90 border-border/30 hover:border-primary/40 cursor-help rounded-lg overflow-hidden w-full animate-fadeIn">
+            <CardHeader className="pb-2 pt-3 px-3 sm:px-4 bg-secondary/10">
+                <CardTitle className="text-sm sm:text-base font-semibold flex items-start justify-between text-foreground gap-2">
+                <span className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 mt-0.5 text-primary" />
+                    <span className="flex-1">{resource.name}</span>
+                </span>
+                <div className="flex items-center flex-shrink-0 gap-1 ml-auto flex-wrap justify-end">
+                    {resource.badges?.map(badge => (
+                        <Badge
+                            key={badge}
+                            variant={badge === 'Best Match' ? 'default' : 'secondary'}
+                            className={cn(
+                                "text-xs px-1.5 py-0.5 whitespace-nowrap",
+                                badge === 'Best Match' && "bg-green-500/20 border-green-500/50 text-green-700 dark:text-green-400",
+                                badge === 'High Impact' && "bg-blue-500/20 border-blue-500/50 text-blue-700 dark:text-blue-400",
+                                badge === 'Broad Focus' && "bg-purple-500/20 border-purple-500/50 text-purple-700 dark:text-purple-400",
+                                badge === 'Niche Focus' && "bg-orange-500/20 border-orange-500/50 text-orange-700 dark:text-orange-400",
+                                badge === 'Community Pick' && "bg-teal-500/20 border-teal-500/50 text-teal-700 dark:text-teal-400",
+                            )}
+                        >
+                           <BadgeIcon badgeType={badge}/> {badge}
+                        </Badge>
+                    ))}
+                    {resource.matchCount && resource.matchCount > 0 && (!resource.badges || resource.badges.length === 0) && (
+                         <Badge variant="outline" className="border-border text-muted-foreground bg-muted/30 text-xs px-1.5 py-0.5 whitespace-nowrap">
+                            Matches {resource.matchCount} concern{resource.matchCount !== 1 ? 's':''}
+                        </Badge>
+                    )}
+                </div>
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="text-xs sm:text-sm space-y-1.5 px-3 sm:px-4 py-3">
+                <CardDesc className="text-muted-foreground leading-relaxed line-clamp-2 sm:line-clamp-3 mb-1">{resource.description}</CardDesc>
+                <p className="text-foreground/80 italic text-[10px] sm:text-xs"><strong className="font-medium text-foreground/90">Why it's relevant:</strong> {resource.overallRelevance}</p>
+                <Button
+                variant="link"
+                size="sm"
+                asChild
+                className="p-0 h-auto text-primary hover:text-primary/80 text-xs sm:text-sm mt-1.5 font-medium"
+                >
+                <a href={resource.url} target="_blank" rel="noopener noreferrer">
+                    Visit Website <ExternalLink className="ml-1 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                </a>
+                </Button>
+            </CardContent>
+            </Card>
+        </TooltipTrigger>
+        <MatchedReasonTooltipContent reasons={resource.matchedReasons || []} resourceName={resource.name}/>
+        </Tooltip>
+    );
+  };
 
 
   return (
@@ -209,7 +286,7 @@ export default function ResourceSuggestionsModal({
             : undefined
         }
         className={cn(
-            'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-2xl flex-col border bg-background shadow-lg sm:rounded-lg',
+            'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:rounded-lg', // Increased max-w
             pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
             'data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut'
         )}
@@ -226,10 +303,10 @@ export default function ResourceSuggestionsModal({
             <div className='space-y-0 sm:space-y-0.5'>
               <DialogTitle className='text-base sm:text-lg md:text-xl font-semibold flex items-center gap-1.5 sm:gap-2 text-primary'>
                 <LinkIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-                Take Further Action
+                Explore Further Actions
               </DialogTitle>
               <DialogDescription className='text-xs sm:text-sm text-muted-foreground'>
-                Organizations related to your concerns. Hover for detailed relevance.
+                Discover organizations aligned with your concerns.
               </DialogDescription>
             </div>
           </div>
@@ -241,7 +318,7 @@ export default function ResourceSuggestionsModal({
         </div>
 
 
-        <ScrollArea className="flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+        <ScrollArea className="flex-1 overflow-y-auto px-1 py-1 sm:px-2 sm:py-2 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
           <TooltipProvider delayDuration={100}>
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
@@ -249,107 +326,42 @@ export default function ResourceSuggestionsModal({
               <p className="text-sm">Finding relevant resources...</p>
             </div>
           ) : suggestedResources.length > 0 ? (
-            <div className="space-y-6">
-              {bestMatches.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold mb-3 text-foreground border-b border-border/30 pb-1.5">Best Matches:</h3>
-                  <div className="space-y-3">
-                    {bestMatches.map((resource, index) => {
-                        const Icon = IconComponents[resource.icon || 'Info'] || Info;
-                        const isTrulyBestMatch = resource.matchCount && resource.matchCount >= bestMatchThreshold;
-                        return (
-                          <Tooltip key={`best-${index}`}>
-                            <TooltipTrigger asChild>
-                              <Card className="shadow-lg hover:shadow-xl transition-shadow duration-200 bg-card/90 border-primary/30 hover:border-primary/50 cursor-help rounded-lg overflow-hidden">
-                                <CardHeader className="pb-2 pt-3 px-3 sm:px-4 bg-primary/5">
-                                   <CardTitle className="text-sm sm:text-base font-semibold flex items-start justify-between text-primary gap-2">
-                                    <span className="flex items-center gap-1.5 sm:gap-2 min-w-0"> {/* Min width 0 for wrapping */}
-                                        <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 mt-0.5" />
-                                        <span className="flex-1">{resource.name}</span> {/* Name can wrap */}
-                                    </span>
-                                    <div className="flex items-center flex-shrink-0 gap-1.5 sm:gap-2 ml-auto">
-                                        {isTrulyBestMatch && (
-                                            <Badge variant="outline" className="border-green-500 text-green-700 dark:text-green-400 bg-green-500/10 text-xs px-1.5 py-0.5 whitespace-nowrap">
-                                                <Sparkles className="h-3 w-3 mr-1" />Best Match
-                                            </Badge>
-                                        )}
-                                        <Badge variant="outline" className="border-border text-muted-foreground bg-muted/30 text-xs px-1.5 py-0.5 whitespace-nowrap">
-                                            Matches {resource.matchCount} concern{resource.matchCount !== 1 ? 's':''}
-                                        </Badge>
-                                    </div>
-                                  </CardTitle>
-                                </CardHeader>
-                                <CardContent className="text-xs sm:text-sm space-y-1.5 px-3 sm:px-4 py-3">
-                                  <CardDesc className="text-muted-foreground leading-relaxed line-clamp-2 sm:line-clamp-3 mb-1">{resource.description}</CardDesc>
-                                  <p className="text-foreground/80 italic text-[10px] sm:text-xs"><strong className="font-medium text-foreground/90">Why it's relevant:</strong> {resource.overallRelevance}</p>
-                                  <Button
-                                    variant="link"
-                                    size="sm"
-                                    asChild
-                                    className="p-0 h-auto text-primary hover:text-primary/80 text-xs sm:text-sm mt-1.5 font-medium"
-                                  >
-                                    <a href={resource.url} target="_blank" rel="noopener noreferrer">
-                                      Visit Website <ExternalLink className="ml-1 h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                                    </a>
-                                  </Button>
-                                </CardContent>
-                              </Card>
-                            </TooltipTrigger>
-                             <MatchedReasonTooltipContent reasons={resource.matchedReasons || []} resourceName={resource.name}/>
-                          </Tooltip>
-                        );
-                    })}
-                  </div>
-                </div>
-              )}
+             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full p-2 sm:p-4">
+                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1 mb-4 h-auto flex-wrap justify-start">
+                    <TabsTrigger value="best-matches" className="text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Best Matches ({bestMatches.length})</TabsTrigger>
+                    <TabsTrigger value="all-organizations" className="text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">All ({otherResources.length})</TabsTrigger>
+                    {categories.map(category => (
+                        <TabsTrigger key={category} value={category} className="text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                            {category} ({otherResources.filter(r => r.mainCategory === category).length})
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
 
-              {otherMatches.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold mt-6 mb-3 text-muted-foreground border-b pb-1.5">Other Suggestions:</h3>
-                   <div className="space-y-3">
-                    {otherMatches.map((resource, index) => {
-                        const Icon = IconComponents[resource.icon || 'Info'] || Info;
-                        return (
-                          <Tooltip key={`other-${index}`}>
-                            <TooltipTrigger asChild>
-                              <Card className="shadow-md hover:shadow-lg transition-shadow duration-200 bg-card/70 border-border/40 hover:border-border/60 cursor-help rounded-lg overflow-hidden">
-                                <CardHeader className="pb-1.5 pt-2.5 px-3 sm:px-4 bg-secondary/20">
-                                   <CardTitle className="text-xs sm:text-sm font-medium flex items-start justify-between text-foreground/90 gap-2">
-                                       <span className="flex items-center gap-1.5 sm:gap-2 min-w-0"> {/* Min width 0 for wrapping */}
-                                          <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-muted-foreground mt-0.5" />
-                                          <span className="flex-1">{resource.name}</span> {/* Name can wrap */}
-                                      </span>
-                                      {resource.matchCount && resource.matchCount > 0 && (
-                                        <Badge variant="outline" className="border-border text-muted-foreground bg-muted/30 text-[10px] sm:text-xs px-1.5 py-0.5 whitespace-nowrap flex-shrink-0 ml-auto">
-                                            Matches {resource.matchCount} concern{resource.matchCount !== 1 ? 's':''}
-                                        </Badge>
-                                      )}
-                                  </CardTitle>
-                                </CardHeader>
-                                <CardContent className="text-[10px] sm:text-xs space-y-1 px-3 sm:px-4 py-2.5">
-                                  <CardDesc className="text-muted-foreground leading-normal line-clamp-2 mb-1">{resource.description}</CardDesc>
-                                   <p className="text-foreground/70 italic text-[9px] sm:text-[10px]"><strong className="font-medium text-foreground/80">Why it's relevant:</strong> {resource.overallRelevance}</p>
-                                  <Button
-                                    variant="link"
-                                    size="sm"
-                                    asChild
-                                    className="p-0 h-auto text-primary/90 hover:text-primary/70 text-[10px] sm:text-xs mt-1 font-medium"
-                                  >
-                                    <a href={resource.url} target="_blank" rel="noopener noreferrer">
-                                      Visit Website <ExternalLink className="ml-1 h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                                    </a>
-                                  </Button>
-                                </CardContent>
-                              </Card>
-                            </TooltipTrigger>
-                            <MatchedReasonTooltipContent reasons={resource.matchedReasons || []} resourceName={resource.name}/>
-                          </Tooltip>
-                        );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
+                <TabsContent value="best-matches">
+                    {bestMatches.length > 0 ? (
+                        <div className="space-y-3 sm:space-y-4">
+                            {bestMatches.map((resource, index) => renderResourceCard(resource, index, 'best'))}
+                        </div>
+                    ) : (
+                         <div className="text-center py-6 text-muted-foreground">
+                            <Info className="h-8 w-8 mx-auto mb-2 text-primary/70" />
+                            <p className="text-xs sm:text-sm">No standout "Best Matches" right now. Try the 'All Organizations' tab or broaden your concerns.</p>
+                         </div>
+                    )}
+                </TabsContent>
+                <TabsContent value="all-organizations">
+                     <div className="space-y-3 sm:space-y-4">
+                        {otherResources.map((resource, index) => renderResourceCard(resource, index, 'other'))}
+                    </div>
+                </TabsContent>
+                {categories.map(category => (
+                    <TabsContent key={category} value={category}>
+                        <div className="space-y-3 sm:space-y-4">
+                        {otherResources.filter(r => r.mainCategory === category).map((resource, index) => renderResourceCard(resource, index, 'other'))}
+                        </div>
+                    </TabsContent>
+                ))}
+            </Tabs>
           ) : (
             <div className="text-center py-10 text-muted-foreground">
               <Info className="h-10 w-10 mx-auto mb-3 text-primary/70" />

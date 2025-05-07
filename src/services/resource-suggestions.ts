@@ -6,26 +6,29 @@
  */
 
 import type { SelectedItem as UserSelectedItem } from '@/services/tax-spending';
-import { cleanItemDescription } from '@/services/email/utils'; // Removed toneBucket as it's passed in
+import { cleanItemDescription } from '@/services/email/utils';
 import type { Tone } from './email/types';
 
 
 export interface MatchedReason {
-  type: 'supports' | 'opposes' | 'reviews' | 'general'; // Type of match
-  description: string; // e.g., "funding for military spending", "review of Israel aid"
-  originalConcern: string; // e.g. "Pentagon - Cut Significantly" or "Balancing the Budget"
-  actionableTag: string; // e.g. "cutting Pentagon spending"
+  type: 'supports' | 'opposes' | 'reviews' | 'general';
+  description: string;
+  originalConcern: string;
+  actionableTag: string;
 }
+
+export type BadgeType = 'Best Match' | 'High Impact' | 'Broad Focus' | 'Niche Focus' | 'Community Pick';
+
 export interface SuggestedResource {
   name: string;
   url: string;
   description: string;
-  overallRelevance: string; // A general sentence about why it's relevant.
+  overallRelevance: string;
   icon?: string;
-  matchCount?: number; // Number of user concerns this resource matches
-  matchedReasons?: MatchedReason[]; // Detailed reasons for the match
-  // New field to explicitly mark as best match, or determine in component
-  isBestMatch?: boolean;
+  matchCount?: number;
+  matchedReasons?: MatchedReason[];
+  badges?: BadgeType[];
+  mainCategory: string; // Added main category for filtering
 }
 
 type FundingAction = 'slash' | 'fund' | 'review';
@@ -36,8 +39,9 @@ interface ResourceDatabaseEntry {
   description: string;
   icon?: string;
   advocacyTags: string[];
-  // Optional: add a size/prominence metric if we want "Largest Organization" type badges later
-  // prominence?: 'high' | 'medium' | 'low';
+  mainCategory: string; // To group resources in the modal
+  prominence?: 'high' | 'medium' | 'low'; // For "High Impact" or "Community Pick"
+  focusType?: 'broad' | 'niche'; // For "Broad Focus" or "Niche Focus"
 }
 
 const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
@@ -47,6 +51,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.peaceaction.org/',
     description: 'Works to promote peace and demilitarization through grassroots organizing and advocacy.',
     icon: 'HandHeart',
+    mainCategory: 'Peace & Demilitarization',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['peace', 'military_spending_cut', 'anti_war', 'israel_aid_cut', 'nuclear_disarmament', 'demilitarization', 'diplomacy_first', 'foreign_military_aid_cut', 'pentagon_cut', 'israel_wars_cut'],
   },
   {
@@ -54,6 +61,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.fcnl.org/',
     description: 'A Quaker lobby in the public interest, working for peace, justice, and environmental stewardship.',
     icon: 'Scale',
+    mainCategory: 'Peace & Social Justice',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['peace', 'social_justice', 'diplomacy_fund', 'foreign_aid_reform', 'military_spending_cut', 'environmental_stewardship', 'human_rights', 'federal_prisons_review', 'criminal_justice_reform', 'pentagon_review'],
   },
   {
@@ -61,6 +71,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://winwithoutwar.org/',
     description: 'Advocates for a more progressive U.S. foreign policy centered on diplomacy and demilitarization.',
     icon: 'Globe',
+    mainCategory: 'Peace & Demilitarization',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['anti_war', 'diplomacy_fund', 'military_spending_cut', 'foreign_aid_fund', 'foreign_policy_reform', 'demilitarization', 'usaid_fund', 'israel_wars_review'],
   },
   {
@@ -68,6 +81,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://livableworld.org/',
     description: 'Advocates for policies to reduce the danger of nuclear weapons and promote national security.',
     icon: 'ShieldAlert',
+    mainCategory: 'Peace & Demilitarization',
+    prominence: 'medium',
+    focusType: 'niche',
     advocacyTags: ['nuclear_disarmament', 'national_security_reform', 'arms_control', 'nuclear_weapons_review', 'nuclear_weapons_cut', 'pentagon_review'],
   },
   {
@@ -75,6 +91,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.internationalpolicy.org/',
     description: 'Promotes a U.S. foreign policy based on international cooperation, demilitarization, and respect for human rights.',
     icon: 'Globe',
+    mainCategory: 'Foreign Policy',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['foreign_policy_reform', 'diplomacy_fund', 'arms_control', 'human_rights', 'demilitarization', 'usaid_review', 'foreign_military_aid_review', 'pentagon_contractors_review'],
   },
   // Middle East / Palestine
@@ -83,6 +102,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://uscpr.org/',
     description: 'A national coalition working for Palestinian rights and an end to U.S. support for Israeli occupation.',
     icon: 'Landmark',
+    mainCategory: 'Human Rights & Regional Conflicts',
+    prominence: 'high',
+    focusType: 'niche',
     advocacyTags: ['palestinian_rights', 'israel_aid_cut', 'middle_east_peace', 'human_rights', 'israel_wars_cut', 'foreign_military_aid_cut'],
   },
   {
@@ -90,6 +112,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.jewishvoiceforpeace.org/',
     description: 'A progressive Jewish anti-Zionist organization working for peace, justice, and human rights.',
     icon: 'Users',
+    mainCategory: 'Human Rights & Regional Conflicts',
+    prominence: 'high',
+    focusType: 'niche',
     advocacyTags: ['palestinian_rights', 'israel_aid_cut', 'anti_war', 'social_justice', 'human_rights', 'israel_wars_cut'],
   },
   {
@@ -97,6 +122,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.adc.org/',
     description: 'Defends the rights of people of Arab descent and promotes their rich cultural heritage.',
     icon: 'Users',
+    mainCategory: 'Civil Rights',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['civil_rights', 'anti_discrimination', 'middle_east_peace', 'palestinian_rights', 'israel_wars_review'],
   },
   // Budget & Fiscal Responsibility
@@ -105,6 +133,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://nationalpriorities.org/',
     description: 'Analyzes and advocates for a federal budget that prioritizes peace, economic opportunity, and a healthy environment.',
     icon: 'PieChart',
+    mainCategory: 'Fiscal Responsibility',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['budget_reform', 'military_spending_cut', 'social_spending_fund', 'tax_fairness', 'fiscal_responsibility', 'pentagon_review', 'interest_debt_review', 'pentagon_cut', 'f35_cut', 'nuclear_weapons_cut'],
   },
   {
@@ -112,6 +143,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.taxpayer.net/',
     description: 'A non-partisan budget watchdog organization working to ensure taxpayer dollars are spent responsibly.',
     icon: 'SearchCheck',
+    mainCategory: 'Fiscal Responsibility',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['fiscal_responsibility', 'budget_reform', 'wasteful_spending_cut', 'government_accountability', 'pentagon_contractors_cut', 'f35_cut', 'nasa_spacex_cut_review', 'farm_subsidies_cut', 'interest_debt_review', 'fsa_cut', 'pentagon_cut', 'usps_cut'],
   },
   {
@@ -119,6 +153,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.pogo.org/',
     description: 'A nonpartisan independent watchdog that investigates and exposes waste, corruption, and abuse of power.',
     icon: 'Eye',
+    mainCategory: 'Government Accountability',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['government_accountability', 'pentagon_contractors_review', 'whistleblower_protection', 'wasteful_spending_cut', 'pentagon_review', 'f35_review', 'pentagon_cut', 'irs_review', 'cfpb_review'],
   },
   {
@@ -126,6 +163,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.crfb.org/',
     description: 'A nonpartisan, non-profit organization committed to educating the public and policymakers about fiscal policy issues.',
     icon: 'Banknote',
+    mainCategory: 'Fiscal Responsibility',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['fiscal_responsibility', 'debt_reduction', 'budget_reform', 'entitlement_reform_review', 'interest_debt_review', 'tax_reform_review', 'medicare_review', 'medicaid_review', 'snap_review', 'child_tax_credit_review'],
   },
   {
@@ -133,6 +173,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.pgpf.org/',
     description: 'Dedicated to increasing awareness of the nature and urgency of key fiscal challenges threatening America\'s future.',
     icon: 'TrendingUp',
+    mainCategory: 'Fiscal Responsibility',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['fiscal_responsibility', 'debt_reduction', 'economic_stability', 'budget_reform', 'interest_debt_review'],
   },
   // Health
@@ -141,6 +184,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://pnhp.org/',
     description: 'Advocates for a universal, comprehensive single-payer national health program.',
     icon: 'HeartPulse',
+    mainCategory: 'Healthcare',
+    prominence: 'medium',
+    focusType: 'niche',
     advocacyTags: ['medicare_fund', 'medicaid_fund', 'healthcare_reform', 'single_payer', 'health_equity', 'nih_fund'],
   },
   {
@@ -148,6 +194,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.nami.org/',
     description: 'The nation’s largest grassroots mental health organization dedicated to building better lives for Americans affected by mental illness.',
     icon: 'Brain',
+    mainCategory: 'Healthcare',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['mental_health_fund', 'substance_mental_health_fund', 'health_equity', 'cdc_fund', 'nih_fund', 'va_fund'],
   },
   {
@@ -155,6 +204,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://familiesusa.org/',
     description: 'A national nonpartisan consumer health advocacy organization.',
     icon: 'Users',
+    mainCategory: 'Healthcare',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['healthcare_access', 'medicaid_fund', 'medicare_fund', 'health_equity', 'affordable_care_act_fund', 'child_health_fund', 'nih_fund', 'cdc_fund', 'wic_fund'],
   },
   {
@@ -162,6 +214,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.cbpp.org/research/health',
     description: 'Researches and advocates for policies that reduce poverty and inequality, including in healthcare.',
     icon: 'Activity',
+    mainCategory: 'Healthcare',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['medicaid_fund', 'affordable_care_act_fund', 'health_equity', 'social_spending_fund', 'snap_fund', 'child_tax_credit_fund', 'medicare_fund', 'wic_fund', 'liheap_fund'],
   },
   {
@@ -169,6 +224,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.kff.org/',
     description: 'A non-profit organization focusing on national health issues, as well as the U.S. role in global health policy. (Research, not advocacy)',
     icon: 'FileText',
+    mainCategory: 'Healthcare',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['health_research', 'medicare_review', 'medicaid_review', 'health_policy_analysis', 'nih_review', 'cdc_review', 'substance_mental_health_review'],
   },
   // Environmental
@@ -177,6 +235,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.ewg.org/',
     description: 'A non-profit, non-partisan organization dedicated to protecting human health and the environment.',
     icon: 'Leaf',
+    mainCategory: 'Environment & Energy',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['epa_fund', 'environmental_protection', 'toxic_chemicals_cut', 'sustainable_agriculture_fund', 'food_safety_fund', 'water_quality_fund', 'renewable_energy_fund', 'fsa_review'],
   },
   {
@@ -184,6 +245,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://climatenetwork.org/',
     description: 'A global network of NGOs working to promote government and individual action to limit human-induced climate change.',
     icon: 'CloudSun',
+    mainCategory: 'Environment & Energy',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['climate_action_fund', 'usaid_climate_fund', 'renewable_energy_fund', 'environmental_justice', 'fossil_fuel_subsidies_cut', 'epa_fund', 'noaa_fund'],
   },
   {
@@ -191,6 +255,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.sierraclub.org/',
     description: 'Grassroots environmental organization in the United States. Founded by legendary conservationist John Muir in 1892.',
     icon: 'Mountain',
+    mainCategory: 'Environment & Energy',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['environmental_protection', 'climate_action_fund', 'renewable_energy_fund', 'nps_fund', 'forest_service_fund', 'wilderness_protection', 'epa_fund', 'noaa_fund', 'public_lands_fund'],
   },
   {
@@ -198,6 +265,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.nrdc.org/',
     description: 'Works to safeguard the earth—its people, its plants and animals, and the natural systems on which all life depends.',
     icon: 'Trees',
+    mainCategory: 'Environment & Energy',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['environmental_protection', 'epa_fund', 'climate_action_fund', 'ocean_conservation', 'renewable_energy_fund', 'noaa_fund', 'forest_service_fund', 'water_quality_fund'],
   },
   {
@@ -205,6 +275,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.lcv.org/',
     description: 'Advocates for sound environmental laws and policies, holds elected officials accountable for their votes and actions.',
     icon: 'Vote',
+    mainCategory: 'Environment & Energy',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['environmental_policy', 'epa_fund', 'climate_action_fund', 'renewable_energy_fund', 'political_action', 'nps_review', 'forest_service_review'],
   },
   // Science & Technology
@@ -213,6 +286,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.planetary.org/',
     description: 'Empowers the world\'s citizens to advance space science and exploration.',
     icon: 'Rocket',
+    mainCategory: 'Science & Technology',
+    prominence: 'medium',
+    focusType: 'niche',
     advocacyTags: ['nasa_fund', 'science_fund', 'space_exploration', 'nsf_fund', 'nasa_review', 'nasa_spacex_review'],
   },
   {
@@ -220,6 +296,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.ucsusa.org/',
     description: 'Puts rigorous, independent science to work to solve our planet\'s most pressing problems.',
     icon: 'FlaskConical',
+    mainCategory: 'Science & Technology',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['science_fund', 'environmental_protection', 'nuclear_weapons_review', 'scientific_integrity', 'climate_action_fund', 'sustainable_agriculture_fund', 'epa_review', 'nsf_review', 'food_safety_review'],
   },
   {
@@ -227,6 +306,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://fas.org/',
     description: 'Provides science-based analysis of and solutions to protect against catastrophic threats to national and international security.',
     icon: 'Microscope',
+    mainCategory: 'Science & Technology',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['science_policy', 'national_security_reform', 'arms_control', 'nuclear_weapons_review', 'emerging_tech_review', 'nsf_fund', 'nasa_review', 'pentagon_review'],
   },
   // General Government Oversight / Social Justice
@@ -235,6 +317,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.aclu.org/',
     description: 'Works to defend and preserve the individual rights and liberties guaranteed by the Constitution and laws of the United States.',
     icon: 'Gavel',
+    mainCategory: 'Civil Rights & Social Justice',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['civil_rights', 'civil_liberties', 'immigration_reform_review', 'criminal_justice_reform', 'government_accountability', 'deportations_border_review', 'federal_prisons_review', 'privacy_rights', 'nlrb_review', 'public_defenders_fund'],
   },
   {
@@ -242,6 +327,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.commoncause.org/',
     description: 'A nonpartisan grassroots organization dedicated to upholding the core values of American democracy.',
     icon: 'Vote',
+    mainCategory: 'Democracy & Governance',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['democracy_reform', 'voting_rights', 'campaign_finance_reform', 'government_accountability', 'ethics_reform', 'irs_review', 'federal_courts_review'],
   },
   {
@@ -249,6 +337,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.brennancenter.org/',
     description: 'A nonpartisan law and policy institute that works to reform, revitalize, and when necessary, defend our country’s systems of democracy and justice.',
     icon: 'LibrarySquare',
+    mainCategory: 'Democracy & Governance',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['democracy_reform', 'voting_rights', 'criminal_justice_reform', 'campaign_finance_reform', 'justice_system_review', 'federal_courts_review', 'public_defenders_fund', 'federal_prisons_reform'],
   },
   {
@@ -256,6 +347,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.splcenter.org/',
     description: 'Monitors hate groups and other extremists throughout the United States and exposes their activities to the public, the media and law enforcement.',
     icon: 'ShieldAlert',
+    mainCategory: 'Civil Rights & Social Justice',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['civil_rights', 'anti_hate', 'social_justice', 'anti_discrimination', 'deportations_border_review', 'immigration_reform_review'],
   },
   // Education
@@ -264,6 +358,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.nea.org/',
     description: 'The nation\'s largest professional employee organization, committed to advancing the cause of public education.',
     icon: 'School',
+    mainCategory: 'Education',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['education_fund', 'k12_schools_fund', 'teacher_support', 'public_education', 'college_aid_fund', 'head_start_fund', 'dept_education_fund', 'imls_fund'],
   },
   {
@@ -271,6 +368,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://edtrust.org/',
     description: 'Works to close opportunity gaps that disproportionately affect students of color and students from low-income backgrounds.',
     icon: 'GraduationCap',
+    mainCategory: 'Education',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['education_equity', 'k12_schools_fund', 'college_aid_fund', 'achievement_gap', 'dept_education_fund', 'head_start_review', 'title_i_fund'],
   },
   {
@@ -278,6 +378,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.freecollegenow.org/',
     description: 'Advocates for making public colleges and universities tuition-free for students.',
     icon: 'Landmark',
+    mainCategory: 'Education',
+    prominence: 'low',
+    focusType: 'niche',
     advocacyTags: ['college_aid_fund', 'education_reform', 'student_debt_relief', 'dept_education_review', 'pell_grants_fund'],
   },
   {
@@ -285,6 +388,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://nhsa.org/',
     description: 'Supports Head Start programs through advocacy, training, and professional development.',
     icon: 'Users',
+    mainCategory: 'Education',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['head_start_fund', 'early_childhood_education', 'child_poverty_reduction', 'k12_schools_fund', 'social_spending_fund'],
   },
   {
@@ -292,6 +398,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://protectmypublicmedia.org/',
     description: 'Advocates for strong public funding for the Corporation for Public Broadcasting.',
     icon: 'Radio',
+    mainCategory: 'Arts & Culture',
+    prominence: 'low',
+    focusType: 'niche',
     advocacyTags: ['cpb_fund', 'public_media', 'arts_culture_fund', 'education_fund', 'media_literacy'],
   },
   {
@@ -299,6 +408,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.ala.org/',
     description: 'Promotes libraries and library education internationally. They advocate for funding such as IMLS.',
     icon: 'LibrarySquare',
+    mainCategory: 'Arts & Culture',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['imls_fund', 'libraries_fund', 'literacy_fund', 'information_access', 'education_fund', 'digital_literacy'],
   },
   // Specific Program Focus / Defense Watchdogs
@@ -307,6 +419,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://securityreform.org/',
     description: 'Provides research and analysis to promote responsible U.S. foreign and national security policy.',
     icon: 'ShieldCheck',
+    mainCategory: 'Defense & Foreign Policy',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['foreign_policy_reform', 'national_security_reform', 'pentagon_review', 'arms_control', 'military_spending_cut', 'pentagon_dei_review', 'nuclear_weapons_review'],
   },
    {
@@ -314,6 +429,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://demandprogress.org/',
     description: 'Fights for a more just and democratic world by campaigning for progressive policies on issues such as civil liberties, government reform, and tech policy.',
     icon: 'Megaphone',
+    mainCategory: 'Democracy & Governance',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['civil_liberties', 'government_accountability', 'tech_policy_reform', 'nasa_spacex_cut_review', 'privacy_rights', 'cfpb_fund', 'usps_review', 'faa_review', 'tsa_review']
   },
   {
@@ -321,6 +439,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.pogo.org/program/center-for-defense-information/',
     description: 'Works to secure far-reaching reforms in U.S. national security policy, dedicated to strong, sensible, and sustainable national security.',
     icon: 'Search',
+    mainCategory: 'Defense & Foreign Policy',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['pentagon_review', 'military_spending_cut', 'f35_review', 'national_security_reform', 'pentagon_contractors_review', 'nuclear_weapons_review', 'wasteful_spending_cut', 'pentagon_cut']
   },
   // Housing & Homelessness
@@ -329,6 +450,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://nlihc.org/',
     description: 'Dedicated solely to achieving socially just public policy that ensures people with the lowest incomes in the United States have affordable and decent homes.',
     icon: 'Home',
+    mainCategory: 'Housing & Community',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['housing_affordability', 'hud_fund', 'public_housing_fund', 'homelessness_prevention', 'rental_assistance_fund', 'usich_fund', 'liheap_fund', 'social_spending_fund'],
   },
   {
@@ -336,6 +460,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://endhomelessness.org/',
     description: 'A nonpartisan organization committed to preventing and ending homelessness in the United States.',
     icon: 'Bed',
+    mainCategory: 'Housing & Community',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['homelessness_prevention', 'usich_fund', 'hud_fund', 'housing_first', 'rental_assistance_fund', 'public_housing_review', 'mental_health_fund'],
   },
   // Food & Agriculture
@@ -344,6 +471,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://frac.org/',
     description: 'The leading national nonprofit organization working to eradicate poverty-related hunger and undernutrition in the United States.',
     icon: 'Utensils',
+    mainCategory: 'Food & Agriculture',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['snap_fund', 'wic_fund', 'school_lunch_fund', 'anti_hunger', 'food_security', 'child_tax_credit_fund', 'social_spending_fund'],
   },
   {
@@ -351,6 +481,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://sustainableagriculture.net/',
     description: 'An alliance of grassroots organizations that advocates for federal policy reform to advance the sustainability of agriculture, food systems, natural resources, and rural communities.',
     icon: 'Tractor',
+    mainCategory: 'Food & Agriculture',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['sustainable_agriculture_fund', 'fsa_review', 'farm_subsidies_reform', 'local_food_systems', 'epa_fund', 'food_and_agriculture_policy', 'climate_action_fund', 'water_quality_fund'],
   },
   // Veterans
@@ -359,6 +492,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.vfw.org/',
     description: 'A nonprofit veterans service organization comprised of eligible veterans and military service members from the active, guard and reserve forces.',
     icon: 'Medal',
+    mainCategory: 'Veterans Affairs',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['veterans_affairs_fund', 'pact_act_fund', 'veteran_benefits', 'national_security_fund', 'pentagon_personnel_fund', 'va_fund', 'va_review'],
   },
   {
@@ -366,6 +502,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://iava.org/',
     description: 'The leading post-9/11 veteran empowerment organization (VEO) with the most diverse and rapidly growing membership in America.',
     icon: 'Users',
+    mainCategory: 'Veterans Affairs',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['veterans_affairs_fund', 'pact_act_fund', 'mental_health_fund', 'post911_veterans', 'va_fund', 'substance_mental_health_fund', 'va_review'],
   },
   // Labor & Worker Rights
@@ -374,6 +513,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://aflcio.org/',
     description: 'The largest federation of unions in the United States, representing more than 12.5 million working men and women.',
     icon: 'Hammer',
+    mainCategory: 'Labor & Worker Rights',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['labor_rights', 'nlrb_fund', 'worker_protections', 'fair_wages', 'job_safety', 'unemployment_labor_policy', 'tanf_fund', 'child_tax_credit_fund'],
   },
   {
@@ -381,6 +523,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.nelp.org/',
     description: 'A non-profit organization that advocates for policies to create good jobs, strengthen worker protections, and help unemployed workers.',
     icon: 'Briefcase',
+    mainCategory: 'Labor & Worker Rights',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['labor_rights', 'unemployment_insurance_fund', 'fair_wages', 'worker_protections', 'tanf_review', 'nlrb_review', 'minimum_wage_increase'],
   },
   // Transportation
@@ -389,6 +534,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://t4america.org/',
     description: 'An advocacy organization made up of local, regional and state leaders who envision a transportation system that safely, affordably and conveniently connects people of all means and ability to jobs, services, and opportunity.',
     icon: 'Bus',
+    mainCategory: 'Transportation',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['public_transit_fund', 'transportation_reform', 'highway_review', 'bike_ped_fund', 'amtrak_fund', 'faa_review', 'tsa_review', 'infrastructure_fund', 'epa_review'],
   },
   {
@@ -396,6 +544,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.apta.com/',
     description: 'An international organization that has been representing the public transportation industry for over 130 years.',
     icon: 'TramFront',
+    mainCategory: 'Transportation',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['public_transit_fund', 'transportation_safety', 'amtrak_fund', 'highways_review', 'infrastructure_fund', 'faa_review'],
   },
   // Consumer Protection
@@ -404,6 +555,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://consumerfed.org/',
     description: 'An association of non-profit consumer organizations established in 1968 to advance the consumer interest through research, advocacy, and education.',
     icon: 'ShieldCheck',
+    mainCategory: 'Consumer Protection',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['consumer_protection', 'cfpb_fund', 'product_safety', 'financial_regulation_review', 'fdic_review', 'irs_review', 'tsa_review'],
   },
   {
@@ -411,6 +565,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://uspirg.org/',
     description: 'Stands up to powerful special interests on behalf of the public, working to win concrete results for our health, safety, and well-being.',
     icon: 'Lightbulb',
+    mainCategory: 'Consumer Protection',
+    prominence: 'high',
+    focusType: 'broad',
     advocacyTags: ['consumer_protection', 'environmental_protection', 'health_safety', 'cfpb_fund', 'transportation_safety', 'product_safety', 'epa_fund', 'fda_review'],
   },
   // Arts & Culture
@@ -419,6 +576,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.americansforthearts.org/',
     description: 'The nation\'s leading nonprofit organization for advancing the arts and arts education.',
     icon: 'Palette',
+    mainCategory: 'Arts & Culture',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['arts_culture_fund', 'nea_fund', 'neh_fund', 'cpb_fund', 'imls_fund', 'education_fund'],
   },
   // Immigration
@@ -427,6 +587,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.nilc.org/',
     description: 'Dedicated to defending and advancing the rights of immigrants with low income.',
     icon: 'Anchor',
+    mainCategory: 'Immigration',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['immigration_reform_review', 'immigrant_rights', 'deportations_border_review', 'civil_rights', 'refugee_assistance_fund', 'snap_fund', 'medicaid_fund'],
   },
   {
@@ -434,6 +597,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.americanimmigrationcouncil.org/',
     description: 'Works to strengthen America by shaping how America thinks about and acts towards immigrants and immigration.',
     icon: 'Globe',
+    mainCategory: 'Immigration',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['immigration_reform_review', 'immigrant_rights', 'deportations_border_review', 'economic_contribution_immigrants', 'refugee_assistance_fund'],
   },
   {
@@ -441,6 +607,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://cis.org/',
     description: 'A non-profit research organization that advocates for reduced immigration levels. (Provides a counter-perspective to pro-immigration groups).',
     icon: 'ArrowDownRightSquare', // Specific icon for this org
+    mainCategory: 'Immigration',
+    prominence: 'medium',
+    focusType: 'niche',
     advocacyTags: ['immigration_reduction', 'border_security_fund', 'deportations_border_fund', 'immigration_enforcement_fund', 'national_security_review'],
   },
   // Disaster Relief / Emergency Management
@@ -449,6 +618,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://www.nemaweb.org/',
     description: 'The professional association of and for emergency management directors from all 50 states, eight U.S. territories, and the District of Columbia.',
     icon: 'Siren',
+    mainCategory: 'Emergency Management',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['fema_review', 'emergency_management', 'disaster_preparedness', 'fema_drf_review', 'climate_adaptation_fund'],
   },
   {
@@ -456,6 +628,9 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     url: 'https://teamrubiconusa.org/',
     description: 'A veteran-led humanitarian organization that serves global communities before, during, and after disasters and crises.',
     icon: 'Wrench',
+    mainCategory: 'Emergency Management',
+    prominence: 'medium',
+    focusType: 'broad',
     advocacyTags: ['disaster_relief', 'humanitarian_aid', 'veterans_service', 'fema_drf_fund_support', 'fema_fund', 'global_health_fund'],
   },
 ];
@@ -657,16 +832,16 @@ function generateMatchedReason(tag: string, originalConcernDescription: string, 
 
     return {
         type: reasonType,
-        description: `${actionableTag}`, // Main part of the reason
-        originalConcern: `${userActionText} ${cleanedConcern}`, // More direct original concern
-        actionableTag: actionableTag // The specific part of the tag
+        description: `${actionableTag}`,
+        originalConcern: `${userActionText} ${cleanedConcern}`,
+        actionableTag: actionableTag
     };
 }
 
 
 export async function suggestResources(
   selectedItems: UserSelectedItem[],
-  userTone: Tone, // Pass the pre-calculated tone
+  userTone: Tone,
   balanceBudgetChecked: boolean
 ): Promise<SuggestedResource[]> {
   const suggestions: SuggestedResource[] = [];
@@ -685,70 +860,87 @@ export async function suggestResources(
      userConcerns.set('balance_budget', {action: 'review', itemDescription: 'Balancing the Budget', tags: budgetTags});
   }
 
-  const BEST_MATCH_THRESHOLD = 2; // Resources matching this many or more concerns are "Best Match"
+  let bestMatchAssigned = false;
 
   const scoredResources = RESOURCE_DATABASE.map(resource => {
     let score = 0;
-    const matchedReasonsSet = new Set<string>(); 
+    const matchedReasonsSet = new Set<string>();
     const detailedMatchedReasons: MatchedReason[] = [];
     let uniqueConcernMatchCount = 0;
     const matchedConcernIds = new Set<string>();
 
-
     userConcerns.forEach((concern, concernId) => {
-        let concernMatched = false;
+        let concernMatchedThisIteration = false;
         concern.tags.forEach(userTag => {
             if (resource.advocacyTags.includes(userTag)) {
-                score++; // Basic score increment for any tag match
+                score++; // Basic score
                 const reason = generateMatchedReason(userTag, concern.itemDescription, concern.action);
-                if (!matchedReasonsSet.has(reason.description)) { 
-                    matchedReasonsSet.add(reason.description);
+                if (!matchedReasonsSet.has(JSON.stringify(reason))) { // Avoid duplicate reasons for the same resource
+                    matchedReasonsSet.add(JSON.stringify(reason));
                     detailedMatchedReasons.push(reason);
                 }
-                if (userTag.includes('_cut') || userTag.includes('_fund') || userTag.includes('_slash')) {
-                    score +=2; // Specific actions get more weight
-                } else if (userTag.includes('_review')) {
-                    score +=1;
-                }
-                concernMatched = true;
+                if (userTag.includes('_cut') || userTag.includes('_fund') || userTag.includes('_slash')) score += 2; // Specific actions higher weight
+                else if (userTag.includes('_review')) score += 1;
+                concernMatchedThisIteration = true;
             }
         });
-        if (concernMatched && !matchedConcernIds.has(concernId)) {
+        if (concernMatchedThisIteration && !matchedConcernIds.has(concernId)) {
             uniqueConcernMatchCount++;
             matchedConcernIds.add(concernId);
         }
     });
-    
+
+    // Add bonus points for prominence
+    if (resource.prominence === 'high') score += 3;
+    else if (resource.prominence === 'medium') score += 1;
 
     return { ...resource, score, matchedReasons: detailedMatchedReasons, matchCount: uniqueConcernMatchCount };
   }).filter(r => r.score > 0)
-    .sort((a, b) => {
-        if (b.matchCount !== a.matchCount) {
-             return b.matchCount - a.matchCount;
-        }
-        return b.score - a.score; 
+    .sort((a, b) => { // Multi-factor sorting
+        if (b.matchCount !== a.matchCount) return b.matchCount - a.matchCount; // Primary: match count
+        if (b.score !== a.score) return b.score - a.score; // Secondary: overall score
+        if (a.prominence === 'high' && b.prominence !== 'high') return -1; // Tertiary: prominence
+        if (b.prominence === 'high' && a.prominence !== 'high') return 1;
+        return 0;
     });
 
 
   for (const resource of scoredResources) {
-    if (suggestions.length >= 7) break; 
+    if (suggestions.length >= 15) break; // Suggest more resources
     if (suggestedUrls.has(resource.url)) continue;
 
-    let overallRelevanceReason = `Focuses on key areas related to your concerns.`; 
+    let overallRelevanceReason = `Focuses on key areas related to your concerns.`;
     if (resource.matchedReasons && resource.matchedReasons.length > 0) {
         const topReasonsSummary = resource.matchedReasons
-            .slice(0, 2) 
-            .map(r => r.actionableTag) 
+            .slice(0, 2)
+            .map(r => r.actionableTag)
             .join(' and ');
 
-        if (userTone > 1) { 
-             overallRelevanceReason = `${resource.name} actively works on issues like ${topReasonsSummary}. They address ${resource.matchCount} of your concerns.`;
-        } else { 
-             overallRelevanceReason = `You might find ${resource.name} relevant as they focus on ${topReasonsSummary}, aligning with ${resource.matchCount} of your concerns.`;
+        if (userTone > 1) {
+             overallRelevanceReason = `${resource.name} actively works on issues like ${topReasonsSummary}. They address ${resource.matchCount} of your concern${resource.matchCount === 1 ? '' : 's'}.`;
+        } else {
+             overallRelevanceReason = `You might find ${resource.name} relevant as they focus on ${topReasonsSummary}, aligning with ${resource.matchCount} of your concern${resource.matchCount === 1 ? '' : 's'}.`;
         }
          if (balanceBudgetChecked && resource.advocacyTags.some(t => ['fiscal_responsibility', 'debt_reduction'].includes(t))) {
             overallRelevanceReason += ` They also advocate for fiscal responsibility.`;
         }
+    }
+
+    const badges: BadgeType[] = [];
+    if (!bestMatchAssigned && resource.matchCount >= 2 && resource.prominence === 'high') {
+        badges.push('Best Match');
+        bestMatchAssigned = true; // Assign Best Match only once
+    } else if (resource.prominence === 'high' && resource.matchCount > 0) {
+        badges.push('High Impact');
+    }
+
+    if (resource.focusType === 'broad' && resource.matchCount > 1) {
+        badges.push('Broad Focus');
+    } else if (resource.focusType === 'niche' && resource.matchCount > 0) {
+        badges.push('Niche Focus');
+    }
+    if (resource.prominence === 'low' && resource.matchCount > 0 && badges.length === 0) {
+        badges.push('Community Pick'); // If it's lower prominence but still matches
     }
 
 
@@ -760,10 +952,23 @@ export async function suggestResources(
       icon: resource.icon,
       matchCount: resource.matchCount,
       matchedReasons: resource.matchedReasons,
-      isBestMatch: resource.matchCount >= BEST_MATCH_THRESHOLD, // Determine if it's a best match
+      badges: badges.length > 0 ? badges : undefined,
+      mainCategory: resource.mainCategory,
     });
     suggestedUrls.add(resource.url);
   }
+
+  // If no "Best Match" was assigned but there are suggestions, assign to the top one if it meets some criteria
+  if (!bestMatchAssigned && suggestions.length > 0) {
+    if (suggestions[0].matchCount && suggestions[0].matchCount >= 1) { // Looser criteria for a fallback Best Match
+        suggestions[0].badges = [...(suggestions[0].badges || []), 'Best Match'];
+        // Remove other badges if Best Match is assigned here to avoid conflict
+        if (suggestions[0].badges?.includes('High Impact')) {
+            suggestions[0].badges = suggestions[0].badges.filter(b => b !== 'High Impact');
+        }
+    }
+  }
+
 
   return suggestions;
 }
