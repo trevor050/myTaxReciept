@@ -28,7 +28,8 @@ export type BadgeType =
   | 'Grassroots Power'
   | 'Data-Driven'
   | 'Legal Advocacy'
-  | 'Established Voice';
+  | 'Established Voice'
+  | 'General Interest'; // Added General Interest
 
 export interface SuggestedResource {
   name: string;
@@ -38,8 +39,11 @@ export interface SuggestedResource {
   icon?: string;
   matchCount?: number; // How many of the user's distinct concerns it matches
   matchedReasons?: MatchedReason[];
-  badges?: BadgeType[];
+  badges?: BadgeType[]; // Will contain all potential badges; modal will pick display ones
   mainCategory: string; // For filtering in the modal
+  prominence?: 'high' | 'medium' | 'low';
+  focusType?: 'broad' | 'niche';
+  orgTypeTags?: ('grassroots' | 'research' | 'legal' | 'established')[];
 }
 
 type FundingAction = 'slash' | 'fund' | 'review';
@@ -56,7 +60,8 @@ interface ResourceDatabaseEntry {
   orgTypeTags?: ('grassroots' | 'research' | 'legal' | 'established')[]; // For new badge types
 }
 
-// Expanded RESOURCE_DATABASE with more organizations and orgTypeTags
+// RESOURCE_DATABASE remains the same as provided in the previous turn.
+// For brevity, it's not repeated here but assumed to be the extensive list from before.
 const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
   // Peace & Demilitarization
   {
@@ -119,7 +124,7 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     name: 'Jewish Voice for Peace (JVP)',
     url: 'https://www.jewishvoiceforpeace.org/',
     description: 'A progressive Jewish anti-Zionist organization working for peace, justice, and human rights.',
-    icon: 'Users',
+    icon: 'Users', // Lucide UserGroup icon
     mainCategory: 'Human Rights & Regional Conflicts',
     prominence: 'high',
     focusType: 'niche',
@@ -311,7 +316,7 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     name: 'Brennan Center for Justice',
     url: 'https://www.brennancenter.org/',
     description: 'A nonpartisan law and policy institute that works to reform, revitalize, and when necessary, defend our country’s systems of democracy and justice.',
-    icon: 'LibrarySquare',
+    icon: 'LibrarySquare', // Lucide LibrarySquare
     mainCategory: 'Democracy & Governance',
     prominence: 'high',
     focusType: 'broad',
@@ -322,7 +327,7 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     name: 'Electronic Frontier Foundation (EFF)',
     url: 'https://www.eff.org/',
     description: 'Defending civil liberties in the digital world. Works on issues of free speech, privacy, innovation, and consumer rights online.',
-    icon: 'Wifi', // Placeholder, Wifi not in lucide, could use Lock or Shield
+    icon: 'ShieldCheck', // Using ShieldCheck as a proxy for digital security/privacy
     mainCategory: 'Civil Rights & Social Justice',
     prominence: 'high',
     focusType: 'broad',
@@ -471,7 +476,7 @@ const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     name: 'American Immigration Council',
     url: 'https://www.americanimmigrationcouncil.org/',
     description: 'Works to strengthen America by shaping how America thinks about and acts towards immigrants and immigration.',
-    icon: 'Globe',
+    icon: 'Globe', // Re-using Globe, consider Users2 or Building
     mainCategory: 'Immigration',
     prominence: 'medium',
     focusType: 'broad',
@@ -682,13 +687,13 @@ function generateMatchedReason(tag: string, originalConcernDescription: string, 
     };
 }
 
-const MAX_SUGGESTIONS = 25; // Limit total suggestions shown
+const MAX_SUGGESTIONS = 25;
 const MAX_BEST_MATCHES = 1;
-const MAX_TOP_MATCHES = 2; // After the best match
+const MAX_TOP_MATCHES = 2;
 
 export async function suggestResources(
   selectedItems: UserSelectedItem[],
-  userToneValue: number, // aggressiveness slider value
+  userToneValue: number,
   balanceBudgetChecked: boolean
 ): Promise<SuggestedResource[]> {
   const suggestions: SuggestedResource[] = [];
@@ -720,7 +725,7 @@ export async function suggestResources(
             if (resource.advocacyTags.includes(userTag)) {
                 score++;
                 const reason = generateMatchedReason(userTag, concern.itemDescription, concern.action);
-                const reasonKey = `${reason.type}-${reason.actionableTag}-${reason.originalConcern}`; // More specific key
+                const reasonKey = `${reason.type}-${reason.actionableTag}-${reason.originalConcern}`;
                 if (!matchedReasonsSet.has(reasonKey)) {
                     matchedReasonsSet.add(reasonKey);
                     detailedMatchedReasons.push(reason);
@@ -737,28 +742,31 @@ export async function suggestResources(
     });
 
     if (resource.prominence === 'high') score += 3;
-    else if (resource.prominence === 'medium') score += 1.5; // Slightly higher weight for medium
+    else if (resource.prominence === 'medium') score += 1.5;
 
     if (balanceBudgetChecked && resource.advocacyTags.some(t => ['fiscal_responsibility', 'debt_reduction', 'budget_reform'].includes(t))) {
-        score += 2; // Boost for matching budget concern
+        score += 2;
         if(!matchedConcernIds.has('balance_budget')) {
             uniqueConcernMatchCount++;
             matchedConcernIds.add('balance_budget');
             const budgetReason = generateMatchedReason('fiscal_responsibility', 'Balancing the Budget & Reducing National Debt', 'review');
-            if (!matchedReasonsSet.has(JSON.stringify(budgetReason))) {
-                 matchedReasonsSet.add(JSON.stringify(budgetReason));
+            const budgetReasonKey = `${budgetReason.type}-${budgetReason.actionableTag}-${budgetReason.originalConcern}`;
+            if (!matchedReasonsSet.has(budgetReasonKey)) {
+                 matchedReasonsSet.add(budgetReasonKey);
                  detailedMatchedReasons.push(budgetReason);
             }
         }
     }
-     // Boost score if org type matches certain criteria
-     if (resource.orgTypeTags?.includes('legal')) score += 0.5;
-     if (resource.orgTypeTags?.includes('data-driven')) score += 0.5;
-     if (resource.orgTypeTags?.includes('grassroots')) score += 0.25;
+
+    // Adjusted scoring for orgTypeTags
+    if (resource.orgTypeTags?.includes('legal')) score += 0.75;
+    if (resource.orgTypeTags?.includes('data-driven')) score += 0.75;
+    if (resource.orgTypeTags?.includes('grassroots')) score += 0.5;
+    if (resource.orgTypeTags?.includes('established')) score += 0.25; // Slightly lower boost
 
 
     return { ...resource, score, matchedReasons: detailedMatchedReasons, matchCount: uniqueConcernMatchCount };
-  }).filter(r => r.score > 0 || (userConcerns.size === 0 && balanceBudgetChecked && r.advocacyTags.some(t => ['fiscal_responsibility', 'debt_reduction'].includes(t)))) // Show fiscal orgs if only budget is checked
+  }).filter(r => r.score > 0 || (userConcerns.size === 0 && balanceBudgetChecked && r.advocacyTags.some(t => ['fiscal_responsibility', 'debt_reduction'].includes(t))))
     .sort((a, b) => {
         if (b.matchCount !== a.matchCount) return b.matchCount - a.matchCount;
         if (b.score !== a.score) return b.score - a.score;
@@ -790,33 +798,28 @@ export async function suggestResources(
     }
 
 
-    const badges: BadgeType[] = [];
-    // Assign Best Match
-    if (!bestMatchAssigned && resource.matchCount >= Math.max(1, Math.floor(userConcerns.size * 0.6)) && resource.score > 3 && resource.prominence === 'high') {
-        badges.push('Best Match');
-        bestMatchAssigned = true;
+    const allPossibleBadges: BadgeType[] = [];
+    if (resource.matchCount >= Math.max(1, Math.floor(userConcerns.size * 0.6)) && resource.score > 3 && resource.prominence === 'high') {
+        allPossibleBadges.push('Best Match');
     }
-    // Assign Top Matches (up to MAX_TOP_MATCHES, not including the Best Match)
-    else if (bestMatchAssigned && topMatchAssignedCount < MAX_TOP_MATCHES && resource.matchCount >= Math.max(1, Math.floor(userConcerns.size * 0.4)) && resource.score > 2.5 && (resource.prominence === 'high' || resource.prominence === 'medium')) {
-        badges.push('Top Match');
-        topMatchAssignedCount++;
+    if (resource.matchCount >= Math.max(1, Math.floor(userConcerns.size * 0.4)) && resource.score > 2.5 && (resource.prominence === 'high' || resource.prominence === 'medium')) {
+        allPossibleBadges.push('Top Match');
     }
-
-    if (resource.prominence === 'high' && !badges.includes('Best Match') && !badges.includes('Top Match')) badges.push('High Impact');
-    if (resource.focusType === 'broad') badges.push('Broad Focus');
-    if (resource.focusType === 'niche') badges.push('Niche Focus');
+    if (resource.prominence === 'high') allPossibleBadges.push('High Impact');
+    if (resource.focusType === 'broad') allPossibleBadges.push('Broad Focus');
+    if (resource.focusType === 'niche') allPossibleBadges.push('Niche Focus');
 
     resource.orgTypeTags?.forEach(tag => {
-        if (tag === 'grassroots' && !badges.includes('Grassroots Power')) badges.push('Grassroots Power');
-        if (tag === 'data-driven' && !badges.includes('Data-Driven')) badges.push('Data-Driven');
-        if (tag === 'legal' && !badges.includes('Legal Advocacy')) badges.push('Legal Advocacy');
-        if (tag === 'established' && !badges.includes('Established Voice') && resource.prominence === 'high') badges.push('Established Voice');
+        if (tag === 'grassroots') allPossibleBadges.push('Grassroots Power');
+        if (tag === 'data-driven') allPossibleBadges.push('Data-Driven');
+        if (tag === 'legal') allPossibleBadges.push('Legal Advocacy');
+        if (tag === 'established') allPossibleBadges.push('Established Voice');
     });
-
-
-    // Ensure "Community Pick" is assigned if few other prominent badges and not already a top/best match.
-    if (badges.length <=1 && !badges.includes('Best Match') && !badges.includes('Top Match') && (resource.prominence === 'low' || resource.prominence === 'medium')) {
-         if (!badges.includes('Community Pick')) badges.push('Community Pick');
+    if ((resource.prominence === 'low' || resource.prominence === 'medium') && !allPossibleBadges.some(b => ['Best Match', 'Top Match', 'High Impact'].includes(b))) {
+        allPossibleBadges.push('Community Pick');
+    }
+    if (resource.matchCount === 0 && allPossibleBadges.length === 0) {
+        allPossibleBadges.push('General Interest');
     }
 
 
@@ -828,8 +831,11 @@ export async function suggestResources(
       icon: resource.icon,
       matchCount: resource.matchCount,
       matchedReasons: resource.matchedReasons,
-      badges: badges.length > 0 ? Array.from(new Set(badges)) : undefined, // Ensure unique badges
+      badges: allPossibleBadges.length > 0 ? Array.from(new Set(allPossibleBadges)) : undefined,
       mainCategory: resource.mainCategory,
+      prominence: resource.prominence,
+      focusType: resource.focusType,
+      orgTypeTags: resource.orgTypeTags,
     });
     suggestedUrls.add(resource.url);
   }

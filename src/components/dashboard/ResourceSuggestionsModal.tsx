@@ -1,3 +1,4 @@
+
 // src/components/dashboard/ResourceSuggestionsModal.tsx
 'use client';
 
@@ -32,18 +33,20 @@ const importLucideIcon = async (iconName: string | undefined): Promise<React.Ele
   }
 };
 
-const BADGE_PRIORITY: BadgeType[] = [
-  'Best Match',
-  'Top Match',
-  'High Impact',
-  'Data-Driven',
-  'Legal Advocacy',
-  'Established Voice',
-  'Grassroots Power',
-  'Niche Focus',
-  'Broad Focus',
-  'Community Pick',
-];
+const BADGE_PRIORITY_MAP: Record<BadgeType, number> = {
+  'Best Match': 1,
+  'Top Match': 2,
+  'High Impact': 3,
+  'Data-Driven': 4,
+  'Legal Advocacy': 5,
+  'Established Voice': 6,
+  'Grassroots Power': 7,
+  'Niche Focus': 8,
+  'Broad Focus': 9,
+  'Community Pick': 10,
+  'General Interest': 11,
+};
+
 
 interface ResourceSuggestionsModalProps {
   isOpen: boolean;
@@ -120,6 +123,7 @@ const BadgeIcon = ({ badgeType }: { badgeType: BadgeType }) => {
         case 'Data-Driven': return <DatabaseIcon className="h-3 w-3 mr-1 text-indigo-600 dark:text-indigo-400" />;
         case 'Legal Advocacy': return <Gavel className="h-3 w-3 mr-1 text-rose-600 dark:text-rose-400" />;
         case 'Established Voice': return <Landmark className="h-3 w-3 mr-1 text-slate-600 dark:text-slate-400" />;
+        case 'General Interest': return <Info className="h-3 w-3 mr-1 text-gray-500 dark:text-gray-400" />;
         default: return null;
     }
 };
@@ -274,13 +278,11 @@ export default function ResourceSuggestionsModal({
         }
         const bestMatchesCount = suggestedResources.filter(r => r.badges?.includes('Best Match')).length;
         if (bestMatchesCount > 0) {
-            const actualBestCount = suggestedResources.filter(r => r.badges?.includes('Best Match')).length;
-            const actualTopCount = suggestedResources.filter(r => r.badges?.includes('Top Match')).length;
-            if (actualBestCount === 1) {
-                 bubbles.push({ key: 'best-matches', label: 'Best Match', count: 1 });
-            } else if (actualTopCount > 0) {
-                bubbles.push({ key: 'top-matches', label: 'Top Matches', count: actualTopCount });
-            }
+            bubbles.push({ key: 'best-matches', label: 'Best Match', count: bestMatchesCount });
+        }
+        const topMatchesCount = suggestedResources.filter(r => r.badges?.includes('Top Match')).length;
+        if (topMatchesCount > 0 && bestMatchesCount ===0) { // Only show Top Matches if no Best Match
+             bubbles.push({ key: 'top-matches', label: 'Top Matches', count: topMatchesCount });
         }
     }
     bubbles.push({ key: 'all-organizations', label: 'All Organizations', count: suggestedResources.length });
@@ -301,16 +303,17 @@ export default function ResourceSuggestionsModal({
 
     if (activeFilterKeys.size > 0 && !activeFilterKeys.has('all-organizations')) {
         filtered = suggestedResources.filter(r => {
-            if (activeFilterKeys.has('your-matches') && (r.matchCount || 0) === 0) return false;
-            if (activeFilterKeys.has('best-matches') && !r.badges?.includes('Best Match')) return false;
-            if (activeFilterKeys.has('top-matches') && !r.badges?.includes('Top Match')) return false;
+            let matchesOneFilter = false;
+            if (activeFilterKeys.has('your-matches') && (r.matchCount || 0) > 0) matchesOneFilter = true;
+            if (activeFilterKeys.has('best-matches') && r.badges?.includes('Best Match')) matchesOneFilter = true;
+            if (activeFilterKeys.has('top-matches') && r.badges?.includes('Top Match')) matchesOneFilter = true;
             
             const categoryFilters = Array.from(activeFilterKeys).filter(key =>
                 !['your-matches', 'best-matches', 'top-matches', 'all-organizations'].includes(key)
             );
-            if (categoryFilters.length > 0 && !categoryFilters.includes(r.mainCategory)) return false;
+            if (categoryFilters.length > 0 && categoryFilters.includes(r.mainCategory)) matchesOneFilter = true;
             
-            return true;
+            return matchesOneFilter;
         });
     }
     return filtered;
@@ -352,17 +355,21 @@ export default function ResourceSuggestionsModal({
   const renderResourceCard = (resource: SuggestedResource, index: number) => {
     const Icon = IconComponents[resource.icon || 'Info'] || Info;
     
-    let currentBadges: BadgeType[] = [];
-    if (resource.badges) {
-        currentBadges = [...resource.badges].sort((a, b) => {
-            const indexA = BADGE_PRIORITY.indexOf(a);
-            const indexB = BADGE_PRIORITY.indexOf(b);
-            return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
-        });
-        if (currentBadges.length > 3) {
-            currentBadges = currentBadges.slice(0, 3);
+    // Select up to 2-3 most relevant badges based on priority
+    let displayedBadges: BadgeType[] = [];
+    if (resource.badges && resource.badges.length > 0) {
+        const sortedBadges = [...resource.badges].sort((a, b) => (BADGE_PRIORITY_MAP[a] || 99) - (BADGE_PRIORITY_MAP[b] || 99));
+        displayedBadges = sortedBadges.slice(0, Math.min(sortedBadges.length, 3)); // Max 3 badges
+
+        // Ensure "General Interest" is shown if no other prominent badges are available.
+        if (displayedBadges.length === 0 && resource.badges.includes('General Interest')) {
+            displayedBadges.push('General Interest');
+        } else if (displayedBadges.length < 2 && resource.badges.includes('General Interest') && !displayedBadges.some(b => ['Best Match', 'Top Match', 'High Impact'].includes(b))) {
+             if (!displayedBadges.includes('General Interest')) displayedBadges.push('General Interest');
         }
+        // If after filtering, no badges, but matchCount > 0, add that as a pseudo-badge info
     }
+
 
     return (
         <Tooltip key={`${Array.from(activeFilterKeys).join('-')}-${index}-${resource.url}`}>
@@ -375,7 +382,7 @@ export default function ResourceSuggestionsModal({
                     <span className="flex-1">{resource.name}</span>
                 </span>
                 <div className="flex items-center flex-shrink-0 gap-1 ml-auto flex-wrap justify-end">
-                    {currentBadges.map(badge => (
+                    {displayedBadges.map(badge => (
                         <Badge
                             key={badge}
                             variant={badge === 'Best Match' ? 'default' : 'secondary'}
@@ -391,20 +398,17 @@ export default function ResourceSuggestionsModal({
                                 badge === 'Data-Driven' && "bg-purple-100 border-purple-400 text-purple-700 dark:bg-purple-700/30 dark:border-purple-600 dark:text-purple-300",
                                 badge === 'Legal Advocacy' && "bg-orange-100 border-orange-400 text-orange-700 dark:bg-orange-700/30 dark:border-orange-600 dark:text-orange-300",
                                 badge === 'Established Voice' && "bg-slate-100 border-slate-400 text-slate-700 dark:bg-slate-700/30 dark:border-slate-600 dark:text-slate-300",
+                                badge === 'General Interest' && "bg-gray-100 border-gray-400 text-gray-700 dark:bg-gray-700/30 dark:border-gray-600 dark:text-gray-300 italic",
                             )}
                         >
                            <BadgeIcon badgeType={badge}/> {badge}
                         </Badge>
                     ))}
-                    {resource.matchCount && resource.matchCount > 0 && (!resource.badges || !resource.badges.some(b => ['Best Match', 'Top Match'].includes(b))) ? (
+                    {(resource.matchCount && resource.matchCount > 0 && displayedBadges.length === 0 && !resource.badges?.includes('General Interest')) ? ( // Show match count if no other badges displayed
                          <Badge variant="outline" className="border-border text-muted-foreground bg-muted/30 text-xs px-1.5 py-0.5 whitespace-nowrap">
                             Matches {resource.matchCount} concern{resource.matchCount !== 1 ? 's':''}
                         </Badge>
-                    ) : (resource.matchCount === 0 && !currentBadges.some(b => ['Best Match', 'Top Match'].includes(b))) && ( // Show "General Interest" only if no match and not already a top/best
-                         <Badge variant="outline" className="border-border text-muted-foreground/70 bg-muted/20 text-xs px-1.5 py-0.5 whitespace-nowrap italic">
-                            General Interest
-                        </Badge>
-                    )}
+                    ): null}
                 </div>
                 </CardTitle>
             </CardHeader>
@@ -554,13 +558,3 @@ export default function ResourceSuggestionsModal({
     </Dialog>
   );
 }
-
-const Wifi = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
-    <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
-    <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
-    <line x1="12" y1="20" x2="12.01" y2="20"/>
-  </svg>
-);
-
