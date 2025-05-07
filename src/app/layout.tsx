@@ -22,7 +22,7 @@ export default function RootLayout({
     // Remove extra whitespace between tags
     <html lang="en" suppressHydrationWarning>
       {/* Apply font variable and antialiased class */}
-      <body className={`${geistSansVariable} font-sans antialiased`}>
+      <body className={`${geistSansVariable} font-sans antialiased`} suppressHydrationWarning>
          <ThemeProvider
             attribute="class"
             defaultTheme="system"
