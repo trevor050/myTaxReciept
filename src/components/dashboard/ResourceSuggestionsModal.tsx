@@ -1,4 +1,3 @@
-
 // src/components/dashboard/ResourceSuggestionsModal.tsx
 'use client';
 
@@ -102,8 +101,8 @@ const DatabaseIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 const BadgeIcon = ({ badgeType }: { badgeType: BadgeType }) => {
     switch (badgeType) {
-        case 'Best Match': return <Trophy className="h-3 w-3 mr-1 text-amber-600 dark:text-amber-400" />;
-        case 'Top Match': return <Sparkles className="h-3 w-3 mr-1 text-sky-600 dark:text-sky-400" />;
+        case 'Best Match': return <Trophy className="h-3 w-3 mr-1" />; // Color handled by Badge variant
+        case 'Top Match': return <Sparkles className="h-3 w-3 mr-1" />; // Color handled by Badge variant
         case 'High Impact': return <Megaphone className="h-3 w-3 mr-1 text-rose-600 dark:text-rose-400" />;
         case 'Broad Focus': return <UsersIcon className="h-3 w-3 mr-1 text-blue-600 dark:text-blue-400" />;
         case 'Niche Focus': return <Target className="h-3 w-3 mr-1 text-indigo-600 dark:text-indigo-400" />;
@@ -356,7 +355,7 @@ export default function ResourceSuggestionsModal({
     const allBadgeTypesPresent = new Set<BadgeType>();
     suggestedResources.forEach(r => r.badges?.forEach(b => allBadgeTypesPresent.add(b)));
     Array.from(allBadgeTypesPresent)
-        .filter(b => !['Best Match', 'Top Match'].includes(b)) 
+        .filter(b => !['Best Match', 'Top Match'].includes(b))
         .sort((a,b) => (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99))
         .forEach(badgeType => {
             const count = suggestedResources.filter(r => r.badges?.includes(badgeType)).length;
@@ -452,11 +451,11 @@ export default function ResourceSuggestionsModal({
                     {displayedBadges.map(badge => (
                         <Badge
                             key={badge}
-                            variant={badge === 'Best Match' ? 'default' : (badge === 'Top Match' ? 'secondary' : 'outline')}
+                            variant={badge === 'Best Match' || badge === 'Top Match' ? 'default' : 'outline'}
                             className={cn(
                                 "text-xs px-1.5 py-0.5 whitespace-nowrap font-medium flex items-center",
-                                badge === 'Best Match' && "bg-green-500/90 border-green-600 text-white dark:bg-green-600 dark:border-green-500 dark:text-green-50",
-                                badge === 'Top Match' && "bg-sky-500/90 border-sky-600 text-white dark:bg-sky-600 dark:border-sky-500 dark:text-sky-50",
+                                badge === 'Best Match' && "bg-emerald-500/90 border-emerald-600 text-white dark:bg-emerald-600/80 dark:border-emerald-500 dark:text-emerald-50",
+                                badge === 'Top Match' && "bg-sky-500/90 border-sky-600 text-white dark:bg-sky-600/80 dark:border-sky-500 dark:text-sky-50",
                                 badge === 'High Impact' && "bg-rose-100 border-rose-400 text-rose-700 dark:bg-rose-700/30 dark:border-rose-600 dark:text-rose-300",
                                 badge === 'Broad Focus' && "bg-blue-100 border-blue-400 text-blue-700 dark:bg-blue-700/30 dark:border-blue-600 dark:text-blue-300",
                                 badge === 'Niche Focus' && "bg-indigo-100 border-indigo-400 text-indigo-700 dark:bg-indigo-700/30 dark:border-indigo-600 dark:text-indigo-300",
@@ -564,7 +563,7 @@ export default function ResourceSuggestionsModal({
                                     className={cn("rounded-full text-xs h-auto px-3 py-1.5 whitespace-nowrap transition-all duration-150 flex items-center gap-1.5",
                                         activeFilterKeys.has(bubble.key) ? "shadow-md ring-2 ring-primary/50" : "hover:bg-accent/70",
                                         bubble.type === 'special' && activeFilterKeys.has(bubble.key) && 'bg-amber-500/20 border-amber-500 text-amber-700 dark:text-amber-300 dark:bg-amber-700/40 dark:border-amber-600',
-                                        bubble.type === 'badgeHighlight' && activeFilterKeys.has(bubble.key) && 'bg-green-500/20 border-green-500 text-green-700 dark:text-green-300 dark:bg-green-700/40 dark:border-green-600',
+                                        bubble.type === 'badgeHighlight' && activeFilterKeys.has(bubble.key) && 'bg-emerald-500/20 border-emerald-600 text-emerald-700 dark:text-emerald-300 dark:bg-emerald-700/40 dark:border-emerald-600',
                                         bubble.type === 'category' && activeFilterKeys.has(bubble.key) && 'bg-blue-500/20 border-blue-500 text-blue-700 dark:text-blue-300 dark:bg-blue-700/40 dark:border-blue-600',
                                         bubble.type === 'orgType' && activeFilterKeys.has(bubble.key) && 'bg-purple-500/20 border-purple-500 text-purple-700 dark:text-purple-300 dark:bg-purple-700/40 dark:border-purple-600',
                                         bubble.type === 'badgeGeneral' && activeFilterKeys.has(bubble.key) && 'bg-teal-500/20 border-teal-500 text-teal-700 dark:text-teal-300 dark:bg-teal-700/40 dark:border-teal-600'
@@ -631,4 +630,5 @@ export default function ResourceSuggestionsModal({
     </Dialog>
   );
 }
+
 

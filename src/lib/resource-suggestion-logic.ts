@@ -6,7 +6,8 @@
 
 import { cleanItemDescription } from '@/services/email/utils';
 import type { FundingLevel } from '@/services/email/types';
-import type { MatchedReason, BadgeType, SuggestedResource } from '@/types/resource-suggestions'; // Ensure these types are correctly defined/imported
+import type { MatchedReason, BadgeType, SuggestedResource } from '@/types/resource-suggestions';
+import { BADGE_DISPLAY_PRIORITY_MAP } from '@/types/resource-suggestions';
 
 export type FundingAction = 'slash' | 'fund' | 'review';
 
@@ -20,6 +21,8 @@ interface ResourceDatabaseEntry {
   prominence?: 'high' | 'medium' | 'low';
   focusType?: 'broad' | 'niche';
   orgTypeTags?: ('grassroots' | 'research' | 'legal' | 'established' | 'activism' | 'think-tank' | 'direct-service')[];
+  // Field to help guide badge assignment for diversification
+  intendedBadgeProfile?: ('single-prominent' | 'double-diverse' | 'triple-focused')[];
 }
 
 export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
@@ -34,6 +37,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'established', 'activism'],
     advocacyTags: ['peace', 'military_spending_cut', 'anti_war', 'israel_aid_cut', 'nuclear_disarmament', 'demilitarization', 'diplomacy_first', 'foreign_military_aid_cut', 'pentagon_cut', 'israel_wars_cut'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   {
     name: 'Friends Committee on National Legislation (FCNL)',
@@ -45,6 +49,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'established', 'think-tank'],
     advocacyTags: ['peace', 'social_justice', 'diplomacy_fund', 'foreign_aid_reform', 'military_spending_cut', 'environmental_stewardship', 'human_rights', 'federal_prisons_review', 'criminal_justice_reform', 'pentagon_review'],
+    intendedBadgeProfile: ['triple-focused'],
   },
   {
     name: 'Win Without War',
@@ -56,6 +61,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'think-tank'],
     advocacyTags: ['anti_war', 'diplomacy_fund', 'military_spending_cut', 'foreign_aid_fund', 'foreign_policy_reform', 'demilitarization', 'usaid_fund', 'israel_wars_review'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   {
     name: 'Council for a Livable World',
@@ -67,6 +73,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'niche',
     orgTypeTags: ['research', 'established', 'think-tank'],
     advocacyTags: ['nuclear_disarmament', 'national_security_reform', 'arms_control', 'nuclear_weapons_review', 'nuclear_weapons_cut', 'pentagon_review'],
+    intendedBadgeProfile: ['single-prominent'],
   },
   {
     name: 'Code Pink',
@@ -78,6 +85,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'activism'],
     advocacyTags: ['anti_war', 'peace', 'demilitarization', 'military_spending_cut', 'israel_aid_cut', 'diplomacy_fund', 'social_spending_fund', 'pentagon_cut', 'israel_wars_cut'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   // Human Rights & Regional Conflicts (4 existing + new)
   {
@@ -90,6 +98,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'niche',
     orgTypeTags: ['grassroots', 'activism'],
     advocacyTags: ['palestinian_rights', 'israel_aid_cut', 'middle_east_peace', 'human_rights', 'israel_wars_cut', 'foreign_military_aid_cut'],
+    intendedBadgeProfile: ['single-prominent'],
   },
   {
     name: 'Jewish Voice for Peace (JVP)',
@@ -101,6 +110,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'niche',
     orgTypeTags: ['grassroots', 'activism'],
     advocacyTags: ['palestinian_rights', 'israel_aid_cut', 'anti_war', 'social_justice', 'human_rights', 'israel_wars_cut'],
+    intendedBadgeProfile: ['single-prominent'],
   },
    {
     name: 'Amnesty International USA',
@@ -112,6 +122,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'established', 'activism'],
     advocacyTags: ['human_rights', 'international_justice', 'refugee_rights', 'arms_control', 'foreign_military_aid_review', 'israel_wars_review', 'refugee_assistance_fund'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   {
     name: 'Human Rights Watch',
@@ -123,6 +134,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['research', 'established', 'data-driven'],
     advocacyTags: ['human_rights', 'international_justice', 'accountability_for_abuses', 'war_crimes_review', 'foreign_military_aid_review', 'israel_wars_review', 'deportations_border_review'],
+    intendedBadgeProfile: ['triple-focused'],
   },
   // Budget & Fiscal Responsibility (4 existing + new)
   {
@@ -135,6 +147,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['research', 'data-driven', 'think-tank'],
     advocacyTags: ['budget_reform', 'military_spending_cut', 'social_spending_fund', 'tax_fairness', 'fiscal_responsibility', 'pentagon_review', 'interest_debt_review', 'pentagon_cut', 'f35_cut', 'nuclear_weapons_cut'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   {
     name: 'Taxpayers for Common Sense',
@@ -146,6 +159,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['research', 'established', 'data-driven'],
     advocacyTags: ['fiscal_responsibility', 'budget_reform', 'wasteful_spending_cut', 'government_accountability', 'pentagon_contractors_cut', 'f35_cut', 'nasa_spacex_cut_review', 'farm_subsidies_cut', 'interest_debt_review', 'fsa_cut', 'pentagon_cut', 'usps_cut'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   {
     name: 'Committee for a Responsible Federal Budget (CRFB)',
@@ -157,6 +171,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['research', 'established', 'data-driven', 'think-tank'],
     advocacyTags: ['fiscal_responsibility', 'debt_reduction', 'budget_reform', 'entitlement_reform_review', 'interest_debt_review', 'tax_reform_review', 'medicare_review', 'medicaid_review', 'snap_review', 'child_tax_credit_review'],
+    intendedBadgeProfile: ['triple-focused'],
   },
   {
     name: 'Cato Institute',
@@ -168,6 +183,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['think-tank', 'research', 'established'],
     advocacyTags: ['limited_government', 'free_markets', 'individual_liberty', 'fiscal_responsibility', 'budget_reform', 'pentagon_review', 'tax_reform_review', 'entitlement_reform_review', 'epa_cut', 'dept_education_cut'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   {
     name: 'The Heritage Foundation',
@@ -179,6 +195,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['think-tank', 'research', 'established'],
     advocacyTags: ['conservative_policy', 'limited_government', 'free_enterprise', 'strong_national_defense', 'fiscal_responsibility', 'pentagon_fund', 'tax_reform_review', 'budget_reform', 'irs_cut'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   // Healthcare (2 existing + new)
   {
@@ -191,6 +208,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'niche',
     orgTypeTags: ['grassroots', 'think-tank'],
     advocacyTags: ['medicare_fund', 'medicaid_fund', 'healthcare_reform', 'single_payer', 'health_equity', 'nih_fund', 'substance_mental_health_fund'],
+    intendedBadgeProfile: ['single-prominent'],
   },
   {
     name: 'National Alliance on Mental Illness (NAMI)',
@@ -202,6 +220,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'established', 'direct-service'],
     advocacyTags: ['mental_health_fund', 'substance_mental_health_fund', 'health_equity', 'cdc_fund', 'nih_fund', 'va_fund', 'medicaid_fund'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   {
     name: 'Families USA',
@@ -213,6 +232,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['research', 'established', 'think-tank'],
     advocacyTags: ['healthcare_reform', 'medicaid_fund', 'medicare_fund', 'health_equity', 'affordable_care_act_fund'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   // Environment & Energy (6 existing + new)
   {
@@ -225,6 +245,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['research', 'data-driven', 'established'],
     advocacyTags: ['epa_fund', 'environmental_protection', 'toxic_chemicals_cut', 'sustainable_agriculture_fund', 'food_safety_fund', 'water_quality_fund', 'renewable_energy_fund', 'fsa_review'],
+    intendedBadgeProfile: ['triple-focused'],
   },
   {
     name: 'Sierra Club',
@@ -236,6 +257,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'established', 'legal', 'activism'],
     advocacyTags: ['environmental_protection', 'climate_action_fund', 'renewable_energy_fund', 'nps_fund', 'forest_service_fund', 'wilderness_protection', 'epa_fund', 'noaa_fund', 'public_lands_fund'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   {
     name: 'Natural Resources Defense Council (NRDC)',
@@ -247,6 +269,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['legal', 'research', 'established'],
     advocacyTags: ['environmental_protection', 'epa_fund', 'climate_action_fund', 'ocean_conservation', 'renewable_energy_fund', 'noaa_fund', 'forest_service_fund', 'water_quality_fund', 'usaid_climate_fund'],
+    intendedBadgeProfile: ['triple-focused'],
   },
   {
     name: 'Earthjustice',
@@ -258,6 +281,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['legal', 'established'],
     advocacyTags: ['environmental_law', 'epa_fund', 'climate_action_fund', 'wilderness_protection', 'renewable_energy_review', 'environmental_justice', 'ocean_conservation', 'forest_service_review'],
+    intendedBadgeProfile: ['single-prominent'],
   },
   {
     name: 'Rainforest Action Network',
@@ -269,6 +293,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'activism'],
     advocacyTags: ['forest_protection', 'climate_action_fund', 'corporate_accountability', 'human_rights', 'environmental_justice', 'fossil_fuel_subsidies_cut', 'forest_service_fund'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   {
     name: 'Greenpeace USA',
@@ -280,6 +305,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'activism', 'established'],
     advocacyTags: ['environmental_protection', 'climate_action_fund', 'ocean_conservation', 'deforestation_cut', 'plastic_pollution_cut', 'renewable_energy_fund', 'epa_fund'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   {
     name: 'League of Conservation Voters (LCV)',
@@ -291,6 +317,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['activism', 'established'],
     advocacyTags: ['environmental_policy', 'climate_action_fund', 'epa_fund', 'renewable_energy_fund', 'clean_water_fund'],
+    intendedBadgeProfile: ['single-prominent'],
   },
   // Science & Technology (2 existing + new)
   {
@@ -303,6 +330,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'niche',
     orgTypeTags: ['grassroots', 'research'],
     advocacyTags: ['nasa_fund', 'science_fund', 'space_exploration', 'nsf_fund', 'nasa_review', 'nasa_spacex_review'],
+    intendedBadgeProfile: ['single-prominent'],
   },
   {
     name: 'Union of Concerned Scientists',
@@ -314,6 +342,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['research', 'data-driven', 'established', 'think-tank'],
     advocacyTags: ['science_fund', 'environmental_protection', 'nuclear_weapons_review', 'scientific_integrity', 'climate_action_fund', 'sustainable_agriculture_fund', 'epa_review', 'nsf_review', 'food_safety_review', 'nasa_review'],
+    intendedBadgeProfile: ['triple-focused'],
   },
   {
     name: 'Federation of American Scientists (FAS)',
@@ -325,6 +354,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['research', 'think-tank', 'established'],
     advocacyTags: ['science_policy', 'national_security_reform', 'nuclear_weapons_review', 'arms_control', 'emerging_tech_policy'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   // Civil Rights & Social Justice (5 existing + new)
   {
@@ -337,6 +367,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['legal', 'established', 'grassroots', 'activism'],
     advocacyTags: ['civil_rights', 'civil_liberties', 'immigration_reform_review', 'criminal_justice_reform', 'government_accountability', 'deportations_border_review', 'federal_prisons_review', 'privacy_rights', 'nlrb_review', 'public_defenders_fund'],
+    intendedBadgeProfile: ['triple-focused'],
   },
   {
     name: 'NAACP Legal Defense and Educational Fund (LDF)',
@@ -348,6 +379,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['legal', 'established'],
     advocacyTags: ['racial_justice', 'civil_rights', 'voting_rights', 'education_equity', 'criminal_justice_reform', 'mbda_fund'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   {
     name: 'Southern Poverty Law Center (SPLC)',
@@ -359,6 +391,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['legal', 'research', 'established'],
     advocacyTags: ['anti_hate', 'civil_rights', 'racial_justice', 'immigrant_rights', 'lgbtq_rights', 'criminal_justice_reform'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   {
     name: 'Electronic Frontier Foundation (EFF)',
@@ -370,6 +403,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['legal', 'research', 'established', 'activism'],
     advocacyTags: ['digital_rights', 'privacy_rights', 'free_speech_online', 'surveillance_review', 'cfpb_review', 'tech_policy_reform', 'nasa_spacex_cut_review', 'tsa_review'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   {
     name: 'The Marshall Project',
@@ -381,6 +415,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'niche',
     orgTypeTags: ['research', 'data-driven'],
     advocacyTags: ['criminal_justice_reform', 'federal_prisons_review', 'racial_justice', 'public_defenders_fund', 'deportations_border_review'],
+    intendedBadgeProfile: ['single-prominent'],
   },
   // Democracy & Governance (3 existing + new)
   {
@@ -393,6 +428,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'established'],
     advocacyTags: ['democracy_reform', 'voting_rights', 'campaign_finance_reform', 'government_accountability', 'ethics_reform', 'irs_review', 'federal_courts_review', 'usps_review'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   {
     name: 'Brennan Center for Justice',
@@ -404,6 +440,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['research', 'legal', 'established', 'think-tank'],
     advocacyTags: ['democracy_reform', 'voting_rights', 'criminal_justice_reform', 'campaign_finance_reform', 'justice_system_review', 'federal_courts_review', 'public_defenders_fund', 'federal_prisons_reform'],
+    intendedBadgeProfile: ['triple-focused'],
   },
   {
     name: 'Center for Responsive Politics (OpenSecrets)',
@@ -415,6 +452,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'niche',
     orgTypeTags: ['research', 'data-driven', 'established'],
     advocacyTags: ['campaign_finance_reform', 'government_accountability', 'ethics_reform', 'lobbying_reform', 'pentagon_contractors_review'],
+    intendedBadgeProfile: ['single-prominent'],
   },
   {
     name: 'Demand Progress',
@@ -426,6 +464,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'activism'],
     advocacyTags: ['democracy_reform', 'anti_surveillance', 'corporate_accountability', 'government_accountability', 'privacy_rights', 'cfpb_fund', 'nlrb_fund', 'tsa_review'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   // Government Accountability (1 existing + new)
   {
@@ -438,6 +477,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['research', 'data-driven', 'established'],
     advocacyTags: ['government_accountability', 'pentagon_contractors_review', 'whistleblower_protection', 'wasteful_spending_cut', 'pentagon_review', 'f35_review', 'pentagon_cut', 'irs_review', 'cfpb_review', 'fdic_review'],
+    intendedBadgeProfile: ['triple-focused'],
   },
   {
     name: 'ProPublica',
@@ -449,6 +489,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['research', 'data-driven'],
     advocacyTags: ['government_accountability', 'investigative_journalism', 'corporate_accountability', 'pentagon_review', 'irs_review', 'fema_review'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   // Education (1 existing + new)
   {
@@ -461,6 +502,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'established', 'direct-service'],
     advocacyTags: ['education_fund', 'k12_schools_fund', 'teacher_support', 'public_education', 'college_aid_fund', 'head_start_fund', 'dept_education_fund', 'imls_fund', 'cpb_fund'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   {
     name: 'The Education Trust',
@@ -472,6 +514,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['research', 'think-tank', 'established'],
     advocacyTags: ['education_equity', 'k12_schools_fund', 'college_aid_fund', 'dept_education_review', 'social_justice'],
+    intendedBadgeProfile: ['single-prominent'],
   },
   // Housing & Homelessness (2 existing + new)
   {
@@ -484,6 +527,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['research', 'grassroots', 'established', 'think-tank'],
     advocacyTags: ['housing_affordability', 'hud_fund', 'public_housing_fund', 'homelessness_prevention', 'rental_assistance_fund', 'usich_fund', 'liheap_fund', 'social_spending_fund'],
+    intendedBadgeProfile: ['triple-focused'],
   },
   {
     name: 'National Alliance to End Homelessness',
@@ -495,6 +539,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['research', 'established', 'direct-service'],
     advocacyTags: ['homelessness_prevention', 'usich_fund', 'hud_fund', 'housing_first', 'rental_assistance_fund', 'public_housing_review', 'mental_health_fund', 'va_fund'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   {
     name: 'Habitat for Humanity International',
@@ -506,6 +551,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'direct-service', 'established'],
     advocacyTags: ['housing_affordability', 'hud_review', 'community_development', 'volunteerism'],
+    intendedBadgeProfile: ['single-prominent'],
   },
   // Food & Agriculture (1 existing + new)
   {
@@ -518,6 +564,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['research', 'established', 'think-tank'],
     advocacyTags: ['snap_fund', 'wic_fund', 'school_lunch_fund', 'anti_hunger', 'food_security', 'child_tax_credit_fund', 'social_spending_fund', 'fsa_review'],
+    intendedBadgeProfile: ['triple-focused'],
   },
   {
     name: 'National Sustainable Agriculture Coalition (NSAC)',
@@ -529,6 +576,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'established', 'think-tank'],
     advocacyTags: ['sustainable_agriculture_fund', 'fsa_review', 'farm_bill_reform', 'food_systems_change', 'rural_development'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   // Veterans (1 existing + new)
   {
@@ -541,6 +589,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'established', 'direct-service'],
     advocacyTags: ['veterans_affairs_fund', 'pact_act_fund', 'veteran_benefits', 'national_security_fund', 'pentagon_personnel_fund', 'va_fund', 'va_review'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   {
     name: 'Iraq and Afghanistan Veterans of America (IAVA)',
@@ -552,6 +601,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'niche',
     orgTypeTags: ['grassroots', 'activism'],
     advocacyTags: ['veterans_affairs_fund', 'pact_act_fund', 'mental_health_fund', 'post_911_veterans', 'va_review', 'suicide_prevention_fund'],
+    intendedBadgeProfile: ['single-prominent'],
   },
   // Labor & Worker Rights (1 existing + new)
   {
@@ -564,6 +614,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'established'],
     advocacyTags: ['labor_rights', 'nlrb_fund', 'worker_protections', 'fair_wages', 'job_safety', 'unemployment_labor_policy', 'tanf_fund', 'child_tax_credit_fund'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   {
     name: 'National Employment Law Project (NELP)',
@@ -575,6 +626,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['research', 'legal', 'think-tank'],
     advocacyTags: ['worker_rights', 'fair_wages', 'unemployment_insurance_reform', 'job_safety', 'nlrb_review', 'social_safety_net_fund'],
+    intendedBadgeProfile: ['double-diverse'],
   },
    // Immigration (2 existing + new)
   {
@@ -587,6 +639,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['legal', 'research', 'established'],
     advocacyTags: ['immigration_reform_review', 'immigrant_rights', 'deportations_border_review', 'civil_rights', 'refugee_assistance_fund', 'snap_fund', 'medicaid_fund'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   {
     name: 'American Immigration Council',
@@ -598,6 +651,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['research', 'established', 'think-tank'],
     advocacyTags: ['immigration_reform_review', 'immigrant_rights', 'deportations_border_review', 'economic_contribution_immigrants', 'refugee_assistance_fund'],
+    intendedBadgeProfile: ['single-prominent'],
   },
   {
     name: 'RAICES',
@@ -609,6 +663,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['legal', 'direct-service', 'grassroots'],
     advocacyTags: ['immigrant_rights', 'refugee_assistance_fund', 'legal_aid', 'deportations_border_review', 'asylum_reform'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   // Consumer Protection
   {
@@ -621,6 +676,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['research', 'established', 'think-tank'],
     advocacyTags: ['consumer_rights', 'cfpb_fund', 'financial_regulation_review', 'product_safety', 'privacy_rights'],
+    intendedBadgeProfile: ['double-diverse'],
   },
   // Transportation
   {
@@ -633,6 +689,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['think-tank', 'activism', 'established'],
     advocacyTags: ['transportation_reform', 'public_transit_fund', 'infrastructure_fund', 'complete_streets', 'highways_review', 'amtrak_fund', 'faa_review'],
+    intendedBadgeProfile: ['single-prominent'],
   },
   // Arts & Culture
   {
@@ -645,6 +702,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['established', 'research', 'direct-service'],
     advocacyTags: ['arts_funding_fund', 'cpb_fund', 'imls_fund', 'nea_fund', 'creative_economy'],
+    intendedBadgeProfile: ['single-prominent'],
   },
 ];
 
@@ -803,7 +861,7 @@ export function getItemAdvocacyTags(itemId: string, fundingAction: FundingAction
   } else if ((specificItemToActionTagMapping[itemId] || specificItemToActionTagMapping[idLower]) && !itemSpecificTags) {
     // Default to a review tag if specific action tag not found but item is known (and not a general category policy tag)
     if(!tags.some(t => t.endsWith('_policy'))) {
-        tags.push(`${itemId}_review`); 
+        tags.push(`${itemId}_review`);
         tags.push(`${idLower}_review`);
     }
   }
@@ -862,4 +920,72 @@ export function generateMatchedReason(tag: string, originalConcernDescription: s
 }
 
 export const MAX_SUGGESTIONS = 50; // Max suggestions to show
-export const MAX_BADGES_PER_RESOURCE = 2; // Average 1-2, max 2-3. Let's aim for 2.
+const MAX_BADGES_BASE = 2; // Base max badges
+const CHANCE_FOR_ONE_BADGE = 0.15; // ~15% of items get 1 badge
+const CHANCE_FOR_THREE_BADGES = 0.35; // ~35% of items get 3 badges
+// Remainder (50%) get 2 badges
+
+export function assignBadgesToResource(resource: SuggestedResource, userConcernsSize: number, isBestMatch: boolean, isTopMatch: boolean): BadgeType[] {
+    const assignedBadges: Set<BadgeType> = new Set();
+
+    if (isBestMatch) assignedBadges.add('Best Match');
+    if (isTopMatch && !assignedBadges.has('Best Match')) assignedBadges.add('Top Match');
+
+    const potentialBadges: Set<BadgeType> = new Set();
+    if (resource.prominence === 'high' && (resource.matchCount || 0) > 0 && resource.score && resource.score > 2.0) {
+        potentialBadges.add('High Impact');
+    }
+
+    const orgTypeToBadgeMap: Partial<Record<NonNullable<typeof resource.orgTypeTags>[number], BadgeType>> = {
+        'legal': 'Legal Advocacy', 'data-driven': 'Data-Driven', 'grassroots': 'Grassroots Power',
+        'established': 'Established Voice', 'activism': 'High Impact',
+        'think-tank': resource.focusType === 'niche' ? 'Niche Focus' : 'Broad Focus',
+    };
+
+    if (resource.orgTypeTags) {
+        for (const orgTag of resource.orgTypeTags) {
+            const badge = orgTypeToBadgeMap[orgTag];
+            if (badge) potentialBadges.add(badge);
+        }
+    }
+    if (resource.focusType === 'broad' && !potentialBadges.has('Broad Focus')) potentialBadges.add('Broad Focus');
+    if (resource.focusType === 'niche' && !potentialBadges.has('Niche Focus')) potentialBadges.add('Niche Focus');
+
+    const sortedPotentialBadges = Array.from(potentialBadges)
+        .filter(b => !assignedBadges.has(b)) // Don't re-add Best/Top
+        .sort((a, b) => (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99));
+
+    // Determine target number of badges for this resource
+    let targetBadgeCount = MAX_BADGES_BASE;
+    const randomFactor = Math.random();
+    if (randomFactor < CHANCE_FOR_ONE_BADGE) {
+        targetBadgeCount = 1;
+    } else if (randomFactor < CHANCE_FOR_ONE_BADGE + CHANCE_FOR_THREE_BADGES) {
+        targetBadgeCount = 3;
+    }
+    // Ensure Best/Top match badges don't prevent other badges if target is low
+    if (assignedBadges.size > 0 && targetBadgeCount <= assignedBadges.size) {
+        targetBadgeCount = assignedBadges.size + 1; // Allow at least one more if Best/Top already present
+    }
+
+
+    for (const badge of sortedPotentialBadges) {
+        if (assignedBadges.size >= targetBadgeCount) break;
+        assignedBadges.add(badge);
+    }
+
+    if (assignedBadges.size === 0 && ((resource.matchCount || 0) === 0 || userConcernsSize === 0)) {
+        assignedBadges.add('General Interest');
+    }
+
+    // If still under target and has matches, consider 'Community Pick'
+    if (assignedBadges.size < targetBadgeCount && (resource.matchCount || 0) > 0 &&
+        (resource.prominence === 'low' || resource.prominence === 'medium') &&
+        !assignedBadges.has('Community Pick') && Math.random() < 0.33) {
+        assignedBadges.add('Community Pick');
+    }
+    
+    return Array.from(assignedBadges)
+        .sort((a, b) => (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99))
+        .slice(0, Math.max(MAX_BADGES_BASE, targetBadgeCount)); // Ensure we don't exceed an absolute max if logic makes targetBadgeCount too high
+}
