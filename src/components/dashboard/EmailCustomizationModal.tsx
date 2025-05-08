@@ -61,12 +61,11 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
   const refModal = useRef<HTMLDivElement>(null);
   const refHandle= useRef<HTMLDivElement>(null);
 
-  const [selectedGenerator, setSelectedGenerator] = useState<string>("template"); // Default to template
+  const [selectedGenerator, setSelectedGenerator] = useState<string>("chatgpt"); // Default to ChatGPT
 
   useLayoutEffect(()=>{
       if (!isOpen) {
-          // setPos({x:null,y:null}); // Keep position if just closed
-          isInitialOpen.current = true; // Reset for centering logic on next open
+          isInitialOpen.current = true;
       }
   }, [isOpen]);
 
@@ -93,15 +92,15 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
   const onDown = useCallback((e:React.MouseEvent)=>{
     if(!refHandle.current?.contains(e.target as Node) || !refModal.current) return;
 
-    if(pos.x===null || pos.y === null || isInitialOpen.current){ // If not positioned, calculate from current rect
+    if(pos.x===null || pos.y === null || isInitialOpen.current){
       const r = refModal.current.getBoundingClientRect();
       const newPos = {x:r.left,y:r.top};
       setPos(newPos);
       dragOffset.current = {x:e.clientX - newPos.x, y:e.clientY - newPos.y};
-    } else { // If already positioned, use existing pos
+    } else {
       dragOffset.current = {x:e.clientX-pos.x,y:e.clientY-pos.y};
     }
-    isInitialOpen.current = false; // No longer initial open for this instance
+    isInitialOpen.current = false;
     setDrag(true);
     document.body.style.userSelect='none';
   },[pos]);
@@ -112,7 +111,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
     const {width:hW,height:hH}=refModal.current.getBoundingClientRect();
     let x=e.clientX-dragOffset.current.x;
     let y=e.clientY-dragOffset.current.y;
-    const margin = 5; // Small margin from window edges
+    const margin = 5;
     x=Math.max(margin,Math.min(x,vw-hW-margin));
     y=Math.max(margin,Math.min(y,vh-hH-margin));
     setPos({x,y});
@@ -141,8 +140,38 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
 
   const handleGenerateEmail = async () => {
     const itemsForAIGen = await prepareItemsForAIPrompt(initialSelectedItems, itemFundingLevels);
+    const aiModel = AI_MODEL_OPTIONS.find(m => m.id === selectedGenerator);
 
-    if (selectedGenerator === 'template') {
+    if (aiModel?.isAIMeta) {
+        const prompt = await generateAIPrompt(
+            itemsForAIGen,
+            aggressiveness,
+            userName,
+            userLocation,
+            balanceBudgetChecked
+        );
+        let urlToOpen = aiModel.url;
+        if (aiModel.url.includes('<YOUR_PROMPT>')) {
+            urlToOpen = aiModel.url.replace('<YOUR_PROMPT>', encodeURIComponent(prompt));
+        }
+
+        let toastDescription = `Opening ${aiModel.name}...`;
+        try {
+            await navigator.clipboard.writeText(prompt);
+            toastDescription = `Prompt for ${aiModel.name} copied! ${toastDescription} Paste the prompt if it's not pre-filled.`;
+        } catch (err) {
+            toastDescription = `Could not copy prompt automatically. ${toastDescription} Please copy the prompt manually if needed.`;
+            console.warn('Failed to copy prompt to clipboard: ', err);
+        }
+        
+        toast({
+            title: `${aiModel.name} Prompt Ready`,
+            description: toastDescription,
+            duration: 7000,
+        });
+        window.open(urlToOpen, '_blank');
+        // Note: Email is not sent directly here; user generates on AI site then copies to their email.
+    } else { // Local template
         const finalSelectedItemsWithCategoryForTemplate: (UserSelectedItem & { category: string })[] = Array.from(itemFundingLevels.entries()).map(([id, sliderValue]) => {
             const originalItem = initialSelectedItems.get(id);
             return {
@@ -161,45 +190,13 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
             balanceBudgetChecked
         );
         window.location.href=`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    } else {
-        const aiModel = AI_MODEL_OPTIONS.find(m => m.id === selectedGenerator);
-        if (aiModel) {
-            const prompt = await generateAIPrompt(
-                itemsForAIGen,
-                aggressiveness,
-                userName,
-                userLocation,
-                balanceBudgetChecked
-            );
-            let urlToOpen = aiModel.url;
-            if (aiModel.url.includes('<YOUR_PROMPT>')) {
-                urlToOpen = aiModel.url.replace('<YOUR_PROMPT>', encodeURIComponent(prompt));
-            }
-
-            try {
-                await navigator.clipboard.writeText(prompt);
-                toast({
-                    title: "Prompt Copied!",
-                    description: `Paste the prompt into ${aiModel.name} to generate your email. Opening ${aiModel.name}...`,
-                    duration: 5000,
-                });
-                window.open(urlToOpen, '_blank');
-            } catch (err) {
-                 toast({
-                    title: "Copy Failed",
-                    description: "Could not copy prompt. Please try manually. Opening AI service...",
-                    variant: "destructive",
-                });
-                console.error('Failed to copy prompt: ', err);
-                window.open(urlToOpen, '_blank');
-            }
-        }
     }
     onEmailGenerated();
   };
 
   const aiModels = AI_MODEL_OPTIONS.filter(model => model.isAIMeta);
-  const templateModel = AI_MODEL_OPTIONS.find(model => model.id === 'template');
+  const templateModel = AI_MODEL_OPTIONS.find(model => !model.isAIMeta);
+  const currentGeneratorName = AI_MODEL_OPTIONS.find(m => m.id === selectedGenerator)?.name || "Email";
 
 
   return(
@@ -209,11 +206,11 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
         style={
             pos.x !== null && pos.y !== null
             ? { left: pos.x, top: pos.y, transform: 'none' }
-            : undefined // Let CSS handle initial centering if pos is null
+            : undefined
         }
         className={cn(
           'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:rounded-lg',
-          pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2', // Centering class
+          pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
           'data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut'
         )}
         onInteractOutside={e=>drag&&e.preventDefault()}
@@ -278,7 +275,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                 <div className='space-y-4 sm:space-y-6'>
                   <h3 className='text-sm sm:text-lg font-semibold border-b pb-1.5 sm:pb-2'>Adjust Funding Priorities</h3>
                   {selectedArray.map(item => {
-                    const sliderValue = itemFundingLevels.get(item.id) ?? 50; // Default to 50 (neutral)
+                    const sliderValue = itemFundingLevels.get(item.id) ?? 50; 
                     const det = fdet(sliderValue);
                     return (
                       <div key={item.id} className='space-y-1.5 sm:space-y-2 border p-3 sm:p-4 rounded-md shadow-sm bg-card/50'>
@@ -316,7 +313,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
 
               {balanceBudgetChecked && (
                 <div className='mt-4 sm:mt-6 rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 sm:p-4 text-xs sm:text-sm text-amber-800 dark:text-amber-300'>
-                  <p><strong>Note:</strong> Your email will emphasize balancing the budget and tackling the national debt.</p>
+                  <p><strong>Note:</strong> Your message will emphasize balancing the budget and tackling the national debt.</p>
                 </div>
               )}
            </div>
@@ -339,7 +336,8 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                   onClick={handleGenerateEmail}
                   className='flex-grow sm:flex-none bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 text-primary-foreground dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800 text-xs sm:text-sm h-9 sm:h-10 rounded-l-md rounded-r-none'
               >
-                  <Send className='mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4'/> Generate Message
+                  <Send className='mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4'/>
+                  {selectedGenerator === 'template' ? 'Generate & Open Email' : `Generate with ${currentGeneratorName}`}
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -352,56 +350,57 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                     <span className="sr-only">Choose Generator</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64 sm:w-72">
-                  <DropdownMenuLabel className="text-xs">Choose AI Generator</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
+                <DropdownMenuContent align="end" className="w-72 sm:w-80">
+                  <DropdownMenuLabel className="text-xs px-2 pt-2 pb-1">Choose AI Generator</DropdownMenuLabel>
                   <DropdownMenuRadioGroup value={selectedGenerator} onValueChange={setSelectedGenerator}>
                     {aiModels.map((model) => {
                       const IconComponent = model.icon || BrainCircuit;
                       return (
-                        <DropdownMenuRadioItem key={model.id} value={model.id} className="text-xs sm:text-sm leading-snug">
-                          <div className="flex items-start gap-2">
-                            <IconComponent className="h-4 w-4 mt-0.5 text-muted-foreground"/>
-                            <div>
-                              <div className="flex items-center gap-1.5">
-                                <span className="font-medium">{model.name}</span>
+                        <DropdownMenuRadioItem key={model.id} value={model.id} className="text-xs sm:text-sm leading-snug cursor-pointer py-2 px-2">
+                          <div className="flex items-start gap-2.5 w-full">
+                            <IconComponent className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0"/>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-1.5 mb-0.5">
+                                <span className="font-medium text-foreground">{model.name}</span>
                                 {model.tag && (
                                   <span className={cn(
-                                    "text-[9px] sm:text-[10px] font-semibold px-1 py-0.5 rounded-sm",
+                                    "text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.5 rounded-sm leading-none",
                                     model.tagColor || "bg-accent text-accent-foreground"
                                   )}>{model.tag}</span>
                                 )}
                               </div>
-                              <p className="text-muted-foreground text-[10px] sm:text-xs">{model.description}</p>
+                              <p className="text-muted-foreground text-[10px] sm:text-xs leading-tight">{model.description}</p>
                             </div>
                           </div>
                         </DropdownMenuRadioItem>
                       );
                     })}
+                   </DropdownMenuRadioGroup>
                      {templateModel && (
                         <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuLabel className="text-xs pt-2">Local Template</DropdownMenuLabel>
-                           <DropdownMenuRadioItem key={templateModel.id} value={templateModel.id} className="text-xs sm:text-sm leading-snug">
-                              <div className="flex items-start gap-2">
-                                <templateModel.icon className="h-4 w-4 mt-0.5 text-muted-foreground"/>
-                                <div>
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="font-medium">{templateModel.name}</span>
-                                    {templateModel.tag && (
-                                      <span className={cn(
-                                        "text-[9px] sm:text-[10px] font-semibold px-1 py-0.5 rounded-sm",
-                                        templateModel.tagColor || "bg-accent text-accent-foreground"
-                                      )}>{templateModel.tag}</span>
-                                    )}
+                          <DropdownMenuSeparator className="my-1" />
+                          <DropdownMenuLabel className="text-xs px-2 pt-1.5 pb-1">Local Template</DropdownMenuLabel>
+                           <DropdownMenuRadioGroup value={selectedGenerator} onValueChange={setSelectedGenerator}>
+                               <DropdownMenuRadioItem key={templateModel.id} value={templateModel.id} className="text-xs sm:text-sm leading-snug cursor-pointer py-2 px-2">
+                                  <div className="flex items-start gap-2.5 w-full">
+                                    <templateModel.icon className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0"/>
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-1.5 mb-0.5">
+                                        <span className="font-medium text-foreground">{templateModel.name}</span>
+                                        {templateModel.tag && (
+                                          <span className={cn(
+                                            "text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.5 rounded-sm leading-none",
+                                            templateModel.tagColor || "bg-accent text-accent-foreground"
+                                          )}>{templateModel.tag}</span>
+                                        )}
+                                      </div>
+                                      <p className="text-muted-foreground text-[10px] sm:text-xs leading-tight">{templateModel.description}</p>
+                                    </div>
                                   </div>
-                                  <p className="text-muted-foreground text-[10px] sm:text-xs">{templateModel.description}</p>
-                                </div>
-                              </div>
-                            </DropdownMenuRadioItem>
+                                </DropdownMenuRadioItem>
+                           </DropdownMenuRadioGroup>
                         </>
                      )}
-                  </DropdownMenuRadioGroup>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -417,8 +416,8 @@ interface EmailCustomizationModalProps{
   onOpenChange:(b:boolean)=>void;
   onEmailGenerated: () => void;
   onSuggestResources: () => void;
-  canSuggestResources: boolean; // Added to control "Further Actions" button enable/disable state
-  selectedItems: Map<string, UserSelectedItem & { category: string }>; // Ensured category is part of selectedItems type
+  canSuggestResources: boolean;
+  selectedItems: Map<string, UserSelectedItem & { category: string }>;
   balanceBudgetChecked:boolean;
   taxAmount:number;
   aggressiveness:number;setAggressiveness:(n:number)=>void;
