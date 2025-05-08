@@ -23,7 +23,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { GripVertical, Mail, X, Send, Lightbulb, BotMessageSquare, FileTextIcon, SearchIcon, MessagesSquareIcon, UserCircleIcon, ClipboardSignatureIcon, ChevronDownIcon, BrainCircuit } from 'lucide-react';
+import { GripVertical, Mail, X, Send, Lightbulb, BrainCircuit } from 'lucide-react';
 
 import type { SelectedItem as UserSelectedItem } from '@/services/tax-spending';
 import { generateRepresentativeEmailContent } from '@/services/email/generator';
@@ -61,14 +61,15 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
   const refModal = useRef<HTMLDivElement>(null);
   const refHandle= useRef<HTMLDivElement>(null);
 
-  const [selectedGenerator, setSelectedGenerator] = useState<string>("template");
+  const [selectedGenerator, setSelectedGenerator] = useState<string>("template"); // Default to template
 
   useLayoutEffect(()=>{
       if (!isOpen) {
-          setPos({x:null,y:null});
-          isInitialOpen.current = true;
+          // setPos({x:null,y:null}); // Keep position if just closed
+          isInitialOpen.current = true; // Reset for centering logic on next open
       }
   }, [isOpen]);
+
 
   useLayoutEffect(() => {
     if (!isOpen || pos.x !== null || !isInitialOpen.current) return;
@@ -92,15 +93,15 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
   const onDown = useCallback((e:React.MouseEvent)=>{
     if(!refHandle.current?.contains(e.target as Node) || !refModal.current) return;
 
-    if(pos.x===null || pos.y === null || isInitialOpen.current){
+    if(pos.x===null || pos.y === null || isInitialOpen.current){ // If not positioned, calculate from current rect
       const r = refModal.current.getBoundingClientRect();
       const newPos = {x:r.left,y:r.top};
       setPos(newPos);
       dragOffset.current = {x:e.clientX - newPos.x, y:e.clientY - newPos.y};
-      isInitialOpen.current = false;
-    } else {
+    } else { // If already positioned, use existing pos
       dragOffset.current = {x:e.clientX-pos.x,y:e.clientY-pos.y};
     }
+    isInitialOpen.current = false; // No longer initial open for this instance
     setDrag(true);
     document.body.style.userSelect='none';
   },[pos]);
@@ -111,7 +112,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
     const {width:hW,height:hH}=refModal.current.getBoundingClientRect();
     let x=e.clientX-dragOffset.current.x;
     let y=e.clientY-dragOffset.current.y;
-    const margin = 5;
+    const margin = 5; // Small margin from window edges
     x=Math.max(margin,Math.min(x,vw-hW-margin));
     y=Math.max(margin,Math.min(y,vh-hH-margin));
     setPos({x,y});
@@ -139,24 +140,21 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
 
 
   const handleGenerateEmail = async () => {
-    // Prepare items for the standard template generator
-    const finalSelectedItemsWithCategoryForTemplate: (UserSelectedItem & { category: string })[] = Array.from(itemFundingLevels.entries()).map(([id, sliderValue]) => {
-       const originalItem = initialSelectedItems.get(id); // initialSelectedItems is Map<string, UserSelectedItem>
-       return {
-            id,
-            description: originalItem?.description || 'Unknown Item',
-            category: originalItem?.category || 'Unknown Category', // Ensure category is here
-            fundingLevel: mapSliderToFundingLevel(sliderValue) // This is the -2 to 2 value
-        };
-    });
-
-    // Prepare items specifically for the AI prompt generator (needs sliderValue 0-100)
     const itemsForAIGen = await prepareItemsForAIPrompt(initialSelectedItems, itemFundingLevels);
 
-
     if (selectedGenerator === 'template') {
-        const {subject, body} = generateRepresentativeEmailContent( // Use generateRepresentativeEmailContent from generator.ts
-            finalSelectedItemsWithCategoryForTemplate, // This needs to match the expected type
+        const finalSelectedItemsWithCategoryForTemplate: (UserSelectedItem & { category: string })[] = Array.from(itemFundingLevels.entries()).map(([id, sliderValue]) => {
+            const originalItem = initialSelectedItems.get(id);
+            return {
+                id,
+                description: originalItem?.description || 'Unknown Item',
+                category: originalItem?.category || 'Unknown Category',
+                fundingLevel: mapSliderToFundingLevel(sliderValue)
+            };
+        });
+
+        const {subject, body} = generateRepresentativeEmailContent(
+            finalSelectedItemsWithCategoryForTemplate,
             aggressiveness,
             userName,
             userLocation,
@@ -167,12 +165,17 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
         const aiModel = AI_MODEL_OPTIONS.find(m => m.id === selectedGenerator);
         if (aiModel) {
             const prompt = await generateAIPrompt(
-                itemsForAIGen, // Pass items with 0-100 sliderValue
+                itemsForAIGen,
                 aggressiveness,
                 userName,
                 userLocation,
                 balanceBudgetChecked
             );
+            let urlToOpen = aiModel.url;
+            if (aiModel.url.includes('<YOUR_PROMPT>')) {
+                urlToOpen = aiModel.url.replace('<YOUR_PROMPT>', encodeURIComponent(prompt));
+            }
+
             try {
                 await navigator.clipboard.writeText(prompt);
                 toast({
@@ -180,7 +183,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                     description: `Paste the prompt into ${aiModel.name} to generate your email. Opening ${aiModel.name}...`,
                     duration: 5000,
                 });
-                window.open(aiModel.url.replace('<YOUR_PROMPT>', encodeURIComponent(prompt)), '_blank');
+                window.open(urlToOpen, '_blank');
             } catch (err) {
                  toast({
                     title: "Copy Failed",
@@ -188,21 +191,15 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                     variant: "destructive",
                 });
                 console.error('Failed to copy prompt: ', err);
-                window.open(aiModel.url.replace('<YOUR_PROMPT>', encodeURIComponent(prompt)), '_blank');
+                window.open(urlToOpen, '_blank');
             }
         }
     }
     onEmailGenerated();
   };
 
-  const AILogos: Record<string, React.ElementType> = {
-    chatgpt: BotMessageSquare,
-    claude: FileTextIcon,
-    perplexity: SearchIcon,
-    bing: MessagesSquareIcon,
-    you: UserCircleIcon,
-    template: ClipboardSignatureIcon,
-  };
+  const aiModels = AI_MODEL_OPTIONS.filter(model => model.isAIMeta);
+  const templateModel = AI_MODEL_OPTIONS.find(model => model.id === 'template');
 
 
   return(
@@ -212,11 +209,11 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
         style={
             pos.x !== null && pos.y !== null
             ? { left: pos.x, top: pos.y, transform: 'none' }
-            : undefined
+            : undefined // Let CSS handle initial centering if pos is null
         }
         className={cn(
           'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:rounded-lg',
-          pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
+          pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2', // Centering class
           'data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut'
         )}
         onInteractOutside={e=>drag&&e.preventDefault()}
@@ -356,11 +353,11 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64 sm:w-72">
-                  <DropdownMenuLabel className="text-xs">Choose Generator</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-xs">Choose AI Generator</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuRadioGroup value={selectedGenerator} onValueChange={setSelectedGenerator}>
-                    {AI_MODEL_OPTIONS.map((model) => {
-                      const IconComponent = AILogos[model.id] || BrainCircuit;
+                    {aiModels.map((model) => {
+                      const IconComponent = model.icon || BrainCircuit;
                       return (
                         <DropdownMenuRadioItem key={model.id} value={model.id} className="text-xs sm:text-sm leading-snug">
                           <div className="flex items-start gap-2">
@@ -381,6 +378,29 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                         </DropdownMenuRadioItem>
                       );
                     })}
+                     {templateModel && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuLabel className="text-xs pt-2">Local Template</DropdownMenuLabel>
+                           <DropdownMenuRadioItem key={templateModel.id} value={templateModel.id} className="text-xs sm:text-sm leading-snug">
+                              <div className="flex items-start gap-2">
+                                <templateModel.icon className="h-4 w-4 mt-0.5 text-muted-foreground"/>
+                                <div>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="font-medium">{templateModel.name}</span>
+                                    {templateModel.tag && (
+                                      <span className={cn(
+                                        "text-[9px] sm:text-[10px] font-semibold px-1 py-0.5 rounded-sm",
+                                        templateModel.tagColor || "bg-accent text-accent-foreground"
+                                      )}>{templateModel.tag}</span>
+                                    )}
+                                  </div>
+                                  <p className="text-muted-foreground text-[10px] sm:text-xs">{templateModel.description}</p>
+                                </div>
+                              </div>
+                            </DropdownMenuRadioItem>
+                        </>
+                     )}
                   </DropdownMenuRadioGroup>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -397,9 +417,10 @@ interface EmailCustomizationModalProps{
   onOpenChange:(b:boolean)=>void;
   onEmailGenerated: () => void;
   onSuggestResources: () => void;
-  selectedItems: Map<string, UserSelectedItem>; // Changed this from SelectedItem to UserSelectedItem from tax-spending
+  canSuggestResources: boolean; // Added to control "Further Actions" button enable/disable state
+  selectedItems: Map<string, UserSelectedItem & { category: string }>; // Ensured category is part of selectedItems type
   balanceBudgetChecked:boolean;
-  taxAmount:number; // Assuming taxAmount is always passed now
+  taxAmount:number;
   aggressiveness:number;setAggressiveness:(n:number)=>void;
   itemFundingLevels:Map<string,number>;setItemFundingLevels:(m:Map<string,number>)=>void;
   userName:string;setUserName:(s:string)=>void;
