@@ -46,7 +46,7 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     url: 'https://www.perplexity.ai/search?q=<YOUR_PROMPT>',
     icon: SearchIcon,
     tag: 'Best Search',
-    tagColor: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-700/30 dark:text-cyan-300', // Ensured this is correct
+    tagColor: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-700/30 dark:text-cyan-300',
     description: 'Integrates real-time search for up-to-date, cited information. Prompt is auto-filled.',
     isAIMeta: true,
   },

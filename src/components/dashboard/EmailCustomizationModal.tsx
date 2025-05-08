@@ -364,7 +364,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                     'flex-grow sm:flex-none text-xs sm:text-sm h-9 sm:h-10 rounded-l-md rounded-r-none',
                     isGenerateDisabled
                         ? 'bg-muted hover:bg-muted cursor-not-allowed text-muted-foreground'
-                        : 'bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800 text-primary-foreground'
+                        : 'bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 text-primary-foreground dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800'
                    )}
               >
                   <Send className='mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4'/>
@@ -377,9 +377,8 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                     size="icon"
                     className={cn(
                         "h-9 w-9 sm:h-10 sm:w-10 rounded-l-none rounded-r-md shrink-0",
-                        isGenerateDisabled
-                           ? 'bg-gradient-to-r from-primary/70 to-teal-600/70 dark:from-purple-600/70 dark:to-purple-700/70 text-primary-foreground/80'
-                           : 'bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800 text-primary-foreground'
+                        // Always apply active styling for this button, not dependent on isGenerateDisabled
+                        'bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 text-primary-foreground dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800'
                     )}
                   >
                     <BrainCircuit className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -389,7 +388,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                 <DropdownMenuContent align="end" className="w-72 sm:w-80">
                   <DropdownMenuLabel className="text-xs px-2 pt-2 pb-1">Choose AI Generator</DropdownMenuLabel>
                   <DropdownMenuRadioGroup value={selectedGenerator} onValueChange={setSelectedGenerator}>
-                    {aiModels.map((modelItem) => { // Renamed model to modelItem to avoid conflict
+                    {aiModels.map((modelItem) => {
                       const IconComponent = modelItem.icon || BrainCircuit;
                        const displayProvider = modelItem.provider && !modelItem.name.toLowerCase().includes(modelItem.provider.toLowerCase()) ? ` (${modelItem.provider})` : '';
                       return (
