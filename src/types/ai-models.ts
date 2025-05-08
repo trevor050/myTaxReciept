@@ -34,7 +34,7 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     name: 'Claude',
     provider: 'Anthropic',
     url: 'https://claude.ai/new?q=<YOUR_PROMPT>',
-    icon: FileTextIcon,
+    icon: FileTextIcon, // Placeholder, consider Anthropic logo
     tag: 'Best Writer',
     tagColor: 'bg-orange-100 text-orange-700 dark:bg-orange-700/30 dark:text-orange-300',
     description: 'Known for strong, nuanced writing. Excellent for detailed emails. Prompt is auto-filled.',
@@ -43,8 +43,9 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
   {
     id: 'perplexity',
     name: 'Perplexity',
+    // provider: 'Perplexity AI', // Not needed if same as name
     url: 'https://www.perplexity.ai/search?q=<YOUR_PROMPT>',
-    icon: SearchIcon,
+    icon: SearchIcon, // Placeholder, consider Perplexity logo
     tag: 'Best Search',
     tagColor: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-700/30 dark:text-cyan-300',
     description: 'Integrates real-time search for up-to-date, cited information. Prompt is auto-filled.',
@@ -55,7 +56,7 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     name: 'Microsoft Copilot',
     provider: 'Microsoft',
     url: 'https://www.bing.com/search?showconv=1&q=<YOUR_PROMPT>',
-    icon: MessagesSquareIcon,
+    icon: MessagesSquareIcon, // Placeholder, consider Copilot/Bing logo
     tag: 'Integrated Search',
     tagColor: 'bg-blue-100 text-blue-700 dark:bg-blue-700/30 dark:text-blue-300',
     description: 'AI chat with Bing search integration for current context. Prompt is auto-filled.',
@@ -64,8 +65,9 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
   {
     id: 'you',
     name: 'You.com',
+    // provider: 'You.com', // Not needed
     url: 'https://you.com/search?q=<YOUR_PROMPT>&tbm=youchat',
-    icon: UserCircleIcon,
+    icon: UserCircleIcon, // Placeholder, consider You.com logo
     tag: 'Researcher',
     tagColor: 'bg-purple-100 text-purple-700 dark:bg-purple-700/30 dark:text-purple-300',
     description: 'AI chat with smart reasoning and integrated web search. Prompt is auto-filled.',
@@ -74,7 +76,7 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
   {
     id: 'template',
     name: 'Use Standard Template',
-    url: '',
+    url: '', // No URL for local template
     icon: ClipboardSignatureIcon,
     tag: 'Eco-Friendly',
     tagColor: 'bg-lime-100 text-lime-700 dark:bg-lime-700/30 dark:text-lime-300',
@@ -82,4 +84,3 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     isAIMeta: false,
   },
 ];
-
