@@ -26,8 +26,7 @@ import {
 import { GripVertical, Mail, X, Send, Lightbulb, BrainCircuit } from 'lucide-react';
 
 import type { SelectedItem as UserSelectedItem } from '@/services/tax-spending';
-import { generateRepresentativeEmailContent } from '@/services/email/generator';
-import { SUBJECT } from '@/services/email/templates'; // Corrected import for SUBJECT
+import { generateRepresentativeEmailContent, SUBJECT } from '@/services/email/generator';
 import { generateAIPrompt, prepareItemsForAIPrompt } from '@/services/ai/prompt-generator';
 import type { AIModelOption } from '@/types/ai-models';
 import { AI_MODEL_OPTIONS } from '@/types/ai-models';
@@ -52,6 +51,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
     balanceBudgetChecked, aggressiveness, setAggressiveness,
     itemFundingLevels, setItemFundingLevels,
     userName, setUserName, userLocation, setUserLocation,
+    canSuggestResources
   } = p;
 
   const [pos, setPos] = useState<{x:number|null;y:number|null}>({ x:null, y:null });
@@ -322,7 +322,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                             onValueChange={v => setItemFundingLevels(new Map(itemFundingLevels).set(item.id, v[0]))}
                             className={cn(
                                 '[&>span>span]:transition-colors [&>span>span]:duration-200',
-                                `[&>span>span]:${det.color.split(' ')[0]}`,
+                                `[&>span>span]:${det.color.split(' ')[0]}`, // Use only the background color part for the slider track
                                 '[&>span]:bg-muted'
                             )}
                         />
@@ -351,7 +351,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
             <Button
                 variant="secondary"
                 onClick={onSuggestResources}
-                disabled={!p.canSuggestResources}
+                disabled={!canSuggestResources}
                 className='w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10'
             >
                 <Lightbulb className='mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4'/> Further Actions
@@ -375,12 +375,11 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                   <Button
                     variant="default"
                     size="icon"
-                    disabled={isGenerateDisabled}
                     className={cn(
                         "h-9 w-9 sm:h-10 sm:w-10 rounded-l-none rounded-r-md shrink-0",
-                         isGenerateDisabled
-                            ? 'bg-muted hover:bg-muted cursor-not-allowed text-muted-foreground'
-                            : 'bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800 text-primary-foreground'
+                        isGenerateDisabled
+                           ? 'bg-gradient-to-r from-primary/70 to-teal-600/70 dark:from-purple-600/70 dark:to-purple-700/70 text-primary-foreground/80'
+                           : 'bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800 text-primary-foreground'
                     )}
                   >
                     <BrainCircuit className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -390,24 +389,24 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                 <DropdownMenuContent align="end" className="w-72 sm:w-80">
                   <DropdownMenuLabel className="text-xs px-2 pt-2 pb-1">Choose AI Generator</DropdownMenuLabel>
                   <DropdownMenuRadioGroup value={selectedGenerator} onValueChange={setSelectedGenerator}>
-                    {aiModels.map((model) => {
-                      const IconComponent = model.icon || BrainCircuit;
-                       const displayProvider = model.provider && !model.name.toLowerCase().includes(model.provider.toLowerCase()) ? ` (${model.provider})` : '';
+                    {aiModels.map((modelItem) => { // Renamed model to modelItem to avoid conflict
+                      const IconComponent = modelItem.icon || BrainCircuit;
+                       const displayProvider = modelItem.provider && !modelItem.name.toLowerCase().includes(modelItem.provider.toLowerCase()) ? ` (${modelItem.provider})` : '';
                       return (
-                        <DropdownMenuRadioItem key={model.id} value={model.id} className="text-xs sm:text-sm leading-snug cursor-pointer py-2 px-2">
+                        <DropdownMenuRadioItem key={modelItem.id} value={modelItem.id} className="text-xs sm:text-sm leading-snug cursor-pointer py-2 px-2">
                           <div className="flex items-start gap-2.5 w-full">
                             <IconComponent className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0"/>
                             <div className="flex-1">
                               <div className="flex items-center gap-1.5 mb-0.5">
-                                <span className="font-medium text-foreground">{model.name}{displayProvider}</span>
-                                {model.tag && (
+                                <span className="font-medium text-foreground">{modelItem.name}{displayProvider}</span>
+                                {modelItem.tag && (
                                   <span className={cn(
                                     "text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.5 rounded-sm leading-none",
-                                    model.tagColor || "bg-accent text-accent-foreground"
-                                  )}>{model.tag}</span>
+                                    modelItem.tagColor || "bg-accent text-accent-foreground"
+                                  )}>{modelItem.tag}</span>
                                 )}
                               </div>
-                              <p className="text-muted-foreground text-[10px] sm:text-xs leading-tight">{model.description}</p>
+                              <p className="text-muted-foreground text-[10px] sm:text-xs leading-tight">{modelItem.description}</p>
                             </div>
                           </div>
                         </DropdownMenuRadioItem>
@@ -463,3 +462,4 @@ interface EmailCustomizationModalProps{
   userName:string;setUserName:(s:string)=>void;
   userLocation:string;setUserLocation:(s:string)=>void;
 }
+
