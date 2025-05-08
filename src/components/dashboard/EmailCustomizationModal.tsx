@@ -66,6 +66,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
   useLayoutEffect(()=>{
       if (!isOpen) {
           isInitialOpen.current = true;
+          // No need to reset position here, as it's handled by the effect below
       }
   }, [isOpen]);
 
@@ -86,7 +87,8 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
     });
 
     return () => cancelAnimationFrame(frame);
-  }, [isOpen, pos.x]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
 
   const onDown = useCallback((e:React.MouseEvent)=>{
@@ -111,7 +113,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
     const {width:hW,height:hH}=refModal.current.getBoundingClientRect();
     let x=e.clientX-dragOffset.current.x;
     let y=e.clientY-dragOffset.current.y;
-    const margin = 5;
+    const margin = 5; // Small margin to prevent dragging completely off-screen
     x=Math.max(margin,Math.min(x,vw-hW-margin));
     y=Math.max(margin,Math.min(y,vh-hH-margin));
     setPos({x,y});
@@ -139,12 +141,12 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
 
 
   const handleGenerateEmail = async () => {
-    const itemsForAIGen = await prepareItemsForAIPrompt(initialSelectedItems, itemFundingLevels);
+    const itemsForPrompt = await prepareItemsForAIPrompt(initialSelectedItems, itemFundingLevels);
     const aiModel = AI_MODEL_OPTIONS.find(m => m.id === selectedGenerator);
 
     if (aiModel?.isAIMeta) {
-        const prompt = await generateAIPrompt(
-            itemsForAIGen,
+        const promptText = await generateAIPrompt(
+            itemsForPrompt,
             aggressiveness,
             userName,
             userLocation,
@@ -152,25 +154,16 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
         );
         let urlToOpen = aiModel.url;
         if (aiModel.url.includes('<YOUR_PROMPT>')) {
-            urlToOpen = aiModel.url.replace('<YOUR_PROMPT>', encodeURIComponent(prompt));
-        }
-
-        let toastDescription = `Opening ${aiModel.name}...`;
-        try {
-            await navigator.clipboard.writeText(prompt);
-            toastDescription = `Prompt for ${aiModel.name} copied! ${toastDescription} Paste the prompt if it's not pre-filled.`;
-        } catch (err) {
-            toastDescription = `Could not copy prompt automatically. ${toastDescription} Please copy the prompt manually if needed.`;
-            console.warn('Failed to copy prompt to clipboard: ', err);
+            urlToOpen = aiModel.url.replace('<YOUR_PROMPT>', encodeURIComponent(promptText));
         }
         
         toast({
-            title: `${aiModel.name} Prompt Ready`,
-            description: toastDescription,
-            duration: 7000,
+            title: `Opening ${aiModel.name}...`,
+            description: `After ${aiModel.name} generates the email body, please copy it and paste it into your email client.`,
+            duration: 9000,
         });
         window.open(urlToOpen, '_blank');
-        // Note: Email is not sent directly here; user generates on AI site then copies to their email.
+        // User manually copies from AI site to their email client.
     } else { // Local template
         const finalSelectedItemsWithCategoryForTemplate: (UserSelectedItem & { category: string })[] = Array.from(itemFundingLevels.entries()).map(([id, sliderValue]) => {
             const originalItem = initialSelectedItems.get(id);
@@ -189,6 +182,11 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
             userLocation,
             balanceBudgetChecked
         );
+        toast({
+            title: 'Email Generated',
+            description: 'Opening your email client with the pre-filled template.',
+            duration: 5000,
+        });
         window.location.href=`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     }
     onEmailGenerated();
@@ -200,7 +198,14 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
 
 
   return(
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+        onOpenChange(open);
+        if (!open) {
+             // Reset isInitialOpen to true and position to null when modal closes
+             isInitialOpen.current = true;
+             setPos({ x: null, y: null });
+        }
+    }}>
       <DialogContent
         ref={refModal}
         style={
@@ -210,7 +215,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
         }
         className={cn(
           'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:rounded-lg',
-          pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
+          pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2', // Center if not positioned
           'data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut'
         )}
         onInteractOutside={e=>drag&&e.preventDefault()}
@@ -361,7 +366,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                             <IconComponent className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0"/>
                             <div className="flex-1">
                               <div className="flex items-center gap-1.5 mb-0.5">
-                                <span className="font-medium text-foreground">{model.name}</span>
+                                <span className="font-medium text-foreground">{model.name} {model.provider ? `(${model.provider})` : ''}</span>
                                 {model.tag && (
                                   <span className={cn(
                                     "text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.5 rounded-sm leading-none",
@@ -425,3 +430,4 @@ interface EmailCustomizationModalProps{
   userName:string;setUserName:(s:string)=>void;
   userLocation:string;setUserLocation:(s:string)=>void;
 }
+
