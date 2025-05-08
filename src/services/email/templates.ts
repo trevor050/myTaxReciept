@@ -1,3 +1,4 @@
+
 /**
  * @fileOverview Stores constants and template strings used for generating representative emails.
  * Includes variations for tone, action, rationale, and structure.
@@ -10,7 +11,7 @@ import type {
 } from './types';
 
 // --- SUBJECT Lines ---
-export const SUBJECT: EmailTemplates<string> = {
+export const SUBJECT: EmailTemplates<string> = { // Made exportable
   0: "A Constituent's Perspective on Federal Budget Priorities",
   1: "Concerns Regarding Specific Federal Spending Allocations",
   2: "Urgent Request: Reevaluate Federal Budget Priorities and Debt",
@@ -1369,7 +1370,7 @@ export const SPECIFIC_RATIONALES: RationaleOptions = {
         "encouraging local and state governments to contribute a larger share towards the operating and capital costs of their transit systems.",
         "critically evaluating the cost-effectiveness and ridership projections for expensive new transit expansion projects.",
         "ensuring transit agencies operate efficiently, control costs, and explore innovative service delivery models.",
-        "questioning the justification for significant federal subsidies for transit routes or systems with persistently low ridership.",
+        "questioning the justification for significant federal subsidies for transit routes or systems with persistently low ridership and high operating losses.",
         "promoting innovation in transit service delivery, including partnerships with private mobility providers or microtransit solutions.",
     ],
     public_transit_fund: [
@@ -1711,3 +1712,4 @@ export const INTRA_PARAGRAPH_CONNECTORS: string[] = [
 export const SALUTATIONS: string[] = [
     "Sincerely,", "Respectfully,", "Regards,", "Thank you for your consideration,", "Yours truly,"
 ];
+

@@ -27,10 +27,12 @@ import { GripVertical, Mail, X, Send, Lightbulb, BrainCircuit } from 'lucide-rea
 
 import type { SelectedItem as UserSelectedItem } from '@/services/tax-spending';
 import { generateRepresentativeEmailContent } from '@/services/email/generator';
+import { SUBJECT } from '@/services/email/templates'; // Corrected import for SUBJECT
 import { generateAIPrompt, prepareItemsForAIPrompt } from '@/services/ai/prompt-generator';
 import type { AIModelOption } from '@/types/ai-models';
 import { AI_MODEL_OPTIONS } from '@/types/ai-models';
 import { mapSliderToFundingLevel } from '@/lib/funding-utils';
+import { toneBucket } from '@/services/email/utils';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -46,9 +48,9 @@ const fundingLevels = [
 export default function EmailCustomizationModal (p: EmailCustomizationModalProps) {
   const {
     isOpen, onOpenChange, onEmailGenerated, onSuggestResources,
-    selectedItems: initialSelectedItems, // This is Map<string, UserSelectedItem>
+    selectedItems: initialSelectedItems,
     balanceBudgetChecked, aggressiveness, setAggressiveness,
-    itemFundingLevels, setItemFundingLevels, // This is Map<string, number>
+    itemFundingLevels, setItemFundingLevels,
     userName, setUserName, userLocation, setUserLocation,
   } = p;
 
@@ -61,12 +63,11 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
   const refModal = useRef<HTMLDivElement>(null);
   const refHandle= useRef<HTMLDivElement>(null);
 
-  const [selectedGenerator, setSelectedGenerator] = useState<string>("chatgpt"); // Default to ChatGPT
+  const [selectedGenerator, setSelectedGenerator] = useState<string>(AI_MODEL_OPTIONS.find(m => m.id === 'chatgpt')?.id || "template");
 
   useLayoutEffect(()=>{
       if (!isOpen) {
           isInitialOpen.current = true;
-          // No need to reset position here, as it's handled by the effect below
       }
   }, [isOpen]);
 
@@ -80,15 +81,14 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
         if (width && height) {
         setPos({
             x: window.innerWidth  / 2 - width  / 2,
-            y: window.innerHeight / 2 - height / 2,
+            y: Math.max(20, window.innerHeight / 2 - height / 2),
         });
         isInitialOpen.current = false;
         }
     });
 
     return () => cancelAnimationFrame(frame);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+  }, [isOpen, pos.x]);
 
 
   const onDown = useCallback((e:React.MouseEvent)=>{
@@ -105,7 +105,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
     isInitialOpen.current = false;
     setDrag(true);
     document.body.style.userSelect='none';
-  },[pos]);
+  },[pos, isInitialOpen]);
 
   const onMove = useCallback((e:MouseEvent)=>{
     if(!drag||!refModal.current || pos.x === null || pos.y === null) return;
@@ -113,7 +113,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
     const {width:hW,height:hH}=refModal.current.getBoundingClientRect();
     let x=e.clientX-dragOffset.current.x;
     let y=e.clientY-dragOffset.current.y;
-    const margin = 5; // Small margin to prevent dragging completely off-screen
+    const margin = 5;
     x=Math.max(margin,Math.min(x,vw-hW-margin));
     y=Math.max(margin,Math.min(y,vh-hH-margin));
     setPos({x,y});
@@ -135,7 +135,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
     return ()=>{window.removeEventListener('mousemove',onMove);window.removeEventListener('mouseup',stopDrag);};
   },[drag,onMove,stopDrag]);
 
-  const tone = (v:number)=>v<=15?'Kind':v<=40?'Concerned':v<=75?'Stern':'Angry';
+  const toneText = (v:number)=>v<=15?'Kind':v<=40?'Concerned':v<=75?'Stern':'Angry';
   const fdet = (s:number)=> fundingLevels.find(f=>f.value===mapSliderToFundingLevel(s))??fundingLevels[2];
   const selectedArray = React.useMemo(() => Array.from(initialSelectedItems.values()), [initialSelectedItems]);
 
@@ -143,8 +143,18 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
   const handleGenerateEmail = async () => {
     const itemsForPrompt = await prepareItemsForAIPrompt(initialSelectedItems, itemFundingLevels);
     const aiModel = AI_MODEL_OPTIONS.find(m => m.id === selectedGenerator);
+    const currentTone = toneBucket(aggressiveness);
 
-    if (aiModel?.isAIMeta) {
+    if (!aiModel) {
+        toast({
+            title: 'Error',
+            description: 'Selected AI model not found.',
+            variant: 'destructive',
+        });
+        return;
+    }
+
+    if (aiModel.isAIMeta) {
         const promptText = await generateAIPrompt(
             itemsForPrompt,
             aggressiveness,
@@ -156,15 +166,25 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
         if (aiModel.url.includes('<YOUR_PROMPT>')) {
             urlToOpen = aiModel.url.replace('<YOUR_PROMPT>', encodeURIComponent(promptText));
         }
-        
+
         toast({
             title: `Opening ${aiModel.name}...`,
-            description: `After ${aiModel.name} generates the email body, please copy it and paste it into your email client.`,
+            description: `After ${aiModel.name} generates the email, copy the text. Click 'Open Email Draft' to prepare your email client.`,
             duration: 9000,
+            action: (
+                <Button variant="outline" size="sm" onClick={() => {
+                    const genericSubject = SUBJECT[currentTone] || SUBJECT[0]; // Use imported SUBJECT
+                    const placeholderBody = `Hello [Representative Name],\n\nI am writing to you today regarding federal budget priorities.\n\n[Please paste the email body generated by ${aiModel.name} here.]\n\nThank you for your time and consideration.\n\nSincerely,\n${userName || '[Your Name]'}\n${userLocation || '[Your Location]'}`;
+                    window.location.href = `mailto:?subject=${encodeURIComponent(genericSubject)}&body=${encodeURIComponent(placeholderBody)}`;
+                }}>
+                    Open Email Draft
+                </Button>
+            )
         });
         window.open(urlToOpen, '_blank');
-        // User manually copies from AI site to their email client.
-    } else { // Local template
+        onEmailGenerated();
+
+    } else { // Local Template
         const finalSelectedItemsWithCategoryForTemplate: (UserSelectedItem & { category: string })[] = Array.from(itemFundingLevels.entries()).map(([id, sliderValue]) => {
             const originalItem = initialSelectedItems.get(id);
             return {
@@ -188,8 +208,8 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
             duration: 5000,
         });
         window.location.href=`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        onEmailGenerated();
     }
-    onEmailGenerated();
   };
 
   const aiModels = AI_MODEL_OPTIONS.filter(model => model.isAIMeta);
@@ -201,7 +221,6 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
     <Dialog open={isOpen} onOpenChange={(open) => {
         onOpenChange(open);
         if (!open) {
-             // Reset isInitialOpen to true and position to null when modal closes
              isInitialOpen.current = true;
              setPos({ x: null, y: null });
         }
@@ -214,9 +233,9 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
             : undefined
         }
         className={cn(
-          'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:rounded-lg',
-          pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2', // Center if not positioned
-          'data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut'
+          'fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:rounded-lg',
+          pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut',
+          pos.x !== null && 'data-[state=open]:animate-fadeIn data-[state=closed]:animate-scaleOut',
         )}
         onInteractOutside={e=>drag&&e.preventDefault()}
         onOpenAutoFocus={e=>e.preventDefault()}
@@ -263,7 +282,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
               <div className='space-y-2 sm:space-y-3 rounded-lg border p-3 sm:p-4 bg-secondary/30 shadow-inner'>
                 <div className='flex justify-between items-center'>
                     <Label htmlFor="aggressiveness" className="text-sm sm:text-base font-semibold">Overall Tone</Label>
-                    <span className='text-xs sm:text-sm font-medium text-primary rounded-full bg-primary/10 px-2 sm:px-2.5 py-0.5'>{tone(aggressiveness)}</span>
+                    <span className='text-xs sm:text-sm font-medium text-primary rounded-full bg-primary/10 px-2 sm:px-2.5 py-0.5'>{toneText(aggressiveness)}</span>
                 </div>
                 <Slider
                     id="aggressiveness"
@@ -280,7 +299,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                 <div className='space-y-4 sm:space-y-6'>
                   <h3 className='text-sm sm:text-lg font-semibold border-b pb-1.5 sm:pb-2'>Adjust Funding Priorities</h3>
                   {selectedArray.map(item => {
-                    const sliderValue = itemFundingLevels.get(item.id) ?? 50; 
+                    const sliderValue = itemFundingLevels.get(item.id) ?? 50;
                     const det = fdet(sliderValue);
                     return (
                       <div key={item.id} className='space-y-1.5 sm:space-y-2 border p-3 sm:p-4 rounded-md shadow-sm bg-card/50'>
@@ -330,7 +349,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
             <Button
                 variant="secondary"
                 onClick={onSuggestResources}
-                disabled={selectedArray.length === 0 && !balanceBudgetChecked}
+                disabled={!p.canSuggestResources}
                 className='w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10'
             >
                 <Lightbulb className='mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4'/> Further Actions
@@ -339,7 +358,13 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
               <Button
                   disabled={!userName || !userLocation}
                   onClick={handleGenerateEmail}
-                  className='flex-grow sm:flex-none bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 text-primary-foreground dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800 text-xs sm:text-sm h-9 sm:h-10 rounded-l-md rounded-r-none'
+                  className={cn(
+                    'flex-grow sm:flex-none text-xs sm:text-sm h-9 sm:h-10 rounded-l-md rounded-r-none',
+                    'text-primary-foreground',
+                    (!userName || !userLocation)
+                        ? 'bg-muted hover:bg-muted cursor-not-allowed'
+                        : 'bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800'
+                   )}
               >
                   <Send className='mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4'/>
                   {selectedGenerator === 'template' ? 'Generate & Open Email' : `Generate with ${currentGeneratorName}`}
@@ -347,9 +372,13 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
-                    variant="default"
+                    variant="default" 
                     size="icon"
-                    className="h-9 w-9 sm:h-10 sm:w-10 rounded-l-none rounded-r-md shrink-0 bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 text-primary-foreground dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800"
+                    className={cn(
+                        "h-9 w-9 sm:h-10 sm:w-10 rounded-l-none rounded-r-md shrink-0",
+                        "text-primary-foreground",
+                        'bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800'
+                    )}
                   >
                     <BrainCircuit className="h-4 w-4 sm:h-5 sm:w-5" />
                     <span className="sr-only">Choose Generator</span>
@@ -360,13 +389,14 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                   <DropdownMenuRadioGroup value={selectedGenerator} onValueChange={setSelectedGenerator}>
                     {aiModels.map((model) => {
                       const IconComponent = model.icon || BrainCircuit;
+                       const displayProvider = model.provider && !model.name.toLowerCase().includes(model.provider.toLowerCase()) ? ` (${model.provider})` : '';
                       return (
                         <DropdownMenuRadioItem key={model.id} value={model.id} className="text-xs sm:text-sm leading-snug cursor-pointer py-2 px-2">
                           <div className="flex items-start gap-2.5 w-full">
                             <IconComponent className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0"/>
                             <div className="flex-1">
                               <div className="flex items-center gap-1.5 mb-0.5">
-                                <span className="font-medium text-foreground">{model.name} {model.provider ? `(${model.provider})` : ''}</span>
+                                <span className="font-medium text-foreground">{model.name}{displayProvider}</span>
                                 {model.tag && (
                                   <span className={cn(
                                     "text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.5 rounded-sm leading-none",
