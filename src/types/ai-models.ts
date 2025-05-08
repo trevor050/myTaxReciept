@@ -74,7 +74,7 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
   {
     id: 'template',
     name: 'Use Standard Template',
-    url: '', 
+    url: '',
     icon: ClipboardSignatureIcon,
     tag: 'Eco-Friendly',
     tagColor: 'bg-lime-100 text-lime-700 dark:bg-lime-700/30 dark:text-lime-300',
