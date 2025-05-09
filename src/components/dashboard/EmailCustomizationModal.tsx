@@ -389,14 +389,11 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                   <DropdownMenuRadioGroup value={selectedGenerator} onValueChange={setSelectedGenerator}>
                     {aiModels.map((modelItem) => {
                       const displayProvider = modelItem.provider && !modelItem.name.toLowerCase().includes(modelItem.provider.toLowerCase()) ? ` (${modelItem.provider})` : '';
+                      const IconComponent = modelItem.icon;
                       return (
                         <DropdownMenuRadioItem key={modelItem.id} value={modelItem.id} className="text-xs sm:text-sm leading-snug cursor-pointer py-2 px-2">
                           <div className="flex items-start gap-2.5 w-full">
-                             {typeof modelItem.icon === 'string' ? (
-                                <img src={modelItem.icon} alt={`${modelItem.name} logo`} className="h-4 w-4 mt-0.5 flex-shrink-0 ai-model-logo" />
-                              ) : (
-                                <modelItem.icon className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0"/>
-                              )}
+                             <IconComponent className="h-4 w-4 mt-0.5 flex-shrink-0 ai-model-logo" />
                             <div className="flex-1">
                               <div className="flex items-center gap-1.5 mb-0.5">
                                 <span className="font-medium text-foreground">{modelItem.name}{displayProvider}</span>
@@ -421,11 +418,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                            <DropdownMenuRadioGroup value={selectedGenerator} onValueChange={setSelectedGenerator}>
                                <DropdownMenuRadioItem key={templateModel.id} value={templateModel.id} className="text-xs sm:text-sm leading-snug cursor-pointer py-2 px-2">
                                   <div className="flex items-start gap-2.5 w-full">
-                                    {typeof templateModel.icon === 'string' ? (
-                                        <img src={templateModel.icon} alt={`${templateModel.name} logo`} className="h-4 w-4 mt-0.5 flex-shrink-0 ai-model-logo" />
-                                    ) : (
-                                        <templateModel.icon className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0"/>
-                                    )}
+                                    <templateModel.icon className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0"/>
                                     <div className="flex-1">
                                       <div className="flex items-center gap-1.5 mb-0.5">
                                         <span className="font-medium text-foreground">{templateModel.name}</span>
@@ -467,3 +460,4 @@ interface EmailCustomizationModalProps{
   userName:string;setUserName:(s:string)=>void;
   userLocation:string;setUserLocation:(s:string)=>void;
 }
+
