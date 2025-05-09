@@ -197,7 +197,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
 
 
         const {subject, body} = generateRepresentativeEmailContent(
-            finalSelectedItemsForTemplate, // Use the correctly prepared array
+            finalSelectedItemsForTemplate, 
             aggressiveness,
             userName,
             userLocation,
@@ -322,7 +322,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                             onValueChange={v => setItemFundingLevels(new Map(itemFundingLevels).set(item.id, v[0]))}
                             className={cn(
                                 '[&>span>span]:transition-colors [&>span>span]:duration-200',
-                                `[&>span>span]:${det.color.split(' ')[0]}`, // Use only the background color part for the slider track
+                                `[&>span>span]:${det.color.split(' ')[0]}`, 
                                 '[&>span]:bg-muted'
                             )}
                         />
@@ -377,7 +377,6 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                     size="icon"
                     className={cn(
                         "h-9 w-9 sm:h-10 sm:w-10 rounded-l-none rounded-r-md shrink-0",
-                        // Always apply active styling for this button, not dependent on isGenerateDisabled
                         'bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 text-primary-foreground dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800'
                     )}
                   >
@@ -389,12 +388,15 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                   <DropdownMenuLabel className="text-xs px-2 pt-2 pb-1">Choose AI Generator</DropdownMenuLabel>
                   <DropdownMenuRadioGroup value={selectedGenerator} onValueChange={setSelectedGenerator}>
                     {aiModels.map((modelItem) => {
-                      const IconComponent = modelItem.icon || BrainCircuit;
-                       const displayProvider = modelItem.provider && !modelItem.name.toLowerCase().includes(modelItem.provider.toLowerCase()) ? ` (${modelItem.provider})` : '';
+                      const displayProvider = modelItem.provider && !modelItem.name.toLowerCase().includes(modelItem.provider.toLowerCase()) ? ` (${modelItem.provider})` : '';
                       return (
                         <DropdownMenuRadioItem key={modelItem.id} value={modelItem.id} className="text-xs sm:text-sm leading-snug cursor-pointer py-2 px-2">
                           <div className="flex items-start gap-2.5 w-full">
-                            <IconComponent className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0"/>
+                             {typeof modelItem.icon === 'string' ? (
+                                <img src={modelItem.icon} alt={`${modelItem.name} logo`} className="h-4 w-4 mt-0.5 flex-shrink-0 ai-model-logo" />
+                              ) : (
+                                <modelItem.icon className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0"/>
+                              )}
                             <div className="flex-1">
                               <div className="flex items-center gap-1.5 mb-0.5">
                                 <span className="font-medium text-foreground">{modelItem.name}{displayProvider}</span>
@@ -419,7 +421,11 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                            <DropdownMenuRadioGroup value={selectedGenerator} onValueChange={setSelectedGenerator}>
                                <DropdownMenuRadioItem key={templateModel.id} value={templateModel.id} className="text-xs sm:text-sm leading-snug cursor-pointer py-2 px-2">
                                   <div className="flex items-start gap-2.5 w-full">
-                                    <templateModel.icon className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0"/>
+                                    {typeof templateModel.icon === 'string' ? (
+                                        <img src={templateModel.icon} alt={`${templateModel.name} logo`} className="h-4 w-4 mt-0.5 flex-shrink-0 ai-model-logo" />
+                                    ) : (
+                                        <templateModel.icon className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0"/>
+                                    )}
                                     <div className="flex-1">
                                       <div className="flex items-center gap-1.5 mb-0.5">
                                         <span className="font-medium text-foreground">{templateModel.name}</span>
@@ -461,4 +467,3 @@ interface EmailCustomizationModalProps{
   userName:string;setUserName:(s:string)=>void;
   userLocation:string;setUserLocation:(s:string)=>void;
 }
-

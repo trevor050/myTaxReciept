@@ -252,3 +252,18 @@ body {
 .tooltip-scrollbar::-webkit-scrollbar-track {
     background-color: hsl(var(--popover)); /* Track matches popover background */
 }
+
+/* Style for AI model logos to attempt monochrome display */
+.ai-model-logo {
+  filter: grayscale(100%); /* Convert to grayscale */
+  opacity: 0.75; /* Slightly muted to blend better */
+}
+
+.dark .ai-model-logo {
+  /* For dark mode, if SVGs are dark, inverting after grayscale can help visibility.
+     If SVGs are light or use 'currentColor', this might not be necessary or could be adjusted.
+     This is a general attempt; specific SVG content might require different filter values.
+  */
+  filter: grayscale(100%) invert(0.8) brightness(1.2) contrast(1.2);
+  opacity: 0.85;
+}
