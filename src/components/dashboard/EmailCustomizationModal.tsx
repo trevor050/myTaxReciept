@@ -34,6 +34,7 @@ import { mapSliderToFundingLevel } from '@/lib/funding-utils';
 import { toneBucket } from '@/services/email/utils';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import PromptTooLongModal from './PromptTooLongModal'; // Import the new modal
 
 
 const fundingLevels = [
@@ -43,6 +44,8 @@ const fundingLevels = [
   { value:  1, label: 'Fund',              color: 'bg-green-500 dark:bg-green-400' },
   { value:  2, label: 'Fund More',          color: 'bg-emerald-600 dark:bg-emerald-500' },
 ];
+
+const PROMPT_LENGTH_THRESHOLD = 1900; // Characters
 
 export default function EmailCustomizationModal (p: EmailCustomizationModalProps) {
   const {
@@ -64,6 +67,12 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
   const refHandle= useRef<HTMLDivElement>(null);
 
   const [selectedGenerator, setSelectedGenerator] = useState<string>(AI_MODEL_OPTIONS.find(m => m.id === 'chatgpt')?.id || "template");
+
+  // State for the PromptTooLongModal
+  const [isPromptTooLongModalOpen, setIsPromptTooLongModalOpen] = useState(false);
+  const [currentPromptForModal, setCurrentPromptForModal] = useState('');
+  const [currentAiModelForTooLongModal, setCurrentAiModelForTooLongModal] = useState<AIModelOption | null>(null);
+
 
   useLayoutEffect(()=>{
       if (!isOpen) {
@@ -162,6 +171,15 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
             userLocation,
             balanceBudgetChecked
         );
+
+        if (promptText.length >= PROMPT_LENGTH_THRESHOLD) {
+            setCurrentAiModelForTooLongModal(aiModel);
+            setCurrentPromptForModal(promptText);
+            setIsPromptTooLongModalOpen(true);
+            return; // Stop further processing, let the new modal handle it
+        }
+
+
         let urlToOpen = aiModel.url;
         if (aiModel.url.includes('<YOUR_PROMPT>')) {
             urlToOpen = aiModel.url.replace('<YOUR_PROMPT>', encodeURIComponent(promptText));
@@ -220,6 +238,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
 
 
   return(
+    <>
     <Dialog open={isOpen} onOpenChange={(open) => {
         onOpenChange(open);
         if (!open) {
@@ -362,9 +381,10 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                   onClick={handleGenerateEmail}
                   className={cn(
                     'flex-grow sm:flex-none text-xs sm:text-sm h-9 sm:h-10 rounded-l-md rounded-r-none',
-                    isGenerateDisabled
-                        ? 'bg-muted hover:bg-muted cursor-not-allowed text-muted-foreground'
-                        : 'bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 text-primary-foreground dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800'
+                     // Ensure the button is not transparent by default
+                    'bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 text-primary-foreground',
+                    'dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800',
+                    isGenerateDisabled && 'bg-muted hover:bg-muted cursor-not-allowed text-muted-foreground from-muted to-muted dark:from-muted dark:to-muted'
                    )}
               >
                   <Send className='mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4'/>
@@ -373,12 +393,18 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
-                    variant="default"
+                    variant="default" // Will inherit gradient from container due to no specific variant styles for this exact case
                     size="icon"
                     className={cn(
                         "h-9 w-9 sm:h-10 sm:w-10 rounded-l-none rounded-r-md shrink-0",
-                        'bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 text-primary-foreground dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800'
+                        // Ensure the button is not transparent by default
+                        'bg-gradient-to-r from-primary to-teal-600 hover:from-primary/90 hover:to-teal-700 text-primary-foreground',
+                        'dark:from-purple-600 dark:to-purple-700 dark:hover:from-purple-700 dark:hover:to-purple-800',
+                         // Explicitly handle disabled state for the trigger if needed, though DropdownMenuTrigger might handle it.
+                         // For visual consistency if the main button is disabled, this could also be styled as disabled:
+                         isGenerateDisabled && 'bg-muted hover:bg-muted cursor-not-allowed text-muted-foreground from-muted to-muted dark:from-muted dark:to-muted opacity-50'
                     )}
+                    disabled={isGenerateDisabled} // Disable trigger if main button is disabled
                   >
                     <BrainCircuit className="h-4 w-4 sm:h-5 sm:w-5" />
                     <span className="sr-only">Choose Generator</span>
@@ -393,7 +419,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                       return (
                         <DropdownMenuRadioItem key={modelItem.id} value={modelItem.id} className="text-xs sm:text-sm leading-snug cursor-pointer py-2 px-2">
                           <div className="flex items-start gap-2.5 w-full">
-                             <IconComponent className="h-4 w-4 mt-0.5 flex-shrink-0 ai-model-logo" />
+                             <IconComponent className={cn("h-4 w-4 mt-0.5 flex-shrink-0", modelItem.isAIMeta ? "ai-model-logo" : "text-muted-foreground")} />
                             <div className="flex-1">
                               <div className="flex items-center gap-1.5 mb-0.5">
                                 <span className="font-medium text-foreground">{modelItem.name}{displayProvider}</span>
@@ -418,7 +444,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                            <DropdownMenuRadioGroup value={selectedGenerator} onValueChange={setSelectedGenerator}>
                                <DropdownMenuRadioItem key={templateModel.id} value={templateModel.id} className="text-xs sm:text-sm leading-snug cursor-pointer py-2 px-2">
                                   <div className="flex items-start gap-2.5 w-full">
-                                    <templateModel.icon className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0"/>
+                                    <templateModel.icon className={cn("h-4 w-4 mt-0.5 flex-shrink-0", templateModel.isAIMeta ? "ai-model-logo" : "text-muted-foreground")} />
                                     <div className="flex-1">
                                       <div className="flex items-center gap-1.5 mb-0.5">
                                         <span className="font-medium text-foreground">{templateModel.name}</span>
@@ -443,6 +469,20 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    {currentAiModelForTooLongModal && (
+        <PromptTooLongModal
+            isOpen={isPromptTooLongModalOpen}
+            onOpenChange={setIsPromptTooLongModalOpen}
+            promptText={currentPromptForModal}
+            aiModelName={currentAiModelForTooLongModal.name}
+            aiModelUrlWithoutPrompt={currentAiModelForTooLongModal.url.replace('<YOUR_PROMPT>', '')}
+            onEmailGenerated={onEmailGenerated}
+            userName={userName}
+            userLocation={userLocation}
+            tone={toneBucket(aggressiveness)}
+        />
+    )}
+    </>
   );
 }
 
