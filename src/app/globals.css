@@ -253,15 +253,12 @@ body {
     background-color: hsl(var(--popover)); /* Track matches popover background */
 }
 
-/* Style for AI model logos to make them monotone (black/white) */
+/* Style for AI model logos to make them monotone and subdued grey */
 .ai-model-logo {
-  filter: grayscale(100%) brightness(0%); /* Makes logo black */
-  opacity: 1; /* Not muted */
+  color: hsl(var(--muted-foreground)); /* Use the muted foreground color for the base */
+  filter: grayscale(100%); /* Ensure it's monochrome based on the new color */
+  opacity: 0.85; /* Make it slightly subdued */
 }
-
-.dark .ai-model-logo {
-  filter: grayscale(100%) brightness(0%) invert(100%); /* Makes logo white */
-  opacity: 1; /* Not muted */
-}
+/* No specific .dark .ai-model-logo needed as --muted-foreground handles theme changes */
 
     
