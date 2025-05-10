@@ -29,7 +29,10 @@ export type IntendedBadgeProfile =
   | 'single-prominent' // Aims for 1 strong badge (ranked or descriptive)
   | 'double-diverse'   // Aims for 2 badges, ideally diverse
   | 'triple-focused'   // Aims for 3 badges, potentially more focused if highly relevant
-  | 'community-focused'; // Aims for 2-3, prioritizing community/grassroots badges
+  | 'community-focused' // Aims for 2-3, prioritizing community/grassroots badges
+  | 'data-driven-focused' // Aims for 2-3, prioritizing data-driven and research aspects
+  | 'legal-advocacy-focused' // Aims for 2-3, prioritizing legal advocacy
+  | 'niche-focused'; // Aims for 1-2, emphasizing niche focus if applicable
 
 
 export interface SuggestedResource {
@@ -63,5 +66,3 @@ export const BADGE_DISPLAY_PRIORITY_MAP: Record<BadgeType, number> = {
   'Broad Focus': 11,
   'General Interest': 12,
 };
-
-

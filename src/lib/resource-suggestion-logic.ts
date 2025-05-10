@@ -34,7 +34,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     description: 'Works to promote peace and demilitarization through grassroots organizing and advocacy.',
     icon: 'HandHeart',
     mainCategory: 'Peace & Demilitarization',
-    prominence: 'high',
+    prominence: 'medium',
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'established', 'activism'],
     advocacyTags: ['peace', 'military_spending_cut', 'anti_war', 'israel_aid_cut', 'nuclear_disarmament', 'demilitarization', 'diplomacy_first', 'foreign_military_aid_cut', 'pentagon_cut', 'israel_wars_cut'],
@@ -46,7 +46,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     description: 'A Quaker lobby in the public interest, working for peace, justice, and environmental stewardship.',
     icon: 'Scale',
     mainCategory: 'Peace & Social Justice',
-    prominence: 'high',
+    prominence: 'medium',
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'established', 'think-tank'],
     advocacyTags: ['peace', 'social_justice', 'diplomacy_fund', 'foreign_aid_reform', 'military_spending_cut', 'environmental_stewardship', 'human_rights', 'federal_prisons_review', 'criminal_justice_reform', 'pentagon_review'],
@@ -86,16 +86,16 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'activism'],
     advocacyTags: ['anti_war', 'peace', 'demilitarization', 'military_spending_cut', 'israel_aid_cut', 'diplomacy_fund', 'social_spending_fund', 'pentagon_cut', 'israel_wars_cut'],
-    intendedBadgeProfile: 'double-diverse',
+    intendedBadgeProfile: 'community-focused',
   },
-  // Human Rights & Regional Conflicts (4 existing + new)
+  // Human Rights & Regional Conflicts
   {
     name: 'US Campaign for Palestinian Rights (USCPR)',
     url: 'https://uscpr.org/',
     description: 'A national coalition working for Palestinian rights and an end to U.S. support for Israeli occupation.',
     icon: 'Landmark',
     mainCategory: 'Human Rights & Regional Conflicts',
-    prominence: 'high',
+    prominence: 'medium',
     focusType: 'niche',
     orgTypeTags: ['grassroots', 'activism'],
     advocacyTags: ['palestinian_rights', 'israel_aid_cut', 'middle_east_peace', 'human_rights', 'israel_wars_cut', 'foreign_military_aid_cut'],
@@ -105,13 +105,13 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     name: 'Jewish Voice for Peace (JVP)',
     url: 'https://www.jewishvoiceforpeace.org/',
     description: 'A progressive Jewish anti-Zionist organization working for peace, justice, and human rights.',
-    icon: 'Users', // Using Users as a proxy icon for group
+    icon: 'Users',
     mainCategory: 'Human Rights & Regional Conflicts',
-    prominence: 'high',
+    prominence: 'medium',
     focusType: 'niche',
     orgTypeTags: ['grassroots', 'activism'],
     advocacyTags: ['palestinian_rights', 'israel_aid_cut', 'anti_war', 'social_justice', 'human_rights', 'israel_wars_cut'],
-    intendedBadgeProfile: 'single-prominent',
+    intendedBadgeProfile: 'community-focused',
   },
    {
     name: 'Amnesty International USA',
@@ -137,18 +137,18 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     advocacyTags: ['human_rights', 'international_justice', 'accountability_for_abuses', 'war_crimes_review', 'foreign_military_aid_review', 'israel_wars_review', 'deportations_border_review'],
     intendedBadgeProfile: 'triple-focused',
   },
-  // Budget & Fiscal Responsibility (4 existing + new)
+  // Budget & Fiscal Responsibility
   {
     name: 'National Priorities Project (Institute for Policy Studies)',
     url: 'https://nationalpriorities.org/',
     description: 'Analyzes and advocates for a federal budget that prioritizes peace, economic opportunity, and a healthy environment.',
     icon: 'PieChart',
     mainCategory: 'Fiscal Responsibility',
-    prominence: 'high',
+    prominence: 'medium',
     focusType: 'broad',
     orgTypeTags: ['research', 'data-driven', 'think-tank'],
     advocacyTags: ['budget_reform', 'military_spending_cut', 'social_spending_fund', 'tax_fairness', 'fiscal_responsibility', 'pentagon_review', 'interest_debt_review', 'pentagon_cut', 'f35_cut', 'nuclear_weapons_cut'],
-    intendedBadgeProfile: 'double-diverse',
+    intendedBadgeProfile: 'data-driven-focused',
   },
   {
     name: 'Taxpayers for Common Sense',
@@ -156,11 +156,11 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     description: 'A non-partisan budget watchdog organization working to ensure taxpayer dollars are spent responsibly.',
     icon: 'SearchCheck',
     mainCategory: 'Fiscal Responsibility',
-    prominence: 'high',
+    prominence: 'medium',
     focusType: 'broad',
     orgTypeTags: ['research', 'established', 'data-driven'],
     advocacyTags: ['fiscal_responsibility', 'budget_reform', 'wasteful_spending_cut', 'government_accountability', 'pentagon_contractors_cut', 'f35_cut', 'nasa_spacex_cut_review', 'farm_subsidies_cut', 'interest_debt_review', 'fsa_cut', 'pentagon_cut', 'usps_cut'],
-    intendedBadgeProfile: 'double-diverse',
+    intendedBadgeProfile: 'data-driven-focused',
   },
   {
     name: 'Committee for a Responsible Federal Budget (CRFB)',
@@ -180,7 +180,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     description: 'A public policy research organization—a think tank—dedicated to the principles of individual liberty, limited government, free markets, and peace.',
     icon: 'LibrarySquare',
     mainCategory: 'Fiscal Responsibility',
-    prominence: 'high',
+    prominence: 'medium',
     focusType: 'broad',
     orgTypeTags: ['think-tank', 'research', 'established'],
     advocacyTags: ['limited_government', 'free_markets', 'individual_liberty', 'fiscal_responsibility', 'budget_reform', 'pentagon_review', 'tax_reform_review', 'entitlement_reform_review', 'epa_cut', 'dept_education_cut'],
@@ -192,13 +192,13 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     description: 'A research and educational institution whose mission is to formulate and promote conservative public policies based on the principles of free enterprise, limited government, individual freedom, traditional American values, and a strong national defense.',
     icon: 'Landmark',
     mainCategory: 'Fiscal Responsibility',
-    prominence: 'high',
+    prominence: 'medium',
     focusType: 'broad',
     orgTypeTags: ['think-tank', 'research', 'established'],
     advocacyTags: ['conservative_policy', 'limited_government', 'free_enterprise', 'strong_national_defense', 'fiscal_responsibility', 'pentagon_fund', 'tax_reform_review', 'budget_reform', 'irs_cut'],
     intendedBadgeProfile: 'double-diverse',
   },
-  // Healthcare (2 existing + new)
+  // Healthcare
   {
     name: 'Physicians for a National Health Program (PNHP)',
     url: 'https://pnhp.org/',
@@ -221,7 +221,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'established', 'direct-service'],
     advocacyTags: ['mental_health_fund', 'substance_mental_health_fund', 'health_equity', 'cdc_fund', 'nih_fund', 'va_fund', 'medicaid_fund'],
-    intendedBadgeProfile: 'double-diverse',
+    intendedBadgeProfile: 'community-focused',
   },
   {
     name: 'Families USA',
@@ -235,18 +235,18 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     advocacyTags: ['healthcare_reform', 'medicaid_fund', 'medicare_fund', 'health_equity', 'affordable_care_act_fund'],
     intendedBadgeProfile: 'double-diverse',
   },
-  // Environment & Energy (6 existing + new)
+  // Environment & Energy
   {
     name: 'Environmental Working Group (EWG)',
     url: 'https://www.ewg.org/',
     description: 'A non-profit, non-partisan organization dedicated to protecting human health and the environment.',
     icon: 'Leaf',
     mainCategory: 'Environment & Energy',
-    prominence: 'high',
+    prominence: 'medium',
     focusType: 'broad',
     orgTypeTags: ['research', 'data-driven', 'established'],
     advocacyTags: ['epa_fund', 'environmental_protection', 'toxic_chemicals_cut', 'sustainable_agriculture_fund', 'food_safety_fund', 'water_quality_fund', 'renewable_energy_fund', 'fsa_review'],
-    intendedBadgeProfile: 'triple-focused',
+    intendedBadgeProfile: 'data-driven-focused',
   },
   {
     name: 'Sierra Club',
@@ -258,7 +258,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'established', 'legal', 'activism'],
     advocacyTags: ['environmental_protection', 'climate_action_fund', 'renewable_energy_fund', 'nps_fund', 'forest_service_fund', 'wilderness_protection', 'epa_fund', 'noaa_fund', 'public_lands_fund'],
-    intendedBadgeProfile: 'double-diverse',
+    intendedBadgeProfile: 'triple-focused',
   },
   {
     name: 'Natural Resources Defense Council (NRDC)',
@@ -278,11 +278,11 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     description: 'A nonprofit public interest environmental law organization. They wield the power of law and the strength of partnership to protect people’s health, to preserve magnificent places and wildlife, to advance clean energy, and to combat climate change.',
     icon: 'Gavel',
     mainCategory: 'Environment & Energy',
-    prominence: 'high',
+    prominence: 'medium',
     focusType: 'broad',
     orgTypeTags: ['legal', 'established'],
     advocacyTags: ['environmental_law', 'epa_fund', 'climate_action_fund', 'wilderness_protection', 'renewable_energy_review', 'environmental_justice', 'ocean_conservation', 'forest_service_review'],
-    intendedBadgeProfile: 'single-prominent',
+    intendedBadgeProfile: 'legal-advocacy-focused',
   },
   {
     name: 'Rainforest Action Network',
@@ -302,11 +302,11 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     description: 'Uses non-violent creative action to pave the way towards a greener, more peaceful world, and to confront the systems that threaten our environment.',
     icon: 'Globe',
     mainCategory: 'Environment & Energy',
-    prominence: 'high',
+    prominence: 'medium',
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'activism', 'established'],
     advocacyTags: ['environmental_protection', 'climate_action_fund', 'ocean_conservation', 'deforestation_cut', 'plastic_pollution_cut', 'renewable_energy_fund', 'epa_fund'],
-    intendedBadgeProfile: 'double-diverse',
+    intendedBadgeProfile: 'community-focused',
   },
   {
     name: 'League of Conservation Voters (LCV)',
@@ -320,7 +320,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     advocacyTags: ['environmental_policy', 'climate_action_fund', 'epa_fund', 'renewable_energy_fund', 'clean_water_fund'],
     intendedBadgeProfile: 'single-prominent',
   },
-  // Science & Technology (2 existing + new)
+  // Science & Technology
   {
     name: 'The Planetary Society',
     url: 'https://www.planetary.org/',
@@ -331,7 +331,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'niche',
     orgTypeTags: ['grassroots', 'research'],
     advocacyTags: ['nasa_fund', 'science_fund', 'space_exploration', 'nsf_fund', 'nasa_review', 'nasa_spacex_review'],
-    intendedBadgeProfile: 'single-prominent',
+    intendedBadgeProfile: 'niche-focused',
   },
   {
     name: 'Union of Concerned Scientists',
@@ -343,7 +343,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['research', 'data-driven', 'established', 'think-tank'],
     advocacyTags: ['science_fund', 'environmental_protection', 'nuclear_weapons_review', 'scientific_integrity', 'climate_action_fund', 'sustainable_agriculture_fund', 'epa_review', 'nsf_review', 'food_safety_review', 'nasa_review'],
-    intendedBadgeProfile: 'triple-focused',
+    intendedBadgeProfile: 'data-driven-focused',
   },
   {
     name: 'Federation of American Scientists (FAS)',
@@ -357,7 +357,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     advocacyTags: ['science_policy', 'national_security_reform', 'nuclear_weapons_review', 'arms_control', 'emerging_tech_policy'],
     intendedBadgeProfile: 'double-diverse',
   },
-  // Civil Rights & Social Justice (5 existing + new)
+  // Civil Rights & Social Justice
   {
     name: 'American Civil Liberties Union (ACLU)',
     url: 'https://www.aclu.org/',
@@ -380,7 +380,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['legal', 'established'],
     advocacyTags: ['racial_justice', 'civil_rights', 'voting_rights', 'education_equity', 'criminal_justice_reform', 'mbda_fund'],
-    intendedBadgeProfile: 'double-diverse',
+    intendedBadgeProfile: 'legal-advocacy-focused',
   },
   {
     name: 'Southern Poverty Law Center (SPLC)',
@@ -398,13 +398,13 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     name: 'Electronic Frontier Foundation (EFF)',
     url: 'https://www.eff.org/',
     description: 'Defending civil liberties in the digital world. Works on issues of free speech, privacy, innovation, and consumer rights online.',
-    icon: 'ShieldCheck', // Using ShieldCheck as a proxy, could also be 'Lock' or similar
+    icon: 'ShieldCheck',
     mainCategory: 'Civil Rights & Social Justice',
-    prominence: 'high',
+    prominence: 'medium',
     focusType: 'broad',
     orgTypeTags: ['legal', 'research', 'established', 'activism'],
     advocacyTags: ['digital_rights', 'privacy_rights', 'free_speech_online', 'surveillance_review', 'cfpb_review', 'tech_policy_reform', 'nasa_spacex_cut_review', 'tsa_review'],
-    intendedBadgeProfile: 'double-diverse',
+    intendedBadgeProfile: 'niche-focused',
   },
   {
     name: 'The Marshall Project',
@@ -416,9 +416,9 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'niche',
     orgTypeTags: ['research', 'data-driven'],
     advocacyTags: ['criminal_justice_reform', 'federal_prisons_review', 'racial_justice', 'public_defenders_fund', 'deportations_border_review'],
-    intendedBadgeProfile: 'single-prominent',
+    intendedBadgeProfile: 'data-driven-focused',
   },
-  // Democracy & Governance (3 existing + new)
+  // Democracy & Governance
   {
     name: 'Common Cause',
     url: 'https://www.commoncause.org/',
@@ -429,7 +429,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'established'],
     advocacyTags: ['democracy_reform', 'voting_rights', 'campaign_finance_reform', 'government_accountability', 'ethics_reform', 'irs_review', 'federal_courts_review', 'usps_review'],
-    intendedBadgeProfile: 'double-diverse',
+    intendedBadgeProfile: 'community-focused',
   },
   {
     name: 'Brennan Center for Justice',
@@ -453,7 +453,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'niche',
     orgTypeTags: ['research', 'data-driven', 'established'],
     advocacyTags: ['campaign_finance_reform', 'government_accountability', 'ethics_reform', 'lobbying_reform', 'pentagon_contractors_review'],
-    intendedBadgeProfile: 'single-prominent',
+    intendedBadgeProfile: 'data-driven-focused',
   },
   {
     name: 'Demand Progress',
@@ -467,7 +467,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     advocacyTags: ['democracy_reform', 'anti_surveillance', 'corporate_accountability', 'government_accountability', 'privacy_rights', 'cfpb_fund', 'nlrb_fund', 'tsa_review'],
     intendedBadgeProfile: 'community-focused',
   },
-  // Government Accountability (1 existing + new)
+  // Government Accountability
   {
     name: 'Project On Government Oversight (POGO)',
     url: 'https://www.pogo.org/',
@@ -478,7 +478,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['research', 'data-driven', 'established'],
     advocacyTags: ['government_accountability', 'pentagon_contractors_review', 'whistleblower_protection', 'wasteful_spending_cut', 'pentagon_review', 'f35_review', 'pentagon_cut', 'irs_review', 'cfpb_review', 'fdic_review'],
-    intendedBadgeProfile: 'triple-focused',
+    intendedBadgeProfile: 'data-driven-focused',
   },
   {
     name: 'ProPublica',
@@ -486,13 +486,13 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     description: 'An independent, nonprofit newsroom that produces investigative journalism with moral force.',
     icon: 'Search',
     mainCategory: 'Government Accountability',
-    prominence: 'high',
+    prominence: 'medium',
     focusType: 'broad',
     orgTypeTags: ['research', 'data-driven'],
     advocacyTags: ['government_accountability', 'investigative_journalism', 'corporate_accountability', 'pentagon_review', 'irs_review', 'fema_review'],
-    intendedBadgeProfile: 'double-diverse',
+    intendedBadgeProfile: 'data-driven-focused',
   },
-  // Education (1 existing + new)
+  // Education
   {
     name: 'National Education Association (NEA)',
     url: 'https://www.nea.org/',
@@ -503,7 +503,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'established', 'direct-service'],
     advocacyTags: ['education_fund', 'k12_schools_fund', 'teacher_support', 'public_education', 'college_aid_fund', 'head_start_fund', 'dept_education_fund', 'imls_fund', 'cpb_fund'],
-    intendedBadgeProfile: 'double-diverse',
+    intendedBadgeProfile: 'community-focused',
   },
   {
     name: 'The Education Trust',
@@ -517,7 +517,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     advocacyTags: ['education_equity', 'k12_schools_fund', 'college_aid_fund', 'dept_education_review', 'social_justice'],
     intendedBadgeProfile: 'single-prominent',
   },
-  // Housing & Homelessness (2 existing + new)
+  // Housing & Homelessness
   {
     name: 'National Low Income Housing Coalition (NLIHC)',
     url: 'https://nlihc.org/',
@@ -536,7 +536,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     description: 'A nonpartisan organization committed to preventing and ending homelessness in the United States.',
     icon: 'Bed',
     mainCategory: 'Housing & Community',
-    prominence: 'high',
+    prominence: 'medium',
     focusType: 'broad',
     orgTypeTags: ['research', 'established', 'direct-service'],
     advocacyTags: ['homelessness_prevention', 'usich_fund', 'hud_fund', 'housing_first', 'rental_assistance_fund', 'public_housing_review', 'mental_health_fund', 'va_fund'],
@@ -548,13 +548,13 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     description: 'A nonprofit organization that helps families build and improve places to call home.',
     icon: 'Hammer',
     mainCategory: 'Housing & Community',
-    prominence: 'high',
+    prominence: 'medium',
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'direct-service', 'established'],
     advocacyTags: ['housing_affordability', 'hud_review', 'community_development', 'volunteerism'],
-    intendedBadgeProfile: 'single-prominent',
+    intendedBadgeProfile: 'community-focused',
   },
-  // Food & Agriculture (1 existing + new)
+  // Food & Agriculture
   {
     name: 'Food Research & Action Center (FRAC)',
     url: 'https://frac.org/',
@@ -565,7 +565,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['research', 'established', 'think-tank'],
     advocacyTags: ['snap_fund', 'wic_fund', 'school_lunch_fund', 'anti_hunger', 'food_security', 'child_tax_credit_fund', 'social_spending_fund', 'fsa_review'],
-    intendedBadgeProfile: 'triple-focused',
+    intendedBadgeProfile: 'data-driven-focused',
   },
   {
     name: 'National Sustainable Agriculture Coalition (NSAC)',
@@ -579,7 +579,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     advocacyTags: ['sustainable_agriculture_fund', 'fsa_review', 'farm_bill_reform', 'food_systems_change', 'rural_development'],
     intendedBadgeProfile: 'community-focused',
   },
-  // Veterans (1 existing + new)
+  // Veterans
   {
     name: 'Veterans of Foreign Wars (VFW)',
     url: 'https://www.vfw.org/',
@@ -590,7 +590,7 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'established', 'direct-service'],
     advocacyTags: ['veterans_affairs_fund', 'pact_act_fund', 'veteran_benefits', 'national_security_fund', 'pentagon_personnel_fund', 'va_fund', 'va_review'],
-    intendedBadgeProfile: 'double-diverse',
+    intendedBadgeProfile: 'community-focused',
   },
   {
     name: 'Iraq and Afghanistan Veterans of America (IAVA)',
@@ -602,9 +602,9 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'niche',
     orgTypeTags: ['grassroots', 'activism'],
     advocacyTags: ['veterans_affairs_fund', 'pact_act_fund', 'mental_health_fund', 'post_911_veterans', 'va_review', 'suicide_prevention_fund'],
-    intendedBadgeProfile: 'single-prominent',
+    intendedBadgeProfile: 'niche-focused',
   },
-  // Labor & Worker Rights (1 existing + new)
+  // Labor & Worker Rights
   {
     name: 'AFL-CIO',
     url: 'https://aflcio.org/',
@@ -627,26 +627,26 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     focusType: 'broad',
     orgTypeTags: ['research', 'legal', 'think-tank'],
     advocacyTags: ['worker_rights', 'fair_wages', 'unemployment_insurance_reform', 'job_safety', 'nlrb_review', 'social_safety_net_fund'],
-    intendedBadgeProfile: 'double-diverse',
+    intendedBadgeProfile: 'legal-advocacy-focused',
   },
-   // Immigration (2 existing + new)
+   // Immigration
   {
     name: 'National Immigration Law Center (NILC)',
     url: 'https://www.nilc.org/',
     description: 'Dedicated to defending and advancing the rights of immigrants with low income.',
-    icon: 'Anchor', // Anchor icon for a sense of stability/support
+    icon: 'Anchor',
     mainCategory: 'Immigration',
     prominence: 'medium',
     focusType: 'broad',
     orgTypeTags: ['legal', 'research', 'established'],
     advocacyTags: ['immigration_reform_review', 'immigrant_rights', 'deportations_border_review', 'civil_rights', 'refugee_assistance_fund', 'snap_fund', 'medicaid_fund'],
-    intendedBadgeProfile: 'double-diverse',
+    intendedBadgeProfile: 'legal-advocacy-focused',
   },
   {
     name: 'American Immigration Council',
     url: 'https://www.americanimmigrationcouncil.org/',
     description: 'Works to strengthen America by shaping how America thinks about and acts towards immigrants and immigration.',
-    icon: 'Users', // Users icon for community/people focus
+    icon: 'Users',
     mainCategory: 'Immigration',
     prominence: 'medium',
     focusType: 'broad',
@@ -705,50 +705,53 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     advocacyTags: ['arts_funding_fund', 'cpb_fund', 'imls_fund', 'nea_fund', 'creative_economy'],
     intendedBadgeProfile: 'single-prominent',
   },
-  // Added Organizations
+  // Animal Welfare
   {
     name: 'ASPCA (American Society for the Prevention of Cruelty to Animals)',
     url: 'https://www.aspca.org/',
     description: 'Works to save lives and secure compassionate treatment for animals across America.',
-    icon: 'PawPrint', // PawPrint icon
+    icon: 'PawPrint',
     mainCategory: 'Animal Welfare',
-    prominence: 'high',
+    prominence: 'medium',
     focusType: 'broad',
     orgTypeTags: ['established', 'activism', 'direct-service'],
     advocacyTags: ['animal_welfare', 'animal_protection_laws', 'anti_cruelty_fund', 'pet_adoption_support'],
     intendedBadgeProfile: 'community-focused',
   },
+  // Disability Rights
   {
     name: 'The Arc of the United States',
     url: 'https://thearc.org/',
     description: 'Promotes and protects the human rights of people with intellectual and developmental disabilities and actively supports their full inclusion and participation in the community.',
-    icon: 'Wheelchair', // Wheelchair icon
+    icon: 'Wheelchair',
     mainCategory: 'Disability Rights',
     prominence: 'high',
     focusType: 'broad',
     orgTypeTags: ['grassroots', 'established', 'legal'],
     advocacyTags: ['disability_rights', 'inclusion_fund', 'medicaid_fund', 'social_security_review', 'education_equity'],
-    intendedBadgeProfile: 'triple-focused',
+    intendedBadgeProfile: 'community-focused',
   },
+  // Economic Justice
   {
     name: 'Center on Budget and Policy Priorities (CBPP)',
     url: 'https://www.cbpp.org/',
     description: 'A nonpartisan research and policy institute pursuing federal and state policies designed to reduce poverty and inequality.',
-    icon: 'TrendingUp', // Used for economic focus
+    icon: 'TrendingUp',
     mainCategory: 'Economic Justice',
     prominence: 'high',
     focusType: 'broad',
     orgTypeTags: ['research', 'data-driven', 'think-tank', 'established'],
     advocacyTags: ['poverty_reduction', 'economic_inequality_cut', 'social_safety_net_fund', 'snap_fund', 'wic_fund', 'child_tax_credit_fund', 'housing_affordability', 'tax_fairness'],
-    intendedBadgeProfile: 'triple-focused',
+    intendedBadgeProfile: 'data-driven-focused',
   },
+  // Public Policy Research (General)
   {
     name: 'Brookings Institution',
     url: 'https://www.brookings.edu/',
     description: 'A nonprofit public policy organization committed to independent research and policy solutions.',
-    icon: 'Building', // Generic for institution
+    icon: 'Building',
     mainCategory: 'Public Policy Research',
-    prominence: 'high',
+    prominence: 'medium',
     focusType: 'broad',
     orgTypeTags: ['research', 'established', 'think-tank'],
     advocacyTags: ['public_policy_research', 'economic_policy_review', 'foreign_policy_review', 'social_policy_review', 'governance_reform'],
@@ -760,11 +763,72 @@ export const RESOURCE_DATABASE: ResourceDatabaseEntry[] = [
     description: 'A conservative think tank that researches government, politics, economics, and social welfare.',
     icon: 'LibrarySquare',
     mainCategory: 'Public Policy Research',
-    prominence: 'high',
+    prominence: 'medium',
     focusType: 'broad',
     orgTypeTags: ['research', 'established', 'think-tank'],
     advocacyTags: ['conservative_policy', 'free_enterprise', 'limited_government', 'economic_policy_review', 'national_security_fund'],
     intendedBadgeProfile: 'double-diverse',
+  },
+  // New orgs for diversity
+  {
+    name: 'Security Policy Reform Institute (SPRI)',
+    url: 'https://www.securitypolicy.us/',
+    description: 'Advocates for a more responsible and effective U.S. foreign and national security policy. Provides research and analysis to promote diplomacy and reduce military intervention.',
+    icon: 'ShieldCheck',
+    mainCategory: 'Peace & Demilitarization',
+    prominence: 'low',
+    focusType: 'broad',
+    orgTypeTags: ['research', 'think-tank'],
+    advocacyTags: ['national_security_reform', 'diplomacy_fund', 'pentagon_review', 'foreign_policy_reform', 'pentagon_dei_review'],
+    intendedBadgeProfile: 'single-prominent',
+  },
+  {
+    name: 'Center for Economic and Policy Research (CEPR)',
+    url: 'https://cepr.net/',
+    description: 'Promoting democratic debate on the most important economic and social issues that affect people\'s lives.',
+    icon: 'Activity',
+    mainCategory: 'Economic Justice',
+    prominence: 'medium',
+    focusType: 'broad',
+    orgTypeTags: ['research', 'think-tank'],
+    advocacyTags: ['economic_policy_review', 'social_safety_net_fund', 'full_employment', 'global_economic_justice'],
+    intendedBadgeProfile: 'data-driven-focused',
+  },
+  {
+    name: 'Defenders of Wildlife',
+    url: 'https://defenders.org/',
+    description: 'Dedicated to the protection of all native animals and plants in their natural communities.',
+    icon: 'Rabbit',
+    mainCategory: 'Environment & Energy',
+    prominence: 'medium',
+    focusType: 'broad',
+    orgTypeTags: ['activism', 'legal', 'established'],
+    advocacyTags: ['wildlife_protection', 'endangered_species_act_fund', 'habitat_conservation', 'environmental_law'],
+    intendedBadgeProfile: 'double-diverse',
+  },
+  {
+    name: 'NARAL Pro-Choice America',
+    url: 'https://www.prochoiceamerica.org/',
+    description: 'Works to protect and expand reproductive freedom for all Americans, including access to abortion and contraception.',
+    icon: 'Baby',
+    mainCategory: 'Healthcare',
+    prominence: 'high',
+    focusType: 'niche',
+    orgTypeTags: ['activism', 'grassroots', 'established'],
+    advocacyTags: ['reproductive_rights_fund', 'healthcare_access', 'womens_health', 'family_planning_fund'],
+    intendedBadgeProfile: 'single-prominent',
+  },
+  {
+    name: 'Brady United Against Gun Violence',
+    url: 'https://www.bradyunited.org/',
+    description: 'Works to pass, enforce, and protect sensible gun laws and regulations to reduce gun violence.',
+    icon: 'ShieldOff',
+    mainCategory: 'Public Safety',
+    prominence: 'high',
+    focusType: 'niche',
+    orgTypeTags: ['activism', 'legal', 'grassroots'],
+    advocacyTags: ['gun_violence_prevention', 'public_safety_fund', 'background_checks', 'community_violence_intervention_fund'],
+    intendedBadgeProfile: 'single-prominent',
   },
 ];
 
@@ -977,9 +1041,8 @@ export function generateMatchedReason(tag: string, originalConcernDescription: s
 }
 
 export const MAX_SUGGESTIONS = 50;
-export const MAX_BADGES_PER_RESOURCE = 3; // Max badges per resource
+export const MAX_BADGES_PER_RESOURCE = 3;
 
-// Refined Badge Assignment Logic
 export function assignBadgesToResource(
   resource: SuggestedResource,
   userConcernsSize: number,
@@ -989,26 +1052,27 @@ export function assignBadgesToResource(
   otherResourcesWithBadges: Map<string, Set<BadgeType>>
 ): BadgeType[] {
   const assignedBadges: Set<BadgeType> = new Set();
+  const targetBadgeProfiles: Record<IntendedBadgeProfile, {min: number, max: number}> = {
+    'single-prominent': {min: 1, max: 1},
+    'double-diverse':   {min: 1, max: 2},
+    'triple-focused':   {min: 2, max: 3},
+    'community-focused':{min: 1, max: 2},
+    'data-driven-focused': {min: 1, max: 2},
+    'legal-advocacy-focused': {min: 1, max: 2},
+    'niche-focused': {min: 1, max: 1},
+  };
 
-  // 1. Assign Ranked Badges
+  const profile = resource.intendedBadgeProfile || 'double-diverse';
+  let targetDescriptiveBadges = targetBadgeProfiles[profile].min + Math.floor(Math.random() * (targetBadgeProfiles[profile].max - targetBadgeProfiles[profile].min + 1));
+
+
   if (isBestMatch) assignedBadges.add('Best Match');
   else if (isTopMatch) assignedBadges.add('Top Match');
   else if (isYourMatch) assignedBadges.add('Your Match');
 
-
-  // 2. Determine target number of descriptive badges based on intended profile
-  let targetDescriptiveBadges = 0;
-  switch (resource.intendedBadgeProfile) {
-    case 'single-prominent': targetDescriptiveBadges = 1 - assignedBadges.size; break;
-    case 'double-diverse': targetDescriptiveBadges = 2 - assignedBadges.size; break;
-    case 'triple-focused': targetDescriptiveBadges = 3 - assignedBadges.size; break;
-    case 'community-focused': targetDescriptiveBadges = Math.random() < 0.5 ? (2 - assignedBadges.size) : (3 - assignedBadges.size); break; // 2 or 3 total
-    default: targetDescriptiveBadges = 2 - assignedBadges.size; // Default to aiming for 2 total badges
-  }
-  targetDescriptiveBadges = Math.max(0, Math.min(targetDescriptiveBadges, MAX_BADGES_PER_RESOURCE - assignedBadges.size));
+  targetDescriptiveBadges = Math.max(0, targetDescriptiveBadges - assignedBadges.size);
 
 
-  // 3. Gather and sort potential descriptive badges
   const potentialDescriptiveBadges: BadgeType[] = [];
   if (resource.prominence === 'high') potentialDescriptiveBadges.push('High Impact');
   if (resource.focusType === 'broad') potentialDescriptiveBadges.push('Broad Focus');
@@ -1016,8 +1080,8 @@ export function assignBadgesToResource(
 
   const orgTypeToBadgeMap: Partial<Record<NonNullable<typeof resource.orgTypeTags>[number], BadgeType>> = {
       'legal': 'Legal Advocacy', 'data-driven': 'Data-Driven', 'grassroots': 'Grassroots Power',
-      'established': 'Established Voice', 'activism': 'High Impact', // Activism can map to High Impact
-      'think-tank': 'Data-Driven', // Think tanks are often data-driven
+      'established': 'Established Voice', 'activism': 'High Impact',
+      'think-tank': 'Data-Driven',
       'direct-service': 'Community Pick',
   };
   resource.orgTypeTags?.forEach(tag => {
@@ -1026,43 +1090,42 @@ export function assignBadgesToResource(
       }
   });
 
-  // Filter out already assigned ranked badges from descriptive pool
   let availableDescriptiveBadges = potentialDescriptiveBadges.filter(b => !assignedBadges.has(b));
 
-  // Count usage of descriptive badges across other resources to promote diversity
   const allAssignedDescriptiveBadgesCount = new Map<BadgeType, number>();
   otherResourcesWithBadges.forEach(badgesOnOtherResource => {
       badgesOnOtherResource.forEach(b => {
-          if (availableDescriptiveBadges.includes(b)) { // Only count descriptive ones
+          if (availableDescriptiveBadges.includes(b)) {
             allAssignedDescriptiveBadgesCount.set(b, (allAssignedDescriptiveBadgesCount.get(b) || 0) + 1);
           }
       });
   });
 
-  // Sort available descriptive badges: first by rarity (less used first), then by predefined priority
   availableDescriptiveBadges.sort((a, b) => {
     const countA = allAssignedDescriptiveBadgesCount.get(a) || 0;
     const countB = allAssignedDescriptiveBadgesCount.get(b) || 0;
-    if (countA !== countB) return countA - countB; // Rarest first
-    return (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99); // Then by priority
+    if (countA !== countB) return countA - countB; // Prioritize less used badges
+    const priorityA = BADGE_DISPLAY_PRIORITY_MAP[a] || 99;
+    const priorityB = BADGE_DISPLAY_PRIORITY_MAP[b] || 99;
+    if (priorityA !== priorityB) return priorityA - priorityB; // Then by defined priority
+    return Math.random() - 0.5; // Finally, randomize if still tied
   });
 
-
-  // 4. Fill remaining slots with descriptive badges
   for (let i = 0; i < targetDescriptiveBadges && i < availableDescriptiveBadges.length; i++) {
     if (assignedBadges.size >= MAX_BADGES_PER_RESOURCE) break;
     assignedBadges.add(availableDescriptiveBadges[i]);
   }
 
-  // 5. Fallback: If no badges assigned at all
   if (assignedBadges.size === 0 && ((resource.matchCount || 0) === 0 || userConcernsSize === 0) ) {
       assignedBadges.add('General Interest');
+  }
+
+  if (assignedBadges.size === 0 && (resource.matchCount || 0) > 0 && availableDescriptiveBadges.length > 0) {
+      assignedBadges.add(availableDescriptiveBadges[0]);
   }
 
 
   return Array.from(assignedBadges)
       .sort((a, b) => (BADGE_DISPLAY_PRIORITY_MAP[a] || 99) - (BADGE_DISPLAY_PRIORITY_MAP[b] || 99))
-      .slice(0, MAX_BADGES_PER_RESOURCE); // Ensure hard limit
+      .slice(0, MAX_BADGES_PER_RESOURCE);
 }
-
-

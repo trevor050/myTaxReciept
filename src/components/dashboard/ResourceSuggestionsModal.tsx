@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription as CardDesc } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, MessageSquareQuote, PlusCircle, MinusCircle, Search, Sparkles, Trophy, Users as UsersIcon, Target, HandHeart, FilterX, Megaphone, Gavel, Landmark, Dove, LibrarySquare, DollarSign, Eye, School, Home, Bed, Utensils, Medal, Hammer, Anchor, ListFilter, Tag, FlaskConical, Brain, Building as BuildingIcon, Star, Wheelchair, PawPrint, CheckCircle } from 'lucide-react';
+import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, MessageSquareQuote, PlusCircle, MinusCircle, Search, Sparkles, Trophy, Users as UsersIcon, Target, HandHeart, FilterX, Megaphone, Gavel, Landmark, Dove, LibrarySquare, DollarSign, Eye, School, Home, Bed, Utensils, Medal, Hammer, Anchor, ListFilter, Tag, FlaskConical, Brain, Building as BuildingIcon, Star, Wheelchair, PawPrint, CheckCircle, Rabbit, Baby, ShieldOff, Activity, TrendingUp, PieChart, Banknote } from 'lucide-react'; // Added Rabbit, Baby, ShieldOff, Activity, TrendingUp, PieChart, Banknote
 import type { SuggestedResource, MatchedReason, BadgeType } from '@/types/resource-suggestions';
 import { BADGE_DISPLAY_PRIORITY_MAP } from '@/types/resource-suggestions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -136,6 +136,9 @@ const FilterBubbleIcon = ({ filterKey, filterType }: { filterKey: string, filter
 };
 
 
+const INITIAL_VISIBLE_ITEMS = 15; // Number of items to render initially for "All Organizations"
+const LOAD_MORE_COUNT = 10; // Number of items to load on "load more"
+
 export default function ResourceSuggestionsModal({
   isOpen,
   onOpenChange,
@@ -146,6 +149,7 @@ export default function ResourceSuggestionsModal({
 }: ResourceSuggestionsModalProps) {
   const [IconComponents, setIconComponents] = React.useState<Record<string, React.ElementType>>({});
   const [activeFilterKeys, setActiveFilterKeys] = React.useState<Set<string>>(new Set(['your-matches']));
+  const [visibleItemCount, setVisibleItemCount] = React.useState(INITIAL_VISIBLE_ITEMS);
 
 
   const [pos, setPos] = React.useState<{ x: number | null; y: number | null }>({ x: null, y: null });
@@ -156,15 +160,16 @@ export default function ResourceSuggestionsModal({
   const refModal = React.useRef<HTMLDivElement>(null);
   const refHandle = React.useRef<HTMLDivElement>(null);
 
-  React.useEffect(() => {
+ React.useEffect(() => {
     if (isOpen) {
-      if (suggestedResources.length > 0) {
+      if (suggestedResources.length > 0 && isInitialOpen.current) { // Only set default filters on initial open
          if (hasUserConcerns && suggestedResources.some(r => (r.matchCount || 0) > 0 || r.badges?.some(b => ['Best Match', 'Top Match', 'Your Match'].includes(b)))) {
               setActiveFilterKeys(new Set(['your-matches']));
          } else {
               setActiveFilterKeys(new Set(['all-organizations']));
          }
       }
+      // Position adjustment logic
       if (refModal.current && pos.x !== null && pos.y !== null && !isInitialOpen.current) {
             const { width: currentWidth, height: currentHeight } = refModal.current.getBoundingClientRect();
             const windowWidth = window.innerWidth;
@@ -174,10 +179,9 @@ export default function ResourceSuggestionsModal({
             let newX = pos.x;
             let newY = pos.y;
 
-            if (newX < margin) newX = margin;
-            if (newX + currentWidth > windowWidth - margin) newX = Math.max(margin, windowWidth - currentWidth - margin);
-            if (newY < margin) newY = margin;
-            if (newY + currentHeight > windowHeight - margin) newY = Math.max(margin, windowHeight - currentHeight - margin);
+            newX = Math.max(margin, Math.min(newX, windowWidth - currentWidth - margin));
+            newY = Math.max(margin, Math.min(newY, windowHeight - currentHeight - margin));
+
 
             if (newX !== pos.x || newY !== pos.y) {
                 setPos({ x: newX, y: newY });
@@ -186,9 +190,9 @@ export default function ResourceSuggestionsModal({
     } else if (!isOpen) {
       isInitialOpen.current = true;
       setPos({ x: null, y: null });
+      setVisibleItemCount(INITIAL_VISIBLE_ITEMS); // Reset visible items when modal closes
     }
-  // Removed pos.x, pos.y from dependencies to prevent filter reset on drag
-  }, [isOpen, hasUserConcerns, suggestedResources]);
+  }, [isOpen, hasUserConcerns, suggestedResources, pos.x, pos.y]); // Keep pos.x, pos.y here for repositioning if window resizes while open
 
 
   React.useLayoutEffect(() => {
@@ -210,22 +214,27 @@ export default function ResourceSuggestionsModal({
 
   const onDown = React.useCallback((e: React.MouseEvent) => {
     if (!refHandle.current?.contains(e.target as Node) || !refModal.current) return;
+    const r = refModal.current.getBoundingClientRect(); // Always get fresh rect on mouse down
+    let currentX = pos.x ?? r.left; // Use current pos.x if available, otherwise rect.left
+    let currentY = pos.y ?? r.top;   // Use current pos.y if available, otherwise rect.top
+
+    // If it's the first drag (pos was null), setPosition to current visual rect
+    // This syncs the state with the CSS-centered position.
     if (pos.x === null || pos.y === null || isInitialOpen.current) {
-      const r = refModal.current.getBoundingClientRect();
-      const newPos = { x: r.left, y: r.top };
-      setPos(newPos);
-      dragOffset.current = { x: e.clientX - newPos.x, y: e.clientY - newPos.y };
-    } else {
-      dragOffset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
+      setPos({x:r.left, y:r.top});
+      currentX = r.left;
+      currentY = r.top;
     }
-    isInitialOpen.current = false;
+
+    dragOffset.current = { x: e.clientX - currentX, y: e.clientY - currentY };
+    isInitialOpen.current = false; // No longer initial open once dragging starts
     setDrag(true);
     document.body.style.userSelect = 'none';
   }, [pos, isInitialOpen]);
 
 
   const onMove = React.useCallback((e: MouseEvent) => {
-    if (!drag || !refModal.current || pos.x === null || pos.y === null ) return;
+    if (!drag || !refModal.current || pos.x === null || pos.y === null ) return; // Check pos.x and pos.y
     const { innerWidth: vw, innerHeight: vh } = window;
     const { width: hW, height: hH } = refModal.current.getBoundingClientRect();
     let x = e.clientX - dragOffset.current.x;
@@ -255,33 +264,48 @@ export default function ResourceSuggestionsModal({
     };
   }, [drag, onMove, stopDrag]);
 
+
   React.useEffect(() => {
     const loadIcons = async () => {
-      const loaded: Record<string, React.ElementType> = {};
       const iconsToLoad = new Set<string>();
+      const newIconComponents: Record<string, React.ElementType> = {};
+
+      // Collect unique icon names from current suggestedResources
       suggestedResources.forEach(resource => {
-        if (resource.icon && !IconComponents[resource.icon]) {
+        if (resource.icon && !(resource.icon in IconComponents)) { // Check against existing IconComponents state
           iconsToLoad.add(resource.icon);
         }
       });
-      const defaultIcons = ['Dove', 'LibrarySquare', 'DollarSign', 'Eye', 'School', 'Home', 'Bed', 'Utensils', 'Medal', 'Hammer', 'Anchor', 'ListFilter', 'Tag', 'FlaskConical', 'Brain', 'Building', 'Wheelchair', 'PawPrint', 'CheckCircle'];
+
+      // Add default/fallback icons if not already loaded
+      const defaultIcons = ['Dove', 'LibrarySquare', 'DollarSign', 'Eye', 'School', 'Home', 'Bed', 'Utensils', 'Medal', 'Hammer', 'Anchor', 'ListFilter', 'Tag', 'FlaskConical', 'Brain', 'Building', 'Wheelchair', 'PawPrint', 'CheckCircle', 'Rabbit', 'Baby', 'ShieldOff', 'Activity', 'TrendingUp', 'PieChart', 'Banknote'];
       defaultIcons.forEach(icon => {
-        if (!IconComponents[icon]) iconsToLoad.add(icon);
+        if (!(icon in IconComponents)) iconsToLoad.add(icon);
       });
 
+      if (iconsToLoad.size === 0) return; // No new icons to load
 
-      for (const iconName of iconsToLoad) {
-        loaded[iconName] = await importLucideIcon(iconName);
-      }
-      if (Object.keys(loaded).length > 0) {
-        setIconComponents(prev => ({ ...prev, ...loaded }));
+      const loadedPromises = Array.from(iconsToLoad).map(async (iconName) => {
+        try {
+          const component = await importLucideIcon(iconName);
+          newIconComponents[iconName] = component;
+        } catch (e) {
+          console.warn(`Could not load icon ${iconName}`, e);
+          newIconComponents[iconName] = Info; // Fallback
+        }
+      });
+
+      await Promise.all(loadedPromises);
+
+      if (Object.keys(newIconComponents).length > 0) {
+        setIconComponents(prev => ({ ...prev, ...newIconComponents }));
       }
     };
 
     if (isOpen && suggestedResources.length > 0) {
       loadIcons();
     }
-  }, [isOpen, suggestedResources, IconComponents]);
+  }, [isOpen, suggestedResources, IconComponents]); // Depend on IconComponents to prevent re-loading already loaded icons unnecessarily
 
 
   const uniqueCategories = React.useMemo(() => {
@@ -357,29 +381,29 @@ export default function ResourceSuggestionsModal({
   const displayedResources = React.useMemo(() => {
     if (isLoading) return [];
     
-    if (activeFilterKeys.has('all-organizations') && activeFilterKeys.size === 1) {
-        return suggestedResources;
-    }
-    if (activeFilterKeys.size === 0){
-        return suggestedResources; // Default to all if no filters active
-    }
+    let filtered = suggestedResources;
 
-    return suggestedResources.filter(r => {
-        return Array.from(activeFilterKeys).every(key => {
-            if (key === 'your-matches') return (r.matchCount || 0) > 0 || r.badges?.includes('Best Match') || r.badges?.includes('Top Match') || r.badges?.includes('Your Match');
-            if (key === 'best-matches') return r.badges?.includes('Best Match') || false;
-            if (key === 'top-matches') return r.badges?.includes('Top Match') || false;
-            if (key.startsWith('cat-')) return r.mainCategory === key.substring(4);
-            if (key.startsWith('orgtype-')) return r.orgTypeTags?.includes(key.substring(8) as any) || false;
-            if (key.startsWith('badge-')) {
-                const badgeKey = key.substring(6).replace(/-/g, ' ');
-                return r.badges?.some(b => b.toLowerCase() === badgeKey) || false;
-            }
-            return false; // Should not happen if key is from filterBubbles
+    if (!(activeFilterKeys.has('all-organizations') && activeFilterKeys.size === 1) && activeFilterKeys.size > 0) {
+        filtered = suggestedResources.filter(r => {
+            return Array.from(activeFilterKeys).every(key => {
+                if (key === 'your-matches') return (r.matchCount || 0) > 0 || r.badges?.includes('Best Match') || r.badges?.includes('Top Match') || r.badges?.includes('Your Match');
+                if (key === 'best-matches') return r.badges?.includes('Best Match') || false;
+                if (key === 'top-matches') return r.badges?.includes('Top Match') || false;
+                if (key.startsWith('cat-')) return r.mainCategory === key.substring(4);
+                if (key.startsWith('orgtype-')) return r.orgTypeTags?.includes(key.substring(8) as any) || false;
+                if (key.startsWith('badge-')) {
+                    const badgeKey = key.substring(6).replace(/-/g, ' ');
+                    return r.badges?.some(b => b.toLowerCase() === badgeKey) || false;
+                }
+                return false; // Should not happen if keys are well-formed
+            });
         });
-    });
+    }
+    
+    // Apply pagination for performance
+    return filtered.slice(0, visibleItemCount);
 
-  }, [isLoading, suggestedResources, activeFilterKeys]);
+  }, [isLoading, suggestedResources, activeFilterKeys, visibleItemCount]);
 
 
   const handleFilterClick = (key: string) => {
@@ -388,23 +412,24 @@ export default function ResourceSuggestionsModal({
         const isAllOrgsActive = newKeys.has('all-organizations');
 
         if (key === 'all-organizations') {
-            return new Set(['all-organizations']); // Exclusive selection
+            setVisibleItemCount(INITIAL_VISIBLE_ITEMS); // Reset visible count for "All"
+            return new Set(['all-organizations']);
         }
 
         if (isAllOrgsActive) {
-            newKeys.delete('all-organizations'); // Deactivate 'all' if a specific filter is clicked
+            newKeys.delete('all-organizations');
         }
-
-        // Handle ranked/special filters (exclusive within their group)
-        if (key === 'your-matches' || key === 'best-matches' || key === 'top-matches') {
-            const rankedFilters = ['your-matches', 'best-matches', 'top-matches'];
+        
+        // Special/ranked filters are mutually exclusive among themselves
+        const specialRankedFilters = ['your-matches', 'best-matches', 'top-matches'];
+        if (specialRankedFilters.includes(key)) {
             if (newKeys.has(key)) { // If it's already active, toggle it off
                 newKeys.delete(key);
             } else { // If not active, activate it and deactivate others in its group
-                rankedFilters.forEach(spKey => newKeys.delete(spKey));
+                specialRankedFilters.forEach(spKey => newKeys.delete(spKey));
                 newKeys.add(key);
             }
-        } else { // Handle category/orgType/badgeGeneral filters (allow multiple)
+        } else { // Handle category/orgType/badgeGeneral filters (allow multiple of these types)
             if (newKeys.has(key)) {
                 newKeys.delete(key);
             } else {
@@ -412,21 +437,22 @@ export default function ResourceSuggestionsModal({
             }
         }
         
-        // If no filters are active after toggling, default to 'all-organizations'
         if (newKeys.size === 0) {
-            return new Set(['all-organizations']);
+            setVisibleItemCount(INITIAL_VISIBLE_ITEMS); // Reset visible count
+            return new Set(['all-organizations']); // Default to all if nothing is selected
         }
+        setVisibleItemCount(INITIAL_VISIBLE_ITEMS); // Reset visible count on filter change
         return newKeys;
     });
   };
 
   const handleClearAllFilters = () => {
-      // Default to 'your-matches' if user has concerns, otherwise 'all-organizations'
       if (hasUserConcerns && suggestedResources.some(r => (r.matchCount || 0) > 0 || r.badges?.some(b => ['Best Match', 'Top Match', 'Your Match'].includes(b)))) {
          setActiveFilterKeys(new Set(['your-matches']));
       } else {
          setActiveFilterKeys(new Set(['all-organizations']));
       }
+      setVisibleItemCount(INITIAL_VISIBLE_ITEMS); // Reset count
   };
 
 
@@ -453,18 +479,18 @@ export default function ResourceSuggestionsModal({
                             variant={badge === 'Best Match' || badge === 'Top Match' || badge === 'Your Match' ? 'default' : 'outline'}
                             className={cn(
                                 "text-xs px-1.5 py-0.5 whitespace-nowrap font-medium flex items-center",
-                                badge === 'Best Match' && "bg-amber-100 border-amber-400 text-amber-700 dark:bg-amber-700/30 dark:border-amber-600 dark:text-amber-300",
-                                badge === 'Top Match' && "bg-teal-100 border-teal-400 text-teal-700 dark:bg-teal-700/30 dark:border-teal-600 dark:text-teal-300",
-                                badge === 'Your Match' && "bg-green-100 border-green-400 text-green-700 dark:bg-green-700/30 dark:border-green-600 dark:text-green-300",
-                                badge === 'High Impact' && "bg-rose-100 border-rose-400 text-rose-700 dark:bg-rose-700/30 dark:border-rose-600 dark:text-rose-300",
-                                badge === 'Broad Focus' && "bg-blue-100 border-blue-400 text-blue-700 dark:bg-blue-700/30 dark:border-blue-600 dark:text-blue-300",
-                                badge === 'Niche Focus' && "bg-indigo-100 border-indigo-400 text-indigo-700 dark:bg-indigo-700/30 dark:border-indigo-600 dark:text-indigo-300",
-                                badge === 'Community Pick' && "bg-pink-100 border-pink-400 text-pink-700 dark:bg-pink-700/30 dark:border-pink-600 dark:text-pink-300",
-                                badge === 'Grassroots Power' && "bg-lime-100 border-lime-400 text-lime-700 dark:bg-lime-700/30 dark:border-lime-600 dark:text-lime-300",
-                                badge === 'Data-Driven' && "bg-purple-100 border-purple-400 text-purple-700 dark:bg-purple-700/30 dark:border-purple-600 dark:text-purple-300",
-                                badge === 'Legal Advocacy' && "bg-orange-100 border-orange-400 text-orange-700 dark:bg-orange-700/30 dark:border-orange-600 dark:text-orange-300",
-                                badge === 'Established Voice' && "bg-slate-100 border-slate-400 text-slate-700 dark:bg-slate-700/30 dark:border-slate-600 dark:text-slate-300",
-                                badge === 'General Interest' && "bg-gray-100 border-gray-400 text-gray-700 dark:bg-gray-700/30 dark:border-gray-600 dark:text-gray-300 italic",
+                                badge === 'Best Match' && "bg-amber-100 border-amber-400 text-amber-700 dark:bg-amber-700/30 dark:border-amber-500 dark:text-amber-300",
+                                badge === 'Top Match' && "bg-teal-100 border-teal-400 text-teal-700 dark:bg-teal-700/30 dark:border-teal-500 dark:text-teal-300",
+                                badge === 'Your Match' && "bg-green-100 border-green-400 text-green-700 dark:bg-green-700/30 dark:border-green-500 dark:text-green-300",
+                                badge === 'High Impact' && "bg-rose-100 border-rose-400 text-rose-700 dark:bg-rose-700/30 dark:border-rose-500 dark:text-rose-300",
+                                badge === 'Broad Focus' && "bg-blue-100 border-blue-400 text-blue-700 dark:bg-blue-700/30 dark:border-blue-500 dark:text-blue-300",
+                                badge === 'Niche Focus' && "bg-indigo-100 border-indigo-400 text-indigo-700 dark:bg-indigo-700/30 dark:border-indigo-500 dark:text-indigo-300",
+                                badge === 'Community Pick' && "bg-pink-100 border-pink-400 text-pink-700 dark:bg-pink-700/30 dark:border-pink-500 dark:text-pink-300",
+                                badge === 'Grassroots Power' && "bg-lime-100 border-lime-400 text-lime-700 dark:bg-lime-700/30 dark:border-lime-500 dark:text-lime-300",
+                                badge === 'Data-Driven' && "bg-purple-100 border-purple-400 text-purple-700 dark:bg-purple-700/30 dark:border-purple-500 dark:text-purple-300",
+                                badge === 'Legal Advocacy' && "bg-orange-100 border-orange-400 text-orange-700 dark:bg-orange-700/30 dark:border-orange-500 dark:text-orange-300",
+                                badge === 'Established Voice' && "bg-slate-100 border-slate-400 text-slate-700 dark:bg-slate-700/30 dark:border-slate-500 dark:text-slate-300",
+                                badge === 'General Interest' && "bg-gray-100 border-gray-400 text-gray-700 dark:bg-gray-700/30 dark:border-gray-500 dark:text-gray-300 italic",
                             )}
                         >
                            <BadgeIcon badgeType={badge}/> {badge}
@@ -503,6 +529,7 @@ export default function ResourceSuggestionsModal({
         <MatchedReasonTooltipContent reasons={resource.matchedReasons || []} resourceName={resource.name}/>
         </Tooltip>
     );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [IconComponents, BADGE_DISPLAY_PRIORITY_MAP]);
 
 
@@ -563,7 +590,7 @@ export default function ResourceSuggestionsModal({
                                         activeFilterKeys.has(bubble.key) ? "shadow-md ring-2 ring-primary/50" : "hover:bg-accent/70",
                                         bubble.key === 'your-matches' && activeFilterKeys.has(bubble.key) && 'bg-sky-500 border-sky-600 text-sky-50 dark:bg-sky-600 dark:border-sky-700 dark:text-sky-100',
                                         bubble.key === 'all-organizations' && activeFilterKeys.has(bubble.key) && 'bg-slate-600 border-slate-700 text-slate-100 dark:bg-slate-500 dark:border-slate-600 dark:text-slate-50',
-                                        bubble.key === 'best-matches' && activeFilterKeys.has(bubble.key) && 'bg-amber-500 border-amber-600 text-amber-50 dark:bg-amber-500 dark:border-amber-600 dark:text-amber-100',
+                                        bubble.key === 'best-matches' && activeFilterKeys.has(bubble.key) && 'bg-amber-500 border-amber-600 text-amber-50 dark:bg-amber-600 dark:border-amber-700 dark:text-amber-100',
                                         bubble.key === 'top-matches' && activeFilterKeys.has(bubble.key) && 'bg-teal-500 border-teal-600 text-teal-50 dark:bg-teal-600 dark:border-teal-700 dark:text-teal-100',
                                         bubble.type === 'category' && activeFilterKeys.has(bubble.key) && 'bg-indigo-500/90 border-indigo-600 text-indigo-50 dark:bg-indigo-600/80 dark:border-indigo-700 dark:text-indigo-100',
                                         bubble.type === 'orgType' && activeFilterKeys.has(bubble.key) && 'bg-purple-500/90 border-purple-600 text-purple-50 dark:bg-purple-600/80 dark:border-purple-700 dark:text-purple-100',
@@ -612,6 +639,17 @@ export default function ResourceSuggestionsModal({
                          // Ensure key is on the outermost element returned by renderResourceCard (which is Tooltip)
                          return React.cloneElement(cardElement, { key: resource.url || resource.name });
                     })}
+                    {suggestedResources.length > visibleItemCount &&
+                        activeFilterKeys.has('all-organizations') &&
+                        activeFilterKeys.size === 1 && (
+                        <Button
+                            onClick={() => setVisibleItemCount(prev => prev + LOAD_MORE_COUNT)}
+                            variant="outline"
+                            className="w-full mt-4"
+                        >
+                            Load More Organizations ({suggestedResources.length - visibleItemCount} remaining)
+                        </Button>
+                    )}
                 </div>
             ) : (
                 <div className="text-center py-10 text-muted-foreground">
@@ -634,5 +672,6 @@ export default function ResourceSuggestionsModal({
     </Dialog>
   );
 }
+
 
 
