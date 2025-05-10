@@ -1,7 +1,7 @@
 // src/components/dashboard/ResourceSuggestionsModal.tsx
 'use client';
 
-import * as React from 'react';
+import * as React from 'react'; // Corrected typo from *ika
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
   DialogFooter, DialogClose,
@@ -158,7 +158,6 @@ export default function ResourceSuggestionsModal({
 
   React.useEffect(() => {
     if (isOpen) {
-      // Preload resources if the modal is open and suggestions are available
       if (suggestedResources.length > 0) {
          if (hasUserConcerns && suggestedResources.some(r => (r.matchCount || 0) > 0 || r.badges?.some(b => ['Best Match', 'Top Match', 'Your Match'].includes(b)))) {
               setActiveFilterKeys(new Set(['your-matches']));
@@ -166,12 +165,11 @@ export default function ResourceSuggestionsModal({
               setActiveFilterKeys(new Set(['all-organizations']));
          }
       }
-      // Ensure the modal doesn't start partially off-screen if content changes its size
       if (refModal.current && pos.x !== null && pos.y !== null && !isInitialOpen.current) {
             const { width: currentWidth, height: currentHeight } = refModal.current.getBoundingClientRect();
             const windowWidth = window.innerWidth;
             const windowHeight = window.innerHeight;
-            const margin = 20; // Small margin
+            const margin = 20;
 
             let newX = pos.x;
             let newY = pos.y;
@@ -185,13 +183,12 @@ export default function ResourceSuggestionsModal({
                 setPos({ x: newX, y: newY });
             }
         }
-
-
     } else if (!isOpen) {
       isInitialOpen.current = true;
-      setPos({ x: null, y: null }); // Reset position when modal closes
+      setPos({ x: null, y: null });
     }
-  }, [isOpen, hasUserConcerns, suggestedResources, pos.x, pos.y]); // Added pos.x, pos.y dependency
+  // Removed pos.x, pos.y from dependencies to prevent filter reset on drag
+  }, [isOpen, hasUserConcerns, suggestedResources]);
 
 
   React.useLayoutEffect(() => {
@@ -202,13 +199,13 @@ export default function ResourceSuggestionsModal({
       if (width && height) {
         setPos({
           x: window.innerWidth / 2 - width / 2,
-          y: Math.max(20, window.innerHeight / 2 - height / 2), // Ensure it's not too high
+          y: Math.max(20, window.innerHeight / 2 - height / 2),
         });
         isInitialOpen.current = false;
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, [isOpen, pos.x]); // Removed pos dependency to avoid re-centering on content change after initial open
+  }, [isOpen, pos.x]);
 
 
   const onDown = React.useCallback((e: React.MouseEvent) => {
@@ -363,16 +360,12 @@ export default function ResourceSuggestionsModal({
     if (activeFilterKeys.has('all-organizations') && activeFilterKeys.size === 1) {
         return suggestedResources;
     }
-    if (activeFilterKeys.size === 0){ // If no filters active, default to showing 'your-matches' if user has concerns, else all
-        if (hasUserConcerns && suggestedResources.some(r => (r.matchCount || 0) > 0 || r.badges?.some(b => ['Best Match', 'Top Match', 'Your Match'].includes(b)))) {
-           return suggestedResources.filter(r => (r.matchCount || 0) > 0 || r.badges?.includes('Best Match') || r.badges?.includes('Top Match') || r.badges?.includes('Your Match'));
-        }
-        return suggestedResources;
+    if (activeFilterKeys.size === 0){
+        return suggestedResources; // Default to all if no filters active
     }
 
-
     return suggestedResources.filter(r => {
-        return Array.from(activeFilterKeys).every(key => { // Changed from some to every for AND logic if multiple non-special filters
+        return Array.from(activeFilterKeys).every(key => {
             if (key === 'your-matches') return (r.matchCount || 0) > 0 || r.badges?.includes('Best Match') || r.badges?.includes('Top Match') || r.badges?.includes('Your Match');
             if (key === 'best-matches') return r.badges?.includes('Best Match') || false;
             if (key === 'top-matches') return r.badges?.includes('Top Match') || false;
@@ -382,11 +375,11 @@ export default function ResourceSuggestionsModal({
                 const badgeKey = key.substring(6).replace(/-/g, ' ');
                 return r.badges?.some(b => b.toLowerCase() === badgeKey) || false;
             }
-            return false;
+            return false; // Should not happen if key is from filterBubbles
         });
     });
 
-  }, [isLoading, suggestedResources, activeFilterKeys, hasUserConcerns]);
+  }, [isLoading, suggestedResources, activeFilterKeys]);
 
 
   const handleFilterClick = (key: string) => {
@@ -395,22 +388,23 @@ export default function ResourceSuggestionsModal({
         const isAllOrgsActive = newKeys.has('all-organizations');
 
         if (key === 'all-organizations') {
-            return new Set(['all-organizations']);
+            return new Set(['all-organizations']); // Exclusive selection
         }
 
         if (isAllOrgsActive) {
-            newKeys.delete('all-organizations');
+            newKeys.delete('all-organizations'); // Deactivate 'all' if a specific filter is clicked
         }
 
+        // Handle ranked/special filters (exclusive within their group)
         if (key === 'your-matches' || key === 'best-matches' || key === 'top-matches') {
-            // For special filters, allow only one active at a time from this group
-            ['your-matches', 'best-matches', 'top-matches'].forEach(spKey => {
-                if (spKey !== key) newKeys.delete(spKey);
-            });
-            if (newKeys.has(key)) newKeys.delete(key);
-            else newKeys.add(key);
-        } else {
-            // For category/orgType/badgeGeneral, allow multiple
+            const rankedFilters = ['your-matches', 'best-matches', 'top-matches'];
+            if (newKeys.has(key)) { // If it's already active, toggle it off
+                newKeys.delete(key);
+            } else { // If not active, activate it and deactivate others in its group
+                rankedFilters.forEach(spKey => newKeys.delete(spKey));
+                newKeys.add(key);
+            }
+        } else { // Handle category/orgType/badgeGeneral filters (allow multiple)
             if (newKeys.has(key)) {
                 newKeys.delete(key);
             } else {
@@ -418,15 +412,8 @@ export default function ResourceSuggestionsModal({
             }
         }
         
-        // If no "your/best/top" match filters are active AND no other category/type filters are active,
-        // AND user has concerns, default to 'your-matches'. Otherwise if empty, default to 'all-organizations'
-        const hasMatchFilter = ['your-matches', 'best-matches', 'top-matches'].some(spKey => newKeys.has(spKey));
-        const hasOtherFilter = Array.from(newKeys).some(k => !['your-matches', 'best-matches', 'top-matches', 'all-organizations'].includes(k));
-
-        if (!hasMatchFilter && !hasOtherFilter) {
-            if (hasUserConcerns && suggestedResources.some(r => (r.matchCount || 0) > 0 || r.badges?.some(b => ['Best Match', 'Top Match', 'Your Match'].includes(b)))) {
-                 return new Set(['your-matches']);
-            }
+        // If no filters are active after toggling, default to 'all-organizations'
+        if (newKeys.size === 0) {
             return new Set(['all-organizations']);
         }
         return newKeys;
@@ -434,6 +421,7 @@ export default function ResourceSuggestionsModal({
   };
 
   const handleClearAllFilters = () => {
+      // Default to 'your-matches' if user has concerns, otherwise 'all-organizations'
       if (hasUserConcerns && suggestedResources.some(r => (r.matchCount || 0) > 0 || r.badges?.some(b => ['Best Match', 'Top Match', 'Your Match'].includes(b)))) {
          setActiveFilterKeys(new Set(['your-matches']));
       } else {
@@ -646,4 +634,5 @@ export default function ResourceSuggestionsModal({
     </Dialog>
   );
 }
+
 

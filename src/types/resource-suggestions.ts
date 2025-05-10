@@ -25,6 +25,13 @@ export type BadgeType =
   | 'Established Voice'
   | 'General Interest';
 
+export type IntendedBadgeProfile =
+  | 'single-prominent' // Aims for 1 strong badge (ranked or descriptive)
+  | 'double-diverse'   // Aims for 2 badges, ideally diverse
+  | 'triple-focused'   // Aims for 3 badges, potentially more focused if highly relevant
+  | 'community-focused'; // Aims for 2-3, prioritizing community/grassroots badges
+
+
 export interface SuggestedResource {
   name: string;
   url: string;
@@ -38,14 +45,14 @@ export interface SuggestedResource {
   prominence?: 'high' | 'medium' | 'low';
   focusType?: 'broad' | 'niche';
   orgTypeTags?: ('grassroots' | 'research' | 'legal' | 'established' | 'activism' | 'think-tank' | 'direct-service')[];
-  intendedBadgeProfile?: ('single-prominent' | 'double-diverse' | 'triple-focused' | 'community-focused')[]; // Hint for badge assignment
+  intendedBadgeProfile?: IntendedBadgeProfile;
 }
 
 // Priority map for displaying badges, lower numbers are higher priority
 export const BADGE_DISPLAY_PRIORITY_MAP: Record<BadgeType, number> = {
   'Best Match': 1,
   'Top Match': 2,
-  'Your Match': 3, // Added "Your Match" with priority
+  'Your Match': 3,
   'High Impact': 4,
   'Data-Driven': 5,
   'Legal Advocacy': 6,
@@ -56,4 +63,5 @@ export const BADGE_DISPLAY_PRIORITY_MAP: Record<BadgeType, number> = {
   'Broad Focus': 11,
   'General Interest': 12,
 };
+
 
