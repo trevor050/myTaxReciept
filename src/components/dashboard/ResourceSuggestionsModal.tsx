@@ -17,21 +17,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { cn } from '@/lib/utils';
 import type { SelectedItem } from '@/services/tax-spending';
 import type { Tone } from '@/services/email/types';
-
-
-const importLucideIcon = async (iconName: string | undefined): Promise<React.ElementType | typeof Info> => {
-  if (!iconName) return Info;
-  try {
-    const normalizedIconName = iconName.charAt(0).toUpperCase() + iconName.slice(1).replace(/-([a-z])/g, (g) => g[1].toUpperCase());
-    // @ts-ignore
-    const module = await import('lucide-react');
-    // @ts-ignore
-    return module[normalizedIconName] || module[iconName] || Info;
-  } catch (error) {
-    console.warn(`Failed to load icon: ${iconName}`, error);
-    return Info;
-  }
-};
+import { importLucideIcon } from '@/lib/icon-utils';
 
 
 interface ResourceSuggestionsModalProps {
@@ -136,8 +122,8 @@ const FilterBubbleIcon = ({ filterKey, filterType }: { filterKey: string, filter
 };
 
 
-const INITIAL_VISIBLE_ITEMS = 15;
-const LOAD_MORE_COUNT = 10;
+const INITIAL_VISIBLE_ITEMS = 20; // Increased for faster initial display
+const LOAD_MORE_COUNT = 15; // Load more items at once
 
 export default function ResourceSuggestionsModal({
   isOpen,
@@ -163,7 +149,7 @@ export default function ResourceSuggestionsModal({
 
   React.useEffect(() => {
     if (isOpen) {
-      if (isInitialOpen.current) { // Logic for initial filter setting moved inside isInitialOpen.current check
+      if (isInitialOpen.current) {
          if (hasUserConcerns && suggestedResources.some(r => (r.matchCount || 0) > 0 || r.badges?.some(b => ['Best Match', 'Top Match', 'Your Match'].includes(b)))) {
               setActiveFilterKeys(new Set(['your-matches']));
          } else {
@@ -188,7 +174,6 @@ export default function ResourceSuggestionsModal({
       isInitialOpen.current = true;
       setPos({ x: null, y: null });
       setVisibleItemCount(INITIAL_VISIBLE_ITEMS);
-       // Reset activeFilterKeys when modal closes to ensure correct default on next open
       if (hasUserConcerns && suggestedResources.some(r => (r.matchCount || 0) > 0 || r.badges?.some(b => ['Best Match', 'Top Match', 'Your Match'].includes(b)))) {
          setActiveFilterKeys(new Set(['your-matches']));
       } else {
@@ -265,39 +250,39 @@ export default function ResourceSuggestionsModal({
     };
   }, [drag, onMove, stopDrag]);
 
-
+  // Icon loading logic moved to page.tsx for preloading,
+  // This effect is now for setting them if passed or loaded by page.tsx
   React.useEffect(() => {
-    const loadIcons = async () => {
-      const iconsToLoad = new Set<string>();
-      const newIconComponents: Record<string, React.ElementType> = {};
-      suggestedResources.forEach(resource => {
-        if (resource.icon && !(resource.icon in IconComponents)) {
-          iconsToLoad.add(resource.icon);
+    const loadAndSetIcons = async () => {
+        const iconsToLoad = new Set<string>();
+        const newIconComponentsState: Record<string, React.ElementType> = {};
+
+        suggestedResources.forEach(resource => {
+            if (resource.icon && !IconComponents[resource.icon]) { // Check if already loaded
+                iconsToLoad.add(resource.icon);
+            }
+        });
+        // Default icons can also be checked and added here if not preloaded by page.tsx
+
+        if (iconsToLoad.size > 0) {
+            const promises = Array.from(iconsToLoad).map(async (iconName) => {
+                try {
+                    const component = await importLucideIcon(iconName);
+                    newIconComponentsState[iconName] = component;
+                } catch (e) {
+                    newIconComponentsState[iconName] = Info; // Fallback
+                }
+            });
+            await Promise.all(promises);
+            setIconComponents(prev => ({ ...prev, ...newIconComponentsState }));
         }
-      });
-      const defaultIcons = ['Dove', 'LibrarySquare', 'DollarSign', 'Eye', 'School', 'Home', 'Bed', 'Utensils', 'Medal', 'Hammer', 'Anchor', 'ListFilter', 'Tag', 'FlaskConical', 'Brain', 'Building', 'Wheelchair', 'PawPrint', 'CheckCircle', 'Rabbit', 'Baby', 'ShieldOff', 'Activity', 'TrendingUp', 'PieChart', 'Banknote'];
-      defaultIcons.forEach(icon => {
-        if (!(icon in IconComponents)) iconsToLoad.add(icon);
-      });
-      if (iconsToLoad.size === 0) return;
-      const loadedPromises = Array.from(iconsToLoad).map(async (iconName) => {
-        try {
-          const component = await importLucideIcon(iconName);
-          newIconComponents[iconName] = component;
-        } catch (e) {
-          console.warn(`Could not load icon ${iconName}`, e);
-          newIconComponents[iconName] = Info;
-        }
-      });
-      await Promise.all(loadedPromises);
-      if (Object.keys(newIconComponents).length > 0) {
-        setIconComponents(prev => ({ ...prev, ...newIconComponents }));
-      }
     };
+
     if (isOpen && suggestedResources.length > 0) {
-      loadIcons();
+        loadAndSetIcons();
     }
-  }, [isOpen, suggestedResources, IconComponents]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, suggestedResources]); // IconComponents removed from deps to avoid loop if icons are passed as prop
 
 
   const uniqueCategories = React.useMemo(() => {
@@ -378,7 +363,7 @@ export default function ResourceSuggestionsModal({
                     const badgeKey = key.substring(6).replace(/-/g, ' ');
                     return r.badges?.some(b => b.toLowerCase() === badgeKey) || false;
                 }
-                return false;
+                return false; // Should not happen if all-organizations is handled
             });
         });
     }
@@ -391,17 +376,17 @@ export default function ResourceSuggestionsModal({
 
 
   React.useEffect(() => {
-    if (!loadMoreRef.current) return;
+    if (!loadMoreRef.current || isLoading) return; // Don't observe if loading
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
-          if (filteredResources.length > visibleItemCount) { // Load more for any active filter set if there are more items
+        if (entries[0].isIntersecting && !isLoading) { // Check isLoading again
+          if (filteredResources.length > visibleItemCount) {
             setVisibleItemCount((prev) => prev + LOAD_MORE_COUNT);
           }
         }
       },
-      { threshold: 1.0 } // Trigger when 100% of the element is visible
+      { threshold: 0.1, rootMargin: "400px 0px" } // More aggressive loading
     );
 
     observer.observe(loadMoreRef.current);
@@ -411,7 +396,7 @@ export default function ResourceSuggestionsModal({
         observer.unobserve(loadMoreRef.current);
       }
     };
-  }, [activeFilterKeys, filteredResources.length, visibleItemCount]); // Re-run effect if these change
+  }, [activeFilterKeys, filteredResources.length, visibleItemCount, isLoading]);
 
 
   const handleFilterClick = (key: string) => {
@@ -422,19 +407,19 @@ export default function ResourceSuggestionsModal({
             setVisibleItemCount(INITIAL_VISIBLE_ITEMS);
             return new Set(['all-organizations']);
         }
-        if (isAllOrgsActive && newKeys.size === 1) { // If "All Orgs" is the *only* active filter
-            newKeys.delete('all-organizations'); // Remove it when another filter is added
+        if (isAllOrgsActive && newKeys.size === 1) {
+            newKeys.delete('all-organizations');
         }
 
         const specialRankedFilters = ['your-matches', 'best-matches', 'top-matches'];
         if (specialRankedFilters.includes(key)) {
-            if (newKeys.has(key)) { // Toggle off if already active
+            if (newKeys.has(key)) {
                 newKeys.delete(key);
-            } else { // If activating a special filter, deselect other special filters
+            } else {
                 specialRankedFilters.forEach(spKey => newKeys.delete(spKey));
                 newKeys.add(key);
             }
-        } else { // For category, orgType, badgeGeneral
+        } else {
             if (newKeys.has(key)) {
                 newKeys.delete(key);
             } else {
@@ -444,7 +429,6 @@ export default function ResourceSuggestionsModal({
 
         if (newKeys.size === 0) {
              setVisibleItemCount(INITIAL_VISIBLE_ITEMS);
-             // Default to 'your-matches' if available, otherwise 'all-organizations'
              if (hasUserConcerns && suggestedResources.some(r => (r.matchCount || 0) > 0 || r.badges?.some(b => ['Best Match', 'Top Match', 'Your Match'].includes(b)))) {
                 return new Set(['your-matches']);
              }
@@ -487,9 +471,9 @@ export default function ResourceSuggestionsModal({
                             variant={badge === 'Best Match' || badge === 'Top Match' || badge === 'Your Match' ? 'default' : 'outline'}
                             className={cn(
                                 "text-xs px-1.5 py-0.5 whitespace-nowrap font-medium flex items-center",
-                                badge === 'Best Match' && "bg-amber-100 border-amber-400 text-amber-700 dark:bg-amber-700/30 dark:border-amber-600 dark:text-amber-300",
-                                badge === 'Top Match' && "bg-sky-100 border-sky-400 text-sky-700 dark:bg-sky-700/30 dark:border-sky-600 dark:text-sky-300",
-                                badge === 'Your Match' && "bg-green-100 border-green-400 text-green-700 dark:bg-green-700/30 dark:border-green-500 dark:text-green-300",
+                                badge === 'Best Match' && "bg-green-100 border-green-500 text-green-700 dark:bg-green-700/30 dark:border-green-600 dark:text-green-300",
+                                badge === 'Top Match' && "bg-blue-100 border-blue-500 text-blue-700 dark:bg-blue-700/30 dark:border-blue-600 dark:text-blue-300",
+                                badge === 'Your Match' && "bg-teal-100 border-teal-500 text-teal-700 dark:bg-teal-700/30 dark:border-teal-600 dark:text-teal-300",
                                 badge === 'High Impact' && "bg-rose-100 border-rose-400 text-rose-700 dark:bg-rose-700/30 dark:border-rose-500 dark:text-rose-300",
                                 badge === 'Broad Focus' && "bg-blue-100 border-blue-400 text-blue-700 dark:bg-blue-700/30 dark:border-blue-500 dark:text-blue-300",
                                 badge === 'Niche Focus' && "bg-indigo-100 border-indigo-400 text-indigo-700 dark:bg-indigo-700/30 dark:border-indigo-500 dark:text-indigo-300",
@@ -598,8 +582,8 @@ export default function ResourceSuggestionsModal({
                                         activeFilterKeys.has(bubble.key) ? "shadow-md ring-2 ring-primary/50" : "hover:bg-accent/70",
                                         bubble.key === 'your-matches' && activeFilterKeys.has(bubble.key) && 'bg-sky-500 border-sky-600 text-sky-50 dark:bg-sky-600 dark:border-sky-700 dark:text-sky-100',
                                         bubble.key === 'all-organizations' && activeFilterKeys.has(bubble.key) && 'bg-slate-600 border-slate-700 text-slate-100 dark:bg-slate-500 dark:border-slate-600 dark:text-slate-50',
-                                        bubble.key === 'best-matches' && activeFilterKeys.has(bubble.key) && 'bg-amber-500 border-amber-600 text-amber-50 dark:bg-amber-600 dark:border-amber-700 dark:text-amber-100',
-                                        bubble.key === 'top-matches' && activeFilterKeys.has(bubble.key) && 'bg-teal-500 border-teal-600 text-teal-50 dark:bg-teal-600 dark:border-teal-700 dark:text-teal-100',
+                                        bubble.key === 'best-matches' && activeFilterKeys.has(bubble.key) && 'bg-green-500 border-green-600 text-green-50 dark:bg-green-600 dark:border-green-700 dark:text-green-100', // Changed from amber
+                                        bubble.key === 'top-matches' && activeFilterKeys.has(bubble.key) && 'bg-blue-500 border-blue-600 text-blue-50 dark:bg-blue-600 dark:border-blue-700 dark:text-blue-100', // Changed from teal
                                         bubble.type === 'category' && activeFilterKeys.has(bubble.key) && 'bg-indigo-500/90 border-indigo-600 text-indigo-50 dark:bg-indigo-600/80 dark:border-indigo-700 dark:text-indigo-100',
                                         bubble.type === 'orgType' && activeFilterKeys.has(bubble.key) && 'bg-purple-500/90 border-purple-600 text-purple-50 dark:bg-purple-600/80 dark:border-purple-700 dark:text-purple-100',
                                         bubble.type === 'badgeGeneral' && activeFilterKeys.has(bubble.key) && 'bg-pink-500/90 border-pink-600 text-pink-50 dark:bg-pink-600/80 dark:border-pink-700 dark:text-pink-100'
@@ -646,8 +630,8 @@ export default function ResourceSuggestionsModal({
                          const cardElement = renderResourceCard(resource);
                          return React.cloneElement(cardElement, { key: resource.url || resource.name });
                     })}
-                    { // Only show load more / loading indicator if there are more items to load
-                     filteredResources.length > visibleItemCount && (
+                    {
+                     filteredResources.length > visibleItemCount && !isLoading && (
                         <div ref={loadMoreRef} className="h-10 flex justify-center items-center text-muted-foreground">
                             <Loader2 className="h-5 w-5 animate-spin" />
                         </div>

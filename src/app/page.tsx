@@ -1,9 +1,8 @@
-
 // src/app/page.tsx
 'use client';
 
 import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react'; // Added useCallback
 import type { Location, TaxSpending, SelectedItem } from '@/services/tax-spending';
 import { getTaxSpending } from '@/services/tax-spending';
 import { guessStateFromZip, getAverageTaxForState } from '@/lib/zip-to-state';
@@ -20,6 +19,9 @@ import ResourceSuggestionsModal from '@/components/dashboard/ResourceSuggestions
 import EnterHourlyWageModal from '@/components/dashboard/EnterHourlyWageModal';
 import type { SuggestedResource } from '@/types/resource-suggestions';
 import { suggestResources } from '@/services/resource-suggestions';
+import { RESOURCE_DATABASE } from '@/lib/resource-suggestion-logic'; // For preloading icons
+import { importLucideIcon } from '@/lib/icon-utils'; // Icon loading utility
+
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -78,6 +80,27 @@ export default function Home() {
     if (typeof window !== 'undefined') {
       checkMobile();
       window.addEventListener('resize', checkMobile);
+
+      // Preload icons for ResourceSuggestionsModal
+      const preloadResourceIcons = async () => {
+        const iconsToLoad = new Set<string>();
+        RESOURCE_DATABASE.forEach(resource => {
+          if (resource.icon) {
+            iconsToLoad.add(resource.icon);
+          }
+        });
+        // Add any other default icons if necessary from ResourceSuggestionsModal
+        // For now, just preloading icons from the database
+        for (const iconName of iconsToLoad) {
+          try {
+            await importLucideIcon(iconName);
+          } catch (e) {
+            // console.warn(`Preload failed for icon ${iconName}:`, e);
+          }
+        }
+      };
+      preloadResourceIcons();
+
       return () => window.removeEventListener('resize', checkMobile);
     }
   }, []);
@@ -94,7 +117,7 @@ export default function Home() {
    }, [selectedEmailItems]);
 
 
-  const navigateToStep = (nextStep: AppStep) => {
+  const navigateToStep = useCallback((nextStep: AppStep) => {
     const stepOrder: AppStep[] = ['location', 'tax', 'hourlyWage', 'dashboard'];
     const currentStepIndex = stepOrder.indexOf(step);
     const nextStepIndex = stepOrder.indexOf(nextStep);
@@ -115,13 +138,11 @@ export default function Home() {
        setSuggestedResources([]);
        setIsResourceModalOpen(false);
        setDashboardPerspectives(null);
-       // Reset hourly wage only if going back from dashboard to a step before hourly wage
        if (nextStep !== 'hourlyWage') {
          setHourlyWage(null);
        }
     }
      if (step === 'hourlyWage' && isGoingBack) {
-        setTaxAmount(null); // Keep tax amount if just going back from hourly to tax
         setHourlyWage(null);
      }
      if (step === 'tax' && isGoingBack) {
@@ -135,9 +156,10 @@ export default function Home() {
       setStep(nextStep);
       setAnimationClass(isGoingBack ? 'animate-slideInDown' : 'animate-slideInUp');
     }, 300);
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, isMobileView]); // Added isMobileView as it affects perspective calculation later
 
-  const generatePerspectives = (currentTaxAmount: number, currentHourlyWage: number | null, currentTaxSpending: TaxSpending[]) => {
+  const generatePerspectives = useCallback((currentTaxAmount: number, currentHourlyWage: number | null, currentTaxSpending: TaxSpending[]) => {
     const maxPerspectiveItems = isMobileView ? 3 : 5;
     const newChartPerspectives: DashboardPerspectives['chart'] = {};
     currentTaxSpending.forEach(item => {
@@ -174,10 +196,10 @@ export default function Home() {
         accordion: newAccordionPerspectives,
         total: newTotalPerspectiveData,
     });
-  };
+  }, [isMobileView]);
 
 
-  const handleLocationSubmit = (loc: Location | null, zipCode?: string) => {
+  const handleLocationSubmit = useCallback((loc: Location | null, zipCode?: string) => {
     const finalLocation = loc ?? DEFAULT_LOCATION;
     setLocation(finalLocation);
 
@@ -190,15 +212,17 @@ export default function Home() {
         description: loc ? (zipCode ? `Using location for ${zipCode}.` : 'Using current location.') : `Using default location (New York Area). Estimated median tax for this area: $${medianForState.toLocaleString()}.`,
     });
     navigateToStep('tax');
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toast, navigateToStep]);
 
-  const handleTaxAmountSubmit = (amount: number | null) => {
+  const handleTaxAmountSubmit = useCallback((amount: number | null) => {
     const finalAmount = amount ?? estimatedMedianTax;
     setTaxAmount(finalAmount);
     navigateToStep('hourlyWage');
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [estimatedMedianTax, navigateToStep]);
 
-   const handleHourlyWageSubmit = async (wage: number | null) => {
+   const handleHourlyWageSubmit = useCallback(async (wage: number | null) => {
      setIsLoading(true);
      setHourlyWage(wage);
 
@@ -207,11 +231,13 @@ export default function Home() {
 
      toast({
           title: wage ? 'Hourly Wage Set' : 'Hourly Wage Skipped',
-          description: wage ? `Calculating breakdown based on $${wage.toFixed(2)}/hour.` : 'Time perspective feature will be disabled initially.',
+          description: wage ? `Calculating breakdown based on $${wage.toFixed(2)}/hour.` : 'Time perspective feature will be disabled. You can enable it later.',
      });
 
      try {
-       await new Promise(resolve => setTimeout(resolve, 400)); // Simulate loading
+       // Simulate loading for smoother transition if API call is very fast
+       // For actual fast APIs, this might not be needed or could be shorter
+       await new Promise(resolve => setTimeout(resolve, 100));
        const spendingData = await getTaxSpending(currentLocation, finalTaxAmount);
        setTaxSpending(spendingData);
        generatePerspectives(finalTaxAmount, wage, spendingData);
@@ -226,9 +252,10 @@ export default function Home() {
      } finally {
        setIsLoading(false);
      }
-   };
+   // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [taxAmount, estimatedMedianTax, location, toast, navigateToStep, generatePerspectives]);
 
-  const handleHourlyWageSubmitFromModal = (wage: number) => {
+  const handleHourlyWageSubmitFromModal = useCallback((wage: number) => {
     setHourlyWage(wage);
     setIsLoading(true);
     toast({
@@ -240,10 +267,11 @@ export default function Home() {
     }
     setIsEnterHourlyWageModalOpen(false);
     setIsLoading(false);
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taxAmount, taxSpending, toast, generatePerspectives]);
 
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
      if (step === 'tax') {
        navigateToStep('location');
      } else if (step === 'hourlyWage') {
@@ -251,10 +279,11 @@ export default function Home() {
      } else if (step === 'dashboard') {
        navigateToStep('hourlyWage');
      }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, navigateToStep]);
 
 
-  const getTitleAndDescription = () => {
+  const getTitleAndDescription = useCallback(() => {
     switch (step) {
         case 'location': return {
             title: 'Find Your Tax Breakdown',
@@ -266,7 +295,7 @@ export default function Home() {
         };
          case 'hourlyWage': return {
             title: 'Time Perspective (Optional)',
-            description: 'Enter your approximate hourly wage to see spending in terms of work time, or skip.'
+            description: 'Enter your approximate hourly wage to see spending in terms of work time. This helps visualize the impact of tax spending in a new way. You can skip this step.'
          };
         case 'dashboard': return {
              title: 'Your Personalized Tax Receipt',
@@ -277,11 +306,12 @@ export default function Home() {
             description: 'Understand your federal tax spending & take action.'
         };
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, estimatedMedianTax, taxAmount]);
 
   const { title, description } = getTitleAndDescription();
 
-  const handleDashboardSelectionChange = (
+  const handleDashboardSelectionChange = useCallback((
       showButton: boolean,
       count: number,
       selected: Map<string, SelectedItem>,
@@ -297,13 +327,11 @@ export default function Home() {
         setUserName('');
         setUserLocationText('');
      }
-  };
+  }, []);
 
-  const handleOpenEmailModal = () => {
-     // Prepare selected items with their categories for the modal
+  const handleOpenEmailModal = useCallback(() => {
      const itemsForModal = new Map<string, SelectedItem>();
      selectedEmailItems.forEach((item, key) => {
-         // The item in selectedEmailItems should already have its category from TaxBreakdownDashboard
          itemsForModal.set(key, { ...item });
      });
 
@@ -313,13 +341,14 @@ export default function Home() {
          itemFundingLevels.get(id) ?? mapFundingLevelToSlider(item.fundingLevel)
        ])
      ));
-     setSelectedEmailItems(itemsForModal); // Ensure modal uses items with categories
+     setSelectedEmailItems(itemsForModal);
      setIsEmailModalOpen(true);
-  };
+   // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [selectedEmailItems, itemFundingLevels]);
 
   const hasConcernsForSuggestions = selectedEmailItems.size > 0 || balanceBudgetChecked;
 
-  const handleShowResourceSuggestions = async () => {
+  const handleShowResourceSuggestions = useCallback(async () => {
     if (!hasConcernsForSuggestions) {
         toast({
             title: "No Concerns Selected",
@@ -332,19 +361,18 @@ export default function Home() {
 
     setIsSuggestingResources(true);
     try {
-        // Ensure items passed to suggestResources have categories
         const itemsArrayForSuggestions: SelectedItem[] = Array.from(selectedEmailItems.values())
             .map(item => ({
                 id: item.id,
                 description: item.description,
                 fundingLevel: item.fundingLevel,
-                category: item.category, // Ensure category is included
+                category: item.category,
             }));
 
         const suggestions = await suggestResources(itemsArrayForSuggestions, aggressiveness, balanceBudgetChecked);
         setSuggestedResources(suggestions);
         if (suggestions.length > 0) {
-            setIsEmailModalOpen(false); // Close email modal if open
+            setIsEmailModalOpen(false);
             setIsResourceModalOpen(true);
         } else {
             toast({
@@ -365,16 +393,17 @@ export default function Home() {
     } finally {
         setIsSuggestingResources(false);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasConcernsForSuggestions, selectedEmailItems, aggressiveness, balanceBudgetChecked, toast]);
 
-  const handleEmailGenerated = () => {
+  const handleEmailGenerated = useCallback(() => {
     setIsEmailModalOpen(false);
     if (hasConcernsForSuggestions) {
         setTimeout(() => {
             handleShowResourceSuggestions();
         }, 300);
     }
-  };
+  }, [hasConcernsForSuggestions, handleShowResourceSuggestions]);
 
 
   return (
@@ -451,7 +480,7 @@ export default function Home() {
             onEmailGenerated={handleEmailGenerated}
             onSuggestResources={handleShowResourceSuggestions}
             canSuggestResources={hasConcernsForSuggestions}
-            selectedItems={selectedEmailItems} // This should be Map<string, SelectedItem & { category: string } potentially
+            selectedItems={selectedEmailItems}
             balanceBudgetChecked={balanceBudgetChecked}
             taxAmount={taxAmount ?? estimatedMedianTax}
             aggressiveness={aggressiveness}
