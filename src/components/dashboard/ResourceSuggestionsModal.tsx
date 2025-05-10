@@ -122,8 +122,8 @@ const FilterBubbleIcon = ({ filterKey, filterType }: { filterKey: string, filter
 };
 
 
-const INITIAL_VISIBLE_ITEMS = 20; // Increased for faster initial display
-const LOAD_MORE_COUNT = 15; // Load more items at once
+const INITIAL_VISIBLE_ITEMS = 20;
+const LOAD_MORE_COUNT = 15;
 
 export default function ResourceSuggestionsModal({
   isOpen,
@@ -202,21 +202,19 @@ export default function ResourceSuggestionsModal({
 
   const onDown = React.useCallback((e: React.MouseEvent) => {
     if (!refHandle.current?.contains(e.target as Node) || !refModal.current) return;
-    const r = refModal.current.getBoundingClientRect();
-    let currentX = pos.x ?? r.left;
-    let currentY = pos.y ?? r.top;
 
-    if (pos.x === null || pos.y === null || isInitialOpen.current) {
-      setPos({x:r.left, y:r.top});
-      currentX = r.left;
-      currentY = r.top;
+    if (pos.x === null && refModal.current) { // Switched from isInitialOpen to pos.x === null
+        const r = refModal.current.getBoundingClientRect();
+        const newPos = { x: r.left, y: r.top };
+        setPos(newPos);
+        dragOffset.current = { x: e.clientX - newPos.x, y: e.clientY - newPos.y };
+    } else if (pos.x !== null && pos.y !== null) { // Ensure pos.x and pos.y are not null
+        dragOffset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
     }
-
-    dragOffset.current = { x: e.clientX - currentX, y: e.clientY - currentY };
-    isInitialOpen.current = false;
+    // isInitialOpen.current = false; // This line might not be needed if we rely on pos.x
     setDrag(true);
     document.body.style.userSelect = 'none';
-  }, [pos, isInitialOpen]);
+  }, [pos]);
 
 
   const onMove = React.useCallback((e: MouseEvent) => {
@@ -250,19 +248,17 @@ export default function ResourceSuggestionsModal({
     };
   }, [drag, onMove, stopDrag]);
 
-  // Icon loading logic moved to page.tsx for preloading,
-  // This effect is now for setting them if passed or loaded by page.tsx
+
   React.useEffect(() => {
     const loadAndSetIcons = async () => {
         const iconsToLoad = new Set<string>();
         const newIconComponentsState: Record<string, React.ElementType> = {};
 
         suggestedResources.forEach(resource => {
-            if (resource.icon && !IconComponents[resource.icon]) { // Check if already loaded
+            if (resource.icon && !IconComponents[resource.icon]) {
                 iconsToLoad.add(resource.icon);
             }
         });
-        // Default icons can also be checked and added here if not preloaded by page.tsx
 
         if (iconsToLoad.size > 0) {
             const promises = Array.from(iconsToLoad).map(async (iconName) => {
@@ -270,7 +266,7 @@ export default function ResourceSuggestionsModal({
                     const component = await importLucideIcon(iconName);
                     newIconComponentsState[iconName] = component;
                 } catch (e) {
-                    newIconComponentsState[iconName] = Info; // Fallback
+                    newIconComponentsState[iconName] = Info;
                 }
             });
             await Promise.all(promises);
@@ -282,7 +278,7 @@ export default function ResourceSuggestionsModal({
         loadAndSetIcons();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, suggestedResources]); // IconComponents removed from deps to avoid loop if icons are passed as prop
+  }, [isOpen, suggestedResources]);
 
 
   const uniqueCategories = React.useMemo(() => {
@@ -349,26 +345,59 @@ export default function ResourceSuggestionsModal({
   }, [suggestedResources, uniqueCategories, uniqueOrgTypeTags, hasUserConcerns]);
 
   const filteredResources = React.useMemo(() => {
-    if (isLoading) return [];
+    if (isLoading) return []; // isLoading is prop from page.tsx (isSuggestingResources)
     let filtered = suggestedResources;
-    if (!(activeFilterKeys.has('all-organizations') && activeFilterKeys.size === 1) && activeFilterKeys.size > 0) {
+
+    if (activeFilterKeys.size === 0) { // If no filters, default to 'all-organizations' equivalent
+        return suggestedResources;
+    }
+    if (activeFilterKeys.has('all-organizations') && activeFilterKeys.size === 1) {
+        return suggestedResources;
+    }
+
+    // If 'all-organizations' is present with others, it acts as a base, and others are ANDed or ORed based on type.
+    // For simplicity, if 'all-organizations' is not the *only* active filter, we ignore it for filtering logic.
+    const effectiveFilters = new Set(activeFilterKeys);
+    if (effectiveFilters.has('all-organizations') && effectiveFilters.size > 1) {
+        effectiveFilters.delete('all-organizations');
+    }
+
+
+    if (effectiveFilters.size > 0) {
         filtered = suggestedResources.filter(r => {
-            return Array.from(activeFilterKeys).every(key => {
-                if (key === 'your-matches') return (r.matchCount || 0) > 0 || r.badges?.includes('Best Match') || r.badges?.includes('Top Match') || r.badges?.includes('Your Match');
-                if (key === 'best-matches') return r.badges?.includes('Best Match') || false;
-                if (key === 'top-matches') return r.badges?.includes('Top Match') || false;
-                if (key.startsWith('cat-')) return r.mainCategory === key.substring(4);
-                if (key.startsWith('orgtype-')) return r.orgTypeTags?.includes(key.substring(8) as any) || false;
-                if (key.startsWith('badge-')) {
-                    const badgeKey = key.substring(6).replace(/-/g, ' ');
-                    return r.badges?.some(b => b.toLowerCase() === badgeKey) || false;
+            // Special handling for ranked filters: if one is selected, only that one matters for ranking perspective.
+            const rankedFiltersPresent = Array.from(effectiveFilters).filter(k => ['your-matches', 'best-matches', 'top-matches'].includes(k));
+            if (rankedFiltersPresent.length > 0) {
+                // If 'your-matches' is active, it's the primary ranked filter.
+                if (effectiveFilters.has('your-matches')) {
+                    if (!((r.matchCount || 0) > 0 || r.badges?.includes('Best Match') || r.badges?.includes('Top Match') || r.badges?.includes('Your Match'))) return false;
+                } else if (effectiveFilters.has('best-matches')) {
+                    if (!(r.badges?.includes('Best Match'))) return false;
+                } else if (effectiveFilters.has('top-matches')) {
+                    if (!(r.badges?.includes('Top Match'))) return false;
                 }
-                return false; // Should not happen if all-organizations is handled
-            });
+            }
+
+            // Apply other filters (category, orgType, badgeGeneral) as AND conditions
+            // if they are selected ALONGSIDE a ranked filter, or if no ranked filter is selected.
+            for (const key of effectiveFilters) {
+                if (['your-matches', 'best-matches', 'top-matches'].includes(key)) continue; // Already handled
+
+                if (key.startsWith('cat-')) {
+                    if (r.mainCategory !== key.substring(4)) return false;
+                } else if (key.startsWith('orgtype-')) {
+                    if (!r.orgTypeTags?.includes(key.substring(8) as any)) return false;
+                } else if (key.startsWith('badge-')) {
+                    const badgeKey = key.substring(6).replace(/-/g, ' ');
+                    if (!r.badges?.some(b => b.toLowerCase() === badgeKey)) return false;
+                }
+            }
+            return true; // If all non-ranked filters pass (or no non-ranked filters are active)
         });
     }
     return filtered;
   }, [isLoading, suggestedResources, activeFilterKeys]);
+
 
   const displayedResources = React.useMemo(() => {
     return filteredResources.slice(0, visibleItemCount);
@@ -376,17 +405,17 @@ export default function ResourceSuggestionsModal({
 
 
   React.useEffect(() => {
-    if (!loadMoreRef.current || isLoading) return; // Don't observe if loading
+    if (!loadMoreRef.current || isLoading) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !isLoading) { // Check isLoading again
+        if (entries[0].isIntersecting && !isLoading) {
           if (filteredResources.length > visibleItemCount) {
             setVisibleItemCount((prev) => prev + LOAD_MORE_COUNT);
           }
         }
       },
-      { threshold: 0.1, rootMargin: "400px 0px" } // More aggressive loading
+      { threshold: 0, rootMargin: "100px 0px" } // Changed threshold to 0, rootMargin to 100px
     );
 
     observer.observe(loadMoreRef.current);
@@ -403,36 +432,47 @@ export default function ResourceSuggestionsModal({
     setActiveFilterKeys(prevKeys => {
         const newKeys = new Set(prevKeys);
         const isAllOrgsActive = newKeys.has('all-organizations');
+
         if (key === 'all-organizations') {
             setVisibleItemCount(INITIAL_VISIBLE_ITEMS);
             return new Set(['all-organizations']);
         }
-        if (isAllOrgsActive && newKeys.size === 1) {
-            newKeys.delete('all-organizations');
-        }
 
-        const specialRankedFilters = ['your-matches', 'best-matches', 'top-matches'];
-        if (specialRankedFilters.includes(key)) {
+        const rankedFilters = ['your-matches', 'best-matches', 'top-matches'];
+
+        if (rankedFilters.includes(key)) {
+             // If a ranked filter is clicked
+            if (newKeys.has(key)) { // If it's already active, deactivate it
+                newKeys.delete(key);
+            } else { // If it's not active, activate it and deactivate others
+                rankedFilters.forEach(rf => newKeys.delete(rf));
+                newKeys.add(key);
+            }
+            // If any ranked filter is active, 'all-organizations' should be off unless no other filters are set
+            if (Array.from(newKeys).some(k => rankedFilters.includes(k))) {
+                newKeys.delete('all-organizations');
+            }
+
+        } else { // Non-ranked filter (category, orgType, badgeGeneral)
             if (newKeys.has(key)) {
                 newKeys.delete(key);
             } else {
-                specialRankedFilters.forEach(spKey => newKeys.delete(spKey));
                 newKeys.add(key);
             }
-        } else {
-            if (newKeys.has(key)) {
-                newKeys.delete(key);
-            } else {
-                newKeys.add(key);
+            // If a non-ranked filter is activated, and a ranked filter is also active, 'all-organizations' should be off.
+            // If only non-ranked filters are active, 'all-organizations' should also be off.
+            if (newKeys.size > 0 && !Array.from(newKeys).every(k => rankedFilters.includes(k))) {
+                 newKeys.delete('all-organizations');
             }
         }
 
-        if (newKeys.size === 0) {
+
+        if (newKeys.size === 0) { // If all filters are deselected
              setVisibleItemCount(INITIAL_VISIBLE_ITEMS);
              if (hasUserConcerns && suggestedResources.some(r => (r.matchCount || 0) > 0 || r.badges?.some(b => ['Best Match', 'Top Match', 'Your Match'].includes(b)))) {
-                return new Set(['your-matches']);
+                return new Set(['your-matches']); // Default to 'your-matches' if concerns exist
              }
-             return new Set(['all-organizations']);
+             return new Set(['all-organizations']); // Default to 'all-organizations' otherwise
         }
         setVisibleItemCount(INITIAL_VISIBLE_ITEMS);
         return newKeys;
@@ -468,11 +508,12 @@ export default function ResourceSuggestionsModal({
                     {displayedBadges.map(badge => (
                         <Badge
                             key={badge}
-                            variant={badge === 'Best Match' || badge === 'Top Match' || badge === 'Your Match' ? 'default' : 'outline'}
+                            variant={'outline'} // Simplified variant, colors handled by cn
                             className={cn(
                                 "text-xs px-1.5 py-0.5 whitespace-nowrap font-medium flex items-center",
-                                badge === 'Best Match' && "bg-green-100 border-green-500 text-green-700 dark:bg-green-700/30 dark:border-green-600 dark:text-green-300",
-                                badge === 'Top Match' && "bg-blue-100 border-blue-500 text-blue-700 dark:bg-blue-700/30 dark:border-blue-600 dark:text-blue-300",
+                                // Badge specific colors
+                                badge === 'Best Match' && "bg-green-100 border-green-500 text-green-700 dark:bg-green-800/40 dark:border-green-600 dark:text-green-300",
+                                badge === 'Top Match' && "bg-sky-100 border-sky-500 text-sky-700 dark:bg-sky-700/30 dark:border-sky-600 dark:text-sky-300",
                                 badge === 'Your Match' && "bg-teal-100 border-teal-500 text-teal-700 dark:bg-teal-700/30 dark:border-teal-600 dark:text-teal-300",
                                 badge === 'High Impact' && "bg-rose-100 border-rose-400 text-rose-700 dark:bg-rose-700/30 dark:border-rose-500 dark:text-rose-300",
                                 badge === 'Broad Focus' && "bg-blue-100 border-blue-400 text-blue-700 dark:bg-blue-700/30 dark:border-blue-500 dark:text-blue-300",
@@ -535,9 +576,9 @@ export default function ResourceSuggestionsModal({
             : undefined
         }
         className={cn(
-            'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:rounded-lg',
-             pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
-            'data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut'
+            'fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:rounded-lg',
+             pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut',
+             pos.x !== null && 'data-[state=open]:animate-fadeIn data-[state=closed]:animate-scaleOut' // Use simpler fadeIn for dragged
         )}
         onInteractOutside={e => drag && e.preventDefault()}
         onOpenAutoFocus={e => {
@@ -582,8 +623,8 @@ export default function ResourceSuggestionsModal({
                                         activeFilterKeys.has(bubble.key) ? "shadow-md ring-2 ring-primary/50" : "hover:bg-accent/70",
                                         bubble.key === 'your-matches' && activeFilterKeys.has(bubble.key) && 'bg-sky-500 border-sky-600 text-sky-50 dark:bg-sky-600 dark:border-sky-700 dark:text-sky-100',
                                         bubble.key === 'all-organizations' && activeFilterKeys.has(bubble.key) && 'bg-slate-600 border-slate-700 text-slate-100 dark:bg-slate-500 dark:border-slate-600 dark:text-slate-50',
-                                        bubble.key === 'best-matches' && activeFilterKeys.has(bubble.key) && 'bg-green-500 border-green-600 text-green-50 dark:bg-green-600 dark:border-green-700 dark:text-green-100', // Changed from amber
-                                        bubble.key === 'top-matches' && activeFilterKeys.has(bubble.key) && 'bg-blue-500 border-blue-600 text-blue-50 dark:bg-blue-600 dark:border-blue-700 dark:text-blue-100', // Changed from teal
+                                        bubble.key === 'best-matches' && activeFilterKeys.has(bubble.key) && 'bg-green-500 border-green-600 text-green-50 dark:bg-green-700 dark:border-green-800 dark:text-green-100',
+                                        bubble.key === 'top-matches' && activeFilterKeys.has(bubble.key) && 'bg-blue-500 border-blue-600 text-blue-50 dark:bg-blue-600 dark:border-blue-700 dark:text-blue-100',
                                         bubble.type === 'category' && activeFilterKeys.has(bubble.key) && 'bg-indigo-500/90 border-indigo-600 text-indigo-50 dark:bg-indigo-600/80 dark:border-indigo-700 dark:text-indigo-100',
                                         bubble.type === 'orgType' && activeFilterKeys.has(bubble.key) && 'bg-purple-500/90 border-purple-600 text-purple-50 dark:bg-purple-600/80 dark:border-purple-700 dark:text-purple-100',
                                         bubble.type === 'badgeGeneral' && activeFilterKeys.has(bubble.key) && 'bg-pink-500/90 border-pink-600 text-pink-50 dark:bg-pink-600/80 dark:border-pink-700 dark:text-pink-100'
