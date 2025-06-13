@@ -206,7 +206,12 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
           </div>
            <p className="text-xs text-muted-foreground pt-1 text-center">Enter your zip code or city, state or press <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-sm dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">Enter</kbd> to use the default.</p>
         </div>
-        <Button type="submit" className="w-full transition-all duration-200 ease-in-out hover:scale-[1.02] text-sm sm:text-base" size="lg">
+        <Button 
+          type="submit" 
+          className="w-full transition-all duration-200 ease-in-out hover:scale-[1.02] text-sm sm:text-base" 
+          size="lg"
+          disabled={!manualLocation.trim()}
+        >
           Find My Tax Breakdown
         </Button>
       </form>
