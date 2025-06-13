@@ -21,13 +21,13 @@ pnpm start    # 🔥 serves the built app
 
 ## Where to tweak the mock budget numbers 🗒️
 
-All mock spending data lives in:
+All mock spending data now lives in a dedicated JSON file:
 
 ```
-src/services/tax-spending.ts
+src/data/tax-spending.json
 ```
 
-Look for `REFERENCE_TOTAL_TAX` and the `detailedBreakdown` array a few lines below it.  Each item in that array has:
+This file contains the `referenceTotalTax` value and a `detailedBreakdown` array. Each item in that array has:
 
 * `category` – top-level bucket name (e.g. "Health")
 * `percentage` – slice of the pie ‑ change these to match reality

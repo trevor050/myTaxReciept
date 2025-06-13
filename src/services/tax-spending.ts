@@ -5,7 +5,7 @@
 
 import { generateRepresentativeEmailContent } from './email/generator'; // Import the generation logic
 import type { FundingLevel, SelectedItem as EmailSelectedItem } from './email/types'; // Import types from email modules
-import taxData from '@/data/tax-spending.json';
+import taxData from '../data/tax-spending.json';
 
 // ---------- interfaces -----------------------------------------------------
 /**
