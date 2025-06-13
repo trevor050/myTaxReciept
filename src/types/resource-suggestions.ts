@@ -49,6 +49,7 @@ export interface SuggestedResource {
   focusType?: 'broad' | 'niche';
   orgTypeTags?: ('grassroots' | 'research' | 'legal' | 'established' | 'activism' | 'think-tank' | 'direct-service')[];
   intendedBadgeProfile?: IntendedBadgeProfile;
+  isExtendedResult?: boolean; // Flag to indicate this is an extended result beyond the main filter
 }
 
 // Priority map for displaying badges, lower numbers are higher priority

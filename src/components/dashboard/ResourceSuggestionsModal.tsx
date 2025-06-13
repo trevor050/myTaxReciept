@@ -383,7 +383,60 @@ export default function ResourceSuggestionsModal({
     });
 
     const anyRankedFilterActive = rankedFilters.some((rf) => effectiveFilters.has(rf));
+    const hasAdditionalFilters = categoryFilters.length > 0 || orgTypeFilters.length > 0 || badgeFilters.length > 0;
 
+    // Extended functionality: When top-matches is active AND additional filters are applied,
+    // show both the top matches that meet the criteria AND other resources that meet the criteria
+    if (effectiveFilters.has('top-matches') && hasAdditionalFilters) {
+      // First get the top matches that meet additional criteria
+      const topMatchesFiltered = suggestedResources.filter((r) => {
+        if (!r.badges?.includes('Top Match')) return false;
+        
+        // Apply additional filters
+        if (categoryFilters.length > 0 && !categoryFilters.includes(r.mainCategory)) {
+          return false;
+        }
+        if (orgTypeFilters.length > 0) {
+          const hasOrgType = r.orgTypeTags?.some((tag) => orgTypeFilters.includes(tag as string));
+          if (!hasOrgType) return false;
+        }
+        if (badgeFilters.length > 0) {
+          const hasBadge = r.badges?.some((b) => badgeFilters.includes(b.toLowerCase()));
+          if (!hasBadge) return false;
+        }
+        return true;
+      });
+
+      // Then get additional matches that aren't top matches but meet the additional criteria
+      const additionalMatches = suggestedResources.filter((r) => {
+        // Skip if it's already a top match
+        if (r.badges?.includes('Top Match')) return false;
+        
+        // Apply additional filters
+        if (categoryFilters.length > 0 && !categoryFilters.includes(r.mainCategory)) {
+          return false;
+        }
+        if (orgTypeFilters.length > 0) {
+          const hasOrgType = r.orgTypeTags?.some((tag) => orgTypeFilters.includes(tag as string));
+          if (!hasOrgType) return false;
+        }
+        if (badgeFilters.length > 0) {
+          const hasBadge = r.badges?.some((b) => badgeFilters.includes(b.toLowerCase()));
+          if (!hasBadge) return false;
+        }
+        return true;
+      });
+
+      // Add a separator indicator to additional matches
+      const markedAdditionalMatches = additionalMatches.map(resource => ({
+        ...resource,
+        isExtendedResult: true
+      }));
+
+      return [...topMatchesFiltered, ...markedAdditionalMatches];
+    }
+
+    // Original filtering logic for other cases
     filtered = suggestedResources.filter((r) => {
       // Handle ranked filters (mutually exclusive, OR between them but functionally only one at a time after click handler)
       if (anyRankedFilterActive) {
@@ -688,9 +741,30 @@ export default function ResourceSuggestionsModal({
                 </div>
             ) : displayedResources.length > 0 ? (
                 <div className="space-y-3 sm:space-y-4">
-                    {displayedResources.map((resource) => {
+                    {displayedResources.map((resource, index) => {
+                         // Check if we need to add a separator before this resource
+                         const isFirstExtendedResult = resource.isExtendedResult && 
+                           (index === 0 || !displayedResources[index - 1]?.isExtendedResult);
+                         
                          const cardElement = renderResourceCard(resource);
-                         return React.cloneElement(cardElement, { key: resource.url || resource.name });
+                         
+                         return (
+                           <React.Fragment key={resource.url || resource.name}>
+                             {isFirstExtendedResult && (
+                               <div className="relative flex items-center justify-center py-4 mt-6">
+                                 <div className="absolute inset-0 flex items-center">
+                                   <div className="w-full border-t border-dashed border-muted-foreground/30"></div>
+                                 </div>
+                                 <div className="relative flex items-center gap-2 bg-background px-4 text-sm text-muted-foreground">
+                                   <Sparkles className="h-4 w-4 opacity-60" />
+                                   <span className="font-medium">Additional matches for your filters</span>
+                                   <span className="text-xs opacity-70">• Not in your top matches, but still relevant</span>
+                                 </div>
+                               </div>
+                             )}
+                             {React.cloneElement(cardElement, { key: resource.url || resource.name })}
+                           </React.Fragment>
+                         );
                     })}
                     {
                      filteredResources.length > visibleItemCount && !isLoading && (
