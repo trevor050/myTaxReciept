@@ -1,0 +1,253 @@
+{
+  "fiscalYear": 2024,
+  "priceLevel": "current dollars",
+  "createdBy": "TrevorBudgetBot v0.2",
+  "referenceTotalTax": 52000,
+  "detailedBreakdown": [
+    {
+      "id": "social_security",
+      "category": "Social Security",
+      "officialFunction": "Social Security",
+      "percentage": 21,
+      "subItems": [
+        {
+          "id": "ssa",
+          "description": "Social Security Administration",
+          "amountPerDollar": 0.21,
+          "tooltipText": "Monthly retirement and disability payments.",
+          "wikiLink": "https://en.wikipedia.org/wiki/Social_Security_(United_States)",
+          "category": "Social Security"
+        }
+      ]
+    },
+    {
+      "id": "health",
+      "category": "Health",
+      "officialFunction": "Health",
+      "percentage": 27,
+      "subItems": [
+        {
+          "id": "medicare",
+          "description": "Medicare",
+          "amountPerDollar": 0.15,
+          "tooltipText": "Federal health insurance for people aged 65+ or with disabilities.",
+          "wikiLink": "https://en.wikipedia.org/wiki/Medicare_(United_States)",
+          "category": "Health"
+        },
+        {
+          "id": "medicaid",
+          "description": "Medicaid",
+          "amountPerDollar": 0.09,
+          "tooltipText": "Health coverage for low-income Americans, jointly funded with states.",
+          "wikiLink": "https://en.wikipedia.org/wiki/Medicaid",
+          "category": "Health"
+        },
+        {
+          "id": "other_health",
+          "description": "Other health programs (NIH, CDC, etc.)",
+          "amountPerDollar": 0.03,
+          "tooltipText": "Public health research and services.",
+          "wikiLink": "https://www.hhs.gov",
+          "category": "Health"
+        }
+      ]
+    },
+    {
+      "id": "national_defense",
+      "category": "War and Weapons",
+      "officialFunction": "National Defense",
+      "percentage": 13,
+      "subItems": [
+        {
+          "id": "operations",
+          "description": "Operations & maintenance",
+          "amountPerDollar": 0.05,
+          "category": "War and Weapons"
+        },
+        {
+          "id": "personnel",
+          "description": "Military personnel",
+          "amountPerDollar": 0.04,
+          "category": "War and Weapons"
+        },
+        {
+          "id": "procurement",
+          "description": "Procurement & research",
+          "amountPerDollar": 0.04,
+          "category": "War and Weapons"
+        }
+      ]
+    },
+    {
+      "id": "interest",
+      "category": "Interest on Debt",
+      "officialFunction": "Net interest",
+      "percentage": 13,
+      "tooltipText": "Interest payments on the national debt.",
+      "subItems": [
+        {
+          "id": "net_interest",
+          "description": "Net interest",
+          "amountPerDollar": 0.13,
+          "category": "Interest on Debt"
+        }
+      ]
+    },
+    {
+      "id": "veterans",
+      "category": "Veterans",
+      "percentage": 4,
+      "subItems": [
+        {
+          "id": "va",
+          "description": "Veterans benefits",
+          "amountPerDollar": 0.04,
+          "category": "Veterans"
+        }
+      ]
+    },
+    {
+      "id": "unemployment_labor",
+      "category": "Unemployment and Labor",
+      "percentage": 4,
+      "subItems": [
+        {
+          "id": "unemployment",
+          "description": "Unemployment insurance and job training",
+          "amountPerDollar": 0.04,
+          "category": "Unemployment and Labor"
+        }
+      ]
+    },
+    {
+      "id": "education",
+      "category": "Education",
+      "percentage": 5,
+      "subItems": [
+        {
+          "id": "k12",
+          "description": "K-12 schools and special education",
+          "amountPerDollar": 0.03,
+          "category": "Education"
+        },
+        {
+          "id": "college_aid",
+          "description": "College aid",
+          "amountPerDollar": 0.02,
+          "category": "Education"
+        }
+      ]
+    },
+    {
+      "id": "transportation",
+      "category": "Transportation",
+      "percentage": 2,
+      "subItems": [
+        {
+          "id": "highways",
+          "description": "Highways & transit",
+          "amountPerDollar": 0.02,
+          "category": "Transportation"
+        }
+      ]
+    },
+    {
+      "id": "housing_community",
+      "category": "Housing and Community",
+      "percentage": 2,
+      "subItems": [
+        {
+          "id": "hud",
+          "description": "Housing assistance and community development",
+          "amountPerDollar": 0.02,
+          "category": "Housing and Community"
+        }
+      ]
+    },
+    {
+      "id": "food_agriculture",
+      "category": "Food and Agriculture",
+      "percentage": 3,
+      "subItems": [
+        {
+          "id": "snap",
+          "description": "Food stamps (SNAP) and nutrition programs",
+          "amountPerDollar": 0.02,
+          "category": "Food and Agriculture"
+        },
+        {
+          "id": "farm_support",
+          "description": "Farm and agriculture programs",
+          "amountPerDollar": 0.01,
+          "category": "Food and Agriculture"
+        }
+      ]
+    },
+    {
+      "id": "energy_environment",
+      "category": "Energy and Environment",
+      "percentage": 2,
+      "subItems": [
+        {
+          "id": "epa",
+          "description": "EPA and conservation",
+          "amountPerDollar": 0.02,
+          "category": "Energy and Environment"
+        }
+      ]
+    },
+    {
+      "id": "science",
+      "category": "Science",
+      "percentage": 1,
+      "subItems": [
+        {
+          "id": "nasa_nsf",
+          "description": "NASA and NSF",
+          "amountPerDollar": 0.01,
+          "category": "Science"
+        }
+      ]
+    },
+    {
+      "id": "government",
+      "category": "Government",
+      "percentage": 1,
+      "subItems": [
+        {
+          "id": "irs",
+          "description": "IRS & federal courts",
+          "amountPerDollar": 0.01,
+          "fundingNote": "Primarily fee-financed",
+          "category": "Government"
+        }
+      ]
+    },
+    {
+      "id": "international_affairs",
+      "category": "International Affairs",
+      "percentage": 1,
+      "subItems": [
+        {
+          "id": "foreign_aid",
+          "description": "Diplomacy and foreign aid",
+          "amountPerDollar": 0.01,
+          "category": "International Affairs"
+        }
+      ]
+    },
+    {
+      "id": "law_enforcement",
+      "category": "Law Enforcement",
+      "percentage": 1,
+      "subItems": [
+        {
+          "id": "justice",
+          "description": "FBI, border patrol, and prisons",
+          "amountPerDollar": 0.01,
+          "category": "Law Enforcement"
+        }
+      ]
+    }
+  ]
+}
