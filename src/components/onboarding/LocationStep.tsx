@@ -255,9 +255,40 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
            <p className="text-xs text-muted-foreground pt-1 pl-1">Enter your location or press <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-sm dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">Enter</kbd> to use the default (New York area).</p>
         </div>
         <Button type="submit" className="w-full transition-all duration-200 ease-in-out hover:scale-[1.02] text-sm sm:text-base" size="lg">
-           {manualLocation.trim() ? 'Next' : 'Skip & Use Default'}
+           {manualLocation.trim() ? 'Next' : 'Use Area Median'}
         </Button>
       </form>
+      
+      {/* Skip option with OR separator */}
+      {!manualLocation.trim() && (
+        <>
+          <div className="relative my-2 sm:my-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border/70" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground/80">
+                Or
+              </span>
+            </div>
+          </div>
+          <Button 
+            type="button"
+            onClick={() => {
+              onSubmit(null);
+              toast({
+                title: 'Skipped Location',
+                description: 'Using default location.',
+              });
+            }}
+            variant="outline"
+            className="w-full transition-all duration-200 ease-in-out hover:scale-[1.02] text-sm sm:text-base" 
+            size="lg"
+          >
+            Skip & Use Default
+          </Button>
+        </>
+      )}
     </div>
   );
 }

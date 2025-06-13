@@ -385,32 +385,94 @@ export default function ResourceSuggestionsModal({
     const anyRankedFilterActive = rankedFilters.some((rf) => effectiveFilters.has(rf));
     const hasAdditionalFilters = categoryFilters.length > 0 || orgTypeFilters.length > 0 || badgeFilters.length > 0;
 
-    // Extended functionality: When top-matches is active AND additional filters are applied,
-    // show both the top matches that meet the criteria AND other resources that meet the criteria
-    if (effectiveFilters.has('top-matches') && hasAdditionalFilters) {
-      // First get the top matches that meet additional criteria
-      const topMatchesFiltered = suggestedResources.filter((r) => {
-        if (!r.badges?.includes('Top Match')) return false;
-        
-        // Apply additional filters
-        if (categoryFilters.length > 0 && !categoryFilters.includes(r.mainCategory)) {
-          return false;
-        }
-        if (orgTypeFilters.length > 0) {
-          const hasOrgType = r.orgTypeTags?.some((tag) => orgTypeFilters.includes(tag as string));
-          if (!hasOrgType) return false;
-        }
-        if (badgeFilters.length > 0) {
-          const hasBadge = r.badges?.some((b) => badgeFilters.includes(b.toLowerCase()));
-          if (!hasBadge) return false;
-        }
-        return true;
-      });
+    // Extended functionality: When any ranked filter is active AND additional filters are applied,
+    // OR when ONLY additional filters are applied without ranked filters
+    if ((anyRankedFilterActive && hasAdditionalFilters) || (!anyRankedFilterActive && hasAdditionalFilters)) {
+      let primaryMatches: SuggestedResource[] = [];
+      
+      // Get the primary matches based on the active ranked filter
+      if (effectiveFilters.has('your-matches')) {
+        primaryMatches = suggestedResources.filter((r) => {
+          if (!((r.matchCount || 0) > 0 || r.badges?.some((b) => ['Best Match', 'Top Match', 'Your Match'].includes(b)))) return false;
+          
+          // Apply additional filters
+          if (categoryFilters.length > 0 && !categoryFilters.includes(r.mainCategory)) {
+            return false;
+          }
+          if (orgTypeFilters.length > 0) {
+            const hasOrgType = r.orgTypeTags?.some((tag) => orgTypeFilters.includes(tag as string));
+            if (!hasOrgType) return false;
+          }
+          if (badgeFilters.length > 0) {
+            const hasBadge = r.badges?.some((b) => badgeFilters.includes(b.toLowerCase()));
+            if (!hasBadge) return false;
+          }
+          return true;
+        });
+      } else if (effectiveFilters.has('best-matches')) {
+        primaryMatches = suggestedResources.filter((r) => {
+          if (!r.badges?.includes('Best Match')) return false;
+          
+          // Apply additional filters
+          if (categoryFilters.length > 0 && !categoryFilters.includes(r.mainCategory)) {
+            return false;
+          }
+          if (orgTypeFilters.length > 0) {
+            const hasOrgType = r.orgTypeTags?.some((tag) => orgTypeFilters.includes(tag as string));
+            if (!hasOrgType) return false;
+          }
+          if (badgeFilters.length > 0) {
+            const hasBadge = r.badges?.some((b) => badgeFilters.includes(b.toLowerCase()));
+            if (!hasBadge) return false;
+          }
+          return true;
+        });
+      } else if (effectiveFilters.has('top-matches')) {
+        primaryMatches = suggestedResources.filter((r) => {
+          if (!r.badges?.includes('Top Match')) return false;
+          
+          // Apply additional filters
+          if (categoryFilters.length > 0 && !categoryFilters.includes(r.mainCategory)) {
+            return false;
+          }
+          if (orgTypeFilters.length > 0) {
+            const hasOrgType = r.orgTypeTags?.some((tag) => orgTypeFilters.includes(tag as string));
+            if (!hasOrgType) return false;
+          }
+          if (badgeFilters.length > 0) {
+            const hasBadge = r.badges?.some((b) => badgeFilters.includes(b.toLowerCase()));
+            if (!hasBadge) return false;
+          }
+          return true;
+        });
+      } else if (!anyRankedFilterActive && hasUserConcerns) {
+        // When no ranked filter is active but user has concerns, show user matches first
+        primaryMatches = suggestedResources.filter((r) => {
+          if (!((r.matchCount || 0) > 0 || r.badges?.some((b) => ['Best Match', 'Top Match', 'Your Match'].includes(b)))) return false;
+          
+          // Apply additional filters
+          if (categoryFilters.length > 0 && !categoryFilters.includes(r.mainCategory)) {
+            return false;
+          }
+          if (orgTypeFilters.length > 0) {
+            const hasOrgType = r.orgTypeTags?.some((tag) => orgTypeFilters.includes(tag as string));
+            if (!hasOrgType) return false;
+          }
+          if (badgeFilters.length > 0) {
+            const hasBadge = r.badges?.some((b) => badgeFilters.includes(b.toLowerCase()));
+            if (!hasBadge) return false;
+          }
+          return true;
+        });
+      }
 
-      // Then get additional matches that aren't top matches but meet the additional criteria
+      // Get the URLs of primary matches to exclude them from additional matches
+      const primaryMatchUrls = new Set(primaryMatches.map(r => r.url));
+
+      // Then get additional matches that meet the additional criteria but aren't primary matches
       const additionalMatches = suggestedResources.filter((r) => {
-        // Skip if it's already a top match
-        if (r.badges?.includes('Top Match')) return false;
+        // Skip if it's already a primary match
+        if (primaryMatchUrls.has(r.url)) return false;
         
         // Apply additional filters
         if (categoryFilters.length > 0 && !categoryFilters.includes(r.mainCategory)) {
@@ -433,7 +495,7 @@ export default function ResourceSuggestionsModal({
         isExtendedResult: true
       }));
 
-      return [...topMatchesFiltered, ...markedAdditionalMatches];
+      return [...primaryMatches, ...markedAdditionalMatches];
     }
 
     // Original filtering logic for other cases
@@ -746,6 +808,9 @@ export default function ResourceSuggestionsModal({
                          const isFirstExtendedResult = resource.isExtendedResult && 
                            (index === 0 || !displayedResources[index - 1]?.isExtendedResult);
                          
+                         // Determine if there are any primary matches
+                         const hasPrimaryMatches = displayedResources.some(r => !r.isExtendedResult);
+                         
                          const cardElement = renderResourceCard(resource);
                          
                          return (
@@ -757,8 +822,17 @@ export default function ResourceSuggestionsModal({
                                  </div>
                                  <div className="relative flex items-center gap-2 bg-background px-4 text-sm text-muted-foreground">
                                    <Sparkles className="h-4 w-4 opacity-60" />
-                                   <span className="font-medium">Additional matches for your filters</span>
-                                   <span className="text-xs opacity-70">• Not in your top matches, but still relevant</span>
+                                   {hasPrimaryMatches ? (
+                                     <>
+                                       <span className="font-medium">Additional matches for your filters</span>
+                                       <span className="text-xs opacity-70">• Not in your top choices, but still relevant</span>
+                                     </>
+                                   ) : (
+                                     <>
+                                       <span className="font-medium">No matches in your top choices</span>
+                                       <span className="text-xs opacity-70">• But here are other relevant organizations</span>
+                                     </>
+                                   )}
                                  </div>
                                </div>
                              )}
