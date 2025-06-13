@@ -1,7 +1,6 @@
-
 import type { Config } from "tailwindcss";
 import { fontFamily } from "tailwindcss/defaultTheme"
-const plugin = require('tailwindcss/plugin'); // Import plugin
+const plugin = require('tailwindcss/plugin');
 
 export default {
     darkMode: ["class"],
@@ -13,7 +12,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-geist-sans)", ...fontFamily.sans], // Use Geist Sans
+        sans: ["var(--font-geist-sans)", ...fontFamily.sans],
       },
       colors: {
         background: 'hsl(var(--background))',
@@ -70,94 +69,188 @@ export default {
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 4px)',
-        sm: 'calc(var(--radius) - 6px)'
+        sm: 'calc(var(--radius) - 6px)',
+        xl: 'calc(var(--radius) + 2px)',
+        '2xl': 'calc(var(--radius) + 6px)',
       },
-       keyframes: {
+      keyframes: {
         'accordion-down': {
-          from: { height: '0', opacity: '0', transform: 'translateY(-5px)' },
-          to: { height: 'var(--radix-accordion-content-height)', opacity: '1', transform: 'translateY(0)' },
+          from: { 
+            height: '0', 
+            opacity: '0', 
+            transform: 'translateY(-8px)' 
+          },
+          to: { 
+            height: 'var(--radix-accordion-content-height)', 
+            opacity: '1', 
+            transform: 'translateY(0)' 
+          },
         },
         'accordion-up': {
-           from: { height: 'var(--radix-accordion-content-height)', opacity: '1', transform: 'translateY(0)' },
-           to: { height: '0', opacity: '0', transform: 'translateY(-5px)' },
+          from: { 
+            height: 'var(--radix-accordion-content-height)', 
+            opacity: '1', 
+            transform: 'translateY(0)' 
+          },
+          to: { 
+            height: '0', 
+            opacity: '0', 
+            transform: 'translateY(-8px)' 
+          },
         },
         'fadeIn': {
-            'from': { opacity: '0' },
-            'to': { opacity: '1' },
+          'from': { opacity: '0', transform: 'translateY(4px)' },
+          'to': { opacity: '1', transform: 'translateY(0)' },
         },
         'slideInUp': {
-            'from': { transform: 'translateY(15px)', opacity: '0' },
-            'to': { transform: 'translateY(0)', opacity: '1' },
+          'from': { transform: 'translateY(20px)', opacity: '0' },
+          'to': { transform: 'translateY(0)', opacity: '1' },
         },
         'slideOutUp': {
-             from: { transform: 'translateY(0)', opacity: '1' },
-             to: { transform: 'translateY(-15px)', opacity: '0' },
+          from: { transform: 'translateY(0)', opacity: '1' },
+          to: { transform: 'translateY(-20px)', opacity: '0' },
         },
         'slideInDown': {
-            from: { transform: 'translateY(-15px)', opacity: '0' },
-            to: { transform: 'translateY(0)', opacity: '1' },
+          from: { transform: 'translateY(-20px)', opacity: '0' },
+          to: { transform: 'translateY(0)', opacity: '1' },
         },
-        'scaleIn': { // Added
-             from: { opacity: '0', transform: 'scale(0.95)' },
-             to: { opacity: '1', transform: 'scale(1)' },
+        'scaleIn': {
+          from: { 
+            opacity: '0', 
+            transform: 'scale(0.92) translateY(8px)' 
+          },
+          to: { 
+            opacity: '1', 
+            transform: 'scale(1) translateY(0)' 
+          },
         },
-        'scaleOut': { // Added
-            from: { opacity: '1', transform: 'scale(1)' },
-            to: { opacity: '0', transform: 'scale(0.95)' },
+        'scaleOut': {
+          from: { 
+            opacity: '1', 
+            transform: 'scale(1) translateY(0)' 
+          },
+          to: { 
+            opacity: '0', 
+            transform: 'scale(0.92) translateY(8px)' 
+          },
         },
-        // Define glow animations for light and dark separately
         'glow': {
-            '0%, 100%': { boxShadow: "0 0 5px hsla(var(--primary) / 0.5), 0 0 10px hsla(var(--primary) / 0.3)" },
-            '50%': { boxShadow: "0 0 15px hsla(var(--primary) / 0.6), 0 0 25px hsla(var(--primary) / 0.4)" },
+          '0%, 100%': { 
+            boxShadow: "0 0 8px hsla(var(--primary) / 0.4), 0 0 16px hsla(var(--primary) / 0.2), 0 0 24px hsla(var(--primary) / 0.1)" 
+          },
+          '50%': { 
+            boxShadow: "0 0 16px hsla(var(--primary) / 0.6), 0 0 32px hsla(var(--primary) / 0.4), 0 0 48px hsla(var(--primary) / 0.2)" 
+          },
         },
-         'glow-dark': { // Dark mode glow uses purple accent
-            '0%, 100%': { boxShadow: "0 0 5px hsla(270 70% 60% / 0.5), 0 0 10px hsla(270 70% 60% / 0.3)" },
-            '50%': { boxShadow: "0 0 15px hsla(270 70% 60% / 0.6), 0 0 25px hsla(270 70% 60% / 0.4)" },
+        'glow-dark': {
+          '0%, 100%': { 
+            boxShadow: "0 0 8px hsla(270 75% 65% / 0.4), 0 0 16px hsla(270 75% 65% / 0.2), 0 0 24px hsla(270 75% 65% / 0.1)" 
+          },
+          '50%': { 
+            boxShadow: "0 0 16px hsla(270 75% 65% / 0.6), 0 0 32px hsla(270 75% 65% / 0.4), 0 0 48px hsla(270 75% 65% / 0.2)" 
+          },
+        },
+        'float': {
+          '0%, 100%': { 
+            transform: 'translateY(0px) scale(1)' 
+          },
+          '50%': { 
+            transform: 'translateY(-4px) scale(1.02)' 
+          },
+        },
+        'shimmer': {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+        'pulse-glow': {
+          '0%, 100%': {
+            boxShadow: '0 0 0 0 hsla(var(--primary) / 0.7)',
+          },
+          '70%': {
+            boxShadow: '0 0 0 10px hsla(var(--primary) / 0)',
+          },
         },
       },
       animation: {
-        'accordion-down': 'accordion-down 0.3s ease-out',
-        'accordion-up': 'accordion-up 0.25s ease-out',
-        'fadeIn': 'fadeIn 0.5s ease-out forwards',
-        'slideInUp': 'slideInUp 0.45s cubic-bezier(0.25, 0.8, 0.25, 1) forwards',
-        'slideOutUp': 'slideOutUp 0.3s ease-in forwards',
-        'slideInDown': 'slideInDown 0.45s cubic-bezier(0.25, 0.8, 0.25, 1) forwards',
-        'scaleIn': 'scaleIn 0.2s ease-out forwards', // Added
-        'scaleOut': 'scaleOut 0.15s ease-in forwards', // Added
-        // Apply correct glow animation based on theme context (handled in component/globals.css)
-        'glow': 'glow 2.5s ease-in-out infinite',
-        'glow-dark': 'glow-dark 2.5s ease-in-out infinite',
-      }
+        'accordion-down': 'accordion-down 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
+        'accordion-up': 'accordion-up 0.3s cubic-bezier(0.55, 0, 1, 0.45)',
+        'fadeIn': 'fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards',
+        'slideInUp': 'slideInUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards',
+        'slideOutUp': 'slideOutUp 0.3s cubic-bezier(0.55, 0, 1, 0.45) forwards',
+        'slideInDown': 'slideInDown 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards',
+        'scaleIn': 'scaleIn 0.25s cubic-bezier(0.22, 1, 0.36, 1) forwards',
+        'scaleOut': 'scaleOut 0.2s cubic-bezier(0.55, 0, 1, 0.45) forwards',
+        'glow': 'glow 3s ease-in-out infinite',
+        'glow-dark': 'glow-dark 3s ease-in-out infinite',
+        'float': 'float 6s ease-in-out infinite',
+        'shimmer': 'shimmer 2s linear infinite',
+        'pulse-glow': 'pulse-glow 2s infinite',
+      },
+      backdropBlur: {
+        xs: '2px',
+      },
+      boxShadow: {
+        'glow': '0 0 20px -5px hsla(var(--primary) / 0.5)',
+        'glow-lg': '0 0 40px -10px hsla(var(--primary) / 0.4)',
+        'inner-glow': 'inset 0 0 20px -5px hsla(var(--primary) / 0.2)',
+      },
     }
   },
   plugins: [
       require("tailwindcss-animate"),
-      // Add custom scrollbar utilities
-      plugin(function({ addUtilities }: { addUtilities: any }) {
+      plugin(function({ addUtilities, addComponents }: { addUtilities: any, addComponents: any }) {
           addUtilities({
               '.scrollbar-thin': {
                   'scrollbar-width': 'thin',
+                  'scrollbar-color': 'hsl(var(--muted)) transparent',
               },
               '.scrollbar-thin::-webkit-scrollbar': {
-                  width: '8px',
-                  height: '8px',
+                  width: '6px',
+                  height: '6px',
               },
               '.scrollbar-thumb-muted': {
                  '&::-webkit-scrollbar-thumb': {
-                      backgroundColor: 'hsl(var(--muted))',
-                      borderRadius: '10px',
-                      border: '2px solid hsl(var(--background))', // Match background
+                      backgroundColor: 'hsl(var(--muted-foreground) / 0.3)',
+                      borderRadius: '8px',
+                      border: '1px solid transparent',
+                      backgroundClip: 'content-box',
                   },
               },
               '.scrollbar-thumb-muted::-webkit-scrollbar-thumb:hover': {
-                       backgroundColor: 'hsl(var(--muted-foreground))',
+                       backgroundColor: 'hsl(var(--muted-foreground) / 0.5)',
+                       backgroundClip: 'content-box',
               },
                '.scrollbar-track-transparent': {
                    '&::-webkit-scrollbar-track': {
                        backgroundColor: 'transparent',
                    },
                },
-          })
+               '.glass': {
+                   backdropFilter: 'blur(8px) saturate(120%)',
+                   backgroundColor: 'hsla(var(--background) / 0.8)',
+                   border: '1px solid hsla(var(--border) / 0.2)',
+               },
+               '.glass-card': {
+                   backdropFilter: 'blur(12px) saturate(120%)',
+                   backgroundColor: 'hsla(var(--card) / 0.8)',
+                   border: '1px solid hsla(var(--border) / 0.3)',
+               },
+          });
+          
+          addComponents({
+              '.btn-primary': {
+                  '@apply bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105': {},
+              },
+              '.btn-secondary': {
+                  '@apply bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-md hover:shadow-lg transition-all duration-200': {},
+              },
+              '.card-modern': {
+                  '@apply bg-card border border-border/60 rounded-xl shadow-lg backdrop-blur-sm': {},
+              },
+              '.text-gradient': {
+                  '@apply bg-gradient-to-r from-primary via-chart-4 to-chart-1 bg-clip-text text-transparent': {},
+              },
+          });
       })
     ],
 } satisfies Config;

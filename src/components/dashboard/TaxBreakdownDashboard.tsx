@@ -438,129 +438,230 @@ export default function TaxBreakdownDashboard({
 
   return (
     <TooltipProvider delayDuration={isMobileView ? 0 : 200}>
-        <div className="space-y-6 sm:space-y-10 animate-fadeIn relative pb-10">
-            <div className="text-center space-y-0.5 sm:space-y-1 mb-1 sm:mb-2 relative">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-foreground">{currentYear ? `${currentYear} ` : ''}Federal Income Tax Receipt</h1>
-                <p className="text-base sm:text-lg text-muted-foreground">Based on your estimated <span className="font-semibold text-foreground">{formatCurrency(taxAmount)}</span> payment.</p>
-                <p className="text-xs text-muted-foreground/70">Next Filing Due: {dueDateDisplay}</p>
+        <div className="space-y-8 sm:space-y-12 animate-fadeIn relative pb-12">
+            {/* Enhanced Header Section */}
+            <div className="text-center space-y-3 sm:space-y-4 mb-4 sm:mb-6 relative">
+                <div className="relative inline-block">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-foreground via-foreground to-primary bg-clip-text text-transparent">
+                        {currentYear ? `${currentYear} ` : ''}Federal Income Tax Receipt
+                    </h1>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-transparent to-chart-1/20 blur-xl opacity-30 animate-pulse"></div>
+                </div>
+                <div className="space-y-2">
+                    <p className="text-lg sm:text-xl text-muted-foreground">
+                        Based on your estimated{' '}
+                        <span className="font-bold text-transparent bg-gradient-to-r from-primary to-chart-1 bg-clip-text">
+                            {formatCurrency(taxAmount)}
+                        </span>{' '}
+                        payment.
+                    </p>
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 backdrop-blur-sm border border-border/40">
+                        <div className="w-2 h-2 rounded-full bg-chart-3 animate-pulse"></div>
+                        <p className="text-sm text-muted-foreground font-medium">Next Filing Due: {dueDateDisplay}</p>
+                    </div>
+                </div>
             </div>
 
 
-             <div className="flex justify-center items-center my-3 sm:my-4">
-                <Label htmlFor="display-mode-toggle" className="text-xs font-medium text-muted-foreground mr-2 sm:mr-3">View as:</Label>
-                <div className="flex items-center space-x-1 sm:space-x-2 bg-muted p-0.5 sm:p-1 rounded-full shadow-sm">
+             {/* Enhanced Display Mode Toggle */}
+             <div className="flex justify-center items-center my-6 sm:my-8">
+                <Label htmlFor="display-mode-toggle" className="text-sm font-semibold text-muted-foreground mr-3 sm:mr-4">View as:</Label>
+                <div className="flex items-center space-x-1 bg-card/60 backdrop-blur-md p-1 rounded-2xl shadow-lg border border-border/40 hover:shadow-xl transition-all duration-300">
                     <Button
                         variant={displayMode === 'currency' ? 'default' : 'ghost'}
                         size="sm"
                         onClick={() => handleDisplayModeToggle('currency')}
-                        className={cn("rounded-full px-2.5 py-1 sm:px-3 sm:py-1.5 h-7 sm:h-8 text-[10px] sm:text-xs transition-all duration-200", displayMode === 'currency' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:bg-accent/80')}
+                        className={cn(
+                            "rounded-xl px-4 py-2 h-9 text-sm font-medium transition-all duration-300 relative overflow-hidden",
+                            displayMode === 'currency' 
+                                ? 'bg-gradient-to-r from-primary to-chart-1 text-primary-foreground shadow-lg transform scale-105 animate-float' 
+                                : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground hover:scale-105'
+                        )}
                         aria-pressed={displayMode === 'currency'}
                     >
-                        <DollarSign className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5" /> Currency
+                        <DollarSign className="h-4 w-4 mr-2" /> Currency
+                        {displayMode === 'currency' && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                        )}
                     </Button>
                     <Button
                          variant={displayMode === 'time' ? 'default' : 'ghost'}
                          size="sm"
                          onClick={() => handleDisplayModeToggle('time')}
-                         className={cn("rounded-full px-2.5 py-1 sm:px-3 sm:py-1.5 h-7 sm:h-8 text-[10px] sm:text-xs transition-all duration-200", displayMode === 'time' && hourlyWage !== null ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:bg-accent/80')}
+                         className={cn(
+                            "rounded-xl px-4 py-2 h-9 text-sm font-medium transition-all duration-300 relative overflow-hidden",
+                            displayMode === 'time' && hourlyWage !== null 
+                                ? 'bg-gradient-to-r from-primary to-chart-1 text-primary-foreground shadow-lg transform scale-105 animate-float' 
+                                : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground hover:scale-105'
+                         )}
                          aria-pressed={displayMode === 'time' && hourlyWage !== null}
                     >
-                        <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5" /> Time Worked
+                        <Clock className="h-4 w-4 mr-2" /> Time Worked
+                        {displayMode === 'time' && hourlyWage !== null && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                        )}
                     </Button>
                 </div>
             </div>
 
-            <Alert className="mb-6 sm:mb-8 shadow-sm rounded-lg border border-primary/20 bg-primary/5 text-foreground animate-fadeIn delay-500 duration-3000">
-                 <Megaphone className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 stroke-primary" />
-                <AlertTitle className="font-semibold text-primary text-sm sm:text-base">Make Your Voice Heard!</AlertTitle>
-                <AlertDescription className="text-xs sm:text-sm text-foreground/90 space-y-1 sm:space-y-1.5">
-                    Understanding where your money goes is the first step. The next is action.
-                    <span className="block">Your elected officials work for you. Let them know how you feel about these spending priorities. Select specific items below that concern you and use the button to draft a direct message.</span>
-                     <Button variant="link" className="p-0 h-auto ml-0 text-primary font-medium text-xs sm:text-sm mt-1" onClick={() => {if (typeof window !== 'undefined') window.open('https://www.usa.gov/elected-officials', '_blank', 'noopener,noreferrer')}}>
-                        Find Your Officials <ExternalLink className="inline ml-1 h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                    </Button>
-                </AlertDescription>
+            {/* Enhanced Call-to-Action Alert */}
+            <Alert className="mb-8 sm:mb-10 rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-chart-1/10 text-foreground backdrop-blur-sm shadow-xl relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-chart-1/5 animate-pulse"></div>
+                <div className="relative z-10">
+                    <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-full bg-primary/20 backdrop-blur-sm">
+                            <Megaphone className="h-5 w-5 sm:h-6 sm:w-6 stroke-primary animate-float" />
+                        </div>
+                        <div className="flex-1 space-y-3">
+                            <AlertTitle className="font-bold text-primary text-lg sm:text-xl tracking-tight">
+                                Make Your Voice Heard!
+                            </AlertTitle>
+                            <AlertDescription className="text-sm sm:text-base text-foreground/90 leading-relaxed space-y-3">
+                                <p className="font-medium">Understanding where your money goes is the first step. The next is action.</p>
+                                <p>Your elected officials work for you. Let them know how you feel about these spending priorities. Select specific items below that concern you and use the button to draft a direct message.</p>
+                                <Button 
+                                    variant="link" 
+                                    className="p-0 h-auto ml-0 text-primary font-semibold text-sm sm:text-base hover:text-chart-1 transition-colors duration-200 group" 
+                                    onClick={() => {if (typeof window !== 'undefined') window.open('https://www.usa.gov/elected-officials', '_blank', 'noopener,noreferrer')}}
+                                >
+                                    Find Your Officials 
+                                    <ExternalLink className="inline ml-2 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" />
+                                </Button>
+                            </AlertDescription>
+                        </div>
+                    </div>
+                </div>
             </Alert>
 
-          <div className="mb-8 sm:mb-12">
-             <h2 className="text-lg sm:text-xl font-semibold text-center mb-3 sm:mb-4">Spending Overview</h2>
+          {/* Enhanced Chart Section */}
+          <div className="mb-10 sm:mb-16">
+             <div className="text-center mb-6 sm:mb-8">
+                <h2 className="text-2xl sm:text-3xl font-bold text-center mb-3 bg-gradient-to-r from-foreground via-primary to-chart-1 bg-clip-text text-transparent">
+                    Spending Overview
+                </h2>
+                <p className="text-muted-foreground text-sm sm:text-base max-w-2xl mx-auto">
+                    Interactive breakdown of your federal tax allocation across government departments
+                </p>
+             </div>
 
-                  <ResponsiveContainer width="100%" height={responsivePieHeight}>
-                    <RechartsPieChart margin={{ top: isMobileView ? 25 : 5, right: 5, bottom: 5, left: 5 }}>
-                      <Pie
-                        data={chartData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        outerRadius={responsiveOuterRadius}
-                        innerRadius={responsiveInnerRadius}
-                        fill="#8884d8"
-                        paddingAngle={1}
-                        dataKey="percentage"
-                        nameKey="category"
-                        activeIndex={activePieIndex ?? undefined}
-                        activeShape={({ cx, cy, innerRadius: ir, outerRadius: or, startAngle, endAngle, fill }) => (
-                            <g>
-                                <Sector
-                                    cx={cx}
-                                    cy={cy}
-                                    innerRadius={ir}
-                                    outerRadius={or + (isMobileView ? 3 : 5)}
-                                    startAngle={startAngle}
-                                    endAngle={endAngle}
-                                    fill={fill}
-                                    stroke={'hsl(var(--foreground))'}
-                                    strokeWidth={1}
-                                />
-                            </g>
-                        )}
-                        onMouseEnter={(_, index) => !isMobileView && setActivePieIndex(index)}
-                        onMouseLeave={() => !isMobileView && setActivePieIndex(null)}
-                        onClick={(_, index) => {
-                            if (isMobileView) {
-                                setActivePieIndex(activePieIndex === index ? null : index);
-                            }
-                        }}
-                      >
-                        {chartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke={'hsl(var(--background))'} strokeWidth={1} />
-                        ))}
-                      </Pie>
-                       <RechartsTooltip
-                         content={({ active, payload: tooltipPayload }) => { // Renamed payload to tooltipPayload
-                            const currentPayload = tooltipPayload && tooltipPayload.length ? tooltipPayload[0].payload : null;
-                            const shouldShowTooltip = active || (isMobileView && activePieIndex !== null && currentPayload?.category === chartData[activePieIndex ?? -1]?.category);
-
-                            if (shouldShowTooltip && currentPayload && perspectives?.chart) {
-                                return (
-                                    <CustomPieTooltip
-                                        active={true}
-                                        payload={tooltipPayload}
-                                        totalAmount={taxAmount}
-                                        hourlyWage={hourlyWage}
-                                        displayMode={displayMode}
-                                        perspectiveData={perspectives.chart}
-                                        isMobile={isMobileView}
+             <div className="relative">
+                {/* Enhanced chart background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-card/50 via-transparent to-primary/5 rounded-3xl backdrop-blur-sm"></div>
+                <div className="relative z-10 p-4 sm:p-6">
+                    <ResponsiveContainer width="100%" height={responsivePieHeight + 40}>
+                        <RechartsPieChart margin={{ top: isMobileView ? 30 : 20, right: 20, bottom: 20, left: 20 }}>
+                          <Pie
+                            data={chartData}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            outerRadius={responsiveOuterRadius}
+                            innerRadius={responsiveInnerRadius}
+                            fill="#8884d8"
+                            paddingAngle={2}
+                            dataKey="percentage"
+                            nameKey="category"
+                            activeIndex={activePieIndex ?? undefined}
+                            activeShape={({ cx, cy, innerRadius: ir, outerRadius: or, startAngle, endAngle, fill }) => (
+                                <g>
+                                    <Sector
+                                        cx={cx}
+                                        cy={cy}
+                                        innerRadius={ir}
+                                        outerRadius={or + (isMobileView ? 6 : 10)}
+                                        startAngle={startAngle}
+                                        endAngle={endAngle}
+                                        fill={fill}
+                                        stroke={'hsl(var(--foreground))'}
+                                        strokeWidth={2}
+                                        filter="drop-shadow(0 4px 8px rgba(0,0,0,0.2))"
                                     />
-                                );
-                            }
-                            return null;
-                         }}
-                         cursor={{ fill: 'hsl(var(--accent))', fillOpacity: 0.4 }}
-                         wrapperStyle={{ zIndex: 100 }}
-                        />
-                       <Legend content={<CustomLegend />} wrapperStyle={{ maxWidth: '100%', overflow: 'hidden' }}/>
-                    </RechartsPieChart>
-                  </ResponsiveContainer>
-                 <p className="text-xs text-muted-foreground text-center mt-3 sm:mt-4 flex items-center justify-center gap-1 px-2">
-                    <Info className="h-3 w-3" /> {isMobileView ? "Tap segments" : "Hover over segments"} or values for details. Estimated data.
-                 </p>
+                                    <Sector
+                                        cx={cx}
+                                        cy={cy}
+                                        innerRadius={ir - 2}
+                                        outerRadius={ir}
+                                        startAngle={startAngle}
+                                        endAngle={endAngle}
+                                        fill={fill}
+                                        opacity={0.6}
+                                    />
+                                </g>
+                            )}
+                            onMouseEnter={(_, index) => !isMobileView && setActivePieIndex(index)}
+                            onMouseLeave={() => !isMobileView && setActivePieIndex(null)}
+                            onClick={(_, index) => {
+                                if (isMobileView) {
+                                    setActivePieIndex(activePieIndex === index ? null : index);
+                                }
+                            }}
+                          >
+                            {chartData.map((entry, index) => (
+                              <Cell 
+                                key={`cell-${index}`} 
+                                fill={COLORS[index % COLORS.length]} 
+                                stroke={'hsl(var(--background))'} 
+                                strokeWidth={2}
+                                style={{
+                                    filter: activePieIndex === index ? 'brightness(1.1)' : 'brightness(1)',
+                                    transition: 'all 0.3s ease'
+                                }}
+                              />
+                            ))}
+                          </Pie>
+                           <RechartsTooltip
+                             content={({ active, payload: tooltipPayload }) => {
+                                const currentPayload = tooltipPayload && tooltipPayload.length ? tooltipPayload[0].payload : null;
+                                const shouldShowTooltip = active || (isMobileView && activePieIndex !== null && currentPayload?.category === chartData[activePieIndex ?? -1]?.category);
+
+                                if (shouldShowTooltip && currentPayload && perspectives?.chart) {
+                                    return (
+                                        <CustomPieTooltip
+                                            active={true}
+                                            payload={tooltipPayload}
+                                            totalAmount={taxAmount}
+                                            hourlyWage={hourlyWage}
+                                            displayMode={displayMode}
+                                            perspectiveData={perspectives.chart}
+                                            isMobile={isMobileView}
+                                        />
+                                    );
+                                }
+                                return null;
+                             }}
+                             cursor={{ fill: 'hsl(var(--accent))', fillOpacity: 0.6 }}
+                             wrapperStyle={{ zIndex: 1000 }}
+                            />
+                           <Legend content={<CustomLegend />} wrapperStyle={{ maxWidth: '100%', overflow: 'hidden' }}/>
+                        </RechartsPieChart>
+                    </ResponsiveContainer>
+                </div>
+                <div className="flex items-center justify-center gap-2 mt-4 px-4 py-2 rounded-full bg-muted/30 backdrop-blur-sm mx-auto w-fit">
+                    <Info className="h-4 w-4 text-primary" /> 
+                    <p className="text-sm text-muted-foreground font-medium">
+                        {isMobileView ? "Tap segments" : "Hover over segments"} for detailed insights • Estimated data
+                    </p>
+                </div>
+             </div>
           </div>
 
-           <Card className="shadow-lg border border-border/60 rounded-xl overflow-hidden bg-gradient-to-b from-card to-card/95">
-                <CardHeader className="px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5 border-b border-border/50">
-                    <CardTitle className="text-base sm:text-lg md:text-xl font-semibold tracking-tight">Detailed Spending</CardTitle>
-                    <CardDescription className="text-muted-foreground text-[10px] sm:text-xs md:text-sm">Select items you believe need funding adjustments or prioritize balancing the budget.</CardDescription>
+           {/* Enhanced Card for Detailed Spending */}
+           <Card className="shadow-2xl border-2 border-border/40 rounded-3xl overflow-hidden bg-gradient-to-br from-card via-card/95 to-card/90 backdrop-blur-md relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-chart-1/5 opacity-50"></div>
+                <CardHeader className="relative z-10 px-4 py-4 sm:px-6 sm:py-6 md:px-8 md:py-8 border-b border-border/30 bg-gradient-to-r from-card/50 to-card/30 backdrop-blur-sm">
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 rounded-xl bg-primary/20 backdrop-blur-sm">
+                            <Scale className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+                                Detailed Spending
+                            </CardTitle>
+                            <CardDescription className="text-muted-foreground text-sm sm:text-base md:text-lg mt-1">
+                                Select items you believe need funding adjustments or prioritize balancing the budget.
+                            </CardDescription>
+                        </div>
+                    </div>
                 </CardHeader>
                 <CardContent className="p-0">
                      <Accordion type="multiple" className="w-full" defaultValue={[]}>
@@ -592,24 +693,30 @@ export default function TaxBreakdownDashboard({
 
 
                             return (
-                                 <AccordionItem value={`item-${index}`} key={item.id || index} className="border-b border-border/40 last:border-b-0 group">
-                                    <AccordionTrigger className="hover:no-underline py-2.5 px-3 sm:py-3 sm:px-4 rounded-none hover:bg-accent/50 data-[state=open]:bg-accent/40 transition-colors duration-150 text-left">
+                                 <AccordionItem value={`item-${index}`} key={item.id || index} className="border-b border-border/20 last:border-b-0 group relative overflow-hidden">
+                                    <AccordionTrigger className="hover:no-underline py-4 px-4 sm:py-5 sm:px-6 rounded-none hover:bg-gradient-to-r hover:from-accent/30 hover:to-primary/10 data-[state=open]:bg-gradient-to-r data-[state=open]:from-accent/40 data-[state=open]:to-primary/15 transition-all duration-300 text-left relative z-10 group/trigger">
                                          <div className="flex justify-between items-center w-full gap-1.5 sm:gap-2 md:gap-3">
-                                            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                                                <CategoryIconComponent className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
-                                                <span className="font-medium text-xs sm:text-sm truncate flex-1">{item.category}</span>
+                                                                                          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                                                <div className="p-1.5 rounded-lg bg-primary/20 backdrop-blur-sm group-hover/trigger:bg-primary/30 transition-colors duration-300">
+                                                    <CategoryIconComponent className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0 group-hover/trigger:scale-110 transition-transform duration-300" />
+                                                </div>
+                                                <span className="font-semibold text-sm sm:text-base truncate flex-1 group-hover/trigger:text-primary transition-colors duration-300">{item.category}</span>
                                             </div>
-                                            <div className="text-right shrink-0 flex items-baseline gap-1 ml-auto">
+                                            <div className="text-right shrink-0 flex items-baseline gap-2 ml-auto">
                                                 <ShadTooltip>
                                                     <TooltipTrigger asChild>
-                                                        <span className="font-semibold font-mono text-xs sm:text-sm cursor-default">{categoryDisplayValue}</span>
+                                                        <span className="font-bold font-mono text-sm sm:text-lg cursor-default bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent hover:from-primary hover:to-chart-1 transition-all duration-300">
+                                                            {categoryDisplayValue}
+                                                        </span>
                                                     </TooltipTrigger>
                                                      <PerspectiveTooltipContent
                                                         perspectiveList={categoryPerspectiveList}
                                                         title={categoryPerspectiveTitle}
                                                     />
                                                 </ShadTooltip>
-                                                <span className="text-muted-foreground text-[10px] sm:text-xs font-mono hidden sm:inline">({item.percentage.toFixed(1)}%)</span>
+                                                <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-full bg-muted/50 backdrop-blur-sm">
+                                                    <span className="text-muted-foreground text-xs font-mono">({item.percentage.toFixed(1)}%)</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </AccordionTrigger>
@@ -718,30 +825,46 @@ export default function TaxBreakdownDashboard({
                             );
                         })}
                      </Accordion>
-                     <div className="flex justify-between items-center w-full px-3 sm:px-4 py-2.5 sm:py-3 md:py-4 border-t-2 border-primary/50 bg-primary/5">
-                         <span className="font-bold text-xs sm:text-sm md:text-base text-primary tracking-tight">TOTAL ESTIMATED TAX</span>
-                          <ShadTooltip>
-                             <TooltipTrigger asChild>
-                                 <span className="font-bold font-mono text-xs sm:text-sm md:text-base text-primary cursor-default">
-                                   {displayMode === 'time' && hourlyWage && perspectives?.total?.time
-                                       ? formatTime((taxAmount / hourlyWage) * 60)
-                                       : formatCurrency(taxAmount)
-                                   }
+                     {/* Enhanced Total Section */}
+                     <div className="relative overflow-hidden">
+                         <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-chart-1/10 to-primary/20 animate-shimmer"></div>
+                         <div className="relative z-10 flex justify-between items-center w-full px-4 sm:px-6 py-6 sm:py-8 border-t-2 border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-chart-1/10 backdrop-blur-sm">
+                             <div className="flex items-center gap-3">
+                                 <div className="p-2 rounded-xl bg-primary/30 backdrop-blur-sm">
+                                     <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-primary animate-pulse" />
+                                 </div>
+                                 <span className="font-black text-sm sm:text-lg md:text-xl text-primary tracking-tight uppercase">
+                                     Total Estimated Tax
                                  </span>
-                             </TooltipTrigger>
-                             <PerspectiveTooltipContent
-                                 perspectiveList={
-                                     displayMode === 'time' && hourlyWage && perspectives?.total?.time
-                                         ? perspectives.total.time
-                                         : perspectives?.total?.currency || null
-                                 }
-                                 title={
-                                     displayMode === 'time' && hourlyWage
-                                         ? 'In this total time, you could have:'
-                                         : 'With this total amount, you could buy:'
-                                 }
-                             />
-                          </ShadTooltip>
+                             </div>
+                              <ShadTooltip>
+                                 <TooltipTrigger asChild>
+                                     <div className="text-right">
+                                         <span className="font-black font-mono text-lg sm:text-2xl md:text-3xl cursor-default bg-gradient-to-r from-primary via-chart-1 to-primary bg-clip-text text-transparent hover:from-chart-1 hover:via-primary hover:to-chart-1 transition-all duration-500 animate-glow">
+                                           {displayMode === 'time' && hourlyWage && perspectives?.total?.time
+                                               ? formatTime((taxAmount / hourlyWage) * 60)
+                                               : formatCurrency(taxAmount)
+                                           }
+                                         </span>
+                                         <div className="text-xs sm:text-sm text-muted-foreground mt-1 font-medium">
+                                             {displayMode === 'time' && hourlyWage ? 'Hours of work' : 'Annual payment'}
+                                         </div>
+                                     </div>
+                                 </TooltipTrigger>
+                                 <PerspectiveTooltipContent
+                                     perspectiveList={
+                                         displayMode === 'time' && hourlyWage && perspectives?.total?.time
+                                             ? perspectives.total.time
+                                             : perspectives?.total?.currency || null
+                                     }
+                                     title={
+                                         displayMode === 'time' && hourlyWage
+                                             ? 'In this total time, you could have:'
+                                             : 'With this total amount, you could buy:'
+                                     }
+                                 />
+                              </ShadTooltip>
+                         </div>
                      </div>
                 </CardContent>
             </Card>
