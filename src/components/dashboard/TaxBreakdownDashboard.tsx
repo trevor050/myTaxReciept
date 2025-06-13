@@ -439,104 +439,92 @@ export default function TaxBreakdownDashboard({
   return (
     <TooltipProvider delayDuration={isMobileView ? 0 : 200}>
         <div className="space-y-8 sm:space-y-12 animate-fadeIn relative pb-12">
-            {/* Enhanced Header Section */}
-            <div className="text-center space-y-3 sm:space-y-4 mb-4 sm:mb-6 relative">
-                <div className="relative inline-block">
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-foreground via-foreground to-primary bg-clip-text text-transparent">
-                        {currentYear ? `${currentYear} ` : ''}Federal Income Tax Receipt
-                    </h1>
-                    <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-transparent to-chart-1/20 blur-xl opacity-30 animate-pulse"></div>
-                </div>
+            {/* Refined Header Section */}
+            <div className="text-center space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground">
+                    {currentYear ? `${currentYear} ` : ''}Federal Income Tax Receipt
+                </h1>
                 <div className="space-y-2">
                     <p className="text-lg sm:text-xl text-muted-foreground">
                         Based on your estimated{' '}
-                        <span className="font-bold text-transparent bg-gradient-to-r from-primary to-chart-1 bg-clip-text">
+                        <span className="font-bold text-primary">
                             {formatCurrency(taxAmount)}
                         </span>{' '}
                         payment.
                     </p>
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 backdrop-blur-sm border border-border/40">
-                        <div className="w-2 h-2 rounded-full bg-chart-3 animate-pulse"></div>
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border/30">
+                        <div className="w-2 h-2 rounded-full bg-chart-3"></div>
                         <p className="text-sm text-muted-foreground font-medium">Next Filing Due: {dueDateDisplay}</p>
                     </div>
                 </div>
             </div>
 
 
-             {/* Enhanced Display Mode Toggle */}
+             {/* Refined Display Mode Toggle */}
              <div className="flex justify-center items-center my-6 sm:my-8">
-                <Label htmlFor="display-mode-toggle" className="text-sm font-semibold text-muted-foreground mr-3 sm:mr-4">View as:</Label>
-                <div className="flex items-center space-x-1 bg-card/60 backdrop-blur-md p-1 rounded-2xl shadow-lg border border-border/40 hover:shadow-xl transition-all duration-300">
+                <Label htmlFor="display-mode-toggle" className="text-sm font-medium text-muted-foreground mr-3 sm:mr-4">View as:</Label>
+                <div className="flex items-center space-x-1 bg-muted p-1 rounded-lg shadow-sm border border-border/40">
                     <Button
                         variant={displayMode === 'currency' ? 'default' : 'ghost'}
                         size="sm"
                         onClick={() => handleDisplayModeToggle('currency')}
                         className={cn(
-                            "rounded-xl px-4 py-2 h-9 text-sm font-medium transition-all duration-300 relative overflow-hidden",
+                            "rounded-md px-4 py-2 h-8 text-sm font-medium transition-all duration-200",
                             displayMode === 'currency' 
-                                ? 'bg-gradient-to-r from-primary to-chart-1 text-primary-foreground shadow-lg transform scale-105 animate-float' 
-                                : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground hover:scale-105'
+                                ? 'bg-primary text-primary-foreground shadow-sm' 
+                                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                         )}
                         aria-pressed={displayMode === 'currency'}
                     >
                         <DollarSign className="h-4 w-4 mr-2" /> Currency
-                        {displayMode === 'currency' && (
-                            <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
-                        )}
                     </Button>
                     <Button
                          variant={displayMode === 'time' ? 'default' : 'ghost'}
                          size="sm"
                          onClick={() => handleDisplayModeToggle('time')}
                          className={cn(
-                            "rounded-xl px-4 py-2 h-9 text-sm font-medium transition-all duration-300 relative overflow-hidden",
+                            "rounded-md px-4 py-2 h-8 text-sm font-medium transition-all duration-200",
                             displayMode === 'time' && hourlyWage !== null 
-                                ? 'bg-gradient-to-r from-primary to-chart-1 text-primary-foreground shadow-lg transform scale-105 animate-float' 
-                                : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground hover:scale-105'
+                                ? 'bg-primary text-primary-foreground shadow-sm' 
+                                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                          )}
                          aria-pressed={displayMode === 'time' && hourlyWage !== null}
                     >
                         <Clock className="h-4 w-4 mr-2" /> Time Worked
-                        {displayMode === 'time' && hourlyWage !== null && (
-                            <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
-                        )}
                     </Button>
                 </div>
             </div>
 
-            {/* Enhanced Call-to-Action Alert */}
-            <Alert className="mb-8 sm:mb-10 rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-chart-1/10 text-foreground backdrop-blur-sm shadow-xl relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-chart-1/5 animate-pulse"></div>
-                <div className="relative z-10">
-                    <div className="flex items-start gap-3">
-                        <div className="p-2 rounded-full bg-primary/20 backdrop-blur-sm">
-                            <Megaphone className="h-5 w-5 sm:h-6 sm:w-6 stroke-primary animate-float" />
-                        </div>
-                        <div className="flex-1 space-y-3">
-                            <AlertTitle className="font-bold text-primary text-lg sm:text-xl tracking-tight">
-                                Make Your Voice Heard!
-                            </AlertTitle>
-                            <AlertDescription className="text-sm sm:text-base text-foreground/90 leading-relaxed space-y-3">
-                                <p className="font-medium">Understanding where your money goes is the first step. The next is action.</p>
-                                <p>Your elected officials work for you. Let them know how you feel about these spending priorities. Select specific items below that concern you and use the button to draft a direct message.</p>
-                                <Button 
-                                    variant="link" 
-                                    className="p-0 h-auto ml-0 text-primary font-semibold text-sm sm:text-base hover:text-chart-1 transition-colors duration-200 group" 
-                                    onClick={() => {if (typeof window !== 'undefined') window.open('https://www.usa.gov/elected-officials', '_blank', 'noopener,noreferrer')}}
-                                >
-                                    Find Your Officials 
-                                    <ExternalLink className="inline ml-2 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" />
-                                </Button>
-                            </AlertDescription>
-                        </div>
-                    </div>
-                </div>
-            </Alert>
+                         {/* Refined Call-to-Action Alert */}
+             <Alert className="mb-8 sm:mb-10 rounded-xl border border-primary/30 bg-primary/5 text-foreground shadow-lg">
+                 <div className="flex items-start gap-3">
+                     <div className="p-2 rounded-lg bg-primary/20">
+                         <Megaphone className="h-5 w-5 sm:h-6 sm:w-6 stroke-primary" />
+                     </div>
+                     <div className="flex-1 space-y-3">
+                         <AlertTitle className="font-bold text-primary text-lg sm:text-xl">
+                             Make Your Voice Heard!
+                         </AlertTitle>
+                         <AlertDescription className="text-sm sm:text-base text-foreground/90 leading-relaxed space-y-3">
+                             <p className="font-medium">Understanding where your money goes is the first step. The next is action.</p>
+                             <p>Your elected officials work for you. Let them know how you feel about these spending priorities. Select specific items below that concern you and use the button to draft a direct message.</p>
+                             <Button 
+                                 variant="link" 
+                                 className="p-0 h-auto ml-0 text-primary font-semibold text-sm sm:text-base hover:text-primary/80 transition-colors duration-200 group" 
+                                 onClick={() => {if (typeof window !== 'undefined') window.open('https://www.usa.gov/elected-officials', '_blank', 'noopener,noreferrer')}}
+                             >
+                                 Find Your Officials 
+                                 <ExternalLink className="inline ml-2 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" />
+                             </Button>
+                         </AlertDescription>
+                     </div>
+                 </div>
+             </Alert>
 
-          {/* Enhanced Chart Section */}
-          <div className="mb-10 sm:mb-16">
+          {/* Refined Chart Section */}
+          <div className="mb-10 sm:mb-14">
              <div className="text-center mb-6 sm:mb-8">
-                <h2 className="text-2xl sm:text-3xl font-bold text-center mb-3 bg-gradient-to-r from-foreground via-primary to-chart-1 bg-clip-text text-transparent">
+                <h2 className="text-2xl sm:text-3xl font-bold mb-3 text-foreground">
                     Spending Overview
                 </h2>
                 <p className="text-muted-foreground text-sm sm:text-base max-w-2xl mx-auto">
@@ -544,120 +532,105 @@ export default function TaxBreakdownDashboard({
                 </p>
              </div>
 
-             <div className="relative">
-                {/* Enhanced chart background */}
-                <div className="absolute inset-0 bg-gradient-to-br from-card/50 via-transparent to-primary/5 rounded-3xl backdrop-blur-sm"></div>
-                <div className="relative z-10 p-4 sm:p-6">
-                    <ResponsiveContainer width="100%" height={responsivePieHeight + 40}>
-                        <RechartsPieChart margin={{ top: isMobileView ? 30 : 20, right: 20, bottom: 20, left: 20 }}>
-                          <Pie
-                            data={chartData}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            outerRadius={responsiveOuterRadius}
-                            innerRadius={responsiveInnerRadius}
-                            fill="#8884d8"
-                            paddingAngle={2}
-                            dataKey="percentage"
-                            nameKey="category"
-                            activeIndex={activePieIndex ?? undefined}
-                            activeShape={({ cx, cy, innerRadius: ir, outerRadius: or, startAngle, endAngle, fill }) => (
-                                <g>
-                                    <Sector
-                                        cx={cx}
-                                        cy={cy}
-                                        innerRadius={ir}
-                                        outerRadius={or + (isMobileView ? 6 : 10)}
-                                        startAngle={startAngle}
-                                        endAngle={endAngle}
-                                        fill={fill}
-                                        stroke={'hsl(var(--foreground))'}
-                                        strokeWidth={2}
-                                        filter="drop-shadow(0 4px 8px rgba(0,0,0,0.2))"
-                                    />
-                                    <Sector
-                                        cx={cx}
-                                        cy={cy}
-                                        innerRadius={ir - 2}
-                                        outerRadius={ir}
-                                        startAngle={startAngle}
-                                        endAngle={endAngle}
-                                        fill={fill}
-                                        opacity={0.6}
-                                    />
-                                </g>
-                            )}
-                            onMouseEnter={(_, index) => !isMobileView && setActivePieIndex(index)}
-                            onMouseLeave={() => !isMobileView && setActivePieIndex(null)}
-                            onClick={(_, index) => {
-                                if (isMobileView) {
-                                    setActivePieIndex(activePieIndex === index ? null : index);
-                                }
+             <div className="bg-card/50 rounded-2xl p-4 sm:p-6 shadow-lg border border-border/40">
+                <ResponsiveContainer width="100%" height={responsivePieHeight}>
+                    <RechartsPieChart margin={{ top: isMobileView ? 20 : 10, right: 10, bottom: 10, left: 10 }}>
+                      <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={responsiveOuterRadius}
+                        innerRadius={responsiveInnerRadius}
+                        fill="#8884d8"
+                        paddingAngle={1.5}
+                        dataKey="percentage"
+                        nameKey="category"
+                        activeIndex={activePieIndex ?? undefined}
+                        activeShape={({ cx, cy, innerRadius: ir, outerRadius: or, startAngle, endAngle, fill }) => (
+                            <g>
+                                <Sector
+                                    cx={cx}
+                                    cy={cy}
+                                    innerRadius={ir}
+                                    outerRadius={or + (isMobileView ? 4 : 6)}
+                                    startAngle={startAngle}
+                                    endAngle={endAngle}
+                                    fill={fill}
+                                    stroke={'hsl(var(--foreground))'}
+                                    strokeWidth={1.5}
+                                />
+                            </g>
+                        )}
+                        onMouseEnter={(_, index) => !isMobileView && setActivePieIndex(index)}
+                        onMouseLeave={() => !isMobileView && setActivePieIndex(null)}
+                        onClick={(_, index) => {
+                            if (isMobileView) {
+                                setActivePieIndex(activePieIndex === index ? null : index);
+                            }
+                        }}
+                      >
+                        {chartData.map((entry, index) => (
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={COLORS[index % COLORS.length]} 
+                            stroke={'hsl(var(--background))'} 
+                            strokeWidth={1.5}
+                            style={{
+                                filter: activePieIndex === index ? 'brightness(1.1)' : 'brightness(1)',
+                                transition: 'all 0.2s ease'
                             }}
-                          >
-                            {chartData.map((entry, index) => (
-                              <Cell 
-                                key={`cell-${index}`} 
-                                fill={COLORS[index % COLORS.length]} 
-                                stroke={'hsl(var(--background))'} 
-                                strokeWidth={2}
-                                style={{
-                                    filter: activePieIndex === index ? 'brightness(1.1)' : 'brightness(1)',
-                                    transition: 'all 0.3s ease'
-                                }}
-                              />
-                            ))}
-                          </Pie>
-                           <RechartsTooltip
-                             content={({ active, payload: tooltipPayload }) => {
-                                const currentPayload = tooltipPayload && tooltipPayload.length ? tooltipPayload[0].payload : null;
-                                const shouldShowTooltip = active || (isMobileView && activePieIndex !== null && currentPayload?.category === chartData[activePieIndex ?? -1]?.category);
+                          />
+                        ))}
+                      </Pie>
+                       <RechartsTooltip
+                         content={({ active, payload: tooltipPayload }) => {
+                            const currentPayload = tooltipPayload && tooltipPayload.length ? tooltipPayload[0].payload : null;
+                            const shouldShowTooltip = active || (isMobileView && activePieIndex !== null && currentPayload?.category === chartData[activePieIndex ?? -1]?.category);
 
-                                if (shouldShowTooltip && currentPayload && perspectives?.chart) {
-                                    return (
-                                        <CustomPieTooltip
-                                            active={true}
-                                            payload={tooltipPayload}
-                                            totalAmount={taxAmount}
-                                            hourlyWage={hourlyWage}
-                                            displayMode={displayMode}
-                                            perspectiveData={perspectives.chart}
-                                            isMobile={isMobileView}
-                                        />
-                                    );
-                                }
-                                return null;
-                             }}
-                             cursor={{ fill: 'hsl(var(--accent))', fillOpacity: 0.6 }}
-                             wrapperStyle={{ zIndex: 1000 }}
-                            />
-                           <Legend content={<CustomLegend />} wrapperStyle={{ maxWidth: '100%', overflow: 'hidden' }}/>
-                        </RechartsPieChart>
-                    </ResponsiveContainer>
-                </div>
-                <div className="flex items-center justify-center gap-2 mt-4 px-4 py-2 rounded-full bg-muted/30 backdrop-blur-sm mx-auto w-fit">
+                            if (shouldShowTooltip && currentPayload && perspectives?.chart) {
+                                return (
+                                    <CustomPieTooltip
+                                        active={true}
+                                        payload={tooltipPayload}
+                                        totalAmount={taxAmount}
+                                        hourlyWage={hourlyWage}
+                                        displayMode={displayMode}
+                                        perspectiveData={perspectives.chart}
+                                        isMobile={isMobileView}
+                                    />
+                                );
+                            }
+                            return null;
+                         }}
+                         cursor={{ fill: 'hsl(var(--accent))', fillOpacity: 0.4 }}
+                         wrapperStyle={{ zIndex: 100 }}
+                        />
+                       <Legend content={<CustomLegend />} wrapperStyle={{ maxWidth: '100%', overflow: 'hidden' }}/>
+                    </RechartsPieChart>
+                </ResponsiveContainer>
+                
+                <div className="flex items-center justify-center gap-2 mt-4 px-3 py-2 rounded-lg bg-muted/30 mx-auto w-fit">
                     <Info className="h-4 w-4 text-primary" /> 
-                    <p className="text-sm text-muted-foreground font-medium">
+                    <p className="text-sm text-muted-foreground">
                         {isMobileView ? "Tap segments" : "Hover over segments"} for detailed insights • Estimated data
                     </p>
                 </div>
              </div>
           </div>
 
-           {/* Enhanced Card for Detailed Spending */}
-           <Card className="shadow-2xl border-2 border-border/40 rounded-3xl overflow-hidden bg-gradient-to-br from-card via-card/95 to-card/90 backdrop-blur-md relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-chart-1/5 opacity-50"></div>
-                <CardHeader className="relative z-10 px-4 py-4 sm:px-6 sm:py-6 md:px-8 md:py-8 border-b border-border/30 bg-gradient-to-r from-card/50 to-card/30 backdrop-blur-sm">
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className="p-2 rounded-xl bg-primary/20 backdrop-blur-sm">
+           {/* Refined Card for Detailed Spending */}
+           <Card className="shadow-lg border border-border/40 rounded-xl overflow-hidden bg-card">
+                <CardHeader className="px-4 py-5 sm:px-6 sm:py-6 border-b border-border/30">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-primary/20">
                             <Scale className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                         </div>
                         <div>
-                            <CardTitle className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+                            <CardTitle className="text-xl sm:text-2xl font-bold text-foreground">
                                 Detailed Spending
                             </CardTitle>
-                            <CardDescription className="text-muted-foreground text-sm sm:text-base md:text-lg mt-1">
+                            <CardDescription className="text-muted-foreground text-sm sm:text-base mt-1">
                                 Select items you believe need funding adjustments or prioritize balancing the budget.
                             </CardDescription>
                         </div>
@@ -693,19 +666,19 @@ export default function TaxBreakdownDashboard({
 
 
                             return (
-                                 <AccordionItem value={`item-${index}`} key={item.id || index} className="border-b border-border/20 last:border-b-0 group relative overflow-hidden">
-                                    <AccordionTrigger className="hover:no-underline py-4 px-4 sm:py-5 sm:px-6 rounded-none hover:bg-gradient-to-r hover:from-accent/30 hover:to-primary/10 data-[state=open]:bg-gradient-to-r data-[state=open]:from-accent/40 data-[state=open]:to-primary/15 transition-all duration-300 text-left relative z-10 group/trigger">
-                                         <div className="flex justify-between items-center w-full gap-1.5 sm:gap-2 md:gap-3">
-                                                                                          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                                                <div className="p-1.5 rounded-lg bg-primary/20 backdrop-blur-sm group-hover/trigger:bg-primary/30 transition-colors duration-300">
-                                                    <CategoryIconComponent className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0 group-hover/trigger:scale-110 transition-transform duration-300" />
+                                 <AccordionItem value={`item-${index}`} key={item.id || index} className="border-b border-border/20 last:border-b-0">
+                                    <AccordionTrigger className="hover:no-underline py-3 px-4 sm:py-4 sm:px-6 hover:bg-accent/50 data-[state=open]:bg-accent transition-colors duration-200 text-left">
+                                         <div className="flex justify-between items-center w-full gap-3">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className="p-1.5 rounded-md bg-primary/20">
+                                                    <CategoryIconComponent className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
                                                 </div>
-                                                <span className="font-semibold text-sm sm:text-base truncate flex-1 group-hover/trigger:text-primary transition-colors duration-300">{item.category}</span>
+                                                <span className="font-semibold text-sm sm:text-base truncate">{item.category}</span>
                                             </div>
-                                            <div className="text-right shrink-0 flex items-baseline gap-2 ml-auto">
+                                            <div className="text-right shrink-0 flex items-center gap-2">
                                                 <ShadTooltip>
                                                     <TooltipTrigger asChild>
-                                                        <span className="font-bold font-mono text-sm sm:text-lg cursor-default bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent hover:from-primary hover:to-chart-1 transition-all duration-300">
+                                                        <span className="font-bold font-mono text-sm sm:text-lg cursor-default text-foreground">
                                                             {categoryDisplayValue}
                                                         </span>
                                                     </TooltipTrigger>
@@ -714,16 +687,16 @@ export default function TaxBreakdownDashboard({
                                                         title={categoryPerspectiveTitle}
                                                     />
                                                 </ShadTooltip>
-                                                <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-full bg-muted/50 backdrop-blur-sm">
-                                                    <span className="text-muted-foreground text-xs font-mono">({item.percentage.toFixed(1)}%)</span>
+                                                <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-md bg-muted/50">
+                                                    <span className="text-muted-foreground text-xs">({item.percentage.toFixed(1)}%)</span>
                                                 </div>
                                             </div>
                                         </div>
                                     </AccordionTrigger>
                                     <AccordionContent
-                                        className="bg-background/30 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up overflow-hidden"
+                                        className="bg-muted/20 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up overflow-hidden"
                                     >
-                                        <div className="pl-6 pr-2 sm:pl-8 sm:pr-3 md:pl-10 md:pr-4 pt-2.5 pb-3 sm:pt-3 sm:pb-4 text-muted-foreground space-y-2 sm:space-y-2.5">
+                                        <div className="pl-6 pr-3 sm:pl-8 sm:pr-4 pt-3 pb-4 text-muted-foreground space-y-2">
                                          {isInterestOnDebt ? (
                                              <Alert variant="destructive" className="bg-destructive/5 border-destructive/30 shadow-inner p-3 sm:p-4">
                                                   <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 stroke-destructive/80 mt-0.5 sm:mt-1" />
@@ -731,15 +704,15 @@ export default function TaxBreakdownDashboard({
                                                  <AlertDescription className="text-xs sm:text-sm text-destructive/90 dark:text-destructive/85 leading-relaxed space-y-1.5 sm:space-y-2">
                                                      <p>This staggering amount paid just on <span className="font-medium">interest</span> is a direct consequence of sustained government spending exceeding revenue—often driven by tax cuts favoring the wealthy, unfunded wars, and economic bailouts.</p>
                                                      <p>High interest payments <span className="font-medium">divert critical funds</span> from essential public services, infrastructure, education, and potential tax relief, raising serious questions about long-term fiscal stability and government accountability.</p>
-                                                     <div className="flex items-center space-x-1.5 sm:space-x-2 pt-2 sm:pt-3">
+                                                                                                           <div className="flex items-center space-x-2 pt-3">
                                                           <Checkbox
                                                             id="balance-budget"
                                                             checked={balanceBudgetChecked}
                                                             onCheckedChange={handleBudgetCheckboxChange}
                                                             aria-label="Prioritize Balancing the Budget"
-                                                            className="rounded-[4px] border-destructive/70 data-[state=checked]:bg-destructive/80 data-[state=checked]:border-destructive/80 h-3.5 w-3.5 sm:h-4 sm:w-4"
+                                                            className="h-4 w-4"
                                                           />
-                                                         <Label htmlFor="balance-budget" className="text-[10px] sm:text-xs font-medium text-destructive/95 dark:text-destructive/85 cursor-pointer">
+                                                         <Label htmlFor="balance-budget" className="text-xs font-medium cursor-pointer">
                                                             Prioritize Balancing the Budget & Reducing Debt
                                                          </Label>
                                                       </div>
@@ -772,14 +745,14 @@ export default function TaxBreakdownDashboard({
                                                     }
 
                                                     return (
-                                                         <li key={subItem.id} className="flex justify-between items-center text-[10px] sm:text-xs gap-1.5 sm:gap-2 group/subitem">
-                                                             <div className="flex items-center gap-1 sm:gap-1.5 flex-1 min-w-0">
+                                                         <li key={subItem.id} className="flex justify-between items-center text-xs gap-2 group/subitem">
+                                                             <div className="flex items-center gap-2 flex-1 min-w-0">
                                                                 <Checkbox
                                                                    id={`subitem-${item.id}-${subItem.id}`}
                                                                    checked={isSelected}
                                                                    onCheckedChange={(checked) => handleCheckboxChange(checked, subItem)}
                                                                    aria-label={`Select ${subItem.description}`}
-                                                                   className="mt-0 shrink-0 rounded-[4px] h-3.5 w-3.5 sm:h-4 sm:w-4"
+                                                                   className="h-4 w-4 shrink-0"
                                                                 />
                                                                <ShadTooltip>
                                                                     <TooltipTrigger asChild>
@@ -825,46 +798,43 @@ export default function TaxBreakdownDashboard({
                             );
                         })}
                      </Accordion>
-                     {/* Enhanced Total Section */}
-                     <div className="relative overflow-hidden">
-                         <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-chart-1/10 to-primary/20 animate-shimmer"></div>
-                         <div className="relative z-10 flex justify-between items-center w-full px-4 sm:px-6 py-6 sm:py-8 border-t-2 border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-chart-1/10 backdrop-blur-sm">
-                             <div className="flex items-center gap-3">
-                                 <div className="p-2 rounded-xl bg-primary/30 backdrop-blur-sm">
-                                     <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-primary animate-pulse" />
-                                 </div>
-                                 <span className="font-black text-sm sm:text-lg md:text-xl text-primary tracking-tight uppercase">
-                                     Total Estimated Tax
-                                 </span>
+                     {/* Refined Total Section */}
+                     <div className="flex justify-between items-center w-full px-4 sm:px-6 py-5 sm:py-6 border-t border-border/30 bg-primary/5">
+                         <div className="flex items-center gap-3">
+                             <div className="p-2 rounded-lg bg-primary/20">
+                                 <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                              </div>
-                              <ShadTooltip>
-                                 <TooltipTrigger asChild>
-                                     <div className="text-right">
-                                         <span className="font-black font-mono text-lg sm:text-2xl md:text-3xl cursor-default bg-gradient-to-r from-primary via-chart-1 to-primary bg-clip-text text-transparent hover:from-chart-1 hover:via-primary hover:to-chart-1 transition-all duration-500 animate-glow">
-                                           {displayMode === 'time' && hourlyWage && perspectives?.total?.time
-                                               ? formatTime((taxAmount / hourlyWage) * 60)
-                                               : formatCurrency(taxAmount)
-                                           }
-                                         </span>
-                                         <div className="text-xs sm:text-sm text-muted-foreground mt-1 font-medium">
-                                             {displayMode === 'time' && hourlyWage ? 'Hours of work' : 'Annual payment'}
-                                         </div>
-                                     </div>
-                                 </TooltipTrigger>
-                                 <PerspectiveTooltipContent
-                                     perspectiveList={
-                                         displayMode === 'time' && hourlyWage && perspectives?.total?.time
-                                             ? perspectives.total.time
-                                             : perspectives?.total?.currency || null
-                                     }
-                                     title={
-                                         displayMode === 'time' && hourlyWage
-                                             ? 'In this total time, you could have:'
-                                             : 'With this total amount, you could buy:'
-                                     }
-                                 />
-                              </ShadTooltip>
+                             <span className="font-bold text-sm sm:text-lg text-primary">
+                                 Total Estimated Tax
+                             </span>
                          </div>
+                          <ShadTooltip>
+                             <TooltipTrigger asChild>
+                                 <div className="text-right">
+                                     <span className="font-bold font-mono text-lg sm:text-2xl md:text-3xl cursor-default text-primary">
+                                       {displayMode === 'time' && hourlyWage && perspectives?.total?.time
+                                           ? formatTime((taxAmount / hourlyWage) * 60)
+                                           : formatCurrency(taxAmount)
+                                       }
+                                     </span>
+                                     <div className="text-xs sm:text-sm text-muted-foreground mt-1">
+                                         {displayMode === 'time' && hourlyWage ? 'Hours of work' : 'Annual payment'}
+                                     </div>
+                                 </div>
+                             </TooltipTrigger>
+                             <PerspectiveTooltipContent
+                                 perspectiveList={
+                                     displayMode === 'time' && hourlyWage && perspectives?.total?.time
+                                         ? perspectives.total.time
+                                         : perspectives?.total?.currency || null
+                                 }
+                                 title={
+                                     displayMode === 'time' && hourlyWage
+                                         ? 'In this total time, you could have:'
+                                         : 'With this total amount, you could buy:'
+                                 }
+                             />
+                          </ShadTooltip>
                      </div>
                 </CardContent>
             </Card>
