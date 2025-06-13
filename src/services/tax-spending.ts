@@ -1,4 +1,3 @@
-
 /**
  * @fileOverview Service for fetching mock tax spending data and generating email content.
  */
@@ -77,6 +76,10 @@ export interface TaxSpending {
     * Optional tooltip text for the main category (used for Interest on Debt).
     */
    tooltipText?: string;
+   /**
+    * A URL to a relevant Wikipedia page for more information. Optional.
+    */
+   wikiLink?: string;
 }
 
 /**
@@ -103,180 +106,192 @@ const REFERENCE_TOTAL_TAX = 52000;
  * @returns A promise that resolves to an array of TaxSpending objects.
  */
 export async function getTaxSpending(_location: Location, _taxAmount: number): Promise<TaxSpending[]> {
-  // Mock data derived from the user-provided example ($52,000 total)
-  // Includes tooltipText and wikiLink for all items
+  // FY-2024 aligned mock data — percentages are rounded whole-number shares of total
   const detailedBreakdown: TaxSpending[] = [
+    /** Social Security – 21 % */
+    {
+      id: 'social_security',
+      category: 'Social Security',
+      percentage: 21,
+      subItems: [
+        { id: 'ss_retirement', description: 'Retirement benefits', tooltipText: 'The bedrock of retirement for millions, Social Security represents a promise between generations. These are the funds paid to retired workers, their spouses, and survivors, a lifeline earned over a lifetime of work.', amountPerDollar: 8920 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Social_Security_(United_States)', category: 'Social Security' },
+        { id: 'ss_disability', description: 'Disability benefits', tooltipText: 'Provides essential income for individuals who can no longer work due to a significant disability. This is a crucial safety net that protects families from financial ruin in the face of unexpected illness or injury.', amountPerDollar: 2000 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Social_Security_Disability_Insurance', category: 'Social Security' },
+      ],
+    },
+
+    /** Health – 24 % */
     {
       id: 'health',
       category: 'Health',
-      percentage: (12906.86 / REFERENCE_TOTAL_TAX) * 100, // ~24.82%
+      percentage: 24,
       subItems: [
-        { id: 'medicaid', description: 'Medicaid', amountPerDollar: 5336.01 / REFERENCE_TOTAL_TAX, tooltipText: 'Provides health coverage for low-income individuals and families, jointly funded by federal and state governments.', wikiLink: 'https://en.wikipedia.org/wiki/Medicaid', category: 'Health' },
-        { id: 'medicare', description: 'Medicare', amountPerDollar: 4854.13 / REFERENCE_TOTAL_TAX, tooltipText: 'Federal health insurance program primarily for people aged 65 or older, and some younger people with disabilities.', wikiLink: 'https://en.wikipedia.org/wiki/Medicare_(United_States)', category: 'Health' },
-        { id: 'nih', description: 'National Institutes of Health', amountPerDollar: 436.73 / REFERENCE_TOTAL_TAX, tooltipText: 'The primary U.S. agency responsible for biomedical and public health research.', wikiLink: 'https://en.wikipedia.org/wiki/National_Institutes_of_Health', category: 'Health' },
-        { id: 'cdc', description: 'Centers for Disease Control & Prevention (CDC)', amountPerDollar: 137.72 / REFERENCE_TOTAL_TAX, tooltipText: 'National public health agency focused on disease control, prevention, and health promotion.', wikiLink: 'https://en.wikipedia.org/wiki/Centers_for_Disease_Control_and_Prevention', category: 'Health' },
-        { id: 'substance_mental_health', description: 'Substance use & mental health programs', amountPerDollar: 86.89 / REFERENCE_TOTAL_TAX, tooltipText: 'Funding for programs addressing substance abuse and mental health issues, primarily via SAMHSA.', wikiLink: 'https://en.wikipedia.org/wiki/Substance_Abuse_and_Mental_Health_Services_Administration', category: 'Health' },
+        { id: 'medicare', description: 'Medicare', tooltipText: 'Guarantees health coverage for Americans aged 65 and older, and for some younger people with disabilities. It is the single largest public health insurance program in the United States.', amountPerDollar: 5400 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Medicare_(United_States)', category: 'Health' },
+        { id: 'medicaid', description: 'Medicaid', tooltipText: 'A joint federal and state program that provides health coverage to millions of Americans, including eligible low-income adults, children, pregnant women, elderly adults and people with disabilities.', amountPerDollar: 4600 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Medicaid', category: 'Health' },
+        { id: 'aca_subsidies', description: 'ACA marketplace subsidies', tooltipText: 'These subsidies, in the form of tax credits, help millions of individuals and families afford health insurance purchased through the Affordable Care Act marketplace, making coverage accessible.', amountPerDollar: 1250 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Health_insurance_marketplace', category: 'Health' },
+        { id: 'chip', description: 'CHIP (children)', tooltipText: 'The Children\'s Health Insurance Program provides low-cost health coverage to children in families who earn too much to qualify for Medicaid but cannot afford private insurance. This ensures that children\'s health is not determined by their parents\' income.', amountPerDollar: 250 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Children%27s_Health_Insurance_Program', category: 'Health' },
+        { id: 'nih', description: 'NIH – Medical research', tooltipText: 'The National Institutes of Health is the primary agency responsible for biomedical and public health research. Its funding drives scientific discovery and has led to countless medical breakthroughs.', amountPerDollar: 400 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/National_Institutes_of_Health', category: 'Health' },
+        { id: 'cdc', description: 'CDC – Disease control', tooltipText: 'The Centers for Disease Control and Prevention is the nation\'s leading public health agency, tasked with protecting Americans from health threats, both foreign and domestic, and responding to health emergencies.', amountPerDollar: 100 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Centers_for_Disease_Control_and_Prevention', category: 'Health' },
       ],
     },
+
+    /** Defense – 13 % */
     {
-      id: 'war_weapons',
-      category: 'War and Weapons',
-      percentage: (10852.53 / REFERENCE_TOTAL_TAX) * 100, // ~20.87%
+      id: 'defense',
+      category: 'Defense (War & Weapons)',
+      percentage: 13,
       subItems: [
-        { id: 'pentagon', description: 'Pentagon', amountPerDollar: 8574.28 / REFERENCE_TOTAL_TAX, tooltipText: 'Overall budget for the United States Department of Defense headquarters and operations.', wikiLink: 'https://en.wikipedia.org/wiki/United_States_Department_of_Defense', category: 'War and Weapons' },
-        { id: 'pentagon_contractors', description: 'Pentagon - Contractors', amountPerDollar: 4187.01 / REFERENCE_TOTAL_TAX, tooltipText: 'Funds paid to private companies contracted by the Department of Defense for various services, equipment, and research.', wikiLink: 'https://en.wikipedia.org/wiki/Military_contractor', category: 'War and Weapons' },
-        { id: 'pentagon_personnel', description: 'Pentagon - Military Personnel', amountPerDollar: 1786.15 / REFERENCE_TOTAL_TAX, tooltipText: 'Costs associated with salaries, benefits, housing, and support for active-duty military members.', wikiLink: 'https://en.wikipedia.org/wiki/United_States_Armed_Forces', category: 'War and Weapons' },
-        { id: 'pentagon_top5_contractors', description: 'Pentagon - Top 5 Contractors', amountPerDollar: 1137.58 / REFERENCE_TOTAL_TAX, tooltipText: 'Spending allocated specifically to the five largest private defense contractors (e.g., Lockheed Martin, Boeing, Raytheon).', wikiLink: 'https://en.wikipedia.org/wiki/List_of_United_States_defense_contractors_by_arms_sales', category: 'War and Weapons' },
-        { id: 'nuclear_weapons', description: 'Nuclear Weapons', amountPerDollar: 339.51 / REFERENCE_TOTAL_TAX, tooltipText: 'Funding for the development, maintenance, security, and modernization of the U.S. nuclear arsenal, managed by the NNSA.', wikiLink: 'https://en.wikipedia.org/wiki/Nuclear_weapons_of_the_United_States', category: 'War and Weapons' },
-        { id: 'foreign_military_aid', description: 'Aid to foreign militaries', amountPerDollar: 258.74 / REFERENCE_TOTAL_TAX, tooltipText: 'Financial and material assistance (e.g., weapons, training) provided to the armed forces of other countries.', wikiLink: 'https://en.wikipedia.org/wiki/United_States_Foreign_Military_Financing', category: 'War and Weapons' },
-        { id: 'israel_wars', description: 'Israel wars (Pentagon & aid)', amountPerDollar: 214.14 / REFERENCE_TOTAL_TAX, tooltipText: 'Specific allocation related to U.S. support for Israel\'s military and defense, including direct aid and joint military operations.', wikiLink: 'https://en.wikipedia.org/wiki/Israel%E2%80%93United_States_military_relations', category: 'War and Weapons' },
-        { id: 'f35', description: 'F-35 Jet Fighter', amountPerDollar: 127.86 / REFERENCE_TOTAL_TAX, tooltipText: 'Funding for the F-35 Lightning II program, a family of single-seat, single-engine, all-weather stealth multirole combat aircraft.', wikiLink: 'https://en.wikipedia.org/wiki/Lockheed_Martin_F-35_Lightning_II', category: 'War and Weapons' },
-        { id: 'pentagon_spacex', description: 'Pentagon - SpaceX Contracts', amountPerDollar: 17.04 / REFERENCE_TOTAL_TAX, tooltipText: 'Contracts awarded by the Department of Defense to SpaceX for national security space launch services and other projects.', wikiLink: 'https://en.wikipedia.org/wiki/SpaceX#Government_contracts', category: 'War and Weapons' },
-        { id: 'pentagon_dei', description: 'Pentagon - Diversity, Equity, Inclusion (DEI)', amountPerDollar: 1.08 / REFERENCE_TOTAL_TAX, tooltipText: 'Funding allocated to Diversity, Equity, and Inclusion initiatives and programs within the Department of Defense.', wikiLink: 'https://en.wikipedia.org/wiki/Diversity,_equity,_and_inclusion', category: 'War and Weapons' },
+        { id: 'military_personnel', description: 'Military personnel', tooltipText: 'This covers the salaries, benefits, and housing for all active-duty military personnel. It reflects the direct human cost of maintaining a large, professional fighting force.', amountPerDollar: 1800 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Military_budget_of_the_United_States#By_title', category: 'Defense (War & Weapons)' },
+        { id: 'operations_maintenance', description: 'Operations & maintenance', tooltipText: 'These funds are used for the day-to-day running of the military, including training, equipment maintenance, and operating bases around the world. Critics argue this budget enables a vast and costly global military presence.', amountPerDollar: 2400 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/United_States_Department_of_Defense', category: 'Defense (War & Weapons)' },
+        { id: 'weapons_procurement', description: 'Weapons & procurement', tooltipText: 'Funding for the acquisition of new weapons systems, vehicles, and technology from private defense contractors. This expenditure is at the heart of the military-industrial complex.', amountPerDollar: 1800 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Military-industrial_complex', category: 'Defense (War & Weapons)' },
+        { id: 'nuclear_weapons', description: 'Nuclear forces', tooltipText: 'This funds the maintenance, security, and modernization of the U.S. nuclear arsenal. The immense cost and existential risk of these weapons make their funding a subject of intense debate.', amountPerDollar: 300 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Nuclear_weapons_of_the_United_States', category: 'Defense (War & Weapons)' },
+        { id: 'foreign_military_aid', description: 'Foreign military aid', tooltipText: 'This represents security assistance, training, and weaponry provided to foreign governments and their militaries. Activists often question whether this aid promotes stability or fuels conflicts abroad.', amountPerDollar: 460 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Foreign_military_financing', category: 'Defense (War & Weapons)' },
       ],
     },
+
+    /** Interest on the debt – 13 % */
+    { id: 'interest_debt', category: 'Interest on Debt', percentage: 13, wikiLink: 'https://en.wikipedia.org/wiki/National_debt_of_the_United_States', tooltipText: 'This is the cost of servicing past national debt, generated by decades of spending more than was collected in revenue. Every dollar spent here is a dollar that cannot be invested in current priorities like health, education, or infrastructure.' },
+
+    /** Veterans & Federal Retirement – 8 % */
     {
-      id: 'interest_debt',
-      category: 'Interest on Debt',
-      percentage: (10105.93 / REFERENCE_TOTAL_TAX) * 100, // ~19.43%
-      tooltipText: 'This substantial portion represents the cost of servicing the national debt. Decades of deficit spending contribute to this burden, diverting funds from other priorities.',
-    },
-    {
-      id: 'veterans',
-      category: 'Veterans',
-      percentage: (3253.81 / REFERENCE_TOTAL_TAX) * 100, // ~6.26%
+      id: 'veterans_retirement',
+      category: 'Veterans & Federal Retirement',
+      percentage: 8,
       subItems: [
-        { id: 'va', description: 'Veterans\' Affairs (VA)', amountPerDollar: 3251.63 / REFERENCE_TOTAL_TAX, tooltipText: 'Provides a wide range of services including healthcare, disability compensation, education benefits (GI Bill), home loans, and burial benefits to U.S. military veterans.', wikiLink: 'https://en.wikipedia.org/wiki/United_States_Department_of_Veterans_Affairs', category: 'Veterans' },
-        { id: 'pact_act', description: 'Veterans Toxic Exposure Fund (PACT Act)', amountPerDollar: 189.31 / REFERENCE_TOTAL_TAX, tooltipText: 'Specifically funds healthcare, research, and benefits for veterans exposed to burn pits, Agent Orange, and other toxic substances during military service.', wikiLink: 'https://en.wikipedia.org/wiki/PACT_Act', category: 'Veterans' },
+        { id: 'va_programs', description: 'Veterans Affairs (VA)', tooltipText: 'This provides healthcare, disability benefits, and educational opportunities (like the GI Bill) to military veterans. It represents a commitment to care for those who have served in the armed forces.', amountPerDollar: 2500 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/United_States_Department_of_Veterans_Affairs', category: 'Veterans & Federal Retirement' },
+        { id: 'military_pensions', description: 'Military retirement pay', tooltipText: 'These are lifetime pensions paid to career service members who have completed 20 or more years in the military. This system is a key incentive for long-term military service.', amountPerDollar: 900 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Military_pay_of_the_United_States#Retirement', category: 'Veterans & Federal Retirement' },
+        { id: 'civilian_pensions', description: 'Federal civilian pensions', tooltipText: 'This covers the retirement costs for the millions of non-military federal employees, from postal workers to park rangers. It is a fundamental component of public service compensation.', amountPerDollar: 680 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Federal_Employees_Retirement_System', category: 'Veterans & Federal Retirement' },
+        { id: 'pact_act', description: 'PACT Act – Toxic-exposure care', tooltipText: 'A recent and significant fund to provide healthcare for veterans exposed to burn pits, Agent Orange, and other toxins during their service. Its creation was the result of years of advocacy by veterans and their families.', amountPerDollar: 80 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/PACT_Act', category: 'Veterans & Federal Retirement' },
       ],
     },
+
+    /** Economic security programs – 7 % */
     {
-      id: 'unemployment_labor',
-      category: 'Unemployment and Labor',
-      percentage: (3089.14 / REFERENCE_TOTAL_TAX) * 100, // ~5.94%
+      id: 'economic_security',
+      category: 'Economic Security & Job Benefits',
+      percentage: 7,
       subItems: [
-        { id: 'tanf', description: 'Temporary Assistance for Needy Families', amountPerDollar: 530.51 / REFERENCE_TOTAL_TAX, tooltipText: 'Provides temporary financial assistance, job training, and support services to low-income families with children, aimed at promoting self-sufficiency.', wikiLink: 'https://en.wikipedia.org/wiki/Temporary_Assistance_for_Needy_Families', category: 'Unemployment and Labor' },
-        { id: 'child_tax_credit', description: 'Child Tax Credit', amountPerDollar: 270.23 / REFERENCE_TOTAL_TAX, tooltipText: 'A tax credit provided to eligible taxpayers for qualifying dependent children, designed to help offset the cost of raising children.', wikiLink: 'https://en.wikipedia.org/wiki/Child_tax_credit_(United_States)', category: 'Unemployment and Labor' },
-        { id: 'refugee_assistance', description: 'Refugee Assistance', amountPerDollar: 76.71 / REFERENCE_TOTAL_TAX, tooltipText: 'Funding for programs supporting the resettlement, integration, and initial needs of refugees admitted to the United States.', wikiLink: 'https://en.wikipedia.org/wiki/Office_of_Refugee_Resettlement', category: 'Unemployment and Labor' },
-        { id: 'liheap', description: 'Low Income Home Energy Assistance Program', amountPerDollar: 49.13 / REFERENCE_TOTAL_TAX, tooltipText: 'Helps eligible low-income households pay their heating and cooling bills, and covers energy crisis assistance and weatherization.', wikiLink: 'https://en.wikipedia.org/wiki/Low_Income_Home_Energy_Assistance_Program', category: 'Unemployment and Labor' },
-        { id: 'nlrb', description: 'National Labor Relations Board (NLRB)', amountPerDollar: 3.00 / REFERENCE_TOTAL_TAX, tooltipText: 'An independent U.S. government agency enforcing federal labor law concerning collective bargaining and unfair labor practices by employers and unions.', wikiLink: 'https://en.wikipedia.org/wiki/National_Labor_Relations_Board', category: 'Unemployment and Labor' },
+        { id: 'snap', description: 'SNAP (food assistance)', tooltipText: 'The Supplemental Nutrition Assistance Program helps low-income individuals and families afford groceries. It is one of the most effective anti-poverty programs in the country.', amountPerDollar: 1300 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Supplemental_Nutrition_Assistance_Program', category: 'Economic Security & Job Benefits' },
+        { id: 'unemployment_insurance', description: 'Unemployment insurance', tooltipText: 'This joint state-federal program provides temporary income support to workers who have lost their jobs through no fault of their own. It serves as a critical buffer during economic downturns.', amountPerDollar: 600 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Unemployment_benefits_in_the_United_States', category: 'Economic Security & Job Benefits' },
+        { id: 'ssi', description: 'Supplemental Security Income', tooltipText: 'SSI provides a minimum level of income for aged, blind, and disabled individuals who have very limited financial resources. It is distinct from Social Security Disability Insurance (SSDI) but serves a similar anti-poverty function.', amountPerDollar: 360 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Supplemental_Security_Income', category: 'Economic Security & Job Benefits' },
+        { id: 'tanf', description: 'TANF cash assistance', tooltipText: 'Provides temporary financial assistance and work support to low-income families with children. Critics argue its funding levels and strict rules limit its effectiveness as a safety net.', amountPerDollar: 240 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Temporary_Assistance_for_Needy_Families', category: 'Economic Security & Job Benefits' },
+        { id: 'child_tax_credit', description: 'Child tax credit', tooltipText: 'This tax credit is designed to help offset the significant costs of raising children. Expansions of this credit have been shown to dramatically reduce child poverty.', amountPerDollar: 270 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Child_tax_credit_(United_States)', category: 'Economic Security & Job Benefits' },
+        { id: 'liheap', description: 'Energy assistance (LIHEAP)', tooltipText: 'The Low Income Home Energy Assistance Program helps eligible households pay their heating and cooling bills, preventing utility shut-offs and ensuring basic living standards.', amountPerDollar: 50 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Low_Income_Home_Energy_Assistance_Program', category: 'Economic Security & Job Benefits' },
       ],
     },
+
+    /** Education – 5 % */
     {
       id: 'education',
       category: 'Education',
-      percentage: (2382.28 / REFERENCE_TOTAL_TAX) * 100, // ~4.58%
+      percentage: 5,
       subItems: [
-        { id: 'dept_education', description: 'Department of Education', amountPerDollar: 2305.39 / REFERENCE_TOTAL_TAX, tooltipText: 'The cabinet-level department overseeing federal education policy, programs, and funding distribution.', wikiLink: 'https://en.wikipedia.org/wiki/United_States_Department_of_Education', category: 'Education' },
-        { id: 'college_aid', description: 'Dept. of Education - College Aid', amountPerDollar: 1220.53 / REFERENCE_TOTAL_TAX, tooltipText: 'Includes federal financial aid programs for postsecondary education like Pell Grants, federal student loans (Direct Loans), and Work-Study.', wikiLink: 'https://en.wikipedia.org/wiki/Student_financial_aid_in_the_United_States', category: 'Education' },
-        { id: 'k12_schools', description: 'Dept. of Education - K-12 Schools', amountPerDollar: 896.15 / REFERENCE_TOTAL_TAX, tooltipText: 'Federal funding supporting elementary and secondary education, often targeting disadvantaged students (e.g., Title I) and students with disabilities (IDEA).', wikiLink: 'https://en.wikipedia.org/wiki/Elementary_and_Secondary_Education_Act', category: 'Education' },
-        { id: 'cpb', description: 'Corporation for Public Broadcasting', amountPerDollar: 5.50 / REFERENCE_TOTAL_TAX, tooltipText: 'A private, non-profit corporation created by Congress to fund public radio (NPR) and television (PBS) stations.', wikiLink: 'https://en.wikipedia.org/wiki/Corporation_for_Public_Broadcasting', category: 'Education' },
-        { id: 'imls', description: 'Museum and Library Services', amountPerDollar: 4.20 / REFERENCE_TOTAL_TAX, tooltipText: 'The primary source of federal support for the nation\'s libraries and museums, providing grants and policy leadership.', wikiLink: 'https://en.wikipedia.org/wiki/Institute_of_Museum_and_Library_Services', category: 'Education' },
+        { id: 'k12_schools', description: 'K-12 schools (Title I, IDEA)', tooltipText: 'This represents federal support for public schools, primarily through Title I grants for disadvantaged students and IDEA grants for students with disabilities. It aims to supplement, not replace, state and local funding.', amountPerDollar: 900 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Elementary_and_Secondary_Education_Act', category: 'Education' },
+        { id: 'college_aid', description: 'College aid (Pell, loans)', tooltipText: 'This includes Pell Grants for low-income students and the administrative costs of the federal student loan program. The level of funding directly impacts college affordability and student debt levels.', amountPerDollar: 1300 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Student_financial_aid_in_the_United_States', category: 'Education' },
+        { id: 'ed_ops', description: 'Education Dept. operations', tooltipText: 'These are the administrative costs for the Department of Education, which oversees federal education policy and distributes funding to states and institutions.', amountPerDollar: 400 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/United_States_Department_of_Education', category: 'Education' },
       ],
     },
+
+    /** Housing & Community – 3 % */
     {
-      id: 'food_agriculture',
-      category: 'Food and Agriculture',
-      percentage: (2101.90 / REFERENCE_TOTAL_TAX) * 100, // ~4.04%
-      subItems: [
-        { id: 'snap', description: 'Food stamps (SNAP)', amountPerDollar: 1305.30 / REFERENCE_TOTAL_TAX, tooltipText: 'The Supplemental Nutrition Assistance Program, providing food-purchasing assistance for low- and no-income people living in the U.S.', wikiLink: 'https://en.wikipedia.org/wiki/Supplemental_Nutrition_Assistance_Program', category: 'Food and Agriculture' },
-        { id: 'school_lunch', description: 'School Lunch & child nutrition', amountPerDollar: 353.78 / REFERENCE_TOTAL_TAX, tooltipText: 'Includes the National School Lunch Program and School Breakfast Program, providing free or reduced-price meals to eligible children in schools.', wikiLink: 'https://en.wikipedia.org/wiki/National_School_Lunch_Program', category: 'Food and Agriculture' },
-        { id: 'fsa', description: 'Farm Services Agency', amountPerDollar: 85.90 / REFERENCE_TOTAL_TAX, tooltipText: 'An agency within the USDA providing loans, commodity price support, disaster assistance, and conservation programs to farmers and ranchers.', wikiLink: 'https://en.wikipedia.org/wiki/Farm_Service_Agency', category: 'Food and Agriculture' },
-        { id: 'wic', description: 'Women, Infants, & Children (WIC)', amountPerDollar: 48.76 / REFERENCE_TOTAL_TAX, tooltipText: 'A supplemental nutrition program providing nutritious foods, nutrition education, and healthcare referrals for low-income pregnant women, new mothers, infants, and children up to age five.', wikiLink: 'https://en.wikipedia.org/wiki/WIC', category: 'Food and Agriculture' },
-      ],
-    },
-    {
-      id: 'government',
-      category: 'Government',
-      percentage: (1906.73 / REFERENCE_TOTAL_TAX) * 100, // ~3.67%
-      subItems: [
-        { id: 'fdic', description: 'Federal Deposit Insurance Corporation', amountPerDollar: 454.03 / REFERENCE_TOTAL_TAX, tooltipText: 'An independent agency created by Congress to maintain stability and public confidence in the nation\'s financial system by insuring deposits in U.S. banks.', wikiLink: 'https://en.wikipedia.org/wiki/Federal_Deposit_Insurance_Corporation', category: 'Government' },
-        { id: 'irs', description: 'Internal Revenue Service', amountPerDollar: 231.86 / REFERENCE_TOTAL_TAX, tooltipText: 'The U.S. government agency responsible for tax collection and the administration of the Internal Revenue Code.', wikiLink: 'https://en.wikipedia.org/wiki/Internal_Revenue_Service', category: 'Government' },
-        { id: 'federal_courts', description: 'Federal Court System', amountPerDollar: 90.92 / REFERENCE_TOTAL_TAX, tooltipText: 'The judiciary branch of the U.S. federal government, including district courts, courts of appeals, and the Supreme Court.', wikiLink: 'https://en.wikipedia.org/wiki/Federal_judiciary_of_the_United_States', category: 'Government' },
-        { id: 'public_defenders', description: 'Federal Court System - Public Defenders', amountPerDollar: 12.91 / REFERENCE_TOTAL_TAX, tooltipText: 'Attorneys appointed and funded by the federal government to represent defendants in federal criminal cases who cannot afford to hire their own lawyer.', wikiLink: 'https://en.wikipedia.org/wiki/Federal_Public_Defender', category: 'Government' },
-        { id: 'usps', description: 'Postal Service', amountPerDollar: 11.53 / REFERENCE_TOTAL_TAX, tooltipText: 'An independent agency of the executive branch responsible for providing postal service in the U.S. (Note: Primarily funded by postage revenue, but receives some federal appropriations).', wikiLink: 'https://en.wikipedia.org/wiki/United_States_Postal_Service', category: 'Government' },
-        { id: 'cfpb', description: 'Consumer Financial Protection Bureau (CFPB)', amountPerDollar: 8.58 / REFERENCE_TOTAL_TAX, tooltipText: 'A regulatory agency charged with overseeing financial products and services offered to consumers.', wikiLink: 'https://en.wikipedia.org/wiki/Consumer_Financial_Protection_Bureau', category: 'Government' },
-        { id: 'mbda', description: 'Minority Business Development Agency', amountPerDollar: 1.21 / REFERENCE_TOTAL_TAX, tooltipText: 'An agency within the Department of Commerce dedicated to promoting the growth and competitiveness of minority-owned businesses.', wikiLink: 'https://en.wikipedia.org/wiki/Minority_Business_Development_Agency', category: 'Government' },
-        { id: 'usich', description: 'Interagency Council on Homelessness', amountPerDollar: 0.04 / REFERENCE_TOTAL_TAX, tooltipText: 'Coordinates the federal response to homelessness across 19 federal agencies.', wikiLink: 'https://en.wikipedia.org/wiki/United_States_Interagency_Council_on_Homelessness', category: 'Government' },
-      ],
-    },
-     {
       id: 'housing_community',
-      category: 'Housing and Community',
-      percentage: (1792.12 / REFERENCE_TOTAL_TAX) * 100, // ~3.45%
+      category: 'Housing & Community',
+      percentage: 3,
       subItems: [
-        { id: 'fema', description: 'Federal Emergency Management Agency', amountPerDollar: 635.39 / REFERENCE_TOTAL_TAX, tooltipText: 'An agency within the Department of Homeland Security coordinating the federal government\'s response to disasters.', wikiLink: 'https://en.wikipedia.org/wiki/Federal_Emergency_Management_Agency', category: 'Housing and Community' },
-        { id: 'fema_drf', description: 'FEMA - Disaster Relief Fund', amountPerDollar: 553.28 / REFERENCE_TOTAL_TAX, tooltipText: 'The primary source of funding for federal disaster response, recovery, and mitigation efforts managed by FEMA.', wikiLink: 'https://en.wikipedia.org/wiki/Disaster_Relief_Fund', category: 'Housing and Community' },
-        { id: 'hud', description: 'Dept. of Housing and Urban Development', amountPerDollar: 525.67 / REFERENCE_TOTAL_TAX, tooltipText: 'The cabinet department responsible for national housing policy, community development, and affordable housing programs.', wikiLink: 'https://en.wikipedia.org/wiki/United_States_Department_of_Housing_and_Urban_Development', category: 'Housing and Community' },
-        { id: 'head_start', description: 'Head Start', amountPerDollar: 112.87 / REFERENCE_TOTAL_TAX, tooltipText: 'A program providing comprehensive early childhood education, health, nutrition, and parent involvement services to low-income children and families.', wikiLink: 'https://en.wikipedia.org/wiki/Head_Start_Program', category: 'Housing and Community' },
-        { id: 'public_housing', description: 'Public Housing', amountPerDollar: 71.97 / REFERENCE_TOTAL_TAX, tooltipText: 'Affordable rental housing programs funded by HUD for eligible low-income families, the elderly, and persons with disabilities.', wikiLink: 'https://en.wikipedia.org/wiki/Public_housing_in_the_United_States', category: 'Housing and Community' },
+        { id: 'hud', description: 'Housing & Urban Development', tooltipText: 'The Department of Housing and Urban Development (HUD) funds a wide range of programs aimed at ensuring access to safe and affordable housing and promoting community development.', amountPerDollar: 526 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/United_States_Department_of_Housing_and_Urban_Development', category: 'Housing & Community' },
+        { id: 'public_housing', description: 'Public housing & vouchers', tooltipText: 'This includes funding for public housing developments and Section 8 vouchers, which help low-income families, the elderly, and the disabled afford decent housing in the private market.', amountPerDollar: 300 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Section_8_(housing)', category: 'Housing & Community' },
+        { id: 'fema_disaster', description: 'FEMA – disaster relief', tooltipText: 'The Federal Emergency Management Agency (FEMA) provides disaster relief funds to communities impacted by natural disasters like hurricanes, floods, and wildfires. Climate change is increasing the demand on these funds.', amountPerDollar: 560 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Disaster_Relief_Fund', category: 'Housing & Community' },
+        { id: 'head_start', description: 'Head Start (early childhood)', tooltipText: 'A long-running program providing comprehensive early childhood education, health, and nutrition services to low-income children and their families, aiming to close opportunity gaps.', amountPerDollar: 113 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Head_Start', category: 'Housing & Community' },
+        { id: 'community_block_grants', description: 'Community development grants', tooltipText: 'Community Development Block Grants (CDBG) are flexible funds that cities and counties can use for a wide range of local projects, from affordable housing to infrastructure improvements.', amountPerDollar: 61 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Community_Development_Block_Grant', category: 'Housing & Community' },
       ],
     },
+
+    /** Transportation – 2 % */
+    {
+      id: 'transportation',
+      category: 'Transportation',
+      percentage: 2,
+      subItems: [
+        { id: 'highways', description: 'Highways', tooltipText: 'The Federal Highway Administration provides funding to states for the construction and maintenance of the National Highway System. This spending shapes our cities and impacts our carbon footprint.', amountPerDollar: 500 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Federal_Highway_Administration', category: 'Transportation' },
+        { id: 'public_transit', description: 'Public transit', tooltipText: 'This funding supports public transportation systems like buses, subways, and light rail. Advocates argue that increasing this funding is crucial for equity and climate action.', amountPerDollar: 220 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Federal_Transit_Administration', category: 'Transportation' },
+        { id: 'rail_service', description: 'Amtrak & rail service', tooltipText: 'This represents the federal subsidy for Amtrak, the national passenger rail corporation. The U.S. invests significantly less in passenger rail compared to many other developed nations.', amountPerDollar: 120 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Amtrak', category: 'Transportation' },
+        { id: 'tsa', description: 'TSA & aviation security', tooltipText: 'The Transportation Security Administration is responsible for security at U.S. airports. Its budget and practices are frequent topics of debate regarding privacy and effectiveness.', amountPerDollar: 100 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Transportation_Security_Administration', category: 'Transportation' },
+        { id: 'faa', description: 'FAA – air-traffic control', tooltipText: 'The Federal Aviation Administration regulates all aspects of civil aviation, including air traffic control and airline safety. Its performance is critical to the safety of millions of travelers.', amountPerDollar: 100 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Federal_Aviation_Administration', category: 'Transportation' },
+      ],
+    },
+
+    /** Energy & Environment – 1 % */
     {
       id: 'energy_environment',
-      category: 'Energy and Environment',
-      percentage: (1103.55 / REFERENCE_TOTAL_TAX) * 100, // ~2.12%
+      category: 'Energy & Environment',
+      percentage: 1,
        subItems: [
-         { id: 'epa', description: 'Environmental Protection Agency', amountPerDollar: 373.06 / REFERENCE_TOTAL_TAX, tooltipText: 'An agency responsible for creating and enforcing regulations based on laws passed by Congress to protect human health and the environment.', wikiLink: 'https://en.wikipedia.org/wiki/United_States_Environmental_Protection_Agency', category: 'Energy and Environment' },
-         { id: 'forest_service', description: 'Forest Service', amountPerDollar: 115.03 / REFERENCE_TOTAL_TAX, tooltipText: 'An agency within the USDA that administers the nation\'s 154 national forests and 20 national grasslands.', wikiLink: 'https://en.wikipedia.org/wiki/United_States_Forest_Service', category: 'Energy and Environment' },
-         { id: 'noaa', description: 'Nat\'l Oceanic & Atmospheric Administration (NOAA)', amountPerDollar: 73.37 / REFERENCE_TOTAL_TAX, tooltipText: 'A scientific agency within the Department of Commerce focusing on the conditions of the oceans, major waterways, and the atmosphere.', wikiLink: 'https://en.wikipedia.org/wiki/National_Oceanic_and_Atmospheric_Administration', category: 'Energy and Environment' },
-         { id: 'renewable_energy', description: 'Energy efficiency and renewable energy', amountPerDollar: 73.36 / REFERENCE_TOTAL_TAX, tooltipText: 'Funding for programs within the Department of Energy promoting energy efficiency improvements and the development/deployment of renewable energy technologies.', wikiLink: 'https://en.wikipedia.org/wiki/Office_of_Energy_Efficiency_and_Renewable_Energy', category: 'Energy and Environment' },
-         { id: 'nps', description: 'National Park Service', amountPerDollar: 41.60 / REFERENCE_TOTAL_TAX, tooltipText: 'An agency within the Department of the Interior managing all national parks, many national monuments, and other conservation and historical properties.', wikiLink: 'https://en.wikipedia.org/wiki/National_Park_Service', category: 'Energy and Environment' },
-       ],
+        { id: 'epa', description: 'EPA – environmental protection', tooltipText: 'The Environmental Protection Agency (EPA) is responsible for enforcing the nation\'s bedrock environmental laws, such as the Clean Air Act and Clean Water Act. Its funding level directly impacts its ability to protect public health.', amountPerDollar: 180 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/United_States_Environmental_Protection_Agency', category: 'Energy & Environment' },
+        { id: 'renewables', description: 'Renewable energy & efficiency', tooltipText: 'This funding, primarily through the Department of Energy, supports research, development, and deployment of clean energy technologies. Activists see this as a critical but underfunded tool in the fight against climate change.', amountPerDollar: 80 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Office_of_Energy_Efficiency_and_Renewable_Energy', category: 'Energy & Environment' },
+        { id: 'forest_service', description: 'Forest Service', tooltipText: 'The U.S. Forest Service manages the nation\'s 154 national forests and 20 national grasslands. Its responsibilities range from timber harvesting to wildfire prevention and ecosystem restoration.', amountPerDollar: 110 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/United_States_Forest_Service', category: 'Energy & Environment' },
+        { id: 'national_parks', description: 'National Park Service', tooltipText: 'The National Park Service protects and maintains America\'s most treasured natural and historical sites. These funds cover everything from park ranger salaries to trail maintenance.', amountPerDollar: 50 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/National_Park_Service', category: 'Energy & Environment' },
+        { id: 'noaa', description: 'NOAA – oceans & atmosphere', tooltipText: 'The National Oceanic and Atmospheric Administration is a scientific agency that provides weather forecasts, monitors climate change, and manages ocean resources. Its research is vital for understanding our changing planet.', amountPerDollar: 100 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/National_Oceanic_and_Atmospheric_Administration', category: 'Energy & Environment' },
+      ],
     },
+
+    /** International Affairs – 1 % */
     {
         id: 'international_affairs',
         category: 'International Affairs',
-        percentage: (681.73 / REFERENCE_TOTAL_TAX) * 100, // ~1.31%
+      percentage: 1,
         subItems: [
-            { id: 'diplomacy', description: 'Diplomacy', amountPerDollar: 151.70 / REFERENCE_TOTAL_TAX, tooltipText: 'Funding for the Department of State, including U.S. embassies, consulates, and diplomatic personnel abroad.', wikiLink: 'https://en.wikipedia.org/wiki/United_States_Department_of_State', category: 'International Affairs' },
-            { id: 'usaid', description: 'U.S. Agency for International Development (USAID)', amountPerDollar: 115.34 / REFERENCE_TOTAL_TAX, tooltipText: 'The lead U.S. government agency primarily responsible for administering civilian foreign aid and development assistance.', wikiLink: 'https://en.wikipedia.org/wiki/United_States_Agency_for_International_Development', category: 'International Affairs' },
-            { id: 'usaid_climate', description: 'USAID - Climate Aid', amountPerDollar: 8.77 / REFERENCE_TOTAL_TAX, tooltipText: 'Specific funding within USAID dedicated to helping other countries mitigate and adapt to the impacts of climate change.', wikiLink: 'https://www.usaid.gov/climate', category: 'International Affairs' },
-        ],
+        { id: 'diplomacy', description: 'Diplomacy (State Dept.)', tooltipText: 'This funds the Department of State, including U.S. embassies, consulates, and diplomatic personnel. Proponents argue that robust diplomatic funding is a more effective and far cheaper way to ensure security than military spending.', amountPerDollar: 200 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/United_States_Department_of_State', category: 'International Affairs' },
+        { id: 'usaid', description: 'Development aid (USAID)', tooltipText: 'USAID is the lead agency for administering civilian foreign aid and development assistance. This funding addresses global poverty, hunger, and disease, which can be root causes of instability.', amountPerDollar: 200 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/United_States_Agency_for_International_Development', category: 'International Affairs' },
+        { id: 'climate_aid', description: 'Climate & disaster aid', tooltipText: 'This specific funding within USAID is dedicated to helping other countries mitigate and adapt to the impacts of climate change. It is a key part of the U.S. commitment to international climate agreements.', amountPerDollar: 120 / REFERENCE_TOTAL_TAX, wikiLink: 'https://www.usaid.gov/climate', category: 'International Affairs' },
+      ],
     },
+
+    /** Law Enforcement & Justice – 1 % */
     {
         id: 'law_enforcement',
-        category: 'Law Enforcement',
-        percentage: (668.42 / REFERENCE_TOTAL_TAX) * 100, // ~1.29%
+      category: 'Law Enforcement & Justice',
+      percentage: 1,
         subItems: [
-            { id: 'deportations_border', description: 'Deportations & border patrol', amountPerDollar: 287.64 / REFERENCE_TOTAL_TAX, tooltipText: 'Funding primarily for Immigration and Customs Enforcement (ICE) for interior enforcement/deportations and Customs and Border Protection (CBP) for border security.', wikiLink: 'https://en.wikipedia.org/wiki/U.S._Immigration_and_Customs_Enforcement', category: 'Law Enforcement' },
-            { id: 'federal_prisons', description: 'Federal Prisons', amountPerDollar: 83.29 / REFERENCE_TOTAL_TAX, tooltipText: 'Funding for the Bureau of Prisons, responsible for the custody and care of federal inmates.', wikiLink: 'https://en.wikipedia.org/wiki/Federal_Bureau_of_Prisons', category: 'Law Enforcement' },
-        ],
+        { id: 'fbi', description: 'FBI & federal investigators', tooltipText: 'This funds the Federal Bureau of Investigation, the primary domestic intelligence and security service of the United States, and its principal federal law enforcement agency.', amountPerDollar: 190 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Federal_Bureau_of_Investigation', category: 'Law Enforcement & Justice' },
+        { id: 'border_security', description: 'Border security & ICE', tooltipText: 'Funds both Customs and Border Protection (CBP) for border security and Immigration and Customs Enforcement (ICE) for interior enforcement and deportations. These agencies are at the center of the national immigration debate.', amountPerDollar: 220 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/U.S._Immigration_and_Customs_Enforcement', category: 'Law Enforcement & Justice' },
+        { id: 'federal_prisons', description: 'Federal prisons', tooltipText: 'This funds the Bureau of Prisons, which is responsible for the custody and care of individuals convicted of federal crimes. The size and cost of the federal prison system are a major focus for justice reform advocates.', amountPerDollar: 110 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Federal_Bureau_of_Prisons', category: 'Law Enforcement & Justice' },
+      ],
     },
+
+    /** Science & Technology – 1 % */
     {
-        id: 'transportation',
-        category: 'Transportation',
-        percentage: (578.94 / REFERENCE_TOTAL_TAX) * 100, // ~1.11%
+      id: 'science',
+      category: 'Science & Technology',
+      percentage: 1,
         subItems: [
-            { id: 'highways', description: 'Highways', amountPerDollar: 111.66 / REFERENCE_TOTAL_TAX, tooltipText: 'Funding distributed to states via the Federal Highway Administration (FHWA) for the construction, maintenance, and repair of the federal-aid highway system.', wikiLink: 'https://en.wikipedia.org/wiki/Federal_Highway_Administration', category: 'Transportation' },
-            { id: 'public_transit', description: 'Public transit', amountPerDollar: 87.29 / REFERENCE_TOTAL_TAX, tooltipText: 'Federal funding provided through the Federal Transit Administration (FTA) to support public transportation systems like buses, subways, and light rail.', wikiLink: 'https://en.wikipedia.org/wiki/Federal_Transit_Administration', category: 'Transportation' },
-            { id: 'tsa', description: 'Transportation Security Administration (TSA)', amountPerDollar: 68.68 / REFERENCE_TOTAL_TAX, tooltipText: 'An agency within the Department of Homeland Security responsible for security of the traveling public, primarily focusing on aviation security.', wikiLink: 'https://en.wikipedia.org/wiki/Transportation_Security_Administration', category: 'Transportation' },
-            { id: 'faa', description: 'Federal Aviation Administration', amountPerDollar: 68.38 / REFERENCE_TOTAL_TAX, tooltipText: 'An agency within the Department of Transportation responsible for regulating all aspects of civil aviation in the U.S.', wikiLink: 'https://en.wikipedia.org/wiki/Federal_Aviation_Administration', category: 'Transportation' },
-            { id: 'amtrak', description: 'Amtrak & Rail Service', amountPerDollar: 40.28 / REFERENCE_TOTAL_TAX, tooltipText: 'Federal funding supporting Amtrak, the national passenger railroad corporation, and potentially other rail initiatives.', wikiLink: 'https://en.wikipedia.org/wiki/Amtrak', category: 'Transportation' },
-        ],
+        { id: 'nasa', description: 'NASA – space exploration', tooltipText: 'NASA is responsible for the U.S. civilian space program and for aeronautics and aerospace research. Its missions have inspired generations and led to numerous technological spinoffs.', amountPerDollar: 250 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/NASA', category: 'Science & Technology' },
+        { id: 'nsf', description: 'National Science Foundation', tooltipText: 'The NSF is an independent federal agency that supports fundamental research and education in all the non-medical fields of science and engineering. This is a primary driver of basic research in the U.S.', amountPerDollar: 100 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/National_Science_Foundation', category: 'Science & Technology' },
+        { id: 'arpa_research', description: 'DARPA / ARPA-style R&D', tooltipText: 'These agencies, like DARPA and ARPA-E, fund high-risk, high-reward research with the goal of developing breakthrough technologies for national security and energy. The internet itself originated from this type of research.', amountPerDollar: 80 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Advanced_Research_Projects_Agency', category: 'Science & Technology' },
+        { id: 'commercial_space', description: 'Commercial space contracts', tooltipText: 'This represents contracts awarded by NASA to private companies like SpaceX and Boeing for services like transporting astronauts and cargo to the International Space Station.', amountPerDollar: 90 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Commercial_Crew_Program', category: 'Science & Technology' },
+      ],
     },
+
+    /** Government operations (small slice, excludes self-funded FDIC) – 1 % */
     {
-        id: 'science',
-        category: 'Science',
-        percentage: (411.82 / REFERENCE_TOTAL_TAX) * 100, // ~0.79%
+      id: 'government_ops',
+      category: 'Government Operations',
+      percentage: 1,
         subItems: [
-            { id: 'nasa', description: 'National Aeronautics & Space Administration (NASA)', amountPerDollar: 225.57 / REFERENCE_TOTAL_TAX, tooltipText: 'An independent agency responsible for the U.S. civilian space program, as well as aeronautics and aerospace research.', wikiLink: 'https://en.wikipedia.org/wiki/NASA', category: 'Science' },
-            { id: 'nsf', description: 'National Science Foundation', amountPerDollar: 96.62 / REFERENCE_TOTAL_TAX, tooltipText: 'An independent federal agency supporting fundamental research and education in all non-medical fields of science and engineering.', wikiLink: 'https://en.wikipedia.org/wiki/National_Science_Foundation', category: 'Science' },
-            { id: 'nasa_spacex', description: 'NASA - SpaceX Contracts', amountPerDollar: 14.95 / REFERENCE_TOTAL_TAX, tooltipText: 'Contracts awarded by NASA to SpaceX for commercial cargo resupply, crew transportation to the ISS, and lunar landing systems (Artemis).', wikiLink: 'https://en.wikipedia.org/wiki/SpaceX#NASA_contracts', category: 'Science' },
+        { id: 'irs', description: 'Internal Revenue Service', tooltipText: 'The IRS is responsible for tax collection and administration of the tax code. The level of funding for the IRS directly impacts its ability to perform taxpayer service and enforce tax laws fairly.', amountPerDollar: 240 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Internal_Revenue_Service', category: 'Government Operations' },
+        { id: 'federal_courts', description: 'Federal court system', tooltipText: 'This funds the judiciary branch of the U.S. government, including district courts, courts of appeals, and the Supreme Court. These institutions are fundamental to upholding the rule of law.', amountPerDollar: 90 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Federal_judiciary_of_the_United_States', category: 'Government Operations' },
+        { id: 'public_defenders', description: 'Federal public defenders', tooltipText: 'These federally funded attorneys represent defendants in federal criminal cases who cannot afford to hire their own lawyer, fulfilling the constitutional right to counsel.', amountPerDollar: 13 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Federal_Public_Defender', category: 'Government Operations' },
+        { id: 'cfpb', description: 'Consumer Financial Protection Bureau', tooltipText: 'The CFPB is a regulatory agency charged with overseeing financial products and services that are offered to consumers. It was created to protect consumers from unfair, deceptive, or abusive practices.', amountPerDollar: 9 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Consumer_Financial_Protection_Bureau', category: 'Government Operations' },
+        { id: 'mbda', description: 'Minority Business Dev. Agency', tooltipText: 'An agency within the Department of Commerce dedicated to promoting the growth and competitiveness of minority-owned businesses in the United States.', amountPerDollar: 1 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Minority_Business_Development_Agency', category: 'Government Operations' },
         ],
     },
   ];
 
-  // Sort by percentage descending
+  // Put the biggest slices first for a nicer UX
   detailedBreakdown.sort((a, b) => b.percentage - a.percentage);
 
-  // Assign category to subItems before returning
-  return detailedBreakdown.map(category => ({
-      ...category,
-      subItems: category.subItems?.map(subItem => ({
-          ...subItem,
-          category: category.category // Add category to subitem for later grouping
-      }))
+  // Stamp the parent category name onto each sub-item (useful for grouping)
+  return detailedBreakdown.map(cat => ({
+    ...cat,
+    subItems: cat.subItems?.map(si => ({ ...si, category: cat.category })),
   }));
 }
 

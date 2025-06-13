@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Service for suggesting relevant resources and organizations
@@ -136,7 +135,6 @@ export async function suggestResources(
 
 
   for (const resource of resourcesWithRankedBadges) {
-    if (suggestions.length >= MAX_SUGGESTIONS) break;
     if (suggestedUrls.has(resource.url)) continue;
 
     let overallRelevanceReason = `Focuses on key areas relevant to public policy.`;
