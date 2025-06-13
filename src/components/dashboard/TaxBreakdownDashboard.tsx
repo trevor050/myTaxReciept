@@ -93,8 +93,16 @@ const iconComponents: { [key: string]: LucideIcon } = {
     // Main Category Icons
     "Health": HeartPulse,
     "War and Weapons": ShieldCheck,
+    "Defense (War & Weapons)": ShieldCheck,
+    "Social Security": Banknote,
+    "Veterans & Federal Retirement": Medal,
+    "Economic Security & Job Benefits": Briefcase,
+    "Housing & Community": Building,
+    "Energy & Environment": Sprout,
+    "Law Enforcement & Justice": Gavel,
+    "Science & Technology": Atom,
+    "Government Operations": Landmark,
     "Interest on Debt": TrendingDown,
-    "Veterans": Medal,
     "Unemployment and Labor": Briefcase,
     "Education": GraduationCap,
     "Food and Agriculture": Wheat,
@@ -109,6 +117,7 @@ const iconComponents: { [key: string]: LucideIcon } = {
     Anchor, CloudSun, Eye, FlaskConical, LibrarySquare, Lightbulb, Palette, PieChart: LucidePieChart, Radio, Rocket, SearchCheck, ShieldAlert, Siren, TramFront, Vote, Banknote, Activity, FileText, Leaf, Mountain, Search,
     Brain,
     ArrowDownRightSquare,
+    "Veterans": Medal,
 };
 
 const DefaultIcon = HelpCircle;
