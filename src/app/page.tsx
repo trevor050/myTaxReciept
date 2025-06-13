@@ -61,6 +61,7 @@ export default function Home() {
   const [itemFundingLevels, setItemFundingLevels] = useState<Map<string, number>>(new Map());
   const [userName, setUserName] = useState('');
   const [userLocationText, setUserLocationText] = useState('');
+  const [zipCode, setZipCode] = useState<string | null>(null);
 
   const [estimatedMedianTax, setEstimatedMedianTax] = useState(NATIONAL_MEDIAN_FEDERAL_TAX);
 
@@ -200,17 +201,20 @@ export default function Home() {
   }, [isMobileView]);
 
 
-  const handleLocationSubmit = useCallback((loc: Location | null, zipCode?: string) => {
+  const handleLocationSubmit = useCallback((loc: Location | null, zip?: string) => {
     const finalLocation = loc ?? DEFAULT_LOCATION;
     setLocation(finalLocation);
+    if (zip) {
+      setZipCode(zip);
+    }
 
-    const stateAbbr = zipCode ? guessStateFromZip(zipCode) : (loc ? null : DEFAULT_STATE);
+    const stateAbbr = zip ? guessStateFromZip(zip) : (loc ? null : DEFAULT_STATE);
     const medianForState = getAverageTaxForState(stateAbbr);
     setEstimatedMedianTax(medianForState);
 
     toast({
         title: 'Location Set',
-        description: loc ? (zipCode ? `Using location for ${zipCode}.` : 'Using current location.') : `Using default location (New York Area). Estimated median tax for this area: $${medianForState.toLocaleString()}.`,
+        description: loc ? (zip ? `Using location for ${zip}.` : 'Using current location.') : `Using default location (New York Area). Estimated median tax for this area: $${medianForState.toLocaleString()}.`,
     });
     navigateToStep('tax');
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -407,112 +411,94 @@ export default function Home() {
     }
   }, [hasConcernsForSuggestions, handleShowResourceSuggestions]);
 
+  const renderStep = () => {
+    switch (step) {
+      case 'location':
+        return <LocationStep onSubmit={handleLocationSubmit} onBack={() => navigateToStep('dashboard')} isLoading={isLoading} />;
+      case 'tax':
+        return <TaxAmountStep onSubmit={handleTaxAmountSubmit} onBack={() => navigateToStep('location')} medianTax={estimatedMedianTax} isLoading={isLoading} />;
+      case 'hourlyWage':
+        return <HourlyWageStep onSubmit={handleHourlyWageSubmit} onBack={() => navigateToStep('tax')} isLoading={isLoading} />;
+      case 'dashboard':
+        return (
+          <TaxBreakdownDashboard
+            taxAmount={taxAmount ?? 0}
+            hourlyWage={hourlyWage}
+            taxSpending={taxSpending}
+            onSelectionChange={handleDashboardSelectionChange}
+            perspectives={dashboardPerspectives}
+            onOpenEnterHourlyWageModal={() => setIsEnterHourlyWageModalOpen(true)}
+            shouldAutoSwitchToTimeMode={shouldAutoSwitchToTimeMode}
+            onAutoSwitchToTimeMode={() => setShouldAutoSwitchToTimeMode(false)}
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-2 sm:p-4 md:p-8 bg-gradient-to-br from-background via-secondary/5 to-background relative">
-       <div className={`w-full ${step === 'dashboard' ? 'max-w-full md:max-w-4xl lg:max-w-5xl' : 'max-w-full sm:max-w-md md:max-w-2xl'} mx-auto space-y-1 sm:space-y-2 transition-all duration-300 ease-in-out z-10`}>
-        <div className="flex justify-start items-center min-h-[36px] sm:min-h-[40px] px-1 sm:px-0">
-            {step !== 'location' ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleBack}
-                className="text-muted-foreground hover:text-foreground transition-colors duration-200 self-center opacity-80 hover:opacity-100 text-xs sm:text-sm"
-                aria-label="Go back"
-              >
-                <ArrowLeft className="mr-1 sm:mr-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" /> Back
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 font-sans antialiased">
+      <Card className="w-full max-w-4xl backdrop-blur-sm bg-card/60">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            {prevStep && step !== 'dashboard' && (
+              <Button variant="ghost" size="sm" onClick={() => navigateToStep(prevStep)} className="mb-2">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
               </Button>
-            ) : <div />}
-        </div>
-
-        <Card className="w-full shadow-xl rounded-lg sm:rounded-xl border border-border/50 overflow-hidden bg-card">
-           <CardHeader className="bg-card/95 border-b border-border/50 px-3 py-2 sm:px-6 sm:py-5 md:px-8 md:py-6 relative">
-             <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10">
-                <ThemeToggle />
-             </div>
-             <div key={`header-${step}`} className="animate-fadeIn duration-400 pr-8 sm:pr-10">
-                  <CardTitle className="text-lg sm:text-2xl md:text-3xl font-semibold tracking-tight text-foreground">
-                     {title}
-                  </CardTitle>
-                  <CardDescription className="text-muted-foreground mt-1 sm:mt-1.5 text-xs sm:text-sm md:text-base">
-                    {description}
-                  </CardDescription>
-              </div>
-           </CardHeader>
-          <CardContent className="p-3 sm:p-6 md:p-10 bg-background relative overflow-hidden min-h-[250px] sm:min-h-[300px] md:min-h-[350px]">
-             <div className={`${animationClass} duration-300`}>
-                 {step === 'location' && <LocationStep onSubmit={handleLocationSubmit} />}
-                 {step === 'tax' && <TaxAmountStep onSubmit={handleTaxAmountSubmit} isLoading={isLoading} medianTax={estimatedMedianTax} />}
-                 {step === 'hourlyWage' && <HourlyWageStep onSubmit={handleHourlyWageSubmit} isLoading={isLoading} />}
-                 {step === 'dashboard' && (
-                     isLoading || taxAmount === null || taxSpending.length === 0 || !dashboardPerspectives ? (
-                         <div className="flex items-center justify-center h-full text-muted-foreground">
-                            <div className="text-center p-6 sm:p-10">Loading your tax breakdown...</div>
-                         </div>
-                     ) : (
-                         <TaxBreakdownDashboard
-                            taxAmount={taxAmount}
-                            hourlyWage={hourlyWage}
-                            taxSpending={taxSpending}
-                            onSelectionChange={handleDashboardSelectionChange}
-                            perspectives={dashboardPerspectives}
-                            onOpenEnterHourlyWageModal={() => setIsEnterHourlyWageModalOpen(true)}
-                            shouldAutoSwitchToTimeMode={shouldAutoSwitchToTimeMode}
-                            onAutoSwitchToTimeMode={() => setShouldAutoSwitchToTimeMode(false)}
-                         />
-                     )
-                 )}
-             </div>
-          </CardContent>
-        </Card>
-
-
-        <footer className="mt-4 sm:mt-6 text-center text-muted-foreground/60 text-[10px] sm:text-xs px-2 sm:px-4 md:px-0 relative pb-16 sm:pb-6">
-             Powered by publicly available data and community resources. Data is estimated and for informational purposes. Verify with official sources.
-        </footer>
-       </div>
-
-       <FloatingEmailButton
-            isVisible={showEmailAction && step === 'dashboard'}
-            count={emailActionCount}
-            onClick={handleOpenEmailModal}
-       />
-
-       <EmailCustomizationModal
-            isOpen={isEmailModalOpen}
-            onOpenChange={setIsEmailModalOpen}
-            onEmailGenerated={handleEmailGenerated}
-            onSuggestResources={handleShowResourceSuggestions}
-            canSuggestResources={hasConcernsForSuggestions}
-            selectedItems={selectedEmailItems}
-            balanceBudgetChecked={balanceBudgetChecked}
-            taxAmount={taxAmount ?? estimatedMedianTax}
-            aggressiveness={aggressiveness}
-            setAggressiveness={setAggressiveness}
-            itemFundingLevels={itemFundingLevels}
-            setItemFundingLevels={setItemFundingLevels}
-            userName={userName}
-            setUserName={setUserName}
-            userLocation={userLocationText}
-            setUserLocation={setUserLocationText}
+            )}
+            <CardTitle className="text-2xl font-bold">My Tax Receipt</CardTitle>
+            <CardDescription>
+              Understand where your federal tax money goes.
+            </CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent className={animationClass}>
+          {renderStep()}
+        </CardContent>
+      </Card>
+      {showEmailAction && (
+        <FloatingEmailButton
+          isVisible={showEmailAction && step === 'dashboard'}
+          count={emailActionCount}
+          onClick={handleOpenEmailModal}
         />
-
-        <ResourceSuggestionsModal
-            isOpen={isResourceModalOpen}
-            onOpenChange={setIsResourceModalOpen}
-            suggestedResources={suggestedResources}
-            isLoading={isSuggestingResources}
-            selectedItems={selectedEmailItems}
-            balanceBudgetChecked={balanceBudgetChecked}
-            userTone={toneBucket(aggressiveness)}
-            hasUserConcerns={hasConcernsForSuggestions}
-        />
-
-        <EnterHourlyWageModal
-            isOpen={isEnterHourlyWageModalOpen}
-            onOpenChange={setIsEnterHourlyWageModalOpen}
-            onSubmit={handleHourlyWageSubmitFromModal}
-        />
-    </main>
+      )}
+      <EmailCustomizationModal
+        isOpen={isEmailModalOpen}
+        onOpenChange={setIsEmailModalOpen}
+        onEmailGenerated={handleEmailGenerated}
+        onSuggestResources={handleShowResourceSuggestions}
+        canSuggestResources={hasConcernsForSuggestions}
+        selectedItems={selectedEmailItems}
+        balanceBudgetChecked={balanceBudgetChecked}
+        taxAmount={taxAmount ?? estimatedMedianTax}
+        aggressiveness={aggressiveness}
+        setAggressiveness={setAggressiveness}
+        itemFundingLevels={itemFundingLevels}
+        setItemFundingLevels={setItemFundingLevels}
+        userName={userName}
+        setUserName={setUserName}
+        userLocation={userLocationText}
+        setUserLocation={setUserLocationText}
+        zipCode={zipCode}
+      />
+      <ResourceSuggestionsModal
+        isOpen={isResourceModalOpen}
+        onOpenChange={setIsResourceModalOpen}
+        suggestedResources={suggestedResources}
+        isLoading={isSuggestingResources}
+        selectedItems={selectedEmailItems}
+        balanceBudgetChecked={balanceBudgetChecked}
+        userTone={toneBucket(aggressiveness)}
+        hasUserConcerns={hasConcernsForSuggestions}
+      />
+      <EnterHourlyWageModal
+        isOpen={isEnterHourlyWageModalOpen}
+        onOpenChange={setIsEnterHourlyWageModalOpen}
+        onSubmit={handleHourlyWageSubmitFromModal}
+      />
+    </div>
   );
 }

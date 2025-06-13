@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -12,10 +11,11 @@ import { cn } from '@/lib/utils';
 
 interface HourlyWageStepProps {
   onSubmit: (amount: number | null) => void; // Allow null for skipping
+  onBack: () => void;
   isLoading: boolean;
 }
 
-export default function HourlyWageStep({ onSubmit, isLoading }: HourlyWageStepProps) {
+export default function HourlyWageStep({ onSubmit, onBack, isLoading }: HourlyWageStepProps) {
   const [hourlyWage, setHourlyWage] = useState('');
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);

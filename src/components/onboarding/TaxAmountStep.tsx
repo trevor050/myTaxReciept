@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -12,11 +11,12 @@ import { cn } from '@/lib/utils';
 
 interface TaxAmountStepProps {
   onSubmit: (amount: number | null) => void; // Allow null for average case
+  onBack: () => void;
   isLoading: boolean;
   medianTax: number; // Accept median tax as prop
 }
 
-export default function TaxAmountStep({ onSubmit, isLoading, medianTax }: TaxAmountStepProps) {
+export default function TaxAmountStep({ onSubmit, onBack, isLoading, medianTax }: TaxAmountStepProps) {
   const [taxAmount, setTaxAmount] = useState('');
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);

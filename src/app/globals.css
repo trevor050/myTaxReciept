@@ -2,354 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: var(--font-geist-sans), sans-serif;
-}
-
 @layer base {
   :root {
-    --background: 0 0% 100%; /* Cleaner White */
-    --foreground: 0 0% 9%; /* Darker text for contrast */
+    --background: 0 0% 100%;
+    --foreground: 224 71.4% 4.1%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
+    --card-foreground: 224 71.4% 4.1%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
-    --primary: 180 100% 25.1%; /* Teal */
-    --primary-foreground: 0 0% 98%; /* Light contrast for teal */
-    --secondary: 0 0% 97.5%; /* Even lighter gray for subtle backgrounds */
-    --secondary-foreground: 0 0% 15%; /* Slightly darker secondary text */
-    --muted: 0 0% 94%; /* Slightly darker muted gray */
-    --muted-foreground: 0 0% 45.1%; /* Muted text */
-    --accent: 0 0% 96.1%; /* Keep light gray accent */
-    --accent-foreground: 180 100% 25.1%; /* Teal text on accent */
+    --popover-foreground: 224 71.4% 4.1%;
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
+    --accent: 220 14.3% 95.9%;
+    --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 91%; /* Lighter border */
-    --input: 0 0% 91%; /* Input border matches general border */
-    --ring: 180 100% 30%; /* Slightly brighter Teal for focus rings */
-
-    /* Expanded and more distinct chart colors */
-    --chart-1: 180 70% 40%; /* Teal */
-    --chart-2: 210 70% 50%; /* Blue */
-    --chart-3: 30 90% 55%;  /* Orange */
-    --chart-4: 270 60% 60%; /* Purple */
-    --chart-5: 120 40% 50%; /* Green */
-    --chart-6: 0 70% 60%;   /* Red */
-    --chart-7: 60 80% 45%;  /* Yellow */
-    --chart-8: 300 50% 65%; /* Pink */
-    --chart-9: 240 40% 70%; /* Lavender */
-    --chart-10: 150 60% 45%;/* Teal-Green */
-    --chart-11: 330 70% 70%;/* Light Pink/Rose */
-    --chart-12: 195 65% 55%;/* Sky Blue */
-    --chart-13: 90 50% 50%; /* Lime Green */
-    --chart-14: 20 60% 60%; /* Brownish Orange */
-    --chart-15: 260 40% 55%;/* Indigo */
-
-    --radius: 0.75rem; /* Slightly larger radius for modern feel */
-
-    /* Sidebar specific colors (can be adjusted if sidebar is used) */
-    /* Keep sidebar consistent or define specific modern theme */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 3.9%;
-    --sidebar-primary: 180 100% 25.1%; /* Teal */
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 0 0% 96.1%;
-    --sidebar-accent-foreground: 180 100% 25.1%; /* Teal */
-    --sidebar-border: 0 0% 89.8%;
-    --sidebar-ring: 180 100% 25.1%; /* Teal */
+    --destructive-foreground: 210 20% 98%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 262.1 83.3% 57.8%;
+    --radius: 0.75rem;
   }
 
   .dark {
-    /* Dark theme with Purple accent - Lightened for better contrast */
-    --background: 240 8% 8%; /* Lighter dark background */
-    --foreground: 0 0% 95%; /* Lighter text */
-    --card: 240 8% 12%; /* More visible card background */
-    --card-foreground: 0 0% 95%;
-    --popover: 240 8% 10%; /* Lighter popover */
-    --popover-foreground: 0 0% 95%;
-    --primary: 270 70% 60%; /* Purple accent */
-    --primary-foreground: 0 0% 98%; /* Light text on purple */
-    --secondary: 240 6% 18%; /* Lighter secondary */
-    --secondary-foreground: 0 0% 85%; /* Better secondary text contrast */
-    --muted: 240 6% 22%; /* Lighter muted */
-    --muted-foreground: 0 0% 60%; /* Better muted text visibility */
-    --accent: 240 6% 20%; /* Lighter accent background */
-    --accent-foreground: 270 70% 70%; /* Lighter Purple text on accent */
-    --destructive: 0 62.8% 50.6%; /* Adjusted destructive */
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 6% 20%; /* More visible borders */
-    --input: 240 6% 20%;
-    --ring: 270 70% 65%; /* Purple focus rings */
-
-    /* Expanded and distinct chart colors for dark mode */
-    --chart-1: 270 70% 60%; /* Purple (Primary) */
-    --chart-2: 180 60% 50%; /* Teal */
-    --chart-3: 30 80% 65%;  /* Orange */
-    --chart-4: 210 60% 60%; /* Blue */
-    --chart-5: 120 40% 60%; /* Green */
-    --chart-6: 0 65% 65%;   /* Red */
-    --chart-7: 60 70% 55%;  /* Yellow */
-    --chart-8: 300 50% 70%; /* Pink */
-    --chart-9: 240 30% 75%; /* Lavender */
-    --chart-10: 150 50% 55%;/* Teal-Green */
-    --chart-11: 330 60% 75%;/* Light Pink/Rose */
-    --chart-12: 195 55% 65%;/* Sky Blue */
-    --chart-13: 90 50% 60%; /* Lime Green */
-    --chart-14: 20 50% 70%; /* Brownish Orange */
-    --chart-15: 260 40% 65%;/* Indigo */
-
-    /* Sidebar specific colors for dark mode */
-    --sidebar-background: 240 8% 10%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 270 70% 60%; /* Purple */
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 6% 18%;
-    --sidebar-accent-foreground: 270 70% 70%; /* Purple */
-    --sidebar-border: 240 6% 20%;
-    --sidebar-ring: 270 70% 65%; /* Purple */
+    --background: 222.2 47.4% 11.2%;
+    --foreground: 210 20% 98%;
+    --card: 222.2 47.4% 11.2%;
+    --card-foreground: 210 20% 98%;
+    --popover: 222.2 47.4% 11.2%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 85.7% 97.3%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 262.1 83.3% 57.8%;
   }
 }
 
 @layer base {
   * {
-    @apply border-border transition-colors duration-150; /* Add subtle transition */
-  }
-  body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
-    -webkit-font-smoothing: antialiased; /* Smoother fonts */
-    -moz-osx-font-smoothing: grayscale;
-  }
-   /* Improved focus visibility */
-  *:focus-visible {
-     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+    @apply border-border;
   }
 }
 
-/* Smooth Fade-in */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-.animate-fadeIn {
-  animation: fadeIn 0.5s ease-out forwards; /* Slightly slower, smoother ease */
-}
-
-/* Smooth Slide-in from bottom + Fade */
-@keyframes slideInUp {
-  from { transform: translateY(15px); opacity: 0; } /* Slightly more distance */
-  to { transform: translateY(0); opacity: 1; }
-}
-.animate-slideInUp {
-  animation: slideInUp 0.45s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; /* Smoother, slightly slower */
-}
-
-/* Slide out to top + Fade */
-@keyframes slideOutUp {
-  from { transform: translateY(0); opacity: 1; }
-  to { transform: translateY(-15px); opacity: 0; }
-}
-.animate-slideOutUp {
-    animation: slideOutUp 0.3s ease-in forwards;
-}
-
-/* Slide in from top + Fade */
-@keyframes slideInDown {
-    from { transform: translateY(-15px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-.animate-slideInDown {
-    animation: slideInDown 0.45s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
-}
-
-
-/* Accordion animations (slightly refined) */
-@keyframes accordion-down {
-  from { height: 0; opacity: 0; transform: translateY(-5px); }
-  to { height: var(--radix-accordion-content-height); opacity: 1; transform: translateY(0); }
-}
-.animate-accordion-down {
-    animation: accordion-down 0.3s ease-out; /* Smoother ease */
-}
-
-@keyframes accordion-up {
-  from { height: var(--radix-accordion-content-height); opacity: 1; transform: translateY(0); }
-  to { height: 0; opacity: 0; transform: translateY(-5px); }
-}
-.animate-accordion-up {
-    animation: accordion-up 0.25s ease-out; /* Slightly faster exit */
-}
-
-/* Popover/Dialog animation */
-@keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
-}
-.animate-scaleIn {
-    animation: scaleIn 0.2s ease-out forwards;
-}
-
-@keyframes scaleOut {
-    from { opacity: 1; transform: scale(1); }
-    to { opacity: 0; transform: scale(0.95); }
-}
-.animate-scaleOut {
-    animation: scaleOut 0.15s ease-in forwards;
-}
-
-
-/* Glow keyframes for FAB */
-@keyframes glow {
-    0%, 100% { box-shadow: 0 0 5px hsla(var(--primary) / 0.5), 0 0 10px hsla(var(--primary) / 0.3); }
-    50% { box-shadow: 0 0 15px hsla(var(--primary) / 0.6), 0 0 25px hsla(var(--primary) / 0.4); }
-}
-.dark .animate-glow { /* Dark mode glow uses purple */
-     animation: glow-dark 2.5s ease-in-out infinite;
-}
-@keyframes glow-dark {
-    0%, 100% { box-shadow: 0 0 5px hsla(270 70% 60% / 0.5), 0 0 10px hsla(270 70% 60% / 0.3); }
-    50% { box-shadow: 0 0 15px hsla(270 70% 60% / 0.6), 0 0 25px hsla(270 70% 60% / 0.4); }
-}
-
-.animate-glow {
-    animation: glow 2.5s ease-in-out infinite;
-}
-
-/* Custom scrollbar utilities */
-.scrollbar-thin {
-    scrollbar-width: thin;
-}
-.scrollbar-thin::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-.scrollbar-thumb-muted::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--muted));
-    border-radius: 10px;
-    border: 2px solid hsl(var(--background));
-}
-.scrollbar-thumb-muted::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(var(--muted-foreground));
-}
-.scrollbar-track-transparent::-webkit-scrollbar-track {
-    background-color: transparent;
-}
-
-/* Scrollbar for tooltips (more visible against popover background) */
-.tooltip-scrollbar::-webkit-scrollbar {
-    width: 6px; /* Thinner for tooltips */
-    height: 6px;
-}
-.tooltip-scrollbar::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--muted-foreground) / 0.7); /* More visible thumb */
-    border-radius: 6px;
-    border: 1px solid hsl(var(--popover)); /* Border matches popover background */
-}
-.tooltip-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(var(--foreground) / 0.6); /* Darker on hover */
-}
-.tooltip-scrollbar::-webkit-scrollbar-track {
-    background-color: hsl(var(--popover)); /* Track matches popover background */
-}
-
-/* AI Generator Cards - More subtle and integrated styling */
-.ai-option-card {
-  @apply rounded-lg border bg-accent p-2 transition-colors;
-}
-
-.ai-option-card:hover, .ai-option-card[aria-checked="true"] {
-  @apply bg-muted border-primary/60;
-}
-
-.ai-option-card .ai-model-icon {
-  @apply h-5 w-5 flex-shrink-0;
-}
-
-.ai-option-card .tag {
-  @apply rounded-sm px-1.5 py-0.5 text-xs font-semibold leading-none;
-}
-
-/* Per-model theming for icons and tags */
-.ai-option-card.chatgpt .ai-model-icon { color: #00A67E; }
-.ai-option-card.chatgpt .tag { @apply bg-emerald-500/10 text-emerald-600 dark:text-emerald-400; }
-
-.ai-option-card.claude .ai-model-icon { color: #f97316; }
-.ai-option-card.claude .tag { @apply bg-orange-500/10 text-orange-600 dark:text-orange-400; }
-
-.ai-option-card.perplexity .ai-model-icon { color: #06b6d4; }
-.ai-option-card.perplexity .tag { @apply bg-cyan-500/10 text-cyan-600 dark:text-cyan-400; }
-
-.ai-option-card.copilot .ai-model-icon { color: #3b82f6; }
-.ai-option-card.copilot .tag { @apply bg-blue-500/10 text-blue-600 dark:text-blue-400; }
-
-.ai-option-card.you .ai-model-icon { color: #5a3fff; }
-.ai-option-card.you .tag { @apply bg-indigo-500/10 text-indigo-600 dark:text-indigo-400; }
-
-/* AI model icons - clean monotone style */
-.ai-model-icon {
-  filter: none;
-  opacity: 0.9;
-}
-
-/* No specific .dark .ai-model-logo needed as --muted-foreground handles theme changes */
-
-/* Custom app styles */
-
-.ai-option-card[data-state=checked] {
-  @apply ring-2 ring-primary border-primary;
-}
-
-.ai-option-card {
-  @apply transition-all duration-150 ease-in-out;
-  @apply cursor-pointer rounded-lg border bg-card py-3 pr-3 pl-4;
-}
-.ai-option-card:hover {
-  @apply border-primary/60;
-}
-
-.ai-option-card .tag {
-    @apply text-xs font-semibold rounded-full px-2 py-0.5 whitespace-nowrap;
-    @apply bg-accent text-accent-foreground;
-}
-
-/* Style for specific AI model tags, if needed */
-.ai-option-card.claude .tag { @apply bg-orange-200 text-orange-800 dark:bg-orange-800 dark:text-orange-200; }
-.ai-option-card.chatgpt .tag { @apply bg-green-200 text-green-800 dark:bg-green-700 dark:text-green-200; }
-.ai-option-card.perplexity .tag { @apply bg-cyan-200 text-cyan-800 dark:bg-cyan-800 dark:text-cyan-200; }
-.ai-option-card.copilot .tag { @apply bg-blue-200 text-blue-800 dark:bg-blue-800 dark:text-blue-200; }
-.ai-option-card.you .tag { @apply bg-indigo-200 text-indigo-800 dark:bg-indigo-700 dark:text-indigo-200; }
-.local-template .tag { @apply bg-lime-200 text-lime-900 dark:bg-lime-800 dark:text-lime-200; }
-
-
-.ai-model-icon {
-  width: 20px;
-  height: 20px;
-}
-
-/* Overwrite Radix's default dot for radio items since we are using a custom one */
-.ai-option-card[role="menuitemradio"]::before {
-    content: none !important;
-}
-
-/* Custom styles for specific AI models icons */
-.ai-option-card.perplexity .ai-model-icon {
-  background-color: transparent; /* No background */
-  color: #00B6A9; /* Perplexity's teal color */
-}
-
-.ai-option-card.copilot .ai-model-icon {
-  /* No specific style needed if using a multicolor icon component */
-}
-
-/* Dark mode fix for ChatGPT icon if it's an SVG with `currentColor` */
-.dark .ai-option-card.chatgpt .ai-model-icon {
-   color: #74A99C;
-}
-
-/* Fine-tune vertical position of Radix-generated radio dot in AI model menu */
-.ai-option-card [data-radix-dropdown-menu-item-indicator] {
-    top: 60% !important;             /* push dot a bit downward */
-    transform: translateY(-50%);     /* keep it centered around the new anchor */
-}
-
-    
+body {
+  @apply bg-background text-foreground;
+  font-feature-settings: "rlig" 1, "calt" 1;
+} 

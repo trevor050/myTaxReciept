@@ -427,10 +427,11 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                         <DropdownMenuRadioItem 
                           key={modelItem.id} 
                           value={modelItem.id} 
-                          className={cn("ai-option-card", modelItem.id)}
+                          className={cn("ai-option-card py-2", modelItem.id)}
+                          hideIndicator
                         >
-                          <div className="flex items-start gap-3 w-full">
-                             <IconComponent className="ai-model-icon mt-1 flex-shrink-0" />
+                          <div className="flex items-center gap-3 w-full">
+                             <IconComponent className="ai-model-icon flex-shrink-0" />
                             <div className="flex-1">
                               <div className="flex items-center justify-between">
                                 <span className="font-medium text-foreground">{modelItem.name}{displayProvider}</span>
@@ -452,10 +453,11 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                                <DropdownMenuRadioItem 
                                  key={templateModel.id} 
                                  value={templateModel.id} 
-                                 className="ai-option-card local-template"
+                                 className="ai-option-card local-template py-2"
+                                 hideIndicator
                                >
-                                  <div className="flex items-start gap-3 w-full">
-                                    <templateModel.icon className="ai-model-icon mt-1" />
+                                  <div className="flex items-center gap-3 w-full">
+                                    <templateModel.icon className="ai-model-icon" />
                                     <div className="flex-1">
                                       <div className="flex items-center justify-between">
                                         <span className="font-medium text-foreground">{templateModel.name}</span>

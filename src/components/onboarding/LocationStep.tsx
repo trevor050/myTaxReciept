@@ -12,11 +12,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 interface LocationStepProps {
-  // Update onSubmit to accept optional zipCode
   onSubmit: (location: Location | null, zipCode?: string) => void;
+  onBack: () => void;
+  isLoading: boolean;
 }
 
-export default function LocationStep({ onSubmit }: LocationStepProps) {
+export default function LocationStep({ onSubmit, onBack, isLoading }: LocationStepProps) {
   const [manualLocation, setManualLocation] = useState('');
   const [isLocating, setIsLocating] = useState(false);
   const [geolocationSupported, setGeolocationSupported] = useState<boolean | null>(null);

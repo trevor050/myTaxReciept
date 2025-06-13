@@ -816,25 +816,30 @@ export default function ResourceSuggestionsModal({
                          return (
                            <React.Fragment key={resource.url || resource.name}>
                              {isFirstExtendedResult && (
-                               <div className="relative flex items-center justify-center py-4 mt-6">
-                                 <div className="absolute inset-0 flex items-center">
-                                   <div className="w-full border-t border-dashed border-muted-foreground/30"></div>
-                                 </div>
-                                 <div className="relative flex items-center gap-2 bg-background px-4 text-sm text-muted-foreground">
-                                   <Sparkles className="h-4 w-4 opacity-60" />
-                                   {hasPrimaryMatches ? (
-                                     <>
-                                       <span className="font-medium">Additional matches for your filters</span>
-                                       <span className="text-xs opacity-70">• Not in your top choices, but still relevant</span>
-                                     </>
-                                   ) : (
-                                     <>
-                                       <span className="font-medium">No matches in your top choices</span>
-                                       <span className="text-xs opacity-70">• But here are other relevant organizations</span>
-                                     </>
-                                   )}
-                                 </div>
-                               </div>
+                                 hasPrimaryMatches ? (
+                                     <div className="relative flex items-center justify-center py-4 mt-6">
+                                         <div className="absolute inset-0 flex items-center">
+                                             <div className="w-full border-t border-dashed border-muted-foreground/30"></div>
+                                         </div>
+                                         <div className="relative flex items-center gap-2 bg-background px-4 text-sm text-muted-foreground">
+                                             <Sparkles className="h-4 w-4 opacity-60" />
+                                             <p className="flex items-center gap-x-2">
+                                                 <span className="font-medium">Additional matches for your filters</span>
+                                                 <span className="text-xs opacity-70">• Not in your top choices, but still relevant</span>
+                                             </p>
+                                         </div>
+                                     </div>
+                                 ) : (
+                                     <div className="my-6 rounded-lg border-2 border-dashed border-muted-foreground/20 bg-muted/20 p-4 sm:p-6 text-center">
+                                         <div className="flex items-center justify-center gap-2 text-base font-medium text-foreground">
+                                             <FilterX className="h-5 w-5 text-primary/80" />
+                                             <span>No matches in your top choices</span>
+                                         </div>
+                                         <p className="mt-2 text-sm text-muted-foreground">
+                                             However, here are some other relevant organizations for your consideration.
+                                         </p>
+                                     </div>
+                                 )
                              )}
                              {React.cloneElement(cardElement, { key: resource.url || resource.name })}
                            </React.Fragment>
