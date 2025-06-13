@@ -145,9 +145,6 @@ export default function HourlyWageStep({ onSubmit, isLoading }: HourlyWageStepPr
         >
           <SkipForward className="mr-2 h-4 w-4" /> Skip This Step
         </Button>
-         <p className="text-xs text-muted-foreground pt-2 text-center">
-            Skipping will disable the time perspective view on the dashboard.
-          </p>
       </div>
     </div>
   );

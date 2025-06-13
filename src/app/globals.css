@@ -262,9 +262,9 @@ body {
 
 /* Fix for specific AI model icons that need better visibility */
 .ai-model-logo.perplexity-icon {
-  background-color: hsl(var(--muted) / 0.3);
-  border-radius: 4px;
-  padding: 2px;
+  background-color: hsl(var(--muted) / 0.5);
+  border-radius: 3px;
+  padding: 1px;
 }
 
 /* Fix ChatGPT icon readability in dark mode */
