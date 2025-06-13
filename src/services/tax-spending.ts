@@ -119,11 +119,11 @@ export async function getTaxSpending(_location: Location, _taxAmount: number): P
       ],
     },
 
-    /** Health – 24 % */
+    /** Health – 23 % */
     {
       id: 'health',
       category: 'Health',
-      percentage: 24,
+      percentage: 23,
       subItems: [
         { id: 'medicare', description: 'Medicare', tooltipText: 'Guarantees health coverage for Americans aged 65 and older, and for some younger people with disabilities. It is the single largest public health insurance program in the United States.', amountPerDollar: 5400 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Medicare_(United_States)', category: 'Health' },
         { id: 'medicaid', description: 'Medicaid', tooltipText: 'A joint federal and state program that provides health coverage to millions of Americans, including eligible low-income adults, children, pregnant women, elderly adults and people with disabilities.', amountPerDollar: 4600 / REFERENCE_TOTAL_TAX, wikiLink: 'https://en.wikipedia.org/wiki/Medicaid', category: 'Health' },
