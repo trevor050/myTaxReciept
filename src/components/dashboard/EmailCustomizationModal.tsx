@@ -420,7 +420,12 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                       return (
                         <DropdownMenuRadioItem key={modelItem.id} value={modelItem.id} className="text-xs sm:text-sm leading-snug cursor-pointer py-2 px-2">
                           <div className="flex items-start gap-2.5 w-full">
-                             <IconComponent className={cn("h-4 w-4 mt-0.5 flex-shrink-0", modelItem.isAIMeta ? "ai-model-logo" : "text-muted-foreground")} />
+                             <IconComponent className={cn(
+                               "h-4 w-4 mt-0.5 flex-shrink-0", 
+                               modelItem.isAIMeta ? "ai-model-logo" : "text-muted-foreground",
+                               modelItem.id === 'perplexity' && "perplexity-icon",
+                               modelItem.id === 'chatgpt' && "chatgpt-icon"
+                             )} />
                             <div className="flex-1">
                               <div className="flex items-center gap-1.5 mb-0.5">
                                 <span className="font-medium text-foreground">{modelItem.name}{displayProvider}</span>

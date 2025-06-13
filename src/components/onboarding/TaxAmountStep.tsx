@@ -151,7 +151,7 @@ export default function TaxAmountStep({ onSubmit, isLoading, medianTax }: TaxAmo
                  className="transition-colors w-full sm:w-auto text-sm sm:text-base border-primary/50 text-primary hover:bg-primary/5" // Adjusted styling
                 size="lg"
             >
-                <Zap className="mr-2 h-4 w-4" /> Use Area Median ($ {medianTax.toLocaleString()}) {/* Use prop */}
+                <Zap className="mr-2 h-4 w-4" /> Use Area Median (${medianTax.toLocaleString()}) {/* Use prop */}
             </Button>
             {/* Removed redundant text */}
        </div>

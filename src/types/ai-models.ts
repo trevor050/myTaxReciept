@@ -66,9 +66,9 @@ export const AI_MODEL_OPTIONS: AIModelOption[] = [
     provider: 'Microsoft',
     url: 'https://www.bing.com/search?showconv=1&q=<YOUR_PROMPT>',
     icon: CopilotIcon,
-    tag: 'Microsoft Ecosystem',
+    tag: 'AI Assistant',
     tagColor: 'bg-blue-100 text-blue-700 dark:bg-blue-700/30 dark:text-blue-300',
-    description: 'AI chat with Bing search integration for current context. Prompt is auto-filled.',
+    description: 'Microsoft\'s AI assistant with Bing search integration for current context. Prompt is auto-filled.',
     isAIMeta: true,
   },
   {

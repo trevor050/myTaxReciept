@@ -259,6 +259,20 @@ body {
   filter: grayscale(100%); /* Ensure it's monochrome based on the new color */
   opacity: 0.85; /* Make it slightly subdued */
 }
+
+/* Fix for specific AI model icons that need better visibility */
+.ai-model-logo.perplexity-icon {
+  background-color: hsl(var(--muted) / 0.3);
+  border-radius: 4px;
+  padding: 2px;
+}
+
+/* Fix ChatGPT icon readability in dark mode */
+.dark .ai-model-logo.chatgpt-icon {
+  color: hsl(var(--foreground) / 0.8);
+  filter: none;
+}
+
 /* No specific .dark .ai-model-logo needed as --muted-foreground handles theme changes */
 
     

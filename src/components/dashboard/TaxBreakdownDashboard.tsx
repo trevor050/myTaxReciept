@@ -58,7 +58,9 @@ interface TaxBreakdownDashboardProps {
     balanceBudgetChecked: boolean
   ) => void;
   perspectives: DashboardPerspectives | null;
-  onOpenEnterHourlyWageModal: () => void; // New prop
+  onOpenEnterHourlyWageModal: () => void;
+  shouldAutoSwitchToTimeMode?: boolean; // New prop for auto-switching
+  onAutoSwitchToTimeMode?: () => void; // New prop callback
 }
 
 // Use CSS variables for colors defined in globals.css
@@ -354,6 +356,8 @@ export default function TaxBreakdownDashboard({
   onSelectionChange,
   perspectives,
   onOpenEnterHourlyWageModal,
+  shouldAutoSwitchToTimeMode = false,
+  onAutoSwitchToTimeMode,
 }: TaxBreakdownDashboardProps) {
 
   const [selectedItems, setSelectedItems] = useState<Map<string, SelectedItem>>(new Map());
@@ -387,6 +391,14 @@ export default function TaxBreakdownDashboard({
         onSelectionChange(count > 0, count, selectedItems, balanceBudgetChecked);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedItems, balanceBudgetChecked]);
+
+    // Auto-switch to time mode when hourly wage is set from modal
+    useEffect(() => {
+        if (shouldAutoSwitchToTimeMode && hourlyWage !== null && onAutoSwitchToTimeMode) {
+            setDisplayMode('time');
+            onAutoSwitchToTimeMode(); // Reset the flag
+        }
+    }, [shouldAutoSwitchToTimeMode, hourlyWage, onAutoSwitchToTimeMode]);
 
    const handleCheckboxChange = (checked: boolean | 'indeterminate', item: TaxSpendingSubItem) => {
         const newSelectedItems = new Map(selectedItems);

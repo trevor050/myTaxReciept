@@ -20,6 +20,9 @@ const timePerspectives: TimePerspectiveItem[] = [
     { minutes: 4, description: "do a quick stretch routine", icon: "Move" },
     { minutes: 5, description: "make a cup of instant coffee or tea", icon: "Coffee" },
     { minutes: 5, description: "send a quick thank-you email", icon: "Mail" },
+    { minutes: 2, description: "pet a dog at the park", icon: "Heart" },
+    { minutes: 3, description: "take a selfie and post it", icon: "Camera" },
+    { minutes: 4, description: "write a haiku", icon: "PenTool" },
 
     // Short (6-15 mins)
     { minutes: 6, description: "quickly scan news headlines", icon: "Newspaper" },
@@ -43,11 +46,16 @@ const timePerspectives: TimePerspectiveItem[] = [
     { minutes: 20, description: "write a short journal entry", icon: "NotebookPen" },
     { minutes: 22, description: "watch a typical YouTube video essay", icon: "Youtube" },
     { minutes: 25, description: "do a quick tidy-up of one room", icon: "SprayCan" },
-    { minutes: 25, description: "call a friend or family member to chat", icon: "Phone" }, // Assuming Phone icon exists
+    { minutes: 25, description: "call a friend or family member to chat", icon: "Phone" },
     { minutes: 28, description: "play a few levels of a mobile game", icon: "Gamepad2" },
     { minutes: 30, description: "watch an episode of a standard sitcom", icon: "Tv" },
     { minutes: 30, description: "practice mindfulness or meditate", icon: "BrainCircuit" },
     { minutes: 30, description: "follow an online drawing tutorial", icon: "PenTool" },
+    { minutes: 18, description: "organize your email inbox", icon: "Mail" },
+    { minutes: 22, description: "try a new recipe for a snack", icon: "Cookie" },
+    { minutes: 25, description: "look up funny memes and laugh", icon: "Smile" },
+    { minutes: 27, description: "practice juggling (badly)", icon: "Sparkles" },
+    { minutes: 30, description: "research your next vacation destination", icon: "Globe" },
 
 
     // Medium (31-60 mins)
@@ -154,25 +162,40 @@ export function generateCombinedPerspectiveList(
     }
 
     let remainingMinutes = totalMinutes;
-    const minTargetCoverage = totalMinutes * 0.98; // Target 98% coverage
+    const minTargetCoverage = totalMinutes * 0.95; // Slightly lower target for more creativity
     let accumulatedMinutes = 0;
 
     const activityCounts = new Map<string, { icon?: string; count: number; totalItemMinutes: number }>();
-    const MIN_TIME_THRESHOLD = 1; // Smallest activity to consider
+    const usedActivities = new Set<string>();
+    const MIN_TIME_THRESHOLD = 1;
     let iterations = 0;
-    const MAX_ITERATIONS = 500; // Increased iterations for potentially more items
+    const MAX_ITERATIONS = 500;
 
     while (remainingMinutes >= MIN_TIME_THRESHOLD && accumulatedMinutes < minTargetCoverage && iterations < MAX_ITERATIONS) {
         iterations++;
-        const availablePerspectives = timePerspectives.filter(p => p.minutes <= remainingMinutes && p.minutes > 0);
+        let availablePerspectives = timePerspectives.filter(p => p.minutes <= remainingMinutes && p.minutes > 0);
 
         if (availablePerspectives.length === 0) {
             break;
         }
 
-        const chosenPerspective = sample(availablePerspectives);
+        // Prioritize diversity: prefer activities we haven't used yet
+        const unusedPerspectives = availablePerspectives.filter(p => !usedActivities.has(p.description));
+        const perspectivesToChooseFrom = unusedPerspectives.length > 0 ? unusedPerspectives : availablePerspectives;
+
+        // Bias selection toward larger activities when there's significant time remaining
+        let chosenPerspective: TimePerspectiveItem | undefined;
+        if (remainingMinutes > 60 && Math.random() < 0.6) {
+            // 60% chance to pick a larger activity when we have >1 hour remaining
+            const largerActivities = perspectivesToChooseFrom.filter(p => p.minutes >= remainingMinutes * 0.3);
+            chosenPerspective = sample(largerActivities.length > 0 ? largerActivities : perspectivesToChooseFrom);
+        } else {
+            chosenPerspective = sample(perspectivesToChooseFrom);
+        }
+
         if (!chosenPerspective) break;
 
+        usedActivities.add(chosenPerspective.description);
         const current = activityCounts.get(chosenPerspective.description);
         activityCounts.set(chosenPerspective.description, {
             icon: chosenPerspective.icon,
