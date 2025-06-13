@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -15,28 +14,28 @@ export default function ThemeToggle() {
     setMounted(true)
   }, [])
 
-  if (!mounted) {
-    // Return a placeholder or null during SSR and initial client render before hydration
-    // This avoids mismatch for theme-dependent attributes like aria-label
-    // You can also return a Skeleton component or null
-    return (
-        <Button variant="ghost" size="icon" disabled aria-label="Toggle theme">
-            <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
-             {/* Moon is initially hidden by scale-0, so it's less critical for initial render mismatch */}
-        </Button>
-    );
-  }
-
+  // Always return the same structure to avoid hydration mismatches
+  // The key is to suppress hydration warnings for this specific component
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-      aria-label={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
-    >
-      <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-      <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-      <span className="sr-only">Toggle theme</span>
-    </Button>
+    <div suppressHydrationWarning>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={mounted ? () => setTheme(theme === "light" ? "dark" : "light") : undefined}
+        disabled={!mounted}
+        aria-label={mounted && theme ? (theme === "light" ? "Switch to dark mode" : "Switch to light mode") : "Toggle theme"}
+      >
+        {/* Always render both icons but control visibility with CSS */}
+        <Sun 
+          className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" 
+          suppressHydrationWarning
+        />
+        <Moon 
+          className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" 
+          suppressHydrationWarning
+        />
+        <span className="sr-only">Toggle theme</span>
+      </Button>
+    </div>
   )
 }

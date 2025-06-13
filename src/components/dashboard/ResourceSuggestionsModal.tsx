@@ -348,53 +348,189 @@ export default function ResourceSuggestionsModal({
     if (isLoading) return []; // isLoading is prop from page.tsx (isSuggestingResources)
     let filtered = suggestedResources;
 
-    if (activeFilterKeys.size === 0) { // If no filters, default to 'all-organizations' equivalent
-        return suggestedResources;
+    if (activeFilterKeys.size === 0) {
+      return suggestedResources;
     }
     if (activeFilterKeys.has('all-organizations') && activeFilterKeys.size === 1) {
-        return suggestedResources;
+      return suggestedResources;
     }
 
-    // If 'all-organizations' is present with others, it acts as a base, and others are ANDed or ORed based on type.
-    // For simplicity, if 'all-organizations' is not the *only* active filter, we ignore it for filtering logic.
     const effectiveFilters = new Set(activeFilterKeys);
     if (effectiveFilters.has('all-organizations') && effectiveFilters.size > 1) {
-        effectiveFilters.delete('all-organizations');
+      effectiveFilters.delete('all-organizations');
     }
 
+    // Early exit if no effective filters (e.g., user deselected everything)
+    if (effectiveFilters.size === 0) {
+      return suggestedResources;
+    }
 
-    if (effectiveFilters.size > 0) {
-        filtered = suggestedResources.filter(r => {
-            // Special handling for ranked filters: if one is selected, only that one matters for ranking perspective.
-            const rankedFiltersPresent = Array.from(effectiveFilters).filter(k => ['your-matches', 'best-matches', 'top-matches'].includes(k));
-            if (rankedFiltersPresent.length > 0) {
-                // If 'your-matches' is active, it's the primary ranked filter.
-                if (effectiveFilters.has('your-matches')) {
-                    if (!((r.matchCount || 0) > 0 || r.badges?.includes('Best Match') || r.badges?.includes('Top Match') || r.badges?.includes('Your Match'))) return false;
-                } else if (effectiveFilters.has('best-matches')) {
-                    if (!(r.badges?.includes('Best Match'))) return false;
-                } else if (effectiveFilters.has('top-matches')) {
-                    if (!(r.badges?.includes('Top Match'))) return false;
-                }
-            }
+    // Separate filters by type for easy OR logic within the same type
+    const rankedFilters = ['your-matches', 'best-matches', 'top-matches'];
+    const categoryFilters: string[] = [];
+    const orgTypeFilters: string[] = [];
+    const badgeFilters: string[] = [];
 
-            // Apply other filters (category, orgType, badgeGeneral) as AND conditions
-            // if they are selected ALONGSIDE a ranked filter, or if no ranked filter is selected.
-            for (const key of effectiveFilters) {
-                if (['your-matches', 'best-matches', 'top-matches'].includes(key)) continue; // Already handled
+    effectiveFilters.forEach((key) => {
+      if (rankedFilters.includes(key)) return; // handle later
+      if (key.startsWith('cat-')) {
+        categoryFilters.push(key.substring(4));
+      } else if (key.startsWith('orgtype-')) {
+        orgTypeFilters.push(key.substring(8));
+      } else if (key.startsWith('badge-')) {
+        badgeFilters.push(key.substring(6).replace(/-/g, ' '));
+      }
+    });
 
-                if (key.startsWith('cat-')) {
-                    if (r.mainCategory !== key.substring(4)) return false;
-                } else if (key.startsWith('orgtype-')) {
-                    if (!r.orgTypeTags?.includes(key.substring(8) as any)) return false;
-                } else if (key.startsWith('badge-')) {
-                    const badgeKey = key.substring(6).replace(/-/g, ' ');
-                    if (!r.badges?.some(b => b.toLowerCase() === badgeKey)) return false;
-                }
-            }
-            return true; // If all non-ranked filters pass (or no non-ranked filters are active)
+    const anyRankedFilterActive = rankedFilters.some((rf) => effectiveFilters.has(rf));
+    const hasAdditionalFilters = categoryFilters.length > 0 || orgTypeFilters.length > 0 || badgeFilters.length > 0;
+
+    // Extended functionality: When any ranked filter is active AND additional filters are applied,
+    // OR when ONLY additional filters are applied without ranked filters
+    if ((anyRankedFilterActive && hasAdditionalFilters) || (!anyRankedFilterActive && hasAdditionalFilters)) {
+      let primaryMatches: SuggestedResource[] = [];
+      
+      // Get the primary matches based on the active ranked filter
+      if (effectiveFilters.has('your-matches')) {
+        primaryMatches = suggestedResources.filter((r) => {
+          if (!((r.matchCount || 0) > 0 || r.badges?.some((b) => ['Best Match', 'Top Match', 'Your Match'].includes(b)))) return false;
+          
+          // Apply additional filters
+          if (categoryFilters.length > 0 && !categoryFilters.includes(r.mainCategory)) {
+            return false;
+          }
+          if (orgTypeFilters.length > 0) {
+            const hasOrgType = r.orgTypeTags?.some((tag) => orgTypeFilters.includes(tag as string));
+            if (!hasOrgType) return false;
+          }
+          if (badgeFilters.length > 0) {
+            const hasBadge = r.badges?.some((b) => badgeFilters.includes(b.toLowerCase()));
+            if (!hasBadge) return false;
+          }
+          return true;
         });
+      } else if (effectiveFilters.has('best-matches')) {
+        primaryMatches = suggestedResources.filter((r) => {
+          if (!r.badges?.includes('Best Match')) return false;
+          
+          // Apply additional filters
+          if (categoryFilters.length > 0 && !categoryFilters.includes(r.mainCategory)) {
+            return false;
+          }
+          if (orgTypeFilters.length > 0) {
+            const hasOrgType = r.orgTypeTags?.some((tag) => orgTypeFilters.includes(tag as string));
+            if (!hasOrgType) return false;
+          }
+          if (badgeFilters.length > 0) {
+            const hasBadge = r.badges?.some((b) => badgeFilters.includes(b.toLowerCase()));
+            if (!hasBadge) return false;
+          }
+          return true;
+        });
+      } else if (effectiveFilters.has('top-matches')) {
+        primaryMatches = suggestedResources.filter((r) => {
+          if (!r.badges?.includes('Top Match')) return false;
+          
+          // Apply additional filters
+          if (categoryFilters.length > 0 && !categoryFilters.includes(r.mainCategory)) {
+            return false;
+          }
+          if (orgTypeFilters.length > 0) {
+            const hasOrgType = r.orgTypeTags?.some((tag) => orgTypeFilters.includes(tag as string));
+            if (!hasOrgType) return false;
+          }
+          if (badgeFilters.length > 0) {
+            const hasBadge = r.badges?.some((b) => badgeFilters.includes(b.toLowerCase()));
+            if (!hasBadge) return false;
+          }
+          return true;
+        });
+      } else if (!anyRankedFilterActive && hasUserConcerns) {
+        // When no ranked filter is active but user has concerns, show user matches first
+        primaryMatches = suggestedResources.filter((r) => {
+          if (!((r.matchCount || 0) > 0 || r.badges?.some((b) => ['Best Match', 'Top Match', 'Your Match'].includes(b)))) return false;
+          
+          // Apply additional filters
+          if (categoryFilters.length > 0 && !categoryFilters.includes(r.mainCategory)) {
+            return false;
+          }
+          if (orgTypeFilters.length > 0) {
+            const hasOrgType = r.orgTypeTags?.some((tag) => orgTypeFilters.includes(tag as string));
+            if (!hasOrgType) return false;
+          }
+          if (badgeFilters.length > 0) {
+            const hasBadge = r.badges?.some((b) => badgeFilters.includes(b.toLowerCase()));
+            if (!hasBadge) return false;
+          }
+          return true;
+        });
+      }
+
+      // Get the URLs of primary matches to exclude them from additional matches
+      const primaryMatchUrls = new Set(primaryMatches.map(r => r.url));
+
+      // Then get additional matches that meet the additional criteria but aren't primary matches
+      const additionalMatches = suggestedResources.filter((r) => {
+        // Skip if it's already a primary match
+        if (primaryMatchUrls.has(r.url)) return false;
+        
+        // Apply additional filters
+        if (categoryFilters.length > 0 && !categoryFilters.includes(r.mainCategory)) {
+          return false;
+        }
+        if (orgTypeFilters.length > 0) {
+          const hasOrgType = r.orgTypeTags?.some((tag) => orgTypeFilters.includes(tag as string));
+          if (!hasOrgType) return false;
+        }
+        if (badgeFilters.length > 0) {
+          const hasBadge = r.badges?.some((b) => badgeFilters.includes(b.toLowerCase()));
+          if (!hasBadge) return false;
+        }
+        return true;
+      });
+
+      // Add a separator indicator to additional matches
+      const markedAdditionalMatches = additionalMatches.map(resource => ({
+        ...resource,
+        isExtendedResult: true
+      }));
+
+      return [...primaryMatches, ...markedAdditionalMatches];
     }
+
+    // Original filtering logic for other cases
+    filtered = suggestedResources.filter((r) => {
+      // Handle ranked filters (mutually exclusive, OR between them but functionally only one at a time after click handler)
+      if (anyRankedFilterActive) {
+        if (effectiveFilters.has('your-matches')) {
+          if (!((r.matchCount || 0) > 0 || r.badges?.some((b) => ['Best Match', 'Top Match', 'Your Match'].includes(b)))) return false;
+        } else if (effectiveFilters.has('best-matches')) {
+          if (!r.badges?.includes('Best Match')) return false;
+        } else if (effectiveFilters.has('top-matches')) {
+          if (!r.badges?.includes('Top Match')) return false;
+        }
+      }
+
+      // Category filter OR logic
+      if (categoryFilters.length > 0 && !categoryFilters.includes(r.mainCategory)) {
+        return false;
+      }
+
+      // OrgType filter OR logic
+      if (orgTypeFilters.length > 0) {
+        const hasOrgType = r.orgTypeTags?.some((tag) => orgTypeFilters.includes(tag as string));
+        if (!hasOrgType) return false;
+      }
+
+      // BadgeGeneral filter OR logic
+      if (badgeFilters.length > 0) {
+        const hasBadge = r.badges?.some((b) => badgeFilters.includes(b.toLowerCase()));
+        if (!hasBadge) return false;
+      }
+
+      return true;
+    });
+
     return filtered;
   }, [isLoading, suggestedResources, activeFilterKeys]);
 
@@ -571,14 +707,20 @@ export default function ResourceSuggestionsModal({
       <DialogContent
         ref={refModal}
         style={
-            pos.x !== null && pos.y !== null
+            pos.x !== null && pos.y !== null && window.innerWidth >= 640
             ? { left: pos.x, top: pos.y, transform: 'none' }
             : undefined
         }
         className={cn(
-            'fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:rounded-lg',
-             pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut',
-             pos.x !== null && 'data-[state=open]:animate-fadeIn data-[state=closed]:animate-scaleOut' // Use simpler fadeIn for dragged
+            'fixed z-50 flex border bg-background shadow-lg',
+            // Mobile: full screen
+            'h-full w-full max-h-none rounded-none',
+            // Desktop: floating dialog
+            'sm:max-h-[85vh] sm:w-[90vw] sm:max-w-3xl sm:rounded-lg',
+            // Animation classes
+            pos.x === null && 'sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut',
+            pos.x !== null && 'data-[state=open]:animate-fadeIn data-[state=closed]:animate-scaleOut',
+            'flex-col'
         )}
         onInteractOutside={e => drag && e.preventDefault()}
         onOpenAutoFocus={e => {
@@ -588,7 +730,7 @@ export default function ResourceSuggestionsModal({
         <div
             ref={refHandle}
             onMouseDown={onDown}
-            className='relative flex shrink-0 cursor-move select-none items-center justify-between border-b px-4 py-3 sm:px-6 sm:py-4 bg-card/95 rounded-t-lg'
+            className='relative flex shrink-0 select-none items-center justify-between border-b px-4 py-3 sm:px-6 sm:py-4 bg-card/95 sm:cursor-move sm:rounded-t-lg'
          >
           <div className='flex items-center gap-2 sm:gap-3 pointer-events-none'>
             <GripVertical className='h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground shrink-0' />
@@ -667,9 +809,47 @@ export default function ResourceSuggestionsModal({
                 </div>
             ) : displayedResources.length > 0 ? (
                 <div className="space-y-3 sm:space-y-4">
-                    {displayedResources.map((resource) => {
+                    {displayedResources.map((resource, index) => {
+                         // Check if we need to add a separator before this resource
+                         const isFirstExtendedResult = resource.isExtendedResult && 
+                           (index === 0 || !displayedResources[index - 1]?.isExtendedResult);
+                         
+                         // Determine if there are any primary matches
+                         const hasPrimaryMatches = displayedResources.some(r => !r.isExtendedResult);
+                         
                          const cardElement = renderResourceCard(resource);
-                         return React.cloneElement(cardElement, { key: resource.url || resource.name });
+                         
+                         return (
+                           <React.Fragment key={resource.url || resource.name}>
+                             {isFirstExtendedResult && (
+                                 hasPrimaryMatches ? (
+                                     <div className="relative flex items-center justify-center py-4 mt-6">
+                                         <div className="absolute inset-0 flex items-center">
+                                             <div className="w-full border-t border-dashed border-muted-foreground/30"></div>
+                                         </div>
+                                         <div className="relative flex items-center gap-2 bg-background px-4 text-sm text-muted-foreground">
+                                             <Sparkles className="h-4 w-4 opacity-60" />
+                                             <p className="flex items-center gap-x-2">
+                                                 <span className="font-medium">Additional matches for your filters</span>
+                                                 <span className="text-xs opacity-70">• Not in your top choices, but still relevant</span>
+                                             </p>
+                                         </div>
+                                     </div>
+                                 ) : (
+                                     <div className="my-6 rounded-lg border-2 border-dashed border-muted-foreground/20 bg-muted/20 p-4 sm:p-6 text-center">
+                                         <div className="flex items-center justify-center gap-2 text-base font-medium text-foreground">
+                                             <FilterX className="h-5 w-5 text-primary/80" />
+                                             <span>No matches in your top choices</span>
+                                         </div>
+                                         <p className="mt-2 text-sm text-muted-foreground">
+                                             However, here are some other relevant organizations for your consideration.
+                                         </p>
+                                     </div>
+                                 )
+                             )}
+                             {React.cloneElement(cardElement, { key: resource.url || resource.name })}
+                           </React.Fragment>
+                         );
                     })}
                     {
                      filteredResources.length > visibleItemCount && !isLoading && (
@@ -690,7 +870,7 @@ export default function ResourceSuggestionsModal({
             </ScrollArea>
         </TooltipProvider>
 
-        <DialogFooter className="flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end px-4 py-3 sm:px-6 sm:py-4 border-t bg-card/95 rounded-b-lg sticky bottom-0 z-10">
+        <DialogFooter className="flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end px-4 py-3 sm:px-6 sm:py-4 border-t bg-card/95 sm:rounded-b-lg sticky bottom-0 z-10">
           <DialogClose asChild>
             <Button variant="outline" className="w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10">Close</Button>
           </DialogClose>

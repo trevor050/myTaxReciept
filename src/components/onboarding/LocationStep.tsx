@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -42,25 +41,22 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
     }
 
 
-    // Add keydown listener for Enter key
+    // Add keydown listener for Enter key (global – not just when input focused)
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Enter') {
-        // Prevent default form submission behavior if input is focused
-        if (document.activeElement === inputRef.current) {
-            event.preventDefault();
-             // If input has value, submit it manually
-             if (manualLocation.trim()) {
-                handleManualSubmit(event as unknown as React.FormEvent); // Cast event type
-             } else {
-                 // If input is empty, skip (submit null)
-                 onSubmit(null); // Pass null for location, no zip code
-                 toast({
-                     title: 'Skipped Location',
-                     description: 'Using default location.',
-                 });
-             }
+        event.preventDefault(); // Prevent default to avoid unexpected form submits
+
+        if (manualLocation.trim()) {
+            // If the user typed something, treat Enter as form submit
+            handleManualSubmit(event as unknown as React.FormEvent);
+        } else {
+            // Otherwise treat Enter as "skip"
+            onSubmit(null);
+            toast({
+                title: 'Skipped Location',
+                description: 'Using default location.',
+            });
         }
-        // Allow Enter for button clicks elsewhere
       }
     };
 
@@ -69,7 +65,7 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-    // Add manualLocation to dependencies to re-evaluate Enter key press logic
+    // Re-run listener when manualLocation changes so latest value is used
   }, [manualLocation, onSubmit, toast]);
 
 
@@ -183,51 +179,7 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
   // Client-side rendered content
   return (
     <div className="space-y-4 sm:space-y-6"> {/* Adjusted spacing for mobile */}
-      {/* Geolocation button section */}
-       {geolocationSupported !== null && (
-           <>
-             <Button
-                onClick={handleUseCurrentLocation}
-                 disabled={!geolocationSupported || isLocating} // Disable if not supported or locating
-                className="w-full transition-all duration-200 ease-in-out hover:scale-[1.02] text-sm sm:text-base"
-                variant="outline"
-                size="lg"
-                aria-live="polite" // Announce changes for screen readers
-              >
-                {isLocating ? (
-                    <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Locating...
-                    </>
-                ) : (
-                    <>
-                        <LocateFixed className="mr-2 h-4 w-4" />
-                        Use Current Location
-                    </>
-                )}
-             </Button>
-              {!geolocationSupported && (
-                <p className="text-xs text-center text-muted-foreground -mt-3">
-                    Geolocation is not available. Please enter manually or skip.
-                </p>
-              )}
-
-              {/* Separator */}
-              <div className="relative my-2 sm:my-4"> {/* Adjusted margin for mobile */}
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border/70" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground/80">
-                    Or Enter Manually
-                  </span>
-                </div>
-              </div>
-          </>
-        )}
-
-
-      {/* Manual input form */}
+      {/* Main Input Form */}
       <form onSubmit={handleManualSubmit} className="space-y-3 sm:space-y-4"> {/* Adjusted spacing for mobile */}
         <div className="space-y-1 sm:space-y-2"> {/* Adjusted spacing for mobile */}
           <Label htmlFor="location" className="sr-only">Location (Zip Code or City, State) or press Enter to skip</Label>
@@ -240,24 +192,75 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
               ref={inputRef}
               id="location"
               type="text"
-              placeholder="Zip Code or City, State"
+              placeholder="Enter Location (e.g., 10001)"
               value={manualLocation}
               onChange={(e) => setManualLocation(e.target.value)}
-              className="pl-9 sm:pl-10 pr-12 sm:pr-16 h-11 sm:h-12 text-sm sm:text-base" // Adjusted padding and height for mobile
+              className="pl-9 sm:pl-10 pr-12 sm:pr-16 h-11 sm:h-12 text-base sm:text-lg text-center" // Adjusted padding, height and font for mobile
               aria-label="Enter your location manually or press Enter to skip"
-              aria-describedby="skip-hint" // Describe the skip action
+              aria-describedby="location-skip-hint" // Describe the skip action
             />
             {/* Skip Hint */}
-            <div id="skip-hint" className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs text-muted-foreground/70 pointer-events-none">
+            <div id="location-skip-hint" className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs text-muted-foreground/70 pointer-events-none">
                Skip <CornerDownLeft className="h-3 w-3"/>
             </div>
           </div>
-           <p className="text-xs text-muted-foreground pt-1 pl-1">Enter your location or press <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-sm dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">Enter</kbd> to use the default (New York area).</p>
+           <p className="text-xs text-muted-foreground pt-1 text-center">Enter your zip code or city, state or press <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-sm dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">Enter</kbd> to use the default.</p>
         </div>
         <Button type="submit" className="w-full transition-all duration-200 ease-in-out hover:scale-[1.02] text-sm sm:text-base" size="lg">
-           {manualLocation.trim() ? 'Next' : 'Skip & Use Default'}
+          Find My Tax Breakdown
         </Button>
       </form>
+
+      {/* Separator */}
+      <div className="relative my-2 sm:my-4"> {/* Adjusted margin for mobile */}
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-border/70" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground/80">
+            Or
+          </span>
+        </div>
+      </div>
+
+      {/* Alternative Options */}
+      <div className="flex flex-col sm:flex-row sm:justify-center gap-2 sm:gap-3"> {/* Improved layout so buttons don't overlap */}
+        {geolocationSupported && (
+          <Button
+            variant="outline"
+            onClick={handleUseCurrentLocation}
+            disabled={isLocating}
+            className="transition-colors w-full sm:w-auto text-sm sm:text-base border-primary/50 text-primary hover:bg-primary/5" // Removed bottom margin due to new flex gap
+            size="lg"
+          >
+            {isLocating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Locating...
+              </>
+            ) : (
+              <>
+                <LocateFixed className="mr-2 h-4 w-4" />
+                Use Current Location
+              </>
+            )}
+          </Button>
+        )}
+        <Button 
+          variant="outline"
+          onClick={() => {
+            onSubmit(null);
+            toast({
+              title: 'Using Default',
+              description: 'Using default location for tax calculation.',
+            });
+          }}
+          className="transition-colors w-full sm:w-auto text-sm sm:text-base border-primary/50 text-primary hover:bg-primary/5" // Styles aligned, spacing handled by flex gap
+          size="lg"
+        >
+          <MapPin className="mr-2 h-4 w-4" /> Use Default Location
+        </Button>
+      </div>
     </div>
   );
 }

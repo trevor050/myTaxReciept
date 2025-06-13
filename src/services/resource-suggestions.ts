@@ -177,6 +177,7 @@ export async function suggestResources(
       focusType: resource.focusType,
       orgTypeTags: resource.orgTypeTags,
       intendedBadgeProfile: resource.intendedBadgeProfile,
+      isExtendedResult: false, // Server-side resources are not extended results initially
     });
     suggestedUrls.add(resource.url);
   }

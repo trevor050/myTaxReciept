@@ -140,14 +140,11 @@ export default function HourlyWageStep({ onSubmit, isLoading }: HourlyWageStepPr
           variant="outline"
           onClick={handleSkip}
           disabled={isLoading}
-          className="transition-colors w-full sm:w-auto text-sm sm:text-base border-muted-foreground/50 text-muted-foreground hover:bg-accent/50" // Adjusted font size
+          className="transition-colors w-full sm:w-auto text-sm sm:text-base border-primary/50 text-primary hover:bg-primary/5" // Adjusted styling to match TaxAmountStep
           size="lg"
         >
           <SkipForward className="mr-2 h-4 w-4" /> Skip This Step
         </Button>
-         <p className="text-xs text-muted-foreground pt-2 text-center">
-            Skipping will disable the time perspective view on the dashboard.
-          </p>
       </div>
     </div>
   );

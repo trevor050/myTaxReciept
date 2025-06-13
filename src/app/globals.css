@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,256 +8,384 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 100%; /* Cleaner White */
-    --foreground: 0 0% 9%; /* Darker text for contrast */
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
+    /* Enhanced Light Theme - More sophisticated palette */
+    --background: 0 0% 99%; /* Pure, bright white */
+    --foreground: 220 13% 9%; /* Rich, deep charcoal */
+    --card: 0 0% 100%; /* Pure white cards */
+    --card-foreground: 220 13% 9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
-    --primary: 180 100% 25.1%; /* Teal */
-    --primary-foreground: 0 0% 98%; /* Light contrast for teal */
-    --secondary: 0 0% 97.5%; /* Even lighter gray for subtle backgrounds */
-    --secondary-foreground: 0 0% 15%; /* Slightly darker secondary text */
-    --muted: 0 0% 94%; /* Slightly darker muted gray */
-    --muted-foreground: 0 0% 45.1%; /* Muted text */
-    --accent: 0 0% 96.1%; /* Keep light gray accent */
-    --accent-foreground: 180 100% 25.1%; /* Teal text on accent */
-    --destructive: 0 84.2% 60.2%;
+    --popover-foreground: 220 13% 9%;
+    --primary: 180 100% 25%; /* Deep teal - primary brand */
+    --primary-foreground: 0 0% 98%;
+    --secondary: 220 14% 96%; /* Subtle cool gray */
+    --secondary-foreground: 220 13% 15%;
+    --muted: 220 13% 95%; /* Refined muted background */
+    --muted-foreground: 220 9% 46%;
+    --accent: 220 13% 97%; /* Subtle accent background */
+    --accent-foreground: 180 100% 25%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 91%; /* Lighter border */
-    --input: 0 0% 91%; /* Input border matches general border */
-    --ring: 180 100% 30%; /* Slightly brighter Teal for focus rings */
+    --border: 220 13% 91%; /* Softer, more refined borders */
+    --input: 220 13% 91%;
+    --ring: 180 100% 30%; /* Vibrant focus ring */
 
-    /* Expanded and more distinct chart colors */
-    --chart-1: 180 70% 40%; /* Teal */
-    --chart-2: 210 70% 50%; /* Blue */
-    --chart-3: 30 90% 55%;  /* Orange */
-    --chart-4: 270 60% 60%; /* Purple */
-    --chart-5: 120 40% 50%; /* Green */
-    --chart-6: 0 70% 60%;   /* Red */
-    --chart-7: 60 80% 45%;  /* Yellow */
-    --chart-8: 300 50% 65%; /* Pink */
-    --chart-9: 240 40% 70%; /* Lavender */
-    --chart-10: 150 60% 45%;/* Teal-Green */
-    --chart-11: 330 70% 70%;/* Light Pink/Rose */
-    --chart-12: 195 65% 55%;/* Sky Blue */
-    --chart-13: 90 50% 50%; /* Lime Green */
-    --chart-14: 20 60% 60%; /* Brownish Orange */
-    --chart-15: 260 40% 55%;/* Indigo */
+    /* Enhanced Chart Colors - More sophisticated palette */
+    --chart-1: 180 75% 45%; /* Sophisticated teal */
+    --chart-2: 210 85% 55%; /* Vibrant blue */
+    --chart-3: 25 85% 60%;  /* Warm orange */
+    --chart-4: 270 65% 65%; /* Rich purple */
+    --chart-5: 140 65% 50%; /* Fresh green */
+    --chart-6: 0 75% 60%;   /* Bold red */
+    --chart-7: 50 90% 55%;  /* Golden yellow */
+    --chart-8: 320 65% 65%; /* Magenta pink */
+    --chart-9: 240 50% 70%; /* Soft lavender */
+    --chart-10: 160 60% 50%;/* Teal-green */
+    --chart-11: 340 70% 65%;/* Rose pink */
+    --chart-12: 200 70% 60%;/* Sky blue */
+    --chart-13: 100 60% 55%; /* Lime green */
+    --chart-14: 30 65% 65%; /* Burnt orange */
+    --chart-15: 260 50% 60%;/* Deep indigo */
 
-    --radius: 0.75rem; /* Slightly larger radius for modern feel */
+    --radius: 0.875rem; /* Larger radius for modern feel */
 
-    /* Sidebar specific colors (can be adjusted if sidebar is used) */
-    /* Keep sidebar consistent or define specific modern theme */
+    /* Sidebar specific colors */
     --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 3.9%;
-    --sidebar-primary: 180 100% 25.1%; /* Teal */
+    --sidebar-foreground: 220 13% 9%;
+    --sidebar-primary: 180 100% 25%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 0 0% 96.1%;
-    --sidebar-accent-foreground: 180 100% 25.1%; /* Teal */
-    --sidebar-border: 0 0% 89.8%;
-    --sidebar-ring: 180 100% 25.1%; /* Teal */
+    --sidebar-accent: 220 13% 97%;
+    --sidebar-accent-foreground: 180 100% 25%;
+    --sidebar-border: 220 13% 89%;
+    --sidebar-ring: 180 100% 30%;
   }
 
   .dark {
-    /* Dark theme with Purple accent */
-    --background: 240 10% 3.9%; /* Dark Blue/Gray */
-    --foreground: 0 0% 95%; /* Lighter text */
-    --card: 240 10% 5.9%; /* Slightly lighter card */
-    --card-foreground: 0 0% 95%;
-    --popover: 240 10% 4.5%; /* Slightly darker popover */
-    --popover-foreground: 0 0% 95%;
-    --primary: 270 70% 60%; /* Purple accent */
-    --primary-foreground: 0 0% 98%; /* Light text on purple */
-    --secondary: 240 5% 12%; /* Darker secondary */
-    --secondary-foreground: 0 0% 80%; /* Lighter secondary text */
-    --muted: 240 5% 18%; /* Darker muted */
-    --muted-foreground: 0 0% 55%; /* Muted text */
-    --accent: 240 5% 15%; /* Dark accent background */
-    --accent-foreground: 270 70% 70%; /* Lighter Purple text on accent */
-    --destructive: 0 62.8% 50.6%; /* Adjusted destructive */
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5% 15%; /* Subtle border */
-    --input: 240 5% 15%;
-    --ring: 270 70% 65%; /* Purple focus rings */
+    /* Enhanced Dark Theme - Sophisticated and modern */
+    --background: 222 15% 6%; /* Deeper, richer dark */
+    --foreground: 210 11% 96%; /* Softer white */
+    --card: 222 15% 8%; /* Slightly elevated card background */
+    --card-foreground: 210 11% 96%;
+    --popover: 222 15% 7%;
+    --popover-foreground: 210 11% 96%;
+    --primary: 270 75% 65%; /* Vibrant purple accent */
+    --primary-foreground: 210 20% 98%;
+    --secondary: 222 13% 15%; /* Refined secondary background */
+    --secondary-foreground: 210 11% 85%;
+    --muted: 222 13% 18%; /* Better contrast muted */
+    --muted-foreground: 215 16% 65%; /* Improved readability */
+    --accent: 222 13% 16%; /* Subtle accent background */
+    --accent-foreground: 270 75% 70%;
+    --destructive: 0 75% 60%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 222 13% 18%; /* Refined borders */
+    --input: 222 13% 18%;
+    --ring: 270 75% 70%; /* Vibrant purple focus */
 
-    /* Expanded and distinct chart colors for dark mode */
-    --chart-1: 270 70% 60%; /* Purple (Primary) */
-    --chart-2: 180 60% 50%; /* Teal */
-    --chart-3: 30 80% 65%;  /* Orange */
-    --chart-4: 210 60% 60%; /* Blue */
-    --chart-5: 120 40% 60%; /* Green */
-    --chart-6: 0 65% 65%;   /* Red */
-    --chart-7: 60 70% 55%;  /* Yellow */
-    --chart-8: 300 50% 70%; /* Pink */
-    --chart-9: 240 30% 75%; /* Lavender */
-    --chart-10: 150 50% 55%;/* Teal-Green */
-    --chart-11: 330 60% 75%;/* Light Pink/Rose */
-    --chart-12: 195 55% 65%;/* Sky Blue */
-    --chart-13: 90 50% 60%; /* Lime Green */
-    --chart-14: 20 50% 70%; /* Brownish Orange */
-    --chart-15: 260 40% 65%;/* Indigo */
+    /* Enhanced Dark Chart Colors */
+    --chart-1: 270 75% 65%; /* Primary purple */
+    --chart-2: 180 65% 55%; /* Teal complement */
+    --chart-3: 30 85% 70%;  /* Warm orange */
+    --chart-4: 210 70% 65%; /* Cool blue */
+    --chart-5: 140 55% 65%; /* Fresh green */
+    --chart-6: 0 70% 68%;   /* Vibrant red */
+    --chart-7: 50 85% 65%;  /* Golden yellow */
+    --chart-8: 320 70% 75%; /* Magenta pink */
+    --chart-9: 240 40% 75%; /* Soft lavender */
+    --chart-10: 160 55% 60%;/* Teal-green */
+    --chart-11: 340 65% 75%;/* Rose pink */
+    --chart-12: 200 65% 70%;/* Sky blue */
+    --chart-13: 100 55% 65%; /* Lime green */
+    --chart-14: 30 60% 75%; /* Burnt orange */
+    --chart-15: 260 45% 70%;/* Deep indigo */
 
-    /* Sidebar specific colors for dark mode */
-    --sidebar-background: 240 10% 4.5%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 270 70% 60%; /* Purple */
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 5% 12%;
-    --sidebar-accent-foreground: 270 70% 70%; /* Purple */
-    --sidebar-border: 240 5% 15%;
-    --sidebar-ring: 270 70% 65%; /* Purple */
+    /* Dark sidebar colors */
+    --sidebar-background: 222 15% 7%;
+    --sidebar-foreground: 210 11% 96%;
+    --sidebar-primary: 270 75% 65%;
+    --sidebar-primary-foreground: 210 20% 98%;
+    --sidebar-accent: 222 13% 15%;
+    --sidebar-accent-foreground: 270 75% 70%;
+    --sidebar-border: 222 13% 18%;
+    --sidebar-ring: 270 75% 70%;
   }
 }
 
 @layer base {
   * {
-    @apply border-border transition-colors duration-150; /* Add subtle transition */
+    @apply border-border transition-all duration-200; /* Smoother, longer transitions */
   }
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
-    -webkit-font-smoothing: antialiased; /* Smoother fonts */
+    -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Beautiful gradient backgrounds for both themes */
+    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--secondary)) 50%, hsl(var(--accent)) 100%);
+    background-attachment: fixed;
   }
-   /* Improved focus visibility */
+  
+  /* Enhanced gradient for dark mode */
+  .dark body {
+    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(222 15% 8%) 30%, hsl(var(--card)) 60%, hsl(222 15% 10%) 100%);
+    background-attachment: fixed;
+  }
+  
+  /* Enhanced focus visibility */
   *:focus-visible {
-     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+    transition: box-shadow 0.15s ease-out;
   }
 }
 
-/* Smooth Fade-in */
+/* Enhanced Animation System */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 .animate-fadeIn {
-  animation: fadeIn 0.5s ease-out forwards; /* Slightly slower, smoother ease */
+  animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-/* Smooth Slide-in from bottom + Fade */
 @keyframes slideInUp {
-  from { transform: translateY(15px); opacity: 0; } /* Slightly more distance */
+  from { transform: translateY(20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
 .animate-slideInUp {
-  animation: slideInUp 0.45s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; /* Smoother, slightly slower */
+  animation: slideInUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-/* Slide out to top + Fade */
 @keyframes slideOutUp {
   from { transform: translateY(0); opacity: 1; }
-  to { transform: translateY(-15px); opacity: 0; }
+  to { transform: translateY(-20px); opacity: 0; }
 }
 .animate-slideOutUp {
-    animation: slideOutUp 0.3s ease-in forwards;
+  animation: slideOutUp 0.3s cubic-bezier(0.55, 0, 1, 0.45) forwards;
 }
 
-/* Slide in from top + Fade */
 @keyframes slideInDown {
-    from { transform: translateY(-15px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 .animate-slideInDown {
-    animation: slideInDown 0.45s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+  animation: slideInDown 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-
-/* Accordion animations (slightly refined) */
+/* Enhanced Accordion animations */
 @keyframes accordion-down {
-  from { height: 0; opacity: 0; transform: translateY(-5px); }
-  to { height: var(--radix-accordion-content-height); opacity: 1; transform: translateY(0); }
+  from { 
+    height: 0; 
+    opacity: 0; 
+    transform: translateY(-8px); 
+  }
+  to { 
+    height: var(--radix-accordion-content-height); 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
 }
 .animate-accordion-down {
-    animation: accordion-down 0.3s ease-out; /* Smoother ease */
+  animation: accordion-down 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes accordion-up {
-  from { height: var(--radix-accordion-content-height); opacity: 1; transform: translateY(0); }
-  to { height: 0; opacity: 0; transform: translateY(-5px); }
+  from { 
+    height: var(--radix-accordion-content-height); 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+  to { 
+    height: 0; 
+    opacity: 0; 
+    transform: translateY(-8px); 
+  }
 }
 .animate-accordion-up {
-    animation: accordion-up 0.25s ease-out; /* Slightly faster exit */
+  animation: accordion-up 0.3s cubic-bezier(0.55, 0, 1, 0.45);
 }
 
-/* Popover/Dialog animation */
+/* Enhanced Popover/Dialog animations */
 @keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+  from { 
+    opacity: 0; 
+    transform: scale(0.92) translateY(8px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1) translateY(0); 
+  }
 }
 .animate-scaleIn {
-    animation: scaleIn 0.2s ease-out forwards;
+  animation: scaleIn 0.25s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 @keyframes scaleOut {
-    from { opacity: 1; transform: scale(1); }
-    to { opacity: 0; transform: scale(0.95); }
+  from { 
+    opacity: 1; 
+    transform: scale(1) translateY(0); 
+  }
+  to { 
+    opacity: 0; 
+    transform: scale(0.92) translateY(8px); 
+  }
 }
 .animate-scaleOut {
-    animation: scaleOut 0.15s ease-in forwards;
+  animation: scaleOut 0.2s cubic-bezier(0.55, 0, 1, 0.45) forwards;
 }
 
-
-/* Glow keyframes for FAB */
-@keyframes glow {
-    0%, 100% { box-shadow: 0 0 5px hsla(var(--primary) / 0.5), 0 0 10px hsla(var(--primary) / 0.3); }
-    50% { box-shadow: 0 0 15px hsla(var(--primary) / 0.6), 0 0 25px hsla(var(--primary) / 0.4); }
-}
-.dark .animate-glow { /* Dark mode glow uses purple */
-     animation: glow-dark 2.5s ease-in-out infinite;
-}
-@keyframes glow-dark {
-    0%, 100% { box-shadow: 0 0 5px hsla(270 70% 60% / 0.5), 0 0 10px hsla(270 70% 60% / 0.3); }
-    50% { box-shadow: 0 0 15px hsla(270 70% 60% / 0.6), 0 0 25px hsla(270 70% 60% / 0.4); }
+/* Subtle Glow Effects - No constant animation */
+.glow-on-hover:hover {
+  box-shadow: 0 0 20px -5px hsla(var(--primary) / 0.3);
 }
 
-.animate-glow {
-    animation: glow 2.5s ease-in-out infinite;
+.dark .glow-on-hover:hover {
+  box-shadow: 0 0 20px -5px hsla(270 75% 65% / 0.3);
 }
 
-/* Custom scrollbar utilities */
+/* Enhanced Scrollbars */
 .scrollbar-thin {
-    scrollbar-width: thin;
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted)) transparent;
 }
+
 .scrollbar-thin::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+  width: 6px;
+  height: 6px;
 }
+
 .scrollbar-thumb-muted::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--muted));
-    border-radius: 10px;
-    border: 2px solid hsl(var(--background));
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background-clip: content-box;
 }
+
 .scrollbar-thumb-muted::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(var(--muted-foreground));
+  background: hsl(var(--muted-foreground) / 0.5);
+  background-clip: content-box;
 }
+
 .scrollbar-track-transparent::-webkit-scrollbar-track {
-    background-color: transparent;
+  background: transparent;
 }
 
-/* Scrollbar for tooltips (more visible against popover background) */
+/* Tooltip specific scrollbar styling */
 .tooltip-scrollbar::-webkit-scrollbar {
-    width: 6px; /* Thinner for tooltips */
-    height: 6px;
-}
-.tooltip-scrollbar::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--muted-foreground) / 0.7); /* More visible thumb */
-    border-radius: 6px;
-    border: 1px solid hsl(var(--popover)); /* Border matches popover background */
-}
-.tooltip-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(var(--foreground) / 0.6); /* Darker on hover */
-}
-.tooltip-scrollbar::-webkit-scrollbar-track {
-    background-color: hsl(var(--popover)); /* Track matches popover background */
+  width: 4px;
 }
 
-/* Style for AI model logos to make them monotone and subdued grey */
-.ai-model-logo {
-  color: hsl(var(--muted-foreground)); /* Use the muted foreground color for the base */
-  filter: grayscale(100%); /* Ensure it's monochrome based on the new color */
-  opacity: 0.85; /* Make it slightly subdued */
+.tooltip-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.4);
+  border-radius: 4px;
 }
+
+.tooltip-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.6);
+}
+
+.tooltip-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Enhanced AI Option Cards */
+.ai-option-card {
+  @apply bg-card border border-border/60 rounded-xl p-4 hover:bg-accent/50 transition-all duration-200 cursor-pointer;
+  backdrop-filter: blur(8px);
+}
+
+.ai-option-card:hover, .ai-option-card[aria-checked="true"] {
+  @apply border-primary/60 shadow-lg;
+  transform: translateY(-1px);
+}
+
+.ai-option-card .ai-model-icon {
+  @apply transition-all duration-200;
+}
+
+.ai-option-card .tag {
+  @apply px-2 py-1 rounded-md text-xs font-medium transition-all duration-200;
+}
+
+/* Brand-specific styling with enhanced colors */
+.ai-option-card.chatgpt .ai-model-icon { color: #00A67E; }
+.ai-option-card.chatgpt .tag { @apply bg-emerald-500/15 text-emerald-600 dark:text-emerald-400; }
+
+.ai-option-card.claude .ai-model-icon { color: #f97316; }
+.ai-option-card.claude .tag { @apply bg-orange-500/15 text-orange-600 dark:text-orange-400; }
+
+.ai-option-card.perplexity .ai-model-icon { color: #06b6d4; }
+.ai-option-card.perplexity .tag { @apply bg-cyan-500/15 text-cyan-600 dark:text-cyan-400; }
+
+.ai-option-card.copilot .ai-model-icon { color: #3b82f6; }
+.ai-option-card.copilot .tag { @apply bg-blue-500/10 text-blue-600 dark:text-blue-400; }
+
+.ai-option-card.you .ai-model-icon { color: #5a3fff; }
+.ai-option-card.you .tag { @apply bg-indigo-500/10 text-indigo-600 dark:text-indigo-400; }
+
+/* Enhanced general styling */
+.ai-model-icon {
+  filter: none;
+  opacity: 0.9;
+}
+
 /* No specific .dark .ai-model-logo needed as --muted-foreground handles theme changes */
+
+/* Custom app styles */
+
+.ai-option-card[data-state=checked] {
+  @apply ring-2 ring-primary border-primary;
+}
+
+.ai-option-card {
+  @apply transition-all duration-150 ease-in-out;
+  @apply cursor-pointer rounded-lg border bg-card py-3 pr-3 pl-4;
+}
+
+.ai-option-card:hover {
+  @apply border-primary/60;
+}
+
+.ai-option-card .tag {
+    @apply text-xs font-semibold rounded-full px-2 py-0.5 whitespace-nowrap;
+    @apply bg-accent text-accent-foreground;
+}
+
+/* Style for specific AI model tags, if needed */
+.ai-option-card.claude .tag { @apply bg-orange-200 text-orange-800 dark:bg-orange-800 dark:text-orange-200; }
+.ai-option-card.chatgpt .tag { @apply bg-green-200 text-green-800 dark:bg-green-700 dark:text-green-200; }
+.ai-option-card.perplexity .tag { @apply bg-cyan-200 text-cyan-800 dark:bg-cyan-800 dark:text-cyan-200; }
+.ai-option-card.copilot .tag { @apply bg-blue-200 text-blue-800 dark:bg-blue-800 dark:text-blue-200; }
+.ai-option-card.you .tag { @apply bg-indigo-200 text-indigo-800 dark:bg-indigo-700 dark:text-indigo-200; }
+.local-template .tag { @apply bg-lime-200 text-lime-900 dark:bg-lime-800 dark:text-lime-200; }
+
+
+/* Enhanced icon styling */
+.ai-model-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.ai-option-card[role="menuitemradio"]::before {
+    content: none !important;
+}
+
+/* Custom styles for specific AI models icons */
+.ai-option-card.perplexity .ai-model-icon {
+  background-color: transparent; /* No background */
+  color: #00B6A9; /* Perplexity's teal color */
+}
+
+.ai-option-card.copilot .ai-model-icon {
+  /* No specific style needed if using a multicolor icon component */
+}
+
+/* Dark mode fix for ChatGPT icon if it's an SVG with `currentColor` */
+.dark .ai-option-card.chatgpt .ai-model-icon {
+   color: #74A99C;
+}
+
+.ai-option-card [data-radix-dropdown-menu-item-indicator] {
+    top: 60% !important;             /* push dot a bit downward */
+    transform: translateY(-50%);     /* keep it centered around the new anchor */
+}
 
     

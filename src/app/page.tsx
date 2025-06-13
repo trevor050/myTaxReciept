@@ -73,6 +73,7 @@ export default function Home() {
   const [isMobileView, setIsMobileView] = useState(false);
 
   const [isEnterHourlyWageModalOpen, setIsEnterHourlyWageModalOpen] = useState(false);
+  const [shouldAutoSwitchToTimeMode, setShouldAutoSwitchToTimeMode] = useState(false);
 
 
   useEffect(() => {
@@ -258,9 +259,10 @@ export default function Home() {
   const handleHourlyWageSubmitFromModal = useCallback((wage: number) => {
     setHourlyWage(wage);
     setIsLoading(true);
+    setShouldAutoSwitchToTimeMode(true); // Flag to auto-switch to time mode
     toast({
         title: 'Hourly Wage Set',
-        description: `Recalculating time perspectives based on $${wage.toFixed(2)}/hour.`,
+        description: `Recalculating time perspectives based on $${wage.toFixed(2)}/hour. View switched to Time Worked.`,
     });
     if (taxAmount && taxSpending.length > 0) {
         generatePerspectives(taxAmount, wage, taxSpending);
@@ -424,12 +426,12 @@ export default function Home() {
         </div>
 
         <Card className="w-full shadow-xl rounded-lg sm:rounded-xl border border-border/50 overflow-hidden bg-card">
-           <CardHeader className="bg-card/95 border-b border-border/50 px-4 py-3 sm:px-6 sm:py-5 md:px-8 md:py-6 relative">
+           <CardHeader className="bg-card/95 border-b border-border/50 px-3 py-2 sm:px-6 sm:py-5 md:px-8 md:py-6 relative">
              <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10">
                 <ThemeToggle />
              </div>
              <div key={`header-${step}`} className="animate-fadeIn duration-400 pr-8 sm:pr-10">
-                  <CardTitle className="text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight text-foreground">
+                  <CardTitle className="text-lg sm:text-2xl md:text-3xl font-semibold tracking-tight text-foreground">
                      {title}
                   </CardTitle>
                   <CardDescription className="text-muted-foreground mt-1 sm:mt-1.5 text-xs sm:text-sm md:text-base">
@@ -437,7 +439,7 @@ export default function Home() {
                   </CardDescription>
               </div>
            </CardHeader>
-          <CardContent className="p-4 sm:p-6 md:p-10 bg-background relative overflow-hidden min-h-[280px] sm:min-h-[300px] md:min-h-[350px]">
+          <CardContent className="p-3 sm:p-6 md:p-10 bg-background relative overflow-hidden min-h-[250px] sm:min-h-[300px] md:min-h-[350px]">
              <div className={`${animationClass} duration-300`}>
                  {step === 'location' && <LocationStep onSubmit={handleLocationSubmit} />}
                  {step === 'tax' && <TaxAmountStep onSubmit={handleTaxAmountSubmit} isLoading={isLoading} medianTax={estimatedMedianTax} />}
@@ -455,6 +457,8 @@ export default function Home() {
                             onSelectionChange={handleDashboardSelectionChange}
                             perspectives={dashboardPerspectives}
                             onOpenEnterHourlyWageModal={() => setIsEnterHourlyWageModalOpen(true)}
+                            shouldAutoSwitchToTimeMode={shouldAutoSwitchToTimeMode}
+                            onAutoSwitchToTimeMode={() => setShouldAutoSwitchToTimeMode(false)}
                          />
                      )
                  )}
