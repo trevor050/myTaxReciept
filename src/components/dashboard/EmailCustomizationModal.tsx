@@ -266,7 +266,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
             : undefined
         }
         className={cn(
-          'fixed z-50 flex border bg-background shadow-lg',
+          'fixed z-[70] flex border bg-background shadow-lg',
           // Mobile: full screen
           'h-full w-full max-h-none rounded-none',
           // Desktop: floating dialog

@@ -31,6 +31,7 @@ import ThemeToggle from '@/components/ThemeToggle';
 import type { DashboardPerspectives } from '@/types/perspective';
 import { generateCurrencyPerspectiveList } from '@/lib/currency-perspective';
 import { generateCombinedPerspectiveList } from '@/lib/time-perspective';
+import { cn } from '@/lib/utils';
 
 
 type AppStep = 'location' | 'tax' | 'hourlyWage' | 'dashboard';
@@ -409,8 +410,8 @@ export default function Home() {
 
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-2 sm:p-4 md:p-8 bg-gradient-to-br from-background via-secondary/5 to-background relative">
-       <div className={`w-full ${step === 'dashboard' ? 'max-w-full md:max-w-4xl lg:max-w-5xl' : 'max-w-full sm:max-w-md md:max-w-2xl'} mx-auto space-y-1 sm:space-y-2 transition-all duration-300 ease-in-out z-10`}>
+    <main className="flex min-h-screen flex-col p-2 sm:p-4 md:p-8 bg-gradient-to-br from-background via-secondary/5 to-background relative">
+       <div className={`w-full ${step === 'dashboard' ? 'max-w-full md:max-w-4xl lg:max-w-5xl' : 'max-w-full sm:max-w-md md:max-w-2xl'} mx-auto space-y-1 sm:space-y-2 transition-all duration-300 ease-in-out z-10 flex-1 flex flex-col ${step !== 'dashboard' ? 'justify-center' : ''}`}>
         <div className="flex justify-start items-center min-h-[36px] sm:min-h-[40px] px-1 sm:px-0">
             {step !== 'location' ? (
               <Button
@@ -439,7 +440,10 @@ export default function Home() {
                   </CardDescription>
               </div>
            </CardHeader>
-          <CardContent className="p-3 sm:p-6 md:p-10 bg-background relative overflow-hidden min-h-[250px] sm:min-h-[300px] md:min-h-[350px]">
+          <CardContent className={cn(
+            "p-3 sm:p-6 md:p-10 bg-background relative overflow-hidden",
+            step === 'dashboard' ? "min-h-[200px]" : "min-h-[300px] sm:min-h-[350px] flex flex-col justify-center"
+          )}>
              <div className={`${animationClass} duration-300`}>
                  {step === 'location' && <LocationStep onSubmit={handleLocationSubmit} />}
                  {step === 'tax' && <TaxAmountStep onSubmit={handleTaxAmountSubmit} isLoading={isLoading} medianTax={estimatedMedianTax} />}
@@ -495,6 +499,7 @@ export default function Home() {
             setUserName={setUserName}
             userLocation={userLocationText}
             setUserLocation={setUserLocationText}
+            zipCode={null}
         />
 
         <ResourceSuggestionsModal
