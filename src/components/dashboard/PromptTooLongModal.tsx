@@ -73,8 +73,8 @@ export default function PromptTooLongModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="h-full w-full max-h-none rounded-none sm:h-auto sm:w-auto sm:max-w-md sm:max-h-[90vh] sm:rounded-lg data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut flex flex-col">
-        <DialogHeader className="text-left shrink-0 px-4 pt-4 sm:px-6 sm:pt-6">
+      <DialogContent className="w-full h-full sm:h-auto sm:w-auto sm:max-w-md rounded-none sm:rounded-lg data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut">
+        <DialogHeader className="text-left">
           <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
             <AlertTriangle className="h-5 w-5 text-amber-500" />
             Prompt May Be Too Long
@@ -85,7 +85,7 @@ export default function PromptTooLongModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 space-y-3 text-sm">
+        <div className="py-4 space-y-3 text-sm">
             <p>
                 We recommend copying the prompt and pasting it manually into <strong>{aiModelName}</strong> after it opens.
             </p>
@@ -94,7 +94,7 @@ export default function PromptTooLongModal({
             </p>
         </div>
 
-        <DialogFooter className="flex-col sm:flex-row gap-2 sm:justify-end shrink-0 px-4 pb-4 pt-2 sm:px-6 sm:pb-6 border-t bg-card/95">
+        <DialogFooter className="flex-col sm:flex-row gap-2 sm:justify-end">
           <DialogClose asChild>
             <Button type="button" variant="outline">
               Cancel

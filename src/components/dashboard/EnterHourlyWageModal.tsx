@@ -139,21 +139,11 @@ export default function EnterHourlyWageModal({ isOpen, onOpenChange, onSubmit }:
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
          ref={refModal}
-         style={
-            pos.x !== null && pos.y !== null && window.innerWidth >= 640
-            ? { left: pos.x, top: pos.y, transform: 'none' }
-            : undefined
-         }
+         style={ pos.x !== null ? { left: pos.x, top: pos.y, transform: 'none' } : undefined }
          className={cn(
-            'fixed z-50 flex border bg-background shadow-lg',
-            // Mobile: full screen
-            'h-full w-full max-h-none rounded-none',
-            // Desktop: floating dialog
-            'sm:max-h-[85vh] sm:w-[90vw] sm:max-w-md sm:rounded-lg',
-            // Animation classes
-            pos.x === null && 'sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut',
-            pos.x !== null && 'data-[state=open]:animate-fadeIn data-[state=closed]:animate-scaleOut',
-            'flex-col'
+            'dialog-pop fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-md flex-col border bg-background shadow-lg sm:rounded-lg',
+            pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
+            'data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut'
          )}
         onInteractOutside={e=>drag&&e.preventDefault()}
         onOpenAutoFocus={e => {
@@ -167,12 +157,9 @@ export default function EnterHourlyWageModal({ isOpen, onOpenChange, onSubmit }:
         <div
             ref={refHandle}
             onMouseDown={onDown}
-            className={cn(
-                'relative flex shrink-0 items-center justify-between border-b px-4 py-3 sm:px-6 sm:py-4 bg-card/95',
-                'sm:cursor-move sm:select-none rounded-none sm:rounded-t-lg'
-            )}
+            className='relative flex shrink-0 cursor-move select-none items-center justify-between border-b px-4 py-3 sm:px-6 sm:py-4 bg-card/95 rounded-t-lg'
          >
-            <DialogHeader className="text-left">
+            <DialogHeader>
                 <DialogTitle className="text-base sm:text-lg md:text-xl font-semibold flex items-center gap-1.5 sm:gap-2">
                     <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-primary" /> Enter Hourly Wage
                 </DialogTitle>
@@ -187,7 +174,7 @@ export default function EnterHourlyWageModal({ isOpen, onOpenChange, onSubmit }:
             </DialogClose>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4 space-y-4">
+        <form onSubmit={handleSubmit} className="px-4 py-3 sm:px-6 sm:py-4 space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="hourlyWageModalInput" className="sr-only">Hourly Wage</Label>
             <div className="relative">
@@ -204,7 +191,7 @@ export default function EnterHourlyWageModal({ isOpen, onOpenChange, onSubmit }:
               />
             </div>
           </div>
-          <DialogFooter className="flex-col sm:flex-row gap-2 mt-4 pt-4 border-t bg-card/95 rounded-none sm:rounded-b-lg px-4 py-3 sm:px-6 sm:py-4 -mx-4 -mb-3 sm:-mx-6 sm:-mb-4">
+          <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button type="submit" disabled={!hourlyWageInput.trim()} className="w-full sm:w-auto h-9 sm:h-10 text-xs sm:text-sm">
               <CheckCircle className="mr-1.5 h-3.5 w-3.5" /> Set Wage & View
             </Button>
