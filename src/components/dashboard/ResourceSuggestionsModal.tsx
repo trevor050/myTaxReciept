@@ -348,53 +348,74 @@ export default function ResourceSuggestionsModal({
     if (isLoading) return []; // isLoading is prop from page.tsx (isSuggestingResources)
     let filtered = suggestedResources;
 
-    if (activeFilterKeys.size === 0) { // If no filters, default to 'all-organizations' equivalent
-        return suggestedResources;
+    if (activeFilterKeys.size === 0) {
+      return suggestedResources;
     }
     if (activeFilterKeys.has('all-organizations') && activeFilterKeys.size === 1) {
-        return suggestedResources;
+      return suggestedResources;
     }
 
-    // If 'all-organizations' is present with others, it acts as a base, and others are ANDed or ORed based on type.
-    // For simplicity, if 'all-organizations' is not the *only* active filter, we ignore it for filtering logic.
     const effectiveFilters = new Set(activeFilterKeys);
     if (effectiveFilters.has('all-organizations') && effectiveFilters.size > 1) {
-        effectiveFilters.delete('all-organizations');
+      effectiveFilters.delete('all-organizations');
     }
 
-
-    if (effectiveFilters.size > 0) {
-        filtered = suggestedResources.filter(r => {
-            // Special handling for ranked filters: if one is selected, only that one matters for ranking perspective.
-            const rankedFiltersPresent = Array.from(effectiveFilters).filter(k => ['your-matches', 'best-matches', 'top-matches'].includes(k));
-            if (rankedFiltersPresent.length > 0) {
-                // If 'your-matches' is active, it's the primary ranked filter.
-                if (effectiveFilters.has('your-matches')) {
-                    if (!((r.matchCount || 0) > 0 || r.badges?.includes('Best Match') || r.badges?.includes('Top Match') || r.badges?.includes('Your Match'))) return false;
-                } else if (effectiveFilters.has('best-matches')) {
-                    if (!(r.badges?.includes('Best Match'))) return false;
-                } else if (effectiveFilters.has('top-matches')) {
-                    if (!(r.badges?.includes('Top Match'))) return false;
-                }
-            }
-
-            // Apply other filters (category, orgType, badgeGeneral) as AND conditions
-            // if they are selected ALONGSIDE a ranked filter, or if no ranked filter is selected.
-            for (const key of effectiveFilters) {
-                if (['your-matches', 'best-matches', 'top-matches'].includes(key)) continue; // Already handled
-
-                if (key.startsWith('cat-')) {
-                    if (r.mainCategory !== key.substring(4)) return false;
-                } else if (key.startsWith('orgtype-')) {
-                    if (!r.orgTypeTags?.includes(key.substring(8) as any)) return false;
-                } else if (key.startsWith('badge-')) {
-                    const badgeKey = key.substring(6).replace(/-/g, ' ');
-                    if (!r.badges?.some(b => b.toLowerCase() === badgeKey)) return false;
-                }
-            }
-            return true; // If all non-ranked filters pass (or no non-ranked filters are active)
-        });
+    // Early exit if no effective filters (e.g., user deselected everything)
+    if (effectiveFilters.size === 0) {
+      return suggestedResources;
     }
+
+    // Separate filters by type for easy OR logic within the same type
+    const rankedFilters = ['your-matches', 'best-matches', 'top-matches'];
+    const categoryFilters: string[] = [];
+    const orgTypeFilters: string[] = [];
+    const badgeFilters: string[] = [];
+
+    effectiveFilters.forEach((key) => {
+      if (rankedFilters.includes(key)) return; // handle later
+      if (key.startsWith('cat-')) {
+        categoryFilters.push(key.substring(4));
+      } else if (key.startsWith('orgtype-')) {
+        orgTypeFilters.push(key.substring(8));
+      } else if (key.startsWith('badge-')) {
+        badgeFilters.push(key.substring(6).replace(/-/g, ' '));
+      }
+    });
+
+    const anyRankedFilterActive = rankedFilters.some((rf) => effectiveFilters.has(rf));
+
+    filtered = suggestedResources.filter((r) => {
+      // Handle ranked filters (mutually exclusive, OR between them but functionally only one at a time after click handler)
+      if (anyRankedFilterActive) {
+        if (effectiveFilters.has('your-matches')) {
+          if (!((r.matchCount || 0) > 0 || r.badges?.some((b) => ['Best Match', 'Top Match', 'Your Match'].includes(b)))) return false;
+        } else if (effectiveFilters.has('best-matches')) {
+          if (!r.badges?.includes('Best Match')) return false;
+        } else if (effectiveFilters.has('top-matches')) {
+          if (!r.badges?.includes('Top Match')) return false;
+        }
+      }
+
+      // Category filter OR logic
+      if (categoryFilters.length > 0 && !categoryFilters.includes(r.mainCategory)) {
+        return false;
+      }
+
+      // OrgType filter OR logic
+      if (orgTypeFilters.length > 0) {
+        const hasOrgType = r.orgTypeTags?.some((tag) => orgTypeFilters.includes(tag as string));
+        if (!hasOrgType) return false;
+      }
+
+      // BadgeGeneral filter OR logic
+      if (badgeFilters.length > 0) {
+        const hasBadge = r.badges?.some((b) => badgeFilters.includes(b.toLowerCase()));
+        if (!hasBadge) return false;
+      }
+
+      return true;
+    });
+
     return filtered;
   }, [isLoading, suggestedResources, activeFilterKeys]);
 
