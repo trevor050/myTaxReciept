@@ -571,20 +571,21 @@ export default function TaxBreakdownDashboard({
 
                             return (
                                  <AccordionItem value={`item-${index}`} key={item.id || index} className="border-b border-border/20 last:border-b-0">
-                                    <AccordionTrigger className="hover:no-underline py-4 px-4 sm:py-5 sm:px-6 hover:bg-accent/50 data-[state=open]:bg-accent transition-colors duration-200 text-left">
-                                         <div className="flex flex-col w-full gap-3">
-                                            {/* Top row: Icon, name, and value */}
-                                            <div className="flex justify-between items-center w-full">
-                                                <div className="flex items-center gap-3 min-w-0">
-                                                    <div className="p-1.5 rounded-md bg-primary/20">
-                                                        <CategoryIconComponent className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
-                                                    </div>
-                                                    <span className="font-semibold text-sm sm:text-base truncate">{item.category}</span>
-                                                </div>
-                                                <div className="text-right shrink-0 flex items-center gap-2">
+                                    <AccordionTrigger className="hover:no-underline py-3 px-4 sm:px-5 hover:bg-accent/50 data-[state=open]:bg-accent transition-colors duration-200 text-left">
+                                         <div className="flex items-center w-full gap-3">
+                                            {/* Icon */}
+                                            <div className="p-1.5 rounded-md bg-primary/20 shrink-0">
+                                                <CategoryIconComponent className="h-4 w-4 text-primary" />
+                                            </div>
+                                            
+                                            {/* Content area */}
+                                            <div className="flex-1 min-w-0">
+                                                {/* Top: Name and value */}
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="font-semibold text-sm truncate">{item.category}</span>
                                                     <ShadTooltip>
                                                         <TooltipTrigger asChild>
-                                                            <span className="font-bold font-mono text-sm sm:text-lg cursor-default text-foreground">
+                                                            <span className="font-bold font-mono text-sm cursor-default text-foreground ml-2">
                                                                 {categoryDisplayValue}
                                                             </span>
                                                         </TooltipTrigger>
@@ -593,26 +594,23 @@ export default function TaxBreakdownDashboard({
                                                             title={categoryPerspectiveTitle}
                                                         />
                                                     </ShadTooltip>
-                                                    <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-md bg-muted/50">
-                                                        <span className="text-muted-foreground text-xs">({item.percentage.toFixed(1)}%)</span>
+                                                </div>
+                                                
+                                                {/* Progress bar */}
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex-1 bg-muted rounded-full h-1.5 overflow-hidden">
+                                                        <div 
+                                                            className="h-full rounded-full transition-all duration-500 ease-out"
+                                                            style={{ 
+                                                                width: `${item.percentage}%`,
+                                                                backgroundColor: COLORS[index % COLORS.length] 
+                                                            }}
+                                                        />
                                                     </div>
+                                                    <span className="text-xs text-muted-foreground font-mono shrink-0 w-10 text-right">
+                                                        {item.percentage.toFixed(1)}%
+                                                    </span>
                                                 </div>
-                                            </div>
-                                            
-                                            {/* Bottom row: Progress bar */}
-                                            <div className="flex items-center gap-2 w-full">
-                                                <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
-                                                    <div 
-                                                        className="h-full rounded-full transition-all duration-500 ease-out"
-                                                        style={{ 
-                                                            width: `${item.percentage}%`,
-                                                            backgroundColor: COLORS[index % COLORS.length] 
-                                                        }}
-                                                    />
-                                                </div>
-                                                <span className="text-xs text-muted-foreground font-mono min-w-[45px] text-right">
-                                                    {item.percentage.toFixed(1)}%
-                                                </span>
                                             </div>
                                         </div>
                                     </AccordionTrigger>
