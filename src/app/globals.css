@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -253,26 +252,98 @@ body {
     background-color: hsl(var(--popover)); /* Track matches popover background */
 }
 
-/* Style for AI model logos to make them monotone and subdued grey */
-.ai-model-logo {
-  color: hsl(var(--muted-foreground)); /* Use the muted foreground color for the base */
-  filter: grayscale(100%); /* Ensure it's monochrome based on the new color */
-  opacity: 0.85; /* Make it slightly subdued */
+/* AI Generator Cards - More subtle and integrated styling */
+.ai-option-card {
+  @apply rounded-lg border bg-accent p-2 transition-colors;
 }
 
-/* Fix for specific AI model icons that need better visibility */
-.ai-model-logo.perplexity-icon {
-  background-color: hsl(var(--muted) / 0.5);
-  border-radius: 3px;
-  padding: 1px;
+.ai-option-card:hover, .ai-option-card[aria-checked="true"] {
+  @apply bg-muted border-primary/60;
 }
 
-/* Fix ChatGPT icon readability in dark mode */
-.dark .ai-model-logo.chatgpt-icon {
-  color: hsl(var(--foreground) / 0.8);
+.ai-option-card .ai-model-icon {
+  @apply h-5 w-5 flex-shrink-0;
+}
+
+.ai-option-card .tag {
+  @apply rounded-sm px-1.5 py-0.5 text-xs font-semibold leading-none;
+}
+
+/* Per-model theming for icons and tags */
+.ai-option-card.chatgpt .ai-model-icon { color: #00A67E; }
+.ai-option-card.chatgpt .tag { @apply bg-emerald-500/10 text-emerald-600 dark:text-emerald-400; }
+
+.ai-option-card.claude .ai-model-icon { color: #f97316; }
+.ai-option-card.claude .tag { @apply bg-orange-500/10 text-orange-600 dark:text-orange-400; }
+
+.ai-option-card.perplexity .ai-model-icon { color: #06b6d4; }
+.ai-option-card.perplexity .tag { @apply bg-cyan-500/10 text-cyan-600 dark:text-cyan-400; }
+
+.ai-option-card.copilot .ai-model-icon { color: #3b82f6; }
+.ai-option-card.copilot .tag { @apply bg-blue-500/10 text-blue-600 dark:text-blue-400; }
+
+.ai-option-card.you .ai-model-icon { color: #5a3fff; }
+.ai-option-card.you .tag { @apply bg-indigo-500/10 text-indigo-600 dark:text-indigo-400; }
+
+/* AI model icons - clean monotone style */
+.ai-model-icon {
   filter: none;
+  opacity: 0.9;
 }
 
 /* No specific .dark .ai-model-logo needed as --muted-foreground handles theme changes */
+
+/* Custom app styles */
+
+.ai-option-card[data-state=checked] {
+  @apply ring-2 ring-primary border-primary;
+}
+
+.ai-option-card {
+  @apply transition-all duration-150 ease-in-out;
+  @apply cursor-pointer rounded-lg border bg-card py-3 pr-3 pl-8;
+}
+.ai-option-card:hover {
+  @apply border-primary/60;
+}
+
+.ai-option-card .tag {
+    @apply text-xs font-semibold rounded-full px-2 py-0.5 whitespace-nowrap;
+    @apply bg-accent text-accent-foreground;
+}
+
+/* Style for specific AI model tags, if needed */
+.ai-option-card.claude .tag { @apply bg-orange-200 text-orange-800 dark:bg-orange-800 dark:text-orange-200; }
+.ai-option-card.chatgpt .tag { @apply bg-green-200 text-green-800 dark:bg-green-700 dark:text-green-200; }
+.ai-option-card.perplexity .tag { @apply bg-cyan-200 text-cyan-800 dark:bg-cyan-800 dark:text-cyan-200; }
+.ai-option-card.copilot .tag { @apply bg-blue-200 text-blue-800 dark:bg-blue-800 dark:text-blue-200; }
+.ai-option-card.you .tag { @apply bg-indigo-200 text-indigo-800 dark:bg-indigo-700 dark:text-indigo-200; }
+.local-template .tag { @apply bg-lime-200 text-lime-900 dark:bg-lime-800 dark:text-lime-200; }
+
+
+.ai-model-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Overwrite Radix's default dot for radio items since we are using a custom one */
+.ai-option-card[role="menuitemradio"]::before {
+    content: none !important;
+}
+
+/* Custom styles for specific AI models icons */
+.ai-option-card.perplexity .ai-model-icon {
+  background-color: transparent; /* No background */
+  color: #00B6A9; /* Perplexity's teal color */
+}
+
+.ai-option-card.copilot .ai-model-icon {
+  /* No specific style needed if using a multicolor icon component */
+}
+
+/* Dark mode fix for ChatGPT icon if it's an SVG with `currentColor` */
+.dark .ai-option-card.chatgpt .ai-model-icon {
+   color: #74A99C;
+}
 
     

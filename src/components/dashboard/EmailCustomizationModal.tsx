@@ -1,9 +1,8 @@
-
 'use client';
 
 import * as React from 'react';
 import {
-  useState, useRef, useLayoutEffect, useCallback,
+  useState, useRef, useLayoutEffect, useCallback, useEffect,
 } from 'react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -24,9 +23,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { GripVertical, Mail, X, Send, Lightbulb, BrainCircuit } from 'lucide-react';
+import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 
 import type { SelectedItem as UserSelectedItem } from '@/services/tax-spending';
-import { generateRepresentativeEmailContent, SUBJECT } from '@/services/email/generator';
+import { generateStandardEmail, SUBJECT } from '@/services/email/standard-template';
 import { generateAIPrompt, prepareItemsForAIPrompt } from '@/services/ai/prompt-generator';
 import type { AIModelOption } from '@/types/ai-models';
 import { AI_MODEL_OPTIONS } from '@/types/ai-models';
@@ -54,7 +54,8 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
     balanceBudgetChecked, aggressiveness, setAggressiveness,
     itemFundingLevels, setItemFundingLevels,
     userName, setUserName, userLocation, setUserLocation,
-    canSuggestResources
+    canSuggestResources,
+    zipCode,
   } = p;
 
   const [pos, setPos] = useState<{x:number|null;y:number|null}>({ x:null, y:null });
@@ -218,7 +219,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
         });
 
 
-        const {subject, body} = generateRepresentativeEmailContent(
+        const {subject, body} = generateStandardEmail(
             finalSelectedItemsForTemplate,
             aggressiveness,
             finalUserName, // Use potentially placeholder name
@@ -241,6 +242,12 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
   // Generate button is no longer disabled based on userName or userLocation
   const isGenerateDisabled = initialSelectedItems.size === 0 && !balanceBudgetChecked;
 
+  useEffect(() => {
+    if (zipCode) {
+      setUserLocation(zipCode);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zipCode]);
 
   return(
     <>
@@ -292,16 +299,15 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
         </div>
 
 
-        <ScrollArea className='flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent'>
-           <div className="space-y-6 sm:space-y-8">
-              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
-                <div className='space-y-1.5 sm:space-y-2'>
-                  <Label htmlFor="userName" className="text-xs sm:text-sm">Your Name (Optional)</Label>
-                  <Input id="userName" value={userName} onChange={e=>setUserName(e.target.value)} placeholder='Jane Doe' className="h-8 sm:h-9 text-sm sm:text-base"/>
-                </div>
-                <div className='space-y-1.5 sm:space-y-2'>
-                  <Label htmlFor="userLocation" className="text-xs sm:text-sm">Your Location (Optional)</Label>
-                  <Input id="userLocation" value={userLocation} onChange={e=>setUserLocation(e.target.value)} placeholder='City, ST Zipcode' className="h-8 sm:h-9 text-sm sm:text-base"/>
+        <ScrollArea className="max-h-[65vh] sm:max-h-[70vh]">
+           <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 pt-0">
+              <div className='space-y-3 sm:space-y-4'>
+                <h3 className='text-sm sm:text-lg font-semibold border-b pb-1.5 sm:pb-2'>Your Information</h3>
+                <div className="grid grid-cols-1 gap-3 sm:gap-4">
+                  <div>
+                    <Label htmlFor="name" className='text-xs sm:text-sm'>Your Name (Optional)</Label>
+                    <Input id="name" placeholder="Jane Doe" value={userName} onChange={e=>setUserName(e.target.value)} className="mt-1" />
+                  </div>
                 </div>
               </div>
 
@@ -411,32 +417,28 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                     <span className="sr-only">Choose Generator</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-72 sm:w-80">
-                  <DropdownMenuLabel className="text-xs px-2 pt-2 pb-1">Choose AI Generator</DropdownMenuLabel>
-                  <DropdownMenuRadioGroup value={selectedGenerator} onValueChange={setSelectedGenerator}>
+                <DropdownMenuContent align="end" className="w-72 sm:w-80 p-2">
+                  <DropdownMenuLabel className="px-1 pb-1 text-xs">Choose AI Generator</DropdownMenuLabel>
+                  <DropdownMenuRadioGroup value={selectedGenerator} onValueChange={setSelectedGenerator} className="space-y-1">
                     {aiModels.map((modelItem) => {
                       const displayProvider = modelItem.provider && !modelItem.name.toLowerCase().includes(modelItem.provider.toLowerCase()) ? ` (${modelItem.provider})` : '';
                       const IconComponent = modelItem.icon;
                       return (
-                        <DropdownMenuRadioItem key={modelItem.id} value={modelItem.id} className="text-xs sm:text-sm leading-snug cursor-pointer py-2 px-2">
-                          <div className="flex items-start gap-2.5 w-full">
-                             <IconComponent className={cn(
-                               "h-4 w-4 mt-0.5 flex-shrink-0", 
-                               modelItem.isAIMeta ? "ai-model-logo" : "text-muted-foreground",
-                               modelItem.id === 'perplexity' && "perplexity-icon",
-                               modelItem.id === 'chatgpt' && "chatgpt-icon"
-                             )} />
+                        <DropdownMenuRadioItem 
+                          key={modelItem.id} 
+                          value={modelItem.id} 
+                          className={cn("ai-option-card", modelItem.id)}
+                        >
+                          <div className="flex items-start gap-3 w-full">
+                             <IconComponent className="ai-model-icon mt-1 flex-shrink-0" />
                             <div className="flex-1">
-                              <div className="flex items-center gap-1.5 mb-0.5">
+                              <div className="flex items-center justify-between">
                                 <span className="font-medium text-foreground">{modelItem.name}{displayProvider}</span>
                                 {modelItem.tag && (
-                                  <span className={cn(
-                                    "text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.5 rounded-sm leading-none",
-                                    modelItem.tagColor || "bg-accent text-accent-foreground"
-                                  )}>{modelItem.tag}</span>
+                                  <span className="tag">{modelItem.tag}</span>
                                 )}
                               </div>
-                              <p className="text-muted-foreground text-[10px] sm:text-xs leading-tight">{modelItem.description}</p>
+                              <p className="text-muted-foreground text-xs leading-tight pr-4">{modelItem.description}</p>
                             </div>
                           </div>
                         </DropdownMenuRadioItem>
@@ -445,23 +447,26 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                    </DropdownMenuRadioGroup>
                      {templateModel && (
                         <>
-                          <DropdownMenuSeparator className="my-1" />
-                          <DropdownMenuLabel className="text-xs px-2 pt-1.5 pb-1">Local Template</DropdownMenuLabel>
-                           <DropdownMenuRadioGroup value={selectedGenerator} onValueChange={setSelectedGenerator}>
-                               <DropdownMenuRadioItem key={templateModel.id} value={templateModel.id} className="text-xs sm:text-sm leading-snug cursor-pointer py-2 px-2">
-                                  <div className="flex items-start gap-2.5 w-full">
-                                    <templateModel.icon className={cn("h-4 w-4 mt-0.5 flex-shrink-0", templateModel.isAIMeta ? "ai-model-logo" : "text-muted-foreground")} />
+                          <DropdownMenuSeparator className="my-2" />
+                          <DropdownMenuRadioGroup value={selectedGenerator} onValueChange={setSelectedGenerator}>
+                               <DropdownMenuRadioItem 
+                                 key={templateModel.id} 
+                                 value={templateModel.id} 
+                                 className="ai-option-card local-template"
+                               >
+                                  <div className="flex items-start gap-3 w-full">
+                                    <templateModel.icon className="ai-model-icon mt-1" />
                                     <div className="flex-1">
-                                      <div className="flex items-center gap-1.5 mb-0.5">
+                                      <div className="flex items-center justify-between">
                                         <span className="font-medium text-foreground">{templateModel.name}</span>
                                         {templateModel.tag && (
                                           <span className={cn(
-                                            "text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.5 rounded-sm leading-none",
+                                            "tag whitespace-nowrap",
                                             templateModel.tagColor || "bg-accent text-accent-foreground"
                                           )}>{templateModel.tag}</span>
                                         )}
                                       </div>
-                                      <p className="text-muted-foreground text-[10px] sm:text-xs leading-tight">{templateModel.description}</p>
+                                      <p className="text-muted-foreground text-xs leading-tight">{templateModel.description}</p>
                                     </div>
                                   </div>
                                 </DropdownMenuRadioItem>
@@ -505,5 +510,6 @@ interface EmailCustomizationModalProps{
   itemFundingLevels:Map<string,number>;setItemFundingLevels:(m:Map<string,number>)=>void;
   userName:string;setUserName:(s:string)=>void;
   userLocation:string;setUserLocation:(s:string)=>void;
+  zipCode: string | null;
 }
 
