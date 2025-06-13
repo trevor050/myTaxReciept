@@ -301,7 +301,7 @@ body {
 
 .ai-option-card {
   @apply transition-all duration-150 ease-in-out;
-  @apply cursor-pointer rounded-lg border bg-card py-3 pr-3 pl-8;
+  @apply cursor-pointer rounded-lg border bg-card py-3 pr-3 pl-4;
 }
 .ai-option-card:hover {
   @apply border-primary/60;
@@ -344,6 +344,12 @@ body {
 /* Dark mode fix for ChatGPT icon if it's an SVG with `currentColor` */
 .dark .ai-option-card.chatgpt .ai-model-icon {
    color: #74A99C;
+}
+
+/* Fine-tune vertical position of Radix-generated radio dot in AI model menu */
+.ai-option-card [data-radix-dropdown-menu-item-indicator] {
+    top: 60% !important;             /* push dot a bit downward */
+    transform: translateY(-50%);     /* keep it centered around the new anchor */
 }
 
     

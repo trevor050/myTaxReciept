@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -42,25 +41,22 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
     }
 
 
-    // Add keydown listener for Enter key
+    // Add keydown listener for Enter key (global – not just when input focused)
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Enter') {
-        // Prevent default form submission behavior if input is focused
-        if (document.activeElement === inputRef.current) {
-            event.preventDefault();
-             // If input has value, submit it manually
-             if (manualLocation.trim()) {
-                handleManualSubmit(event as unknown as React.FormEvent); // Cast event type
-             } else {
-                 // If input is empty, skip (submit null)
-                 onSubmit(null); // Pass null for location, no zip code
-                 toast({
-                     title: 'Skipped Location',
-                     description: 'Using default location.',
-                 });
-             }
+        event.preventDefault(); // Prevent default to avoid unexpected form submits
+
+        if (manualLocation.trim()) {
+            // If the user typed something, treat Enter as form submit
+            handleManualSubmit(event as unknown as React.FormEvent);
+        } else {
+            // Otherwise treat Enter as "skip"
+            onSubmit(null);
+            toast({
+                title: 'Skipped Location',
+                description: 'Using default location.',
+            });
         }
-        // Allow Enter for button clicks elsewhere
       }
     };
 
@@ -69,7 +65,7 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-    // Add manualLocation to dependencies to re-evaluate Enter key press logic
+    // Re-run listener when manualLocation changes so latest value is used
   }, [manualLocation, onSubmit, toast]);
 
 
@@ -228,13 +224,13 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
       </div>
 
       {/* Alternative Options */}
-      <div className="text-center space-y-1 sm:space-y-2"> {/* Adjusted spacing for mobile */}
+      <div className="flex flex-col sm:flex-row sm:justify-center gap-2 sm:gap-3"> {/* Improved layout so buttons don't overlap */}
         {geolocationSupported && (
           <Button
             variant="outline"
             onClick={handleUseCurrentLocation}
             disabled={isLocating}
-            className="transition-colors w-full sm:w-auto text-sm sm:text-base border-primary/50 text-primary hover:bg-primary/5 mb-2" // Adjusted styling to match other steps
+            className="transition-colors w-full sm:w-auto text-sm sm:text-base border-primary/50 text-primary hover:bg-primary/5" // Removed bottom margin due to new flex gap
             size="lg"
           >
             {isLocating ? (
@@ -259,7 +255,7 @@ export default function LocationStep({ onSubmit }: LocationStepProps) {
               description: 'Using default location for tax calculation.',
             });
           }}
-          className="transition-colors w-full sm:w-auto text-sm sm:text-base border-primary/50 text-primary hover:bg-primary/5" // Adjusted styling to match other steps
+          className="transition-colors w-full sm:w-auto text-sm sm:text-base border-primary/50 text-primary hover:bg-primary/5" // Styles aligned, spacing handled by flex gap
           size="lg"
         >
           <MapPin className="mr-2 h-4 w-4" /> Use Default Location
