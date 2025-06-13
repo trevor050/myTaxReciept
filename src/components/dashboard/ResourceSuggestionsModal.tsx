@@ -707,14 +707,20 @@ export default function ResourceSuggestionsModal({
       <DialogContent
         ref={refModal}
         style={
-            pos.x !== null && pos.y !== null
+            pos.x !== null && pos.y !== null && window.innerWidth >= 640
             ? { left: pos.x, top: pos.y, transform: 'none' }
             : undefined
         }
         className={cn(
-            'fixed z-50 flex max-h-[90vh] sm:max-h-[85vh] w-[95vw] sm:w-[90vw] max-w-3xl flex-col border bg-background shadow-lg sm:rounded-lg',
-             pos.x === null && 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut',
-             pos.x !== null && 'data-[state=open]:animate-fadeIn data-[state=closed]:animate-scaleOut' // Use simpler fadeIn for dragged
+            'fixed z-50 flex border bg-background shadow-lg',
+            // Mobile: full screen
+            'h-full w-full max-h-none rounded-none',
+            // Desktop: floating dialog
+            'sm:max-h-[85vh] sm:w-[90vw] sm:max-w-3xl sm:rounded-lg',
+            // Animation classes
+            pos.x === null && 'sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut',
+            pos.x !== null && 'data-[state=open]:animate-fadeIn data-[state=closed]:animate-scaleOut',
+            'flex-col'
         )}
         onInteractOutside={e => drag && e.preventDefault()}
         onOpenAutoFocus={e => {
@@ -724,7 +730,7 @@ export default function ResourceSuggestionsModal({
         <div
             ref={refHandle}
             onMouseDown={onDown}
-            className='relative flex shrink-0 cursor-move select-none items-center justify-between border-b px-4 py-3 sm:px-6 sm:py-4 bg-card/95 rounded-t-lg'
+            className='relative flex shrink-0 select-none items-center justify-between border-b px-4 py-3 sm:px-6 sm:py-4 bg-card/95 sm:cursor-move sm:rounded-t-lg'
          >
           <div className='flex items-center gap-2 sm:gap-3 pointer-events-none'>
             <GripVertical className='h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground shrink-0' />
@@ -864,7 +870,7 @@ export default function ResourceSuggestionsModal({
             </ScrollArea>
         </TooltipProvider>
 
-        <DialogFooter className="flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end px-4 py-3 sm:px-6 sm:py-4 border-t bg-card/95 rounded-b-lg sticky bottom-0 z-10">
+        <DialogFooter className="flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end px-4 py-3 sm:px-6 sm:py-4 border-t bg-card/95 sm:rounded-b-lg sticky bottom-0 z-10">
           <DialogClose asChild>
             <Button variant="outline" className="w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10">Close</Button>
           </DialogClose>

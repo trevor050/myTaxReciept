@@ -43,30 +43,31 @@ export default function FloatingEmailButton({ isVisible, count, onClick }: Float
           size="lg"
           onClick={onClick}
           className={cn(
-            "relative shadow-lg rounded-full text-sm sm:text-base font-semibold px-6 py-3 sm:px-8 sm:py-4",
+            "relative shadow-lg rounded-xl text-sm sm:text-base font-semibold px-6 py-3 sm:px-8 sm:py-4",
             "bg-primary text-primary-foreground hover:bg-primary/90",
-            "flex items-center gap-3 min-w-[200px] justify-center",
-            "transition-all duration-200 transform hover:scale-105 active:scale-95",
-            "focus:ring-2 focus:ring-primary/50 focus:outline-none"
+            "flex items-center gap-3 min-w-[180px] justify-between",
+            "transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]",
+            "focus:ring-2 focus:ring-primary/50 focus:outline-none border border-primary/20"
           )}
           aria-label={`Email officials about ${count} item(s)`}
           tabIndex={isVisible ? 0 : -1}
         >
-          {/* Icon with subtle animation */}
-          <div className="relative">
-            <Mail className="h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-200 group-hover:scale-110" />
+          {/* Left side: Icon and text */}
+          <div className="flex items-center gap-3">
+            <div className="p-1.5 rounded-lg bg-primary-foreground/20">
+              <Mail className="h-4 w-4 sm:h-5 sm:w-5" />
+            </div>
+            
+            <div className="flex flex-col items-start">
+              <span className="font-bold text-sm sm:text-base leading-tight">Email Officials</span>
+              <span className="text-xs opacity-90 leading-tight">
+                {count} selected
+              </span>
+            </div>
           </div>
           
-          {/* Text content */}
-          <div className="flex flex-col items-start">
-            <span className="font-bold text-sm sm:text-base">Email Officials</span>
-            <span className="text-xs sm:text-sm opacity-90">
-              {count} {count === 1 ? 'concern' : 'concerns'} selected
-            </span>
-          </div>
-          
-          {/* Count badge */}
-          <div className="absolute -top-2 -right-2 bg-chart-3 text-white rounded-full h-6 w-6 sm:h-7 sm:w-7 flex items-center justify-center text-xs sm:text-sm font-bold">
+          {/* Right side: Count badge */}
+          <div className="bg-primary-foreground/20 text-primary-foreground rounded-lg h-8 w-8 flex items-center justify-center text-sm font-bold">
             {count}
           </div>
         </Button>

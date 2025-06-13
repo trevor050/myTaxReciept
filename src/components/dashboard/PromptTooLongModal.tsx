@@ -73,7 +73,7 @@ export default function PromptTooLongModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut">
+      <DialogContent className="w-full h-full sm:h-auto sm:w-auto sm:max-w-md rounded-none sm:rounded-lg data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut">
         <DialogHeader className="text-left">
           <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
             <AlertTriangle className="h-5 w-5 text-amber-500" />
