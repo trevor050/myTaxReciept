@@ -12,13 +12,17 @@ import { toneBucket } from '@/services/email/utils';
 import LocationStep from '@/components/onboarding/LocationStep';
 import TaxAmountStep from '@/components/onboarding/TaxAmountStep';
 import HourlyWageStep from '@/components/onboarding/HourlyWageStep';
+// Mobile-specific versions
+import LocationStepMobile from '@/components/onboarding/mobile/LocationStepMobile';
+import TaxAmountStepMobile from '@/components/onboarding/mobile/TaxAmountStepMobile';
+import HourlyWageStepMobile from '@/components/onboarding/mobile/HourlyWageStepMobile';
 import TaxBreakdownDashboard from '@/components/dashboard/TaxBreakdownDashboard';
 import FloatingEmailButton from '@/components/dashboard/FloatingEmailButton';
 import EmailCustomizationModal from '@/components/dashboard/EmailCustomizationModal';
 import ResourceSuggestionsModal from '@/components/dashboard/ResourceSuggestionsModal';
 import EnterHourlyWageModal from '@/components/dashboard/EnterHourlyWageModal';
 import type { SuggestedResource } from '@/types/resource-suggestions';
-import { suggestResources } from '@/services/resource-suggestions';
+
 import { RESOURCE_DATABASE } from '@/lib/resource-suggestion-logic'; // For preloading icons
 import { importLucideIcon } from '@/lib/icon-utils'; // Icon loading utility
 
@@ -63,6 +67,7 @@ export default function Home() {
   const [userLocationText, setUserLocationText] = useState('');
 
   const [estimatedMedianTax, setEstimatedMedianTax] = useState(NATIONAL_MEDIAN_FEDERAL_TAX);
+  const [zipCode, setZipCode] = useState<string | null>(null);
 
   const [suggestedResources, setSuggestedResources] = useState<SuggestedResource[]>([]);
   const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
@@ -124,7 +129,7 @@ export default function Home() {
     const nextStepIndex = stepOrder.indexOf(nextStep);
     const isGoingBack = nextStepIndex < currentStepIndex;
 
-    setAnimationClass(isGoingBack ? 'animate-slideOutUp' : 'animate-slideOutUp');
+    setAnimationClass(isGoingBack ? 'animate-slideOutDown' : 'animate-slideOutUp');
 
     if (step === 'dashboard' && nextStep !== 'dashboard') {
        setShowEmailAction(false);
@@ -200,17 +205,18 @@ export default function Home() {
   }, [isMobileView]);
 
 
-  const handleLocationSubmit = useCallback((loc: Location | null, zipCode?: string) => {
+  const handleLocationSubmit = useCallback((loc: Location | null, zip?: string) => {
     const finalLocation = loc ?? DEFAULT_LOCATION;
     setLocation(finalLocation);
 
-    const stateAbbr = zipCode ? guessStateFromZip(zipCode) : (loc ? null : DEFAULT_STATE);
+    const stateAbbr = zip ? guessStateFromZip(zip) : (loc ? null : DEFAULT_STATE);
     const medianForState = getAverageTaxForState(stateAbbr);
     setEstimatedMedianTax(medianForState);
+    setZipCode(zip ?? null);
 
     toast({
         title: 'Location Set',
-        description: loc ? (zipCode ? `Using location for ${zipCode}.` : 'Using current location.') : `Using default location (New York Area). Estimated median tax for this area: $${medianForState.toLocaleString()}.`,
+        description: loc ? (zip ? `Using location for ${zip}.` : 'Using current location.') : `Using default location (New York Area). Estimated median tax for this area: $${medianForState.toLocaleString()}.`,
     });
     navigateToStep('tax');
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -371,7 +377,23 @@ export default function Home() {
                 category: item.category,
             }));
 
-        const suggestions = await suggestResources(itemsArrayForSuggestions, aggressiveness, balanceBudgetChecked);
+        const response = await fetch('/api/suggest-resources', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                selectedItems: itemsArrayForSuggestions,
+                userToneValue: aggressiveness,
+                balanceBudgetChecked
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch resource suggestions');
+        }
+        
+        const suggestions = await response.json();
         setSuggestedResources(suggestions);
         if (suggestions.length > 0) {
             setIsEmailModalOpen(false);
@@ -398,6 +420,16 @@ export default function Home() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasConcernsForSuggestions, selectedEmailItems, aggressiveness, balanceBudgetChecked, toast]);
 
+  // Re-enable body scroll on mobile when no modals are open
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const anyModalOpen = isEmailModalOpen || isResourceModalOpen || isEnterHourlyWageModalOpen;
+    if (!anyModalOpen) {
+      document.body.style.overflow = 'auto';
+      document.body.removeAttribute('data-radix-body-scroll-lock');
+    }
+  }, [isEmailModalOpen, isResourceModalOpen, isEnterHourlyWageModalOpen]);
+
   const handleEmailGenerated = useCallback(() => {
     setIsEmailModalOpen(false);
     if (hasConcernsForSuggestions) {
@@ -409,7 +441,7 @@ export default function Home() {
 
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-2 sm:p-4 md:p-8 bg-gradient-to-br from-background via-secondary/5 to-background relative">
+    <main className="flex min-h-screen flex-col items-center justify-center p-2 sm:p-4 md:p-8 bg-gradient-to-br from-background via-secondary/5 to-background relative overflow-y-auto">
        <div className={`w-full ${step === 'dashboard' ? 'max-w-full md:max-w-4xl lg:max-w-5xl' : 'max-w-full sm:max-w-md md:max-w-2xl'} mx-auto space-y-1 sm:space-y-2 transition-all duration-300 ease-in-out z-10`}>
         <div className="flex justify-start items-center min-h-[36px] sm:min-h-[40px] px-1 sm:px-0">
             {step !== 'location' ? (
@@ -441,9 +473,27 @@ export default function Home() {
            </CardHeader>
           <CardContent className="p-3 sm:p-6 md:p-10 bg-background relative overflow-hidden min-h-[250px] sm:min-h-[300px] md:min-h-[350px]">
              <div className={`${animationClass} duration-300`}>
-                 {step === 'location' && <LocationStep onSubmit={handleLocationSubmit} />}
-                 {step === 'tax' && <TaxAmountStep onSubmit={handleTaxAmountSubmit} isLoading={isLoading} medianTax={estimatedMedianTax} />}
-                 {step === 'hourlyWage' && <HourlyWageStep onSubmit={handleHourlyWageSubmit} isLoading={isLoading} />}
+                 {step === 'location' && (
+                      isMobileView ? (
+                          <LocationStepMobile onSubmit={handleLocationSubmit} />
+                      ) : (
+                          <LocationStep onSubmit={handleLocationSubmit} />
+                      )
+                 )}
+                 {step === 'tax' && (
+                      isMobileView ? (
+                          <TaxAmountStepMobile onSubmit={handleTaxAmountSubmit} isLoading={isLoading} medianTax={estimatedMedianTax} />
+                      ) : (
+                          <TaxAmountStep onSubmit={handleTaxAmountSubmit} isLoading={isLoading} medianTax={estimatedMedianTax} />
+                      )
+                 )}
+                 {step === 'hourlyWage' && (
+                      isMobileView ? (
+                          <HourlyWageStepMobile onSubmit={handleHourlyWageSubmit} isLoading={isLoading} />
+                      ) : (
+                          <HourlyWageStep onSubmit={handleHourlyWageSubmit} isLoading={isLoading} />
+                      )
+                 )}
                  {step === 'dashboard' && (
                      isLoading || taxAmount === null || taxSpending.length === 0 || !dashboardPerspectives ? (
                          <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -495,6 +545,7 @@ export default function Home() {
             setUserName={setUserName}
             userLocation={userLocationText}
             setUserLocation={setUserLocationText}
+            zipCode={zipCode}
         />
 
         <ResourceSuggestionsModal

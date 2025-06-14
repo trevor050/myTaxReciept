@@ -71,6 +71,24 @@ const COLORS = [
     'hsl(var(--chart-13))','hsl(var(--chart-14))','hsl(var(--chart-15))'
 ];
 
+// Mobile-friendly category names mapping
+const getMobileCategoryName = (category: string, isMobile: boolean): string => {
+  if (!isMobile) return category;
+  
+  const mobileNames: { [key: string]: string } = {
+    'Defense (War & Weapons)': 'Defense',
+    'Veterans & Federal Retirement': 'Veterans',
+    'Economic Security & Job Benefits': 'Job Benefits',
+    'Housing & Community': 'Housing',
+    'Energy & Environment': 'Environment',
+    'Law Enforcement & Justice': 'Law Enforcement',
+    'Science & Technology': 'Science',
+    'Government Operations': 'Government'
+  };
+  
+  return mobileNames[category] || category;
+};
+
 const iconComponents: { [key: string]: LucideIcon } = {
     // Time Icons
     Wind, Smile, Music2, Music, Coffee, Mail, Newspaper, Footprints, Podcast, BookOpen, SprayCan,
@@ -161,7 +179,7 @@ const CustomPieTooltip = ({ active, payload, totalAmount, hourlyWage, displayMod
              <div className="flex items-center justify-between mb-0.5 sm:mb-1 gap-1 sm:gap-2">
                  <span className="font-medium flex items-center gap-1 sm:gap-1.5 truncate">
                     <CategoryIconComponent className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground shrink-0" />
-                    {data.category}
+                    {getMobileCategoryName(data.category, isMobile)}
                  </span>
                 <span className="font-mono text-muted-foreground shrink-0">{data.percentage.toFixed(1)}%</span>
             </div>
@@ -177,7 +195,7 @@ const CustomPieTooltip = ({ active, payload, totalAmount, hourlyWage, displayMod
                  <div className="flex items-center justify-between mb-0.5 sm:mb-1 gap-1 sm:gap-2">
                      <span className="font-medium flex items-center gap-1 sm:gap-1.5 truncate">
                         <CategoryIconComponent className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground shrink-0" />
-                        {data.category}
+                        {getMobileCategoryName(data.category, isMobile)}
                      </span>
                     <span className="font-mono text-muted-foreground shrink-0">{data.percentage.toFixed(1)}%</span>
                 </div>
@@ -268,22 +286,51 @@ const CustomLegend = (props: any) => {
   const { payload } = props;
   const [chartWidth, setChartWidth] = useState(0);
   const [isClient, setIsClient] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
-    if (typeof window !== 'undefined') {
-        const chartContainer = document.querySelector('.recharts-responsive-container');
-        if (chartContainer) {
-            setChartWidth(chartContainer.clientWidth);
-        }
-        const handleResize = () => {
-            if (chartContainer) {
-                setChartWidth(chartContainer.clientWidth);
-            }
-        };
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
+    if (typeof window === 'undefined') {
+      // Abort early on the server
+      return;
     }
+
+    setIsClient(true);
+
+    const checkMobile = () => setIsMobileView(window.innerWidth < 768);
+
+    // Initial evaluation
+    checkMobile();
+
+    // Register listener
+    window.addEventListener('resize', checkMobile);
+
+    // Measure initial width of the chart container (if present)
+    const chartContainer = document.querySelector(
+      '.recharts-responsive-container'
+    ) as HTMLElement | null;
+
+    if (chartContainer) {
+      setChartWidth(chartContainer.clientWidth);
+
+      // Resize handler scoped to this container
+      const handleResize = () => {
+        if (chartContainer) {
+          setChartWidth(chartContainer.clientWidth);
+        }
+      };
+
+      window.addEventListener('resize', handleResize);
+
+      return () => {
+        window.removeEventListener('resize', checkMobile);
+        window.removeEventListener('resize', handleResize);
+      };
+    }
+
+    // Fallback cleanup (only mobile listener was added)
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
   }, []);
 
   if (!isClient) {
@@ -296,10 +343,11 @@ const CustomLegend = (props: any) => {
     <ul className="flex flex-wrap justify-center gap-x-2 sm:gap-x-3 gap-y-1 sm:gap-y-1.5 text-[10px] sm:text-xs mt-3 sm:mt-4 list-none p-0 max-w-full mx-auto">
       {payload.map((entry: any, index: number) => {
           const percentage = entry.payload?.percentage;
+          const displayName = getMobileCategoryName(entry.value, isMobileView);
           return (
             <li key={`item-${index}`} className="flex items-center space-x-1 cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
               <span style={{ backgroundColor: entry.color }} className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full inline-block shrink-0"></span>
-              <span className="truncate" style={{ maxWidth: maxItemWidth }}>{entry.value}</span>
+              <span className="truncate" style={{ maxWidth: maxItemWidth }}>{displayName}</span>
               {percentage != null && <span className="font-mono shrink-0">({percentage.toFixed(1)}%)</span>}
             </li>
           );
@@ -380,18 +428,34 @@ export default function TaxBreakdownDashboard({
 
 
   useEffect(() => {
+    // Ensure this code only runs in the browser
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     setIsClient(true);
+
     const checkMobile = () => setIsMobileView(window.innerWidth < 768);
+
+    // Initial check
     checkMobile();
+
+    // Register listener
     window.addEventListener('resize', checkMobile);
 
-    if (typeof window !== 'undefined') {
-        const currentYear = new Date().getFullYear();
-        const date = new Date(currentYear + 1, 3, 15).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-        setClientDueDate(date);
-        getFormattedNationalDebt().then(setNationalDebt);
-    }
-    return () => window.removeEventListener('resize', checkMobile);
+    // Additional client-side data initialisation
+    const currentYear = new Date().getFullYear();
+    const date = new Date(currentYear + 1, 3, 15).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+    setClientDueDate(date);
+    getFormattedNationalDebt().then(setNationalDebt);
+
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
   }, []);
 
 
@@ -432,9 +496,17 @@ export default function TaxBreakdownDashboard({
     percentage: item.percentage,
   }));
 
-  const responsivePieHeight = isMobileView ? 280 : 320;
-  const responsiveOuterRadius = isMobileView ? 70 : (isClient && window.innerWidth < 768 ? 80 : 100);
-  const responsiveInnerRadius = isMobileView ? 40 : (isClient && window.innerWidth < 768 ? 50 : 65);
+  const isBrowser = typeof window !== 'undefined';
+  const responsiveOuterRadius = isMobileView
+    ? 70
+    : isClient && isBrowser && window.innerWidth < 768
+    ? 80
+    : 100;
+  const responsiveInnerRadius = isMobileView
+    ? 40
+    : isClient && isBrowser && window.innerWidth < 768
+    ? 50
+    : 65;
 
   const handleDisplayModeToggle = (mode: 'currency' | 'time') => {
     if (mode === 'time' && hourlyWage === null) {
@@ -520,7 +592,15 @@ export default function TaxBreakdownDashboard({
                              <Button 
                                  variant="link" 
                                  className="p-0 h-auto ml-0 text-primary font-semibold text-sm sm:text-base hover:text-primary/80 transition-colors duration-200 group" 
-                                 onClick={() => {if (typeof window !== 'undefined') window.open('https://www.usa.gov/elected-officials', '_blank', 'noopener,noreferrer')}}
+                                 onClick={() => {
+                                     if (typeof window === 'undefined') return;
+                                     const url = 'https://www.usa.gov/elected-officials';
+                                     if (window.innerWidth < 768) {
+                                         window.location.href = url;
+                                     } else {
+                                         window.open(url, '_blank', 'noopener,noreferrer');
+                                     }
+                                 }}
                              >
                                  Find Your Officials 
                                  <ExternalLink className="inline ml-2 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" />
@@ -588,7 +668,7 @@ export default function TaxBreakdownDashboard({
                                                     <div className="p-1.5 rounded-md bg-primary/20">
                                                         <CategoryIconComponent className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
                                                     </div>
-                                                    <span className="font-semibold text-sm sm:text-base truncate">{item.category}</span>
+                                                    <span className="font-semibold text-sm sm:text-base truncate">{getMobileCategoryName(item.category, isMobileView)}</span>
                                                 </div>
                                                 <div className="text-right shrink-0 flex items-center gap-2">
                                                     <ShadTooltip>

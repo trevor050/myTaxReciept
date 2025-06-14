@@ -26,8 +26,9 @@ import { GripVertical, Mail, X, Send, Lightbulb, BrainCircuit } from 'lucide-rea
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 
 import type { SelectedItem as UserSelectedItem } from '@/services/tax-spending';
+import type { FundingLevel } from '@/services/email/types';
 import { generateStandardEmail, SUBJECT } from '@/services/email/standard-template';
-import { generateAIPrompt, prepareItemsForAIPrompt } from '@/services/ai/prompt-generator';
+
 import type { AIModelOption } from '@/types/ai-models';
 import { AI_MODEL_OPTIONS } from '@/types/ai-models';
 import { mapSliderToFundingLevel } from '@/lib/funding-utils';
@@ -73,6 +74,15 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
   const [currentPromptForModal, setCurrentPromptForModal] = useState('');
   const [currentAiModelForTooLongModal, setCurrentAiModelForTooLongModal] = useState<AIModelOption | null>(null);
 
+  // Prevent SSR window access for the Dialog modal prop
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const update = () => setIsDesktop(window.innerWidth >= 768);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   useLayoutEffect(()=>{
       if (!isOpen) {
@@ -150,89 +160,127 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
 
 
   const handleGenerateEmail = async () => {
-    const itemsForPrompt = await prepareItemsForAIPrompt(initialSelectedItems, itemFundingLevels);
-    const aiModel = AI_MODEL_OPTIONS.find(m => m.id === selectedGenerator);
-    const currentTone = toneBucket(aggressiveness);
+    try {
+      // ---- 1. Prepare items for the AI prompt ----
+      const prepareResponse = await fetch('/api/generate-ai-prompt', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          initialSelectedItems: Array.from(initialSelectedItems.entries()),
+          itemFundingLevels: Array.from(itemFundingLevels.entries()),
+        }),
+      });
 
-    if (!aiModel) {
-        toast({
-            title: 'Error',
-            description: 'Selected AI model not found.',
-            variant: 'destructive',
-        });
+      if (!prepareResponse.ok) {
+        throw new Error('Failed to prepare items for AI prompt');
+      }
+
+      const itemsForPrompt = await prepareResponse.json();
+
+      const aiModel = AI_MODEL_OPTIONS.find((m) => m.id === selectedGenerator);
+      if (!aiModel) {
+        toast({ title: 'Error', description: 'Selected AI model not found.', variant: 'destructive' });
         return;
-    }
+      }
 
-    // Use placeholders if userName or userLocation is empty
-    const finalUserName = userName.trim() === '' ? '[Your Name]' : userName;
-    const finalUserLocation = userLocation.trim() === '' ? '[Your Location]' : userLocation;
+      const currentTone = toneBucket(aggressiveness);
 
+      // Use placeholders if userName or userLocation is empty
+      const finalUserName = userName.trim() === '' ? '[Your Name]' : userName;
+      const finalUserLocation = userLocation.trim() === '' ? '[Your Location]' : userLocation;
 
-    if (aiModel.isAIMeta) {
-        const promptText = await generateAIPrompt(
-            itemsForPrompt,
+      // ---- 2. If using an external AI provider, generate the prompt ----
+      if (aiModel.isAIMeta) {
+        const promptResponse = await fetch('/api/generate-ai-prompt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            selectedItemsWithSliderValues: itemsForPrompt,
             aggressiveness,
-            finalUserName, // Use potentially placeholder name
-            finalUserLocation, // Use potentially placeholder location
-            balanceBudgetChecked
-        );
+            userName: finalUserName,
+            userLocation: finalUserLocation,
+            balanceBudgetPreference: balanceBudgetChecked,
+          }),
+        });
 
-        if (promptText.length >= PROMPT_LENGTH_THRESHOLD) {
-            setCurrentAiModelForTooLongModal(aiModel);
-            setCurrentPromptForModal(promptText);
-            setIsPromptTooLongModalOpen(true);
-            return;
+        if (!promptResponse.ok) {
+          throw new Error('Failed to generate AI prompt');
         }
 
+        const { prompt: promptText } = await promptResponse.json();
+
+        if (promptText.length >= PROMPT_LENGTH_THRESHOLD) {
+          setCurrentAiModelForTooLongModal(aiModel);
+          setCurrentPromptForModal(promptText);
+          setIsPromptTooLongModalOpen(true);
+          return;
+        }
 
         let urlToOpen = aiModel.url;
         if (aiModel.url.includes('<YOUR_PROMPT>')) {
-            urlToOpen = aiModel.url.replace('<YOUR_PROMPT>', encodeURIComponent(promptText));
+          urlToOpen = aiModel.url.replace('<YOUR_PROMPT>', encodeURIComponent(promptText));
         }
 
         toast({
-            title: `Opening ${aiModel.name}...`,
-            description: `After ${aiModel.name} generates the email, copy the text. Click 'Open Email Draft' to prepare your email client.`,
-            duration: 9000,
-            action: (
-                <Button variant="outline" size="sm" onClick={() => {
-                    const genericSubject = SUBJECT[currentTone] || SUBJECT[0];
-                    const placeholderBody = `Hello [Representative Name],\n\nI am writing to you today regarding federal budget priorities.\n\n[Please paste the email body generated by ${aiModel.name} here.]\n\nThank you for your time and consideration.\n\nSincerely,\n${finalUserName}\n${finalUserLocation}`;
-                    window.location.href = `mailto:?subject=${encodeURIComponent(genericSubject)}&body=${encodeURIComponent(placeholderBody)}`;
-                }}>
-                    Open Email Draft
-                </Button>
-            )
+          title: `Opening ${aiModel.name}...`,
+          description: `After ${aiModel.name} generates the email, copy the text. Click 'Open Email Draft' to prepare your email client.`,
+          duration: 9000,
+          action: (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const genericSubject = SUBJECT[currentTone] || SUBJECT[0];
+                const placeholderBody = `Hello [Representative Name],\n\nI am writing to you today regarding federal budget priorities.\n\n[Please paste the email body generated by ${aiModel.name} here.]\n\nThank you for your time and consideration.\n\nSincerely,\n${finalUserName}\n${finalUserLocation}`;
+                window.location.href = `mailto:?subject=${encodeURIComponent(genericSubject)}&body=${encodeURIComponent(placeholderBody)}`;
+              }}
+            >
+              Open Email Draft
+            </Button>
+          ),
         });
-        window.open(urlToOpen, '_blank');
+
+        // Open differently on mobile to avoid the grey popup issue
+        if (typeof window !== 'undefined' && window.innerWidth < 768) {
+          window.location.href = urlToOpen; // full-page navigation on mobile
+        } else {
+          window.open(urlToOpen, '_blank');
+        }
         onEmailGenerated();
-
-    } else { // Local Template
+      } else { // Local Template
         const finalSelectedItemsForTemplate: (UserSelectedItem & { category: string })[] = Array.from(itemFundingLevels.entries()).map(([id, sliderValue]) => {
-            const originalItem = initialSelectedItems.get(id);
-            return {
-                id,
-                description: originalItem?.description || 'Unknown Item',
-                category: originalItem?.category || 'Unknown Category',
-                fundingLevel: mapSliderToFundingLevel(sliderValue)
-            };
+          const originalItem = initialSelectedItems.get(id);
+          return {
+            id,
+            description: originalItem?.description || 'Unknown Item',
+            category: originalItem?.category || 'Unknown Category',
+            fundingLevel: mapSliderToFundingLevel(sliderValue) as FundingLevel
+          };
         });
-
 
         const {subject, body} = generateStandardEmail(
-            finalSelectedItemsForTemplate,
-            aggressiveness,
-            finalUserName, // Use potentially placeholder name
-            finalUserLocation, // Use potentially placeholder location
-            balanceBudgetChecked
+          finalSelectedItemsForTemplate,
+          aggressiveness,
+          finalUserName, // Use potentially placeholder name
+          finalUserLocation, // Use potentially placeholder location
+          balanceBudgetChecked
         );
         toast({
-            title: 'Email Generated',
-            description: 'Opening your email client with the pre-filled template.',
-            duration: 5000,
+          title: 'Email Generated',
+          description: 'Opening your email client with the pre-filled template.',
+          duration: 5000,
         });
+        // For mobile we still use mailto directly; behaviour is consistent across devices
         window.location.href=`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         onEmailGenerated();
+      }
+    } catch (error) {
+      console.error('handleGenerateEmail:', error);
+      toast({
+        title: 'Network Error',
+        description: 'Something went wrong while generating the email. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -251,7 +299,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
 
   return(
     <>
-    <Dialog open={isOpen} onOpenChange={(open) => {
+    <Dialog open={isOpen} modal={isDesktop} onOpenChange={(open) => {
         onOpenChange(open);
         if (!open) {
              isInitialOpen.current = true;
@@ -261,22 +309,30 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
       <DialogContent
         ref={refModal}
         style={
-            pos.x !== null && pos.y !== null && window.innerWidth >= 640
+            pos.x !== null && pos.y !== null && isDesktop
             ? { left: pos.x, top: pos.y, transform: 'none' }
             : undefined
         }
         className={cn(
-          'fixed z-50 flex border bg-background shadow-lg',
+          'fixed z-[90] flex border bg-background shadow-lg',
           // Mobile: full screen
-          'h-full w-full max-h-none rounded-none',
+          'h-full w-full max-h-none rounded-none inset-0',
           // Desktop: floating dialog
           'sm:max-h-[85vh] sm:w-[90vw] sm:max-w-3xl sm:rounded-lg',
           // Animation classes
           pos.x === null && 'sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut',
           pos.x !== null && 'data-[state=open]:animate-fadeIn data-[state=closed]:animate-scaleOut',
-          'flex-col'
+          'flex-col',
+          // Mobile-specific fixes
+          'sm:inset-auto touch-manipulation'
         )}
-        onInteractOutside={e=>drag&&e.preventDefault()}
+        onInteractOutside={e=>{
+          // On mobile, don't prevent interaction outside unless dragging
+          if (typeof window !== 'undefined' && window.innerWidth < 768) {
+            return; // Allow closing on mobile by tapping outside
+          }
+          if (drag) e.preventDefault();
+        }}
         onOpenAutoFocus={e=>e.preventDefault()}
       >
 
@@ -305,7 +361,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
         </div>
 
 
-        <ScrollArea className="flex-1 sm:max-h-[70vh]">
+        <div className="flex-1 overflow-y-auto sm:max-h-[70vh]">
            <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 pt-4">
               <div className='space-y-3 sm:space-y-4'>
                 <h3 className='text-sm sm:text-lg font-semibold border-b pb-1.5 sm:pb-2'>Your Information</h3>
@@ -379,7 +435,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                 </div>
               )}
            </div>
-        </ScrollArea>
+        </div>
 
         <DialogFooter className='flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-between items-center px-4 py-3 sm:px-6 sm:py-4 border-t bg-card/95 sticky bottom-0 z-10 sm:rounded-b-lg'>
           <DialogClose asChild><Button variant='outline' className='w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10'>Cancel</Button></DialogClose>
@@ -423,7 +479,15 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                     <span className="sr-only">Choose Generator</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-72 sm:w-80 p-2">
+                <DropdownMenuContent 
+                  align="end" 
+                  side="top"
+                  className="w-[calc(100vw-2rem)] max-w-[320px] sm:w-80 p-2 z-[200] mx-4 sm:mx-0"
+                  sideOffset={8}
+                  alignOffset={0}
+                  avoidCollisions={true}
+                  collisionPadding={16}
+                >
                   <DropdownMenuLabel className="px-1 pb-1 text-xs">Choose AI Generator</DropdownMenuLabel>
                   <DropdownMenuRadioGroup value={selectedGenerator} onValueChange={setSelectedGenerator} className="space-y-1">
                     {aiModels.map((modelItem) => {

@@ -388,4 +388,38 @@ body {
     transform: translateY(-50%);     /* keep it centered around the new anchor */
 }
 
+/* Fix: Allow scrolling on mobile by resetting background-attachment */
+@media (hover: none) and (pointer: coarse) {
+  body, .dark body {
+    background-attachment: scroll;
+  }
+  
+  /* Mobile-specific dropdown fixes */
+  [data-radix-dropdown-menu-content] {
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  /* Ensure dropdown items are properly clickable on mobile */
+  [data-radix-dropdown-menu-item] {
+    touch-action: manipulation;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Fix for AI option cards on mobile */
+  .ai-option-card {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+  }
+  
+  /* Ensure proper z-index stacking on mobile */
+  [data-radix-dropdown-menu-content] {
+    z-index: 9999 !important;
+  }
+}
+
     
