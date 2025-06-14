@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription as CardDesc } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, MessageSquareQuote, PlusCircle, MinusCircle, Search, Sparkles, Trophy, Users as UsersIcon, Target, HandHeart, FilterX, Megaphone, Gavel, Landmark, Dove, LibrarySquare, DollarSign, Eye, School, Home, Bed, Utensils, Medal, Hammer, Anchor, ListFilter, Tag, FlaskConical, Brain, Building as BuildingIcon, Star, Wheelchair, PawPrint, CheckCircle, Rabbit, Baby, ShieldOff, Activity, TrendingUp, PieChart, Banknote } from 'lucide-react'; // Added Rabbit, Baby, ShieldOff, Activity, TrendingUp, PieChart, Banknote
+import { ExternalLink, Info, Loader2, Link as LinkIcon, GripVertical, X, MessageSquareQuote, PlusCircle, MinusCircle, Search, Sparkles, Trophy, Users as UsersIcon, Target, HandHeart, FilterX, Megaphone, Gavel, Landmark, LibrarySquare, DollarSign, Eye, School, Home, Bed, Utensils, Medal, Hammer, Anchor, ListFilter, Tag, FlaskConical, Brain, Building as BuildingIcon, Star, PawPrint, CheckCircle, Rabbit, Baby, ShieldOff, Activity, TrendingUp, PieChart, Banknote } from 'lucide-react';
 import type { SuggestedResource, MatchedReason, BadgeType } from '@/types/resource-suggestions';
 import { BADGE_DISPLAY_PRIORITY_MAP } from '@/lib/resource-suggestion-logic';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -633,20 +633,20 @@ export default function ResourceSuggestionsModal({
     return (
         <Tooltip>
         <TooltipTrigger asChild>
-            <Card className="shadow-lg hover:shadow-xl transition-shadow duration-200 bg-card/90 border-border/30 hover:border-primary/40 cursor-help rounded-lg overflow-hidden w-full animate-fadeIn">
-            <CardHeader className="pb-2 pt-3 px-3 sm:px-4 bg-secondary/10">
-                <CardTitle className="text-sm sm:text-base font-semibold flex items-start justify-between text-foreground gap-2">
+            <Card className="shadow-lg hover:shadow-xl transition-shadow duration-200 bg-card/90 border-border/30 hover:border-primary/40 cursor-help rounded-xl overflow-hidden w-full animate-fadeIn">
+            <CardHeader className="pb-3 pt-4 px-4 sm:px-4 bg-secondary/10">
+                <CardTitle className="text-base sm:text-base font-semibold flex items-start justify-between text-foreground gap-3">
                 <span className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                    <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 mt-0.5 text-primary" />
+                    <Icon className="h-5 w-5 sm:h-5 sm:w-5 shrink-0 mt-0.5 text-primary" />
                     <span className="flex-1">{resource.name}</span>
                 </span>
-                <div className="flex items-center flex-shrink-0 gap-1 ml-auto flex-wrap justify-end max-w-[60%]">
+                <div className="flex items-center flex-shrink-0 gap-1.5 ml-auto flex-wrap justify-end max-w-[50%]">
                     {displayedBadges.map(badge => (
                         <Badge
                             key={badge}
                             variant={'outline'} // Simplified variant, colors handled by cn
                             className={cn(
-                                "text-xs px-1.5 py-0.5 whitespace-nowrap font-medium flex items-center",
+                                "text-xs px-2 py-1 whitespace-nowrap font-medium flex items-center rounded-full",
                                 // Badge specific colors
                                 badge === 'Best Match' && "bg-green-100 border-green-500 text-green-700 dark:bg-green-800/40 dark:border-green-600 dark:text-green-300",
                                 badge === 'Top Match' && "bg-sky-100 border-sky-500 text-sky-700 dark:bg-sky-700/30 dark:border-sky-600 dark:text-sky-300",
@@ -666,30 +666,30 @@ export default function ResourceSuggestionsModal({
                         </Badge>
                     ))}
                     {(resource.matchCount && resource.matchCount > 0 && !resource.badges?.some(b => ['Best Match', 'Top Match', 'Your Match'].includes(b)) && !resource.badges?.includes('General Interest')) ? (
-                         <Badge variant="outline" className="border-border text-muted-foreground bg-muted/30 text-xs px-1.5 py-0.5 whitespace-nowrap">
+                         <Badge variant="outline" className="border-border text-muted-foreground bg-muted/30 text-xs px-2 py-1 whitespace-nowrap rounded-full">
                             Matches {resource.matchCount} concern{resource.matchCount !== 1 ? 's':''}
                         </Badge>
                     ): null}
                      {(!resource.matchCount || resource.matchCount === 0) && displayedBadges.length === 0 && (
-                        <Badge variant="outline" className="border-border text-muted-foreground bg-muted/30 text-xs px-1.5 py-0.5 whitespace-nowrap italic">
+                        <Badge variant="outline" className="border-border text-muted-foreground bg-muted/30 text-xs px-2 py-1 whitespace-nowrap italic rounded-full">
                             General Info
                         </Badge>
                     )}
                 </div>
                 </CardTitle>
             </CardHeader>
-            <CardContent className="text-xs sm:text-sm space-y-1.5 px-3 sm:px-4 py-3">
-                <CardDesc className="text-muted-foreground leading-relaxed line-clamp-2 sm:line-clamp-3 mb-1">{resource.description}</CardDesc>
-                <p className="text-foreground/80 italic text-[10px] sm:text-xs"><strong className="font-medium text-foreground/90">Why it might be relevant:</strong> {resource.overallRelevance}</p>
+            <CardContent className="text-sm sm:text-sm space-y-3 px-4 sm:px-4 py-4">
+                <CardDesc className="text-muted-foreground leading-relaxed line-clamp-3 sm:line-clamp-3 mb-2">{resource.description}</CardDesc>
+                <p className="text-foreground/80 italic text-xs sm:text-xs"><strong className="font-medium text-foreground/90">Why it might be relevant:</strong> {resource.overallRelevance}</p>
                 <Button
                 variant="link"
                 size="sm"
                 asChild
-                className="p-0 h-auto text-primary hover:text-primary/80 text-xs sm:text-sm mt-1.5 font-medium"
+                className="p-0 h-auto text-primary hover:text-primary/80 text-sm sm:text-sm mt-2 font-medium"
                 onClick={(e) => e.stopPropagation()}
                 >
                 <a href={resource.url} target="_blank" rel="noopener noreferrer">
-                    Visit Website <ExternalLink className="ml-1 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                    Visit Website <ExternalLink className="ml-1.5 h-4 w-4 sm:h-3.5 sm:w-3.5" />
                 </a>
                 </Button>
             </CardContent>
@@ -703,7 +703,7 @@ export default function ResourceSuggestionsModal({
 
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange} modal={typeof window !== 'undefined' && window.innerWidth >= 768}>
       <DialogContent
         ref={refModal}
         style={
@@ -712,17 +712,25 @@ export default function ResourceSuggestionsModal({
             : undefined
         }
         className={cn(
-            'fixed z-50 flex border bg-background shadow-lg',
+            'fixed z-[100] flex border bg-background shadow-lg',
             // Mobile: full screen
-            'h-full w-full max-h-none rounded-none',
+            'h-full w-full max-h-none rounded-none inset-0',
             // Desktop: floating dialog
             'sm:max-h-[85vh] sm:w-[90vw] sm:max-w-3xl sm:rounded-lg',
             // Animation classes
             pos.x === null && 'sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut',
             pos.x !== null && 'data-[state=open]:animate-fadeIn data-[state=closed]:animate-scaleOut',
-            'flex-col'
+            'flex-col',
+            // Mobile-specific fixes
+            'sm:inset-auto touch-manipulation'
         )}
-        onInteractOutside={e => drag && e.preventDefault()}
+        onInteractOutside={e => {
+          // On mobile, allow closing by tapping outside
+          if (typeof window !== 'undefined' && window.innerWidth < 640) {
+            return;
+          }
+          if (drag) e.preventDefault();
+        }}
         onOpenAutoFocus={e => {
             e.preventDefault();
         }}
@@ -801,14 +809,14 @@ export default function ResourceSuggestionsModal({
                 )}
             </div>
 
-            <ScrollArea className="flex-1 overflow-y-auto px-2 py-2 sm:px-4 sm:py-4 tooltip-scrollbar">
+            <div className="flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4">
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
                 <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
                 <p className="text-sm">Finding relevant resources...</p>
                 </div>
             ) : displayedResources.length > 0 ? (
-                <div className="space-y-3 sm:space-y-4">
+                <div className="space-y-4 sm:space-y-4">
                     {displayedResources.map((resource, index) => {
                          // Check if we need to add a separator before this resource
                          const isFirstExtendedResult = resource.isExtendedResult && 
@@ -823,25 +831,25 @@ export default function ResourceSuggestionsModal({
                            <React.Fragment key={resource.url || resource.name}>
                              {isFirstExtendedResult && (
                                  hasPrimaryMatches ? (
-                                     <div className="relative flex items-center justify-center py-4 mt-6">
+                                     <div className="relative flex items-center justify-center py-6 mt-8">
                                          <div className="absolute inset-0 flex items-center">
                                              <div className="w-full border-t border-dashed border-muted-foreground/30"></div>
                                          </div>
-                                         <div className="relative flex items-center gap-2 bg-background px-4 text-sm text-muted-foreground">
+                                         <div className="relative flex items-center gap-2 bg-background px-4 text-sm sm:text-sm text-muted-foreground">
                                              <Sparkles className="h-4 w-4 opacity-60" />
-                                             <p className="flex items-center gap-x-2">
+                                             <p className="flex flex-col sm:flex-row sm:items-center gap-x-2 text-center sm:text-left">
                                                  <span className="font-medium">Additional matches for your filters</span>
-                                                 <span className="text-xs opacity-70">• Not in your top choices, but still relevant</span>
+                                                 <span className="text-xs opacity-70 hidden sm:inline">• Not in your top choices, but still relevant</span>
                                              </p>
                                          </div>
                                      </div>
                                  ) : (
-                                     <div className="my-6 rounded-lg border-2 border-dashed border-muted-foreground/20 bg-muted/20 p-4 sm:p-6 text-center">
+                                     <div className="my-8 rounded-lg border-2 border-dashed border-muted-foreground/20 bg-muted/20 p-6 text-center">
                                          <div className="flex items-center justify-center gap-2 text-base font-medium text-foreground">
                                              <FilterX className="h-5 w-5 text-primary/80" />
                                              <span>No matches in your top choices</span>
                                          </div>
-                                         <p className="mt-2 text-sm text-muted-foreground">
+                                         <p className="mt-3 text-sm text-muted-foreground">
                                              However, here are some other relevant organizations for your consideration.
                                          </p>
                                      </div>
@@ -853,13 +861,13 @@ export default function ResourceSuggestionsModal({
                     })}
                     {
                      filteredResources.length > visibleItemCount && !isLoading && (
-                        <div ref={loadMoreRef} className="h-10 flex justify-center items-center text-muted-foreground">
+                        <div ref={loadMoreRef} className="h-12 flex justify-center items-center text-muted-foreground">
                             <Loader2 className="h-5 w-5 animate-spin" />
                         </div>
                     )}
                 </div>
             ) : (
-                <div className="text-center py-10 text-muted-foreground">
+                <div className="text-center py-12 text-muted-foreground">
                 <Info className="h-10 w-10 mx-auto mb-3 text-primary/70" />
                 <p className="text-sm">{ activeFilterKeys.size > 0 && !activeFilterKeys.has('all-organizations') && (!hasUserConcerns || (hasUserConcerns && !activeFilterKeys.has('your-matches'))) ? `No resources matched your current filter combination.` : "No resources found."}</p>
                 <p className="text-xs mt-1">
@@ -867,7 +875,7 @@ export default function ResourceSuggestionsModal({
                 </p>
                 </div>
             )}
-            </ScrollArea>
+            </div>
         </TooltipProvider>
 
         <DialogFooter className="flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end px-4 py-3 sm:px-6 sm:py-4 border-t bg-card/95 sm:rounded-b-lg sticky bottom-0 z-10">

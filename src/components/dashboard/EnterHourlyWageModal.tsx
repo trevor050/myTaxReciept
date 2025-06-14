@@ -136,7 +136,7 @@ export default function EnterHourlyWageModal({ isOpen, onOpenChange, onSubmit }:
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange} modal={typeof window !== 'undefined' && window.innerWidth >= 768}>
       <DialogContent
          ref={refModal}
          style={ pos.x !== null ? { left: pos.x, top: pos.y, transform: 'none' } : undefined }

@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -45,7 +44,11 @@ export default function PromptTooLongModal({
         description: `The prompt for ${aiModelName} has been copied to your clipboard.`,
         duration: 5000,
       });
-      window.open(aiModelUrlWithoutPrompt, '_blank');
+      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+        window.location.href = aiModelUrlWithoutPrompt;
+      } else {
+        window.open(aiModelUrlWithoutPrompt, '_blank');
+      }
       onOpenChange(false);
       onEmailGenerated();
     } catch (err) {

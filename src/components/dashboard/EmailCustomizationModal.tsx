@@ -204,7 +204,12 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                 </Button>
             )
         });
-        window.open(urlToOpen, '_blank');
+        // Open differently on mobile to avoid grey popup issue
+        if (typeof window !== 'undefined' && window.innerWidth < 768) {
+            window.location.href = urlToOpen; // full-page navigation on mobile
+        } else {
+            window.open(urlToOpen, '_blank');
+        }
         onEmailGenerated();
 
     } else { // Local Template
@@ -231,6 +236,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
             description: 'Opening your email client with the pre-filled template.',
             duration: 5000,
         });
+        // For mobile we still use mailto directly; behaviour is consistent across devices
         window.location.href=`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         onEmailGenerated();
     }
@@ -251,7 +257,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
 
   return(
     <>
-    <Dialog open={isOpen} onOpenChange={(open) => {
+    <Dialog open={isOpen} modal={typeof window !== 'undefined' && window.innerWidth >= 768} onOpenChange={(open) => {
         onOpenChange(open);
         if (!open) {
              isInitialOpen.current = true;
@@ -266,17 +272,25 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
             : undefined
         }
         className={cn(
-          'fixed z-50 flex border bg-background shadow-lg',
+          'fixed z-[100] flex border bg-background shadow-lg',
           // Mobile: full screen
-          'h-full w-full max-h-none rounded-none',
+          'h-full w-full max-h-none rounded-none inset-0',
           // Desktop: floating dialog
           'sm:max-h-[85vh] sm:w-[90vw] sm:max-w-3xl sm:rounded-lg',
           // Animation classes
           pos.x === null && 'sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut',
           pos.x !== null && 'data-[state=open]:animate-fadeIn data-[state=closed]:animate-scaleOut',
-          'flex-col'
+          'flex-col',
+          // Mobile-specific fixes
+          'sm:inset-auto touch-manipulation'
         )}
-        onInteractOutside={e=>drag&&e.preventDefault()}
+        onInteractOutside={e=>{
+          // On mobile, don't prevent interaction outside unless dragging
+          if (typeof window !== 'undefined' && window.innerWidth < 640) {
+            return; // Allow closing on mobile by tapping outside
+          }
+          if (drag) e.preventDefault();
+        }}
         onOpenAutoFocus={e=>e.preventDefault()}
       >
 
@@ -305,7 +319,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
         </div>
 
 
-        <ScrollArea className="flex-1 sm:max-h-[70vh]">
+        <div className="flex-1 overflow-y-auto sm:max-h-[70vh]">
            <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 pt-4">
               <div className='space-y-3 sm:space-y-4'>
                 <h3 className='text-sm sm:text-lg font-semibold border-b pb-1.5 sm:pb-2'>Your Information</h3>
@@ -379,7 +393,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                 </div>
               )}
            </div>
-        </ScrollArea>
+        </div>
 
         <DialogFooter className='flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-between items-center px-4 py-3 sm:px-6 sm:py-4 border-t bg-card/95 sticky bottom-0 z-10 sm:rounded-b-lg'>
           <DialogClose asChild><Button variant='outline' className='w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10'>Cancel</Button></DialogClose>

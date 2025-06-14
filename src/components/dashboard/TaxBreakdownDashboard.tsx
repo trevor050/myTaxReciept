@@ -520,7 +520,15 @@ export default function TaxBreakdownDashboard({
                              <Button 
                                  variant="link" 
                                  className="p-0 h-auto ml-0 text-primary font-semibold text-sm sm:text-base hover:text-primary/80 transition-colors duration-200 group" 
-                                 onClick={() => {if (typeof window !== 'undefined') window.open('https://www.usa.gov/elected-officials', '_blank', 'noopener,noreferrer')}}
+                                 onClick={() => {
+                                     if (typeof window === 'undefined') return;
+                                     const url = 'https://www.usa.gov/elected-officials';
+                                     if (window.innerWidth < 768) {
+                                         window.location.href = url;
+                                     } else {
+                                         window.open(url, '_blank', 'noopener,noreferrer');
+                                     }
+                                 }}
                              >
                                  Find Your Officials 
                                  <ExternalLink className="inline ml-2 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1" />
