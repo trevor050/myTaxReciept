@@ -26,6 +26,7 @@ import { GripVertical, Mail, X, Send, Lightbulb, BrainCircuit } from 'lucide-rea
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 
 import type { SelectedItem as UserSelectedItem } from '@/services/tax-spending';
+import type { FundingLevel } from '@/services/email/types';
 import { generateStandardEmail, SUBJECT } from '@/services/email/standard-template';
 
 import type { AIModelOption } from '@/types/ai-models';
@@ -73,6 +74,15 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
   const [currentPromptForModal, setCurrentPromptForModal] = useState('');
   const [currentAiModelForTooLongModal, setCurrentAiModelForTooLongModal] = useState<AIModelOption | null>(null);
 
+  // Prevent SSR window access for the Dialog modal prop
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const update = () => setIsDesktop(window.innerWidth >= 768);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   useLayoutEffect(()=>{
       if (!isOpen) {
@@ -244,7 +254,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
             id,
             description: originalItem?.description || 'Unknown Item',
             category: originalItem?.category || 'Unknown Category',
-            fundingLevel: mapSliderToFundingLevel(sliderValue)
+            fundingLevel: mapSliderToFundingLevel(sliderValue) as FundingLevel
           };
         });
 
@@ -289,7 +299,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
 
   return(
     <>
-    <Dialog open={isOpen} modal={typeof window !== 'undefined' && window.innerWidth >= 768} onOpenChange={(open) => {
+    <Dialog open={isOpen} modal={isDesktop} onOpenChange={(open) => {
         onOpenChange(open);
         if (!open) {
              isInitialOpen.current = true;
@@ -299,7 +309,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
       <DialogContent
         ref={refModal}
         style={
-            pos.x !== null && pos.y !== null && window.innerWidth >= 640
+            pos.x !== null && pos.y !== null && isDesktop
             ? { left: pos.x, top: pos.y, transform: 'none' }
             : undefined
         }
@@ -318,7 +328,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
         )}
         onInteractOutside={e=>{
           // On mobile, don't prevent interaction outside unless dragging
-          if (typeof window !== 'undefined' && window.innerWidth < 640) {
+          if (typeof window !== 'undefined' && window.innerWidth < 768) {
             return; // Allow closing on mobile by tapping outside
           }
           if (drag) e.preventDefault();
