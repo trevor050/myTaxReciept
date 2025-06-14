@@ -272,7 +272,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
             : undefined
         }
         className={cn(
-          'fixed z-[100] flex border bg-background shadow-lg',
+          'fixed z-[90] flex border bg-background shadow-lg',
           // Mobile: full screen
           'h-full w-full max-h-none rounded-none inset-0',
           // Desktop: floating dialog
@@ -437,7 +437,15 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
                     <span className="sr-only">Choose Generator</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-72 sm:w-80 p-2">
+                <DropdownMenuContent 
+                  align="end" 
+                  side="top"
+                  className="w-[calc(100vw-2rem)] max-w-[320px] sm:w-80 p-2 z-[200] mx-4 sm:mx-0"
+                  sideOffset={8}
+                  alignOffset={0}
+                  avoidCollisions={true}
+                  collisionPadding={16}
+                >
                   <DropdownMenuLabel className="px-1 pb-1 text-xs">Choose AI Generator</DropdownMenuLabel>
                   <DropdownMenuRadioGroup value={selectedGenerator} onValueChange={setSelectedGenerator} className="space-y-1">
                     {aiModels.map((modelItem) => {
