@@ -22,7 +22,7 @@ import EmailCustomizationModal from '@/components/dashboard/EmailCustomizationMo
 import ResourceSuggestionsModal from '@/components/dashboard/ResourceSuggestionsModal';
 import EnterHourlyWageModal from '@/components/dashboard/EnterHourlyWageModal';
 import type { SuggestedResource } from '@/types/resource-suggestions';
-import { suggestResources } from '@/services/resource-suggestions';
+
 import { RESOURCE_DATABASE } from '@/lib/resource-suggestion-logic'; // For preloading icons
 import { importLucideIcon } from '@/lib/icon-utils'; // Icon loading utility
 
@@ -377,7 +377,23 @@ export default function Home() {
                 category: item.category,
             }));
 
-        const suggestions = await suggestResources(itemsArrayForSuggestions, aggressiveness, balanceBudgetChecked);
+        const response = await fetch('/api/suggest-resources', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                selectedItems: itemsArrayForSuggestions,
+                userToneValue: aggressiveness,
+                balanceBudgetChecked
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch resource suggestions');
+        }
+        
+        const suggestions = await response.json();
         setSuggestedResources(suggestions);
         if (suggestions.length > 0) {
             setIsEmailModalOpen(false);

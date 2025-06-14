@@ -27,7 +27,7 @@ import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 
 import type { SelectedItem as UserSelectedItem } from '@/services/tax-spending';
 import { generateStandardEmail, SUBJECT } from '@/services/email/standard-template';
-import { generateAIPrompt, prepareItemsForAIPrompt } from '@/services/ai/prompt-generator';
+
 import type { AIModelOption } from '@/types/ai-models';
 import { AI_MODEL_OPTIONS } from '@/types/ai-models';
 import { mapSliderToFundingLevel } from '@/lib/funding-utils';
@@ -150,7 +150,28 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
 
 
   const handleGenerateEmail = async () => {
-    const itemsForPrompt = await prepareItemsForAIPrompt(initialSelectedItems, itemFundingLevels);
+    // Prepare items for AI prompt via API
+    const prepareResponse = await fetch('/api/generate-ai-prompt', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            initialSelectedItems: Array.from(initialSelectedItems.entries()),
+            itemFundingLevels: Array.from(itemFundingLevels.entries())
+        })
+    });
+    
+    if (!prepareResponse.ok) {
+        toast({
+            title: 'Error',
+            description: 'Failed to prepare items for AI prompt.',
+            variant: 'destructive',
+        });
+        return;
+    }
+    
+    const itemsForPrompt = await prepareResponse.json();
     const aiModel = AI_MODEL_OPTIONS.find(m => m.id === selectedGenerator);
     const currentTone = toneBucket(aggressiveness);
 
@@ -169,13 +190,31 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
 
 
     if (aiModel.isAIMeta) {
-        const promptText = await generateAIPrompt(
-            itemsForPrompt,
-            aggressiveness,
-            finalUserName, // Use potentially placeholder name
-            finalUserLocation, // Use potentially placeholder location
-            balanceBudgetChecked
-        );
+        // Generate AI prompt via API
+        const promptResponse = await fetch('/api/generate-ai-prompt', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                selectedItemsWithSliderValues: itemsForPrompt,
+                aggressiveness,
+                userName: finalUserName,
+                userLocation: finalUserLocation,
+                balanceBudgetPreference: balanceBudgetChecked
+            })
+        });
+        
+        if (!promptResponse.ok) {
+            toast({
+                title: 'Error',
+                description: 'Failed to generate AI prompt.',
+                variant: 'destructive',
+            });
+            return;
+        }
+        
+        const { prompt: promptText } = await promptResponse.json();
 
         if (promptText.length >= PROMPT_LENGTH_THRESHOLD) {
             setCurrentAiModelForTooLongModal(aiModel);
