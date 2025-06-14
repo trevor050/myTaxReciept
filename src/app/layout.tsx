@@ -1,9 +1,9 @@
-
 import type {Metadata} from 'next';
 import { GeistSans } from 'geist/font/sans';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"; // Import Toaster
 import { ThemeProvider } from "@/components/ThemeProvider"; // Import ThemeProvider
+import { Analytics } from "@vercel/analytics/next";
 
 // Use GeistSans.variable directly
 const geistSansVariable = GeistSans.variable;
@@ -32,6 +32,7 @@ export default function RootLayout({
             {children}
             <Toaster /> {/* Add Toaster component here */}
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
