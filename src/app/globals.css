@@ -388,4 +388,11 @@ body {
     transform: translateY(-50%);     /* keep it centered around the new anchor */
 }
 
+/* Fix: Allow scrolling on mobile by resetting background-attachment */
+@media (hover: none) and (pointer: coarse) {
+  body, .dark body {
+    background-attachment: scroll;
+  }
+}
+
     
