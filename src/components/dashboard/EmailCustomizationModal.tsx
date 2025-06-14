@@ -299,7 +299,7 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
 
   return(
     <>
-    <Dialog open={isOpen} modal={isDesktop} onOpenChange={(open) => {
+    <Dialog open={isOpen} modal={true} onOpenChange={(open) => {
         onOpenChange(open);
         if (!open) {
              isInitialOpen.current = true;
@@ -327,9 +327,10 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
           'sm:inset-auto touch-manipulation'
         )}
         onInteractOutside={e=>{
-          // On mobile, don't prevent interaction outside unless dragging
+          // On mobile, prevent all interaction outside the modal
           if (typeof window !== 'undefined' && window.innerWidth < 768) {
-            return; // Allow closing on mobile by tapping outside
+            e.preventDefault(); // Block all outside interactions on mobile
+            return;
           }
           if (drag) e.preventDefault();
         }}
