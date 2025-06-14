@@ -40,6 +40,14 @@ export async function POST(request: NextRequest) {
   try {
     const { selectedItemsWithSliderValues, aggressiveness, userName, userLocation, balanceBudgetPreference } = await request.json();
 
+    // Basic input validation
+    if (!Array.isArray(selectedItemsWithSliderValues)) {
+        return NextResponse.json({ error: 'selectedItemsWithSliderValues must be an array' }, { status: 400 });
+    }
+    if (typeof aggressiveness !== 'number' || aggressiveness < 0 || aggressiveness > 100) {
+        return NextResponse.json({ error: 'Invalid aggressiveness value' }, { status: 400 });
+    }
+
     let prompt = `Draft an email to an elected representative about federal budget priorities.
 User: ${userName || '[Constituent Name]'}, ${userLocation || '[Constituent Location]'}.
 Tone: ${getToneDescription(aggressiveness)} (Aggressiveness: ${aggressiveness}/100. Scale: 0-15 Polite, 16-40 Concerned, 41-75 Stern, 76-100 Angry).

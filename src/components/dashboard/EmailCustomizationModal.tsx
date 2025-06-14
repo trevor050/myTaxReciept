@@ -150,134 +150,127 @@ export default function EmailCustomizationModal (p: EmailCustomizationModalProps
 
 
   const handleGenerateEmail = async () => {
-    // Prepare items for AI prompt via API
-    const prepareResponse = await fetch('/api/generate-ai-prompt', {
+    try {
+      // ---- 1. Prepare items for the AI prompt ----
+      const prepareResponse = await fetch('/api/generate-ai-prompt', {
         method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            initialSelectedItems: Array.from(initialSelectedItems.entries()),
-            itemFundingLevels: Array.from(itemFundingLevels.entries())
-        })
-    });
-    
-    if (!prepareResponse.ok) {
-        toast({
-            title: 'Error',
-            description: 'Failed to prepare items for AI prompt.',
-            variant: 'destructive',
-        });
+          initialSelectedItems: Array.from(initialSelectedItems.entries()),
+          itemFundingLevels: Array.from(itemFundingLevels.entries()),
+        }),
+      });
+
+      if (!prepareResponse.ok) {
+        throw new Error('Failed to prepare items for AI prompt');
+      }
+
+      const itemsForPrompt = await prepareResponse.json();
+
+      const aiModel = AI_MODEL_OPTIONS.find((m) => m.id === selectedGenerator);
+      if (!aiModel) {
+        toast({ title: 'Error', description: 'Selected AI model not found.', variant: 'destructive' });
         return;
-    }
-    
-    const itemsForPrompt = await prepareResponse.json();
-    const aiModel = AI_MODEL_OPTIONS.find(m => m.id === selectedGenerator);
-    const currentTone = toneBucket(aggressiveness);
+      }
 
-    if (!aiModel) {
-        toast({
-            title: 'Error',
-            description: 'Selected AI model not found.',
-            variant: 'destructive',
-        });
-        return;
-    }
+      const currentTone = toneBucket(aggressiveness);
 
-    // Use placeholders if userName or userLocation is empty
-    const finalUserName = userName.trim() === '' ? '[Your Name]' : userName;
-    const finalUserLocation = userLocation.trim() === '' ? '[Your Location]' : userLocation;
+      // Use placeholders if userName or userLocation is empty
+      const finalUserName = userName.trim() === '' ? '[Your Name]' : userName;
+      const finalUserLocation = userLocation.trim() === '' ? '[Your Location]' : userLocation;
 
-
-    if (aiModel.isAIMeta) {
-        // Generate AI prompt via API
+      // ---- 2. If using an external AI provider, generate the prompt ----
+      if (aiModel.isAIMeta) {
         const promptResponse = await fetch('/api/generate-ai-prompt', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                selectedItemsWithSliderValues: itemsForPrompt,
-                aggressiveness,
-                userName: finalUserName,
-                userLocation: finalUserLocation,
-                balanceBudgetPreference: balanceBudgetChecked
-            })
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            selectedItemsWithSliderValues: itemsForPrompt,
+            aggressiveness,
+            userName: finalUserName,
+            userLocation: finalUserLocation,
+            balanceBudgetPreference: balanceBudgetChecked,
+          }),
         });
-        
+
         if (!promptResponse.ok) {
-            toast({
-                title: 'Error',
-                description: 'Failed to generate AI prompt.',
-                variant: 'destructive',
-            });
-            return;
+          throw new Error('Failed to generate AI prompt');
         }
-        
+
         const { prompt: promptText } = await promptResponse.json();
 
         if (promptText.length >= PROMPT_LENGTH_THRESHOLD) {
-            setCurrentAiModelForTooLongModal(aiModel);
-            setCurrentPromptForModal(promptText);
-            setIsPromptTooLongModalOpen(true);
-            return;
+          setCurrentAiModelForTooLongModal(aiModel);
+          setCurrentPromptForModal(promptText);
+          setIsPromptTooLongModalOpen(true);
+          return;
         }
-
 
         let urlToOpen = aiModel.url;
         if (aiModel.url.includes('<YOUR_PROMPT>')) {
-            urlToOpen = aiModel.url.replace('<YOUR_PROMPT>', encodeURIComponent(promptText));
+          urlToOpen = aiModel.url.replace('<YOUR_PROMPT>', encodeURIComponent(promptText));
         }
 
         toast({
-            title: `Opening ${aiModel.name}...`,
-            description: `After ${aiModel.name} generates the email, copy the text. Click 'Open Email Draft' to prepare your email client.`,
-            duration: 9000,
-            action: (
-                <Button variant="outline" size="sm" onClick={() => {
-                    const genericSubject = SUBJECT[currentTone] || SUBJECT[0];
-                    const placeholderBody = `Hello [Representative Name],\n\nI am writing to you today regarding federal budget priorities.\n\n[Please paste the email body generated by ${aiModel.name} here.]\n\nThank you for your time and consideration.\n\nSincerely,\n${finalUserName}\n${finalUserLocation}`;
-                    window.location.href = `mailto:?subject=${encodeURIComponent(genericSubject)}&body=${encodeURIComponent(placeholderBody)}`;
-                }}>
-                    Open Email Draft
-                </Button>
-            )
+          title: `Opening ${aiModel.name}...`,
+          description: `After ${aiModel.name} generates the email, copy the text. Click 'Open Email Draft' to prepare your email client.`,
+          duration: 9000,
+          action: (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const genericSubject = SUBJECT[currentTone] || SUBJECT[0];
+                const placeholderBody = `Hello [Representative Name],\n\nI am writing to you today regarding federal budget priorities.\n\n[Please paste the email body generated by ${aiModel.name} here.]\n\nThank you for your time and consideration.\n\nSincerely,\n${finalUserName}\n${finalUserLocation}`;
+                window.location.href = `mailto:?subject=${encodeURIComponent(genericSubject)}&body=${encodeURIComponent(placeholderBody)}`;
+              }}
+            >
+              Open Email Draft
+            </Button>
+          ),
         });
-        // Open differently on mobile to avoid grey popup issue
+
+        // Open differently on mobile to avoid the grey popup issue
         if (typeof window !== 'undefined' && window.innerWidth < 768) {
-            window.location.href = urlToOpen; // full-page navigation on mobile
+          window.location.href = urlToOpen; // full-page navigation on mobile
         } else {
-            window.open(urlToOpen, '_blank');
+          window.open(urlToOpen, '_blank');
         }
         onEmailGenerated();
-
-    } else { // Local Template
+      } else { // Local Template
         const finalSelectedItemsForTemplate: (UserSelectedItem & { category: string })[] = Array.from(itemFundingLevels.entries()).map(([id, sliderValue]) => {
-            const originalItem = initialSelectedItems.get(id);
-            return {
-                id,
-                description: originalItem?.description || 'Unknown Item',
-                category: originalItem?.category || 'Unknown Category',
-                fundingLevel: mapSliderToFundingLevel(sliderValue)
-            };
+          const originalItem = initialSelectedItems.get(id);
+          return {
+            id,
+            description: originalItem?.description || 'Unknown Item',
+            category: originalItem?.category || 'Unknown Category',
+            fundingLevel: mapSliderToFundingLevel(sliderValue)
+          };
         });
 
-
         const {subject, body} = generateStandardEmail(
-            finalSelectedItemsForTemplate,
-            aggressiveness,
-            finalUserName, // Use potentially placeholder name
-            finalUserLocation, // Use potentially placeholder location
-            balanceBudgetChecked
+          finalSelectedItemsForTemplate,
+          aggressiveness,
+          finalUserName, // Use potentially placeholder name
+          finalUserLocation, // Use potentially placeholder location
+          balanceBudgetChecked
         );
         toast({
-            title: 'Email Generated',
-            description: 'Opening your email client with the pre-filled template.',
-            duration: 5000,
+          title: 'Email Generated',
+          description: 'Opening your email client with the pre-filled template.',
+          duration: 5000,
         });
         // For mobile we still use mailto directly; behaviour is consistent across devices
         window.location.href=`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         onEmailGenerated();
+      }
+    } catch (error) {
+      console.error('handleGenerateEmail:', error);
+      toast({
+        title: 'Network Error',
+        description: 'Something went wrong while generating the email. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 

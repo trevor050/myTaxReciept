@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import type { SelectedItem } from '@/services/tax-spending';
 import type { Tone } from '@/services/email/types';
 import { importLucideIcon } from '@/lib/icon-utils';
+import { useState, useEffect } from 'react';
 
 
 interface ResourceSuggestionsModalProps {
@@ -146,6 +147,15 @@ export default function ResourceSuggestionsModal({
   const refHandle = React.useRef<HTMLDivElement>(null);
   const loadMoreRef = React.useRef<HTMLDivElement | null>(null);
 
+  // Prevent SSR window access for the Dialog modal prop
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const update = () => setIsDesktop(window.innerWidth >= 640);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   React.useEffect(() => {
     if (isOpen) {
@@ -703,11 +713,11 @@ export default function ResourceSuggestionsModal({
 
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange} modal={typeof window !== 'undefined' && window.innerWidth >= 768}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange} modal={isDesktop}>
       <DialogContent
         ref={refModal}
         style={
-            pos.x !== null && pos.y !== null && window.innerWidth >= 640
+            pos.x !== null && pos.y !== null && isDesktop
             ? { left: pos.x, top: pos.y, transform: 'none' }
             : undefined
         }

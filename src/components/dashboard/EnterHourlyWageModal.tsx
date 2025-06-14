@@ -32,6 +32,15 @@ export default function EnterHourlyWageModal({ isOpen, onOpenChange, onSubmit }:
   const refModal = React.useRef<HTMLDivElement>(null);
   const refHandle = React.useRef<HTMLDivElement>(null);
 
+  // Avoid SSR window access for the `modal` prop
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const update = () => setIsDesktop(window.innerWidth >= 768);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -136,7 +145,7 @@ export default function EnterHourlyWageModal({ isOpen, onOpenChange, onSubmit }:
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange} modal={typeof window !== 'undefined' && window.innerWidth >= 768}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange} modal={isDesktop}>
       <DialogContent
          ref={refModal}
          style={ pos.x !== null ? { left: pos.x, top: pos.y, transform: 'none' } : undefined }

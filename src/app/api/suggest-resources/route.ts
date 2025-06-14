@@ -9,6 +9,13 @@ export async function POST(request: NextRequest) {
   try {
     const { selectedItems, userToneValue, balanceBudgetChecked } = await request.json();
 
+    if (!Array.isArray(selectedItems)) {
+      return NextResponse.json({ error: 'selectedItems must be an array' }, { status: 400 });
+    }
+    if (typeof userToneValue !== 'number' || userToneValue < 0 || userToneValue > 100) {
+      return NextResponse.json({ error: 'Invalid userToneValue' }, { status: 400 });
+    }
+
     const suggestions: SuggestedResource[] = [];
     const suggestedUrls = new Set<string>();
     const userConcerns: Map<string, {action: ReturnType<typeof getActionFromFundingLevel>, itemDescription: string, tags: Set<string>}> = new Map();
@@ -166,7 +173,9 @@ export async function POST(request: NextRequest) {
       suggestedUrls.add(resource.url);
     }
 
-    return NextResponse.json(suggestions);
+    // Enforce MAX_SUGGESTIONS limit
+    const limitedSuggestions = suggestions.slice(0, MAX_SUGGESTIONS);
+    return NextResponse.json(limitedSuggestions);
   } catch (error) {
     console.error('Error in suggest-resources API:', error);
     return NextResponse.json({ error: 'Failed to suggest resources' }, { status: 500 });

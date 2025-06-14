@@ -289,27 +289,48 @@ const CustomLegend = (props: any) => {
   const [isMobileView, setIsMobileView] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
-    const checkMobile = () => setIsMobileView(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    if (typeof window !== 'undefined') {
-        const chartContainer = document.querySelector('.recharts-responsive-container');
-        if (chartContainer) {
-            setChartWidth(chartContainer.clientWidth);
-        }
-        const handleResize = () => {
-            if (chartContainer) {
-                setChartWidth(chartContainer.clientWidth);
-            }
-        };
-        window.addEventListener('resize', handleResize);
-        return () => {
-            window.removeEventListener('resize', handleResize);
-            window.removeEventListener('resize', checkMobile);
-        };
+    if (typeof window === 'undefined') {
+      // Abort early on the server
+      return;
     }
+
+    setIsClient(true);
+
+    const checkMobile = () => setIsMobileView(window.innerWidth < 768);
+
+    // Initial evaluation
+    checkMobile();
+
+    // Register listener
+    window.addEventListener('resize', checkMobile);
+
+    // Measure initial width of the chart container (if present)
+    const chartContainer = document.querySelector(
+      '.recharts-responsive-container'
+    ) as HTMLElement | null;
+
+    if (chartContainer) {
+      setChartWidth(chartContainer.clientWidth);
+
+      // Resize handler scoped to this container
+      const handleResize = () => {
+        if (chartContainer) {
+          setChartWidth(chartContainer.clientWidth);
+        }
+      };
+
+      window.addEventListener('resize', handleResize);
+
+      return () => {
+        window.removeEventListener('resize', checkMobile);
+        window.removeEventListener('resize', handleResize);
+      };
+    }
+
+    // Fallback cleanup (only mobile listener was added)
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
   }, []);
 
   if (!isClient) {
@@ -407,18 +428,34 @@ export default function TaxBreakdownDashboard({
 
 
   useEffect(() => {
+    // Ensure this code only runs in the browser
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     setIsClient(true);
+
     const checkMobile = () => setIsMobileView(window.innerWidth < 768);
+
+    // Initial check
     checkMobile();
+
+    // Register listener
     window.addEventListener('resize', checkMobile);
 
-    if (typeof window !== 'undefined') {
-        const currentYear = new Date().getFullYear();
-        const date = new Date(currentYear + 1, 3, 15).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-        setClientDueDate(date);
-        getFormattedNationalDebt().then(setNationalDebt);
-    }
-    return () => window.removeEventListener('resize', checkMobile);
+    // Additional client-side data initialisation
+    const currentYear = new Date().getFullYear();
+    const date = new Date(currentYear + 1, 3, 15).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+    setClientDueDate(date);
+    getFormattedNationalDebt().then(setNationalDebt);
+
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
   }, []);
 
 
@@ -459,9 +496,17 @@ export default function TaxBreakdownDashboard({
     percentage: item.percentage,
   }));
 
-  const responsivePieHeight = isMobileView ? 280 : 320;
-  const responsiveOuterRadius = isMobileView ? 70 : (isClient && window.innerWidth < 768 ? 80 : 100);
-  const responsiveInnerRadius = isMobileView ? 40 : (isClient && window.innerWidth < 768 ? 50 : 65);
+  const isBrowser = typeof window !== 'undefined';
+  const responsiveOuterRadius = isMobileView
+    ? 70
+    : isClient && isBrowser && window.innerWidth < 768
+    ? 80
+    : 100;
+  const responsiveInnerRadius = isMobileView
+    ? 40
+    : isClient && isBrowser && window.innerWidth < 768
+    ? 50
+    : 65;
 
   const handleDisplayModeToggle = (mode: 'currency' | 'time') => {
     if (mode === 'time' && hourlyWage === null) {

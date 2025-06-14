@@ -129,7 +129,7 @@ export default function Home() {
     const nextStepIndex = stepOrder.indexOf(nextStep);
     const isGoingBack = nextStepIndex < currentStepIndex;
 
-    setAnimationClass(isGoingBack ? 'animate-slideOutUp' : 'animate-slideOutUp');
+    setAnimationClass(isGoingBack ? 'animate-slideOutDown' : 'animate-slideOutUp');
 
     if (step === 'dashboard' && nextStep !== 'dashboard') {
        setShowEmailAction(false);
