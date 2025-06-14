@@ -11,7 +11,7 @@ import { BADGE_DISPLAY_PRIORITY_MAP } from '@/types/resource-suggestions'; // Al
 export { BADGE_DISPLAY_PRIORITY_MAP }; // Export it
 
 // Limit for number of suggestions returned by the API layer
-export const MAX_SUGGESTIONS = 25;
+export const MAX_SUGGESTIONS = 150;
 
 export type FundingAction = 'slash' | 'fund' | 'review';
 
