@@ -6,18 +6,18 @@
 
 👉 **Live:** https://mytaxreceipt.org
 
-Punch in your income → instantly see where every federal tax dollar *actually* lands. Then fire off a politely-spicy e-mail to your representatives in one click. Democracy, but with charts.
+Want to know where your tax money goes? It has become unreasonably hard to track the US Governments spending. So, I aggregated FY2025 budget data and packaged it all in a neat activism first UI. 
 
 ---
 
 ## ✨ Features
 
-• Interactive donut chart & breakdown accordion  
-• Per-dollar + per-hour "time spent working" perspective  
+• See where your money goes in a simple way
 • AI-generated e-mails (plus ready-made prompt)  
-• Resource suggestions for taking action  
-• Dark-mode & responsive mobile flows  
-• Observability via Vercel Analytics **and** Speed Insights
+• See a whole load of organizations that align with your interests
+• See how much time of your life you gave to Uncle Sam
+• Light/Dark modes and a mobile first UI
+
 
 ## 🛠️ Stack
 
