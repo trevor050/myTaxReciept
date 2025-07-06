@@ -1,6 +1,3 @@
-<div align="center">
-  <img src="/share.png" width="100%" alt="MyTaxReceipt preview"/>
-</div>
 
 # 💸 MyTaxReceipt.org
 
