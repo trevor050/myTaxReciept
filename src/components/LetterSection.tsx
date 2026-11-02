@@ -30,7 +30,11 @@ export function LetterSection({ marks, tax }: { marks: Marks; tax: number }) {
   const input = { marks, tax, fiscalYear: budget.fiscalYear, tone, chamber, recipient, name, place, story };
   const letter = buildLetter(input);
   const orgs = useMemo(() => matchOrgs(marks, { opposing }), [marks, opposing]);
-  const general = useMemo(() => generalCutGroups(marks), [marks]);
+  const general = useMemo(() => {
+    const { lines, orgs: groups } = generalCutGroups(marks);
+    const listed = new Set(matchOrgs(marks).map(({ org }) => org.url));
+    return { lines, orgs: groups.filter((org) => !listed.has(org.url)) };
+  }, [marks]);
   const body = edited ?? letter.body;
 
   // With no marks left there is nothing to write about, so hand edits no longer apply.
@@ -176,19 +180,19 @@ export function LetterSection({ marks, tax }: { marks: Marks; tax: number }) {
                 ))}
               </ul>
             )}
-            {!opposing && general.orgs.length > 0 && (
+            {!opposing && general.lines.length > 0 && (
               <div className="org-general">
                 <h4>
-                  We found no group with a published position on cutting {general.lines.map((id) => findLine(id)?.label).join(', ')}. These campaign to cut federal spending in general:
+                  We found no group with a published position on cutting {general.lines.map((id) => findLine(id)?.label).join(', ')}. {general.orgs.length > 0 ? ' These campaign to cut federal spending in general:' : ' The spending watchdogs listed above campaign for cuts in general.'}
                 </h4>
-                <ul>
+                {general.orgs.length > 0 && <ul>
                   {general.orgs.map((org) => (
                     <li key={org.url}>
                       <a href={org.url} target="_blank" rel="noreferrer">{org.name}</a>
                       <p>{org.description}</p>
                     </li>
                   ))}
-                </ul>
+                </ul>}
               </div>
             )}
           </div>
