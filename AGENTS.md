@@ -7,3 +7,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## Project notes
+Static single-page Next app (no backend). Live: mytaxreceipt.org, Vercel project `my-tax-reciept`; pushing to `main` deploys production. Repo name misspelling is intentional history.
+- Gates: `npm test`, `npm run typecheck`, `npm run build`.
+- Data flow: `data/budget-fy2026.json` (sourced, Treasury MTS) -> `scripts/build-budget.mjs` (friendly labels live here) -> `src/data/budget.json`. New markable program needs a label, `src/data/blurbs.ts`, and both directions in `src/data/reasons.ts`; tests enforce it.
+- Stay nonpartisan: reasons argue both sides at equal strength; org stances need first-party evidence, never inferred from ideology.
+- Traction: only cite what is in the README. "Millions of visits" and "front page" are unverified.
+- AI prompt URLs: cap 1900 encoded chars (2,000 seen intact on Grok and Perplexity, once on ChatGPT; Claude only seen redirecting to login with the prompt kept). Gemini, Copilot, duck.ai did not prefill, hence Copy prompt.
+- `.printer-feed` clip-path clips the top only so the receipt prints out of the slot; shadow must stay on that wrapper because `.receipt` clip-path would cut it.

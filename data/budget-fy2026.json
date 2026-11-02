@@ -1,0 +1,2024 @@
+{
+  "fiscalYear": 2026,
+  "dataStatus": "final",
+  "asOf": "2026-11-02",
+  "units": "Billions of nominal US dollars (amountB and totals); dollars per tax return for estimator/state means.",
+  "accountingBasis": "Unified federal budget, on- and off-budget, net outlays. Category amounts are MTS table 9 functional totals; detailed program accounts use MTS table 5 unless identified otherwise. Residuals retain unitemized outlays, offsets and classification differences.",
+  "totals": {
+    "outlaysB": 7395.79998331323,
+    "receiptsB": 5403.32675896081,
+    "deficitB": 1992.47322435242,
+    "individualIncomeTaxB": 2845.52686615955,
+    "payrollTaxB": 1811.79472116092,
+    "tariffCustomsB": 173.2186146434,
+    "corporateB": 381.41468905762,
+    "otherReceiptsB": 191.37186793932
+  },
+  "receiptDefinitions": {
+    "payrollTaxB": "MTS social insurance and retirement receipts: employment/general retirement, unemployment insurance, and other retirement. Broader than employee FICA alone.",
+    "otherReceiptsB": "Excise taxes + estate/gift taxes + miscellaneous receipts; customs and corporate taxes are separately listed."
+  },
+  "sources": [
+    {
+      "id": "mts1",
+      "title": "Treasury September 2026 Monthly Treasury Statement, table 1, FYTD through September 30",
+      "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/mts/mts_table_1?filter=record_date:eq:2026-09-30&page%5Bsize%5D=10000",
+      "accessed": "2026-11-02",
+      "localFile": "sources/mts-table1-2026.json"
+    },
+    {
+      "id": "mts4",
+      "title": "Treasury September 2026 Monthly Treasury Statement, table 4, FYTD through September 30",
+      "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/mts/mts_table_4?filter=record_date:eq:2026-09-30&page%5Bsize%5D=10000",
+      "accessed": "2026-11-02",
+      "localFile": "sources/mts-table4-2026.json"
+    },
+    {
+      "id": "mts5",
+      "title": "Treasury September 2026 Monthly Treasury Statement, table 5, FYTD through September 30",
+      "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/mts/mts_table_5?filter=record_date:eq:2026-09-30&page%5Bsize%5D=10000",
+      "accessed": "2026-11-02",
+      "localFile": "sources/mts-table5-2026.json"
+    },
+    {
+      "id": "mts",
+      "title": "Treasury September 2026 Monthly Treasury Statement, table 9, FYTD through September 30",
+      "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/mts/mts_table_9?filter=record_date:eq:2026-09-30&page%5Bsize%5D=10000",
+      "accessed": "2026-11-02",
+      "localFile": "sources/mts-table9-2026.json"
+    },
+    {
+      "id": "cbo2026",
+      "title": "CBO Monthly Budget Review: September 2026 (October 8, preliminary estimates)",
+      "url": "https://www.cbo.gov/system/files/2026-10/61985-MBR.pdf",
+      "accessed": "2026-11-02"
+    },
+    {
+      "id": "irs2023",
+      "title": "IRS SOI Historic Table 2, tax year 2023, CSV",
+      "url": "https://www.irs.gov/pub/irs-soi/23in55cmcsv.csv",
+      "accessed": "2026-11-02",
+      "localFile": "sources/23in55cmcsv.csv"
+    },
+    {
+      "id": "irs2023doc",
+      "title": "IRS Historic Table 2, 2023 documentation and variable definitions",
+      "url": "https://www.irs.gov/pub/irs-soi/23incmdocguide.doc",
+      "accessed": "2026-11-02",
+      "localFile": "sources/23incmdocguide.doc"
+    },
+    {
+      "id": "irs2022",
+      "title": "IRS SOI Historic Table 2, tax year 2022 (legacy comparison)",
+      "url": "https://www.irs.gov/pub/irs-soi/22in55cmcsv.csv",
+      "accessed": "2026-11-02",
+      "localFile": "sources/22in55cmcsv.csv"
+    },
+    {
+      "id": "irsbrackets",
+      "title": "IRS Revenue Procedure 2024-40, section 2.01, 2025 marginal rate tables",
+      "url": "https://www.irs.gov/irb/2024-45_IRB#REV-PROC-2024-40",
+      "accessed": "2026-11-02"
+    },
+    {
+      "id": "irsdeduction",
+      "title": "IRS Publication 501 (2025), table 6, updated standard deductions",
+      "url": "https://www.irs.gov/publications/p501",
+      "accessed": "2026-11-02"
+    },
+    {
+      "id": "npp",
+      "title": "National Priorities Project, Tax Day 2025: Notes and Sources",
+      "url": "https://www.nationalpriorities.org/analysis/2025/tax-day-2025-your-tax-receipt/tax-day-2025-notes-and-sources/",
+      "accessed": "2026-11-02"
+    },
+    {
+      "id": "whreceipt",
+      "title": "Archived White House 2014 Taxpayer Receipt, categories and dedicated funding explanation",
+      "url": "https://obamawhitehouse.archives.gov/issues/taxes/tax-receipt",
+      "accessed": "2026-11-02"
+    },
+    {
+      "id": "medicarefinancing",
+      "title": "Medicare.gov, How is Medicare funded?",
+      "url": "https://www.medicare.gov/about-us/how-is-medicare-funded",
+      "accessed": "2026-11-02"
+    },
+    {
+      "id": "gao_usaid",
+      "title": "GAO-26-108607, September 30, 2026, changes to foreign assistance and transfer to State",
+      "url": "https://www.gao.gov/products/gao-26-108607",
+      "accessed": "2026-11-02"
+    },
+    {
+      "id": "usps",
+      "title": "USPS three-digit ZIP list by area/district (postal districts are not state boundaries)",
+      "url": "https://about.usps.com/what/performance/service-performance/zip-3-by-area-district.htm",
+      "accessed": "2026-11-02"
+    },
+    {
+      "id": "usps_states",
+      "title": "USPS Postal Explorer exhibit 215.1, participating ZIP prefixes by state",
+      "url": "https://pe.usps.com/text/imm/immc2_006.htm",
+      "accessed": "2026-11-02"
+    },
+    {
+      "id": "guam_zip",
+      "title": "US Department of Justice, Guam office address, GU 96910",
+      "url": "https://www.justice.gov/usao-gu/contact-us",
+      "accessed": "2026-11-02"
+    },
+    {
+      "id": "hudzip",
+      "title": "HUD-USPS ZIP crosswalk documentation, cross-state ZIPs and coverage limits",
+      "url": "https://www.huduser.gov/portal/datasets/usps_crosswalk.html",
+      "accessed": "2026-11-02"
+    },
+    {
+      "id": "usa_pact",
+      "title": "USAspending FY2026 federal account snapshot: Cost of War Toxic Exposures Fund, 036-1126",
+      "url": "https://api.usaspending.gov/api/v2/federal_accounts/6479/fiscal_year_snapshot/2026/",
+      "accessed": "2026-11-02",
+      "localFile": "sources/usaspending-pact-snapshot.json"
+    },
+    {
+      "id": "usa_mbda",
+      "title": "USAspending FY2026 federal account snapshot: Minority Business Development, 013-0201",
+      "url": "https://api.usaspending.gov/api/v2/federal_accounts/3664/fiscal_year_snapshot/2026/",
+      "accessed": "2026-11-02",
+      "localFile": "sources/usaspending-mbda-snapshot.json"
+    },
+    {
+      "id": "usa_arpae",
+      "title": "USAspending FY2026 federal account snapshot: ARPA-E, 089-0337",
+      "url": "https://api.usaspending.gov/api/v2/federal_accounts/5813/fiscal_year_snapshot/2026/",
+      "accessed": "2026-11-02",
+      "localFile": "sources/usaspending-federal_accounts_5813_fiscal_year_snapshot_2026_.json"
+    }
+  ],
+  "categories": [
+    {
+      "id": "social_security",
+      "label": "Social Security",
+      "amountB": 1667.09726519446,
+      "sourceId": "mts",
+      "sourceLines": [
+        27
+      ],
+      "programs": [
+        {
+          "id": "ss_retirement",
+          "label": "Old-age and survivors insurance benefit payments",
+          "amountB": 1494.55872410946,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            665
+          ],
+          "note": "Includes survivors as well as retirement; benefits only, not all OASI trust fund transactions."
+        },
+        {
+          "id": "ss_disability",
+          "label": "Disability insurance benefit payments",
+          "amountB": 159.90297390126,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            670
+          ]
+        },
+        {
+          "id": "other_social_security",
+          "label": "Other social security and net accounting adjustments",
+          "amountB": 12.63556718374,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts",
+          "note": "Arithmetic residual: category MTS table 9 FYTD amount minus the other listed programs. Includes unitemized programs and any applicable offsetting receipts/classification differences; not an independently reported program."
+        }
+      ]
+    },
+    {
+      "id": "health",
+      "label": "Health and Medicare",
+      "amountB": 2098.21325344484,
+      "sourceId": "mts",
+      "sourceLines": [
+        24,
+        25
+      ],
+      "programs": [
+        {
+          "id": "medicare",
+          "label": "Medicare (net of offsetting receipts)",
+          "amountB": 1072.62601886853,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts",
+          "note": "Entire budget function 570. Do not add gross HI/SMI trust-fund benefits, beneficiary premiums, or general-fund transfers to this line.",
+          "sourceLines": [
+            25
+          ]
+        },
+        {
+          "id": "medicaid",
+          "label": "Federal Medicaid grants to states",
+          "amountB": 722.97670933778,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            213
+          ],
+          "note": "Federal outlays only; excludes state spending."
+        },
+        {
+          "id": "aca_subsidies",
+          "label": "Refundable premium tax credits and cost-sharing reductions",
+          "amountB": 126.02962734466,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            491,
+            492
+          ],
+          "note": "Sum of Treasury and HHS entries, including the negative Treasury entry. Outlay component only; excludes credits recorded as reduced receipts."
+        },
+        {
+          "id": "chip",
+          "label": "Children's Health Insurance Fund",
+          "amountB": 25.04001426196,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            215
+          ]
+        },
+        {
+          "id": "nih",
+          "label": "National Institutes of Health",
+          "amountB": 45.62993342584,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            209
+          ]
+        },
+        {
+          "id": "cdc",
+          "label": "Centers for Disease Control and Prevention",
+          "amountB": 9.91237368908,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            208
+          ]
+        },
+        {
+          "id": "mental_health",
+          "label": "Substance Abuse and Mental Health Services Administration",
+          "amountB": 7.70400435824,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            210
+          ]
+        },
+        {
+          "id": "hrsa",
+          "label": "Health Resources and Services Administration",
+          "amountB": 14.67577344564,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            206
+          ]
+        },
+        {
+          "id": "indian_health_service",
+          "label": "Indian Health Service",
+          "amountB": 10.08769010983,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            207
+          ]
+        },
+        {
+          "id": "other_health",
+          "label": "Other health and medicare and net accounting adjustments",
+          "amountB": 63.53110860328,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts",
+          "note": "Arithmetic residual: category MTS table 9 FYTD amount minus the other listed programs. Includes unitemized programs and any applicable offsetting receipts/classification differences; not an independently reported program."
+        }
+      ]
+    },
+    {
+      "id": "defense",
+      "label": "National defense",
+      "amountB": 965.16035682148,
+      "sourceId": "mts",
+      "sourceLines": [
+        14
+      ],
+      "programs": [
+        {
+          "id": "military_personnel",
+          "label": "Military personnel",
+          "amountB": 223.2519095152,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            93
+          ]
+        },
+        {
+          "id": "operations_maintenance",
+          "label": "Military operations and maintenance",
+          "amountB": 336.04768206462,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            99
+          ]
+        },
+        {
+          "id": "weapons_procurement",
+          "label": "Military procurement",
+          "amountB": 176.6754856652,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            105
+          ]
+        },
+        {
+          "id": "nuclear_weapons",
+          "label": "DOE atomic energy defense accounts",
+          "amountB": 34.54611019049,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            180,
+            181,
+            182,
+            183,
+            185,
+            186,
+            187
+          ],
+          "note": "Naval reactors, weapons activities, nonproliferation, other NNSA, and environmental/other defense activities. Does not include nuclear delivery systems already in DoD procurement/R&D."
+        },
+        {
+          "id": "defense_rdte",
+          "label": "Military research, development, test and evaluation",
+          "amountB": 161.09511132244,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            111
+          ],
+          "note": "Includes DARPA; do not add a separate DARPA estimate."
+        },
+        {
+          "id": "military_construction",
+          "label": "Military construction",
+          "amountB": 14.23135960489,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            117
+          ]
+        },
+        {
+          "id": "other_defense",
+          "label": "Other national defense and net accounting adjustments",
+          "amountB": 19.31269845864,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts",
+          "note": "Arithmetic residual: category MTS table 9 FYTD amount minus the other listed programs. Includes unitemized programs and any applicable offsetting receipts/classification differences; not an independently reported program."
+        }
+      ],
+      "note": "Budget function 050. Foreign Military Financing is in international_affairs, and pensions are in economic_security."
+    },
+    {
+      "id": "interest_debt",
+      "label": "Net interest",
+      "amountB": 1051.75396931111,
+      "sourceId": "mts",
+      "sourceLines": [
+        31
+      ],
+      "programs": [
+        {
+          "id": "net_interest",
+          "label": "Net interest",
+          "amountB": 1051.75396931111,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts",
+          "note": "Budget function 900; excludes interest paid within government on the consolidated functional basis. Not gross Treasury debt interest.",
+          "sourceLines": [
+            31
+          ]
+        },
+        {
+          "id": "other_interest_debt",
+          "label": "Other net interest and net accounting adjustments",
+          "amountB": 0.0,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts",
+          "note": "Arithmetic residual: category MTS table 9 FYTD amount minus the other listed programs. Includes unitemized programs and any applicable offsetting receipts/classification differences; not an independently reported program."
+        }
+      ]
+    },
+    {
+      "id": "veterans_retirement",
+      "label": "Veterans benefits and services",
+      "amountB": 416.20410458987,
+      "sourceId": "mts",
+      "sourceLines": [
+        28
+      ],
+      "programs": [
+        {
+          "id": "va_programs",
+          "label": "Department of Veterans Affairs excluding toxic exposure fund",
+          "amountB": 367.83214911273,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "note": "VA agency net outlays less the separately listed USAspending toxic-exposure account. The subtraction avoids counting the PACT account twice. Source-system differences remain in the category residual.",
+          "sourceLines": [
+            539
+          ],
+          "componentSourceIds": [
+            "mts5",
+            "usa_pact"
+          ]
+        },
+        {
+          "id": "pact_act",
+          "label": "Cost of War Toxic Exposures Fund",
+          "amountB": 47.74262866029,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "usa_pact",
+          "note": "Reported FY2026 account outlay, not the appropriation. Snapshot endpoint does not establish September certification or completeness; may be revised. Not a measure of every PACT Act-related cost.",
+          "dataStatus": "preliminary"
+        },
+        {
+          "id": "other_veterans_retirement",
+          "label": "Other veterans benefits and services and net accounting adjustments",
+          "amountB": 0.62932681685,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts",
+          "note": "Arithmetic residual: category MTS table 9 FYTD amount minus the other listed programs. Includes unitemized programs and any applicable offsetting receipts/classification differences; not an independently reported program."
+        }
+      ],
+      "note": "Budget function 700. Category ID retained for compatibility; federal civilian and military pensions moved to economic_security (function 600)."
+    },
+    {
+      "id": "economic_security",
+      "label": "Income security and federal retirement",
+      "amountB": 694.22447039436,
+      "sourceId": "mts",
+      "sourceLines": [
+        26
+      ],
+      "programs": [
+        {
+          "id": "snap",
+          "label": "Supplemental Nutrition Assistance Program",
+          "amountB": 95.39260525593,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            59
+          ]
+        },
+        {
+          "id": "unemployment_insurance",
+          "label": "Unemployment Trust Fund",
+          "amountB": 42.03872283892,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            389
+          ],
+          "note": "Includes benefit and administrative outlays; other unemployment-related accounts remain in the residual."
+        },
+        {
+          "id": "ssi",
+          "label": "Supplemental Security Income program",
+          "amountB": 70.45654028239,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            663
+          ]
+        },
+        {
+          "id": "tanf",
+          "label": "Temporary Assistance for Needy Families",
+          "amountB": 17.51911656367,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            231
+          ],
+          "note": "Federal TANF account outlays, not solely cash benefits to households; excludes separately reported contingency fund and state funds."
+        },
+        {
+          "id": "child_tax_credit",
+          "label": "Refundable Child Tax Credit outlays",
+          "amountB": 28.6096692657,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            494
+          ],
+          "note": "Only payments exceeding income tax liability, not the entire Child Tax Credit tax expenditure."
+        },
+        {
+          "id": "liheap",
+          "label": "Low Income Home Energy Assistance",
+          "amountB": 4.08213253703,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            234
+          ]
+        },
+        {
+          "id": "public_housing",
+          "label": "Public/Indian housing and project-based rental assistance",
+          "amountB": 67.02485095418,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            284,
+            301
+          ],
+          "note": "Includes vouchers, public housing, Native American housing accounts and project-based rental assistance; excluded from the nonadditive HUD total."
+        },
+        {
+          "id": "military_pensions",
+          "label": "Military Retirement Fund payments",
+          "amountB": 82.95047971397,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            553
+          ],
+          "note": "Benefit-fund outlays, not payments into the fund. Government employer-contribution offsets are in undistributed offsetting receipts."
+        },
+        {
+          "id": "civilian_pensions",
+          "label": "Civil Service Retirement and Disability Fund payments",
+          "amountB": 115.92024500778,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            642
+          ],
+          "note": "Benefit-fund outlays, not the general-fund contribution into the fund."
+        },
+        {
+          "id": "earned_income_tax_credit",
+          "label": "Refundable Earned Income Tax Credit outlays",
+          "amountB": 68.49161330308,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            493
+          ]
+        },
+        {
+          "id": "child_nutrition",
+          "label": "Child nutrition programs",
+          "amountB": 33.34439003651,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            60
+          ]
+        },
+        {
+          "id": "wic",
+          "label": "Women, Infants, and Children (WIC)",
+          "amountB": 7.69770166794,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            61
+          ]
+        },
+        {
+          "id": "child_care",
+          "label": "Child care entitlement and development block grants",
+          "amountB": 13.32470303836,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            236,
+            237
+          ]
+        },
+        {
+          "id": "foster_care",
+          "label": "Foster care and adoption assistance",
+          "amountB": 10.68964419411,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            240
+          ]
+        },
+        {
+          "id": "other_economic_security",
+          "label": "Other income security and federal retirement and net accounting adjustments",
+          "amountB": 36.68205573479,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts",
+          "note": "Arithmetic residual: category MTS table 9 FYTD amount minus the other listed programs. Includes unitemized programs and any applicable offsetting receipts/classification differences; not an independently reported program."
+        }
+      ]
+    },
+    {
+      "id": "education",
+      "label": "Education, training, employment and social services",
+      "amountB": 107.55140335647,
+      "sourceId": "mts",
+      "sourceLines": [
+        23
+      ],
+      "programs": [
+        {
+          "id": "k12_schools",
+          "label": "Elementary/secondary education and special education",
+          "amountB": 44.3144691045,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            152,
+            156
+          ],
+          "note": "Broader than only Title I and IDEA: includes all Office of Elementary and Secondary Education plus Special Education outlays."
+        },
+        {
+          "id": "college_aid",
+          "label": "Federal student aid and postsecondary education",
+          "amountB": 99.79040133089,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            171,
+            163,
+            495
+          ],
+          "note": "Includes student-loan subsidy outlays and administration, Pell/other aid, postsecondary programs, and refundable American Opportunity Credit. Department receipt offsets are shown separately; loan principal disbursements are not budget outlays."
+        },
+        {
+          "id": "ed_ops",
+          "label": "Education departmental management",
+          "amountB": 0.57058685744,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            173
+          ]
+        },
+        {
+          "id": "student_loan_and_education_offsets",
+          "label": "Education Department proprietary receipts",
+          "amountB": -76.66234478598,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            175
+          ],
+          "note": "Negative line, including student-loan subsidy downward reestimates/modification receipts; not negative cash tuition or loan principal repayments. Do not remove when reconciling outlays."
+        },
+        {
+          "id": "other_education",
+          "label": "Other education, training, employment and social services and net accounting adjustments",
+          "amountB": 39.53829084962,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts",
+          "note": "Arithmetic residual: category MTS table 9 FYTD amount minus the other listed programs. Includes unitemized programs and any applicable offsetting receipts/classification differences; not an independently reported program."
+        }
+      ]
+    },
+    {
+      "id": "housing_community",
+      "label": "Community and regional development",
+      "amountB": 62.42958448616,
+      "sourceId": "mts",
+      "sourceLines": [
+        22
+      ],
+      "programs": [
+        {
+          "id": "fema_disaster",
+          "label": "FEMA Disaster Relief",
+          "amountB": 31.77746811934,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            264
+          ],
+          "note": "Disaster Relief account only, not all FEMA; counted once here. HUD disaster recovery is a separate Community Development Fund account."
+        },
+        {
+          "id": "community_block_grants",
+          "label": "HUD Community Development Fund",
+          "amountB": 9.50613272562,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            287
+          ],
+          "note": "Includes regular community development and disaster-recovery components reported together; cannot label this amount regular CDBG alone."
+        },
+        {
+          "id": "other_housing_community",
+          "label": "Other community and regional development and net accounting adjustments",
+          "amountB": 21.1459836412,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts",
+          "note": "Arithmetic residual: category MTS table 9 FYTD amount minus the other listed programs. Includes unitemized programs and any applicable offsetting receipts/classification differences; not an independently reported program."
+        }
+      ],
+      "note": "Budget function 450. Rental/public-housing assistance is under economic_security; mortgage-credit activity is in commerce_housing_credit. HUD is retained as a nonadditive cross-cutting total."
+    },
+    {
+      "id": "transportation",
+      "label": "Transportation",
+      "amountB": 142.86424932625,
+      "sourceId": "mts",
+      "sourceLines": [
+        21
+      ],
+      "programs": [
+        {
+          "id": "highways",
+          "label": "Federal Highway Administration",
+          "amountB": 65.95061445273,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            443
+          ]
+        },
+        {
+          "id": "public_transit",
+          "label": "Federal Transit Administration",
+          "amountB": 21.06843473017,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            454
+          ]
+        },
+        {
+          "id": "rail_service",
+          "label": "Federal Railroad Administration",
+          "amountB": 7.08866286175,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            448
+          ],
+          "note": "All FRA outlays; broader than Amtrak subsidy alone."
+        },
+        {
+          "id": "faa",
+          "label": "Federal Aviation Administration",
+          "amountB": 25.61637529338,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            437
+          ]
+        },
+        {
+          "id": "tsa",
+          "label": "Transportation Security Administration",
+          "amountB": 7.9016976794,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            258
+          ]
+        },
+        {
+          "id": "nasa_aeronautics",
+          "label": "NASA aeronautics",
+          "amountB": 0.79585412316,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            624
+          ],
+          "note": "Removed from NASA total under science to preserve disjoint program amounts."
+        },
+        {
+          "id": "other_transportation",
+          "label": "Other transportation and net accounting adjustments",
+          "amountB": 14.44261018566,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts",
+          "note": "Arithmetic residual: category MTS table 9 FYTD amount minus the other listed programs. Includes unitemized programs and any applicable offsetting receipts/classification differences; not an independently reported program."
+        }
+      ]
+    },
+    {
+      "id": "energy_environment",
+      "label": "Energy, natural resources and environment",
+      "amountB": 78.06899603753,
+      "sourceId": "mts",
+      "sourceLines": [
+        17,
+        18
+      ],
+      "programs": [
+        {
+          "id": "epa",
+          "label": "Environmental Protection Agency",
+          "amountB": 17.36516836324,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            572
+          ]
+        },
+        {
+          "id": "renewables",
+          "label": "Energy Efficiency and Renewable Energy",
+          "amountB": 3.59851676998,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            191
+          ]
+        },
+        {
+          "id": "forest_service",
+          "label": "Forest Service",
+          "amountB": 12.81559557137,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            70
+          ]
+        },
+        {
+          "id": "national_parks",
+          "label": "National Park Service",
+          "amountB": 4.94645415939,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            335
+          ]
+        },
+        {
+          "id": "noaa",
+          "label": "National Oceanic and Atmospheric Administration",
+          "amountB": 7.3334827622,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            79
+          ]
+        },
+        {
+          "id": "arpa_e",
+          "label": "Advanced Research Projects Agency-Energy",
+          "amountB": 0.31845740923,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "usa_arpae",
+          "note": "Reported FY2026 account outlay. Snapshot endpoint does not establish September certification/completeness; may be revised. DARPA is already in defense_rdte.",
+          "dataStatus": "preliminary"
+        },
+        {
+          "id": "other_energy_environment",
+          "label": "Other energy, natural resources and environment and net accounting adjustments",
+          "amountB": 31.69132100212,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts",
+          "note": "Arithmetic residual: category MTS table 9 FYTD amount minus the other listed programs. Includes unitemized programs and any applicable offsetting receipts/classification differences; not an independently reported program."
+        }
+      ]
+    },
+    {
+      "id": "international_affairs",
+      "label": "International affairs",
+      "amountB": 48.01456833842,
+      "sourceId": "mts",
+      "sourceLines": [
+        15
+      ],
+      "programs": [
+        {
+          "id": "diplomacy",
+          "label": "Diplomatic/consular programs, exchanges and embassy security",
+          "amountB": 12.29552555813,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            410,
+            411,
+            412
+          ],
+          "note": "Selected named accounts, not all State Department outlays or all conduct-of-foreign-affairs subfunction outlays."
+        },
+        {
+          "id": "usaid",
+          "label": "Legacy USAID accounts, including transferred/closeout activity",
+          "amountB": 7.34968647457,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            609
+          ],
+          "note": "Treasury retains the USAID account heading. GAO reports USAID ceased administering foreign assistance July 1, 2025 and State assumed remaining programs. Not an independently operating 2026 aid agency.",
+          "status": "transferred_and_closeout",
+          "contextSourceId": "gao_usaid"
+        },
+        {
+          "id": "foreign_military_aid",
+          "label": "Foreign Military Financing Program",
+          "amountB": 8.50827485075,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            591
+          ],
+          "note": "FMF account only; excludes DoD security assistance embedded in defense and other international security assistance."
+        },
+        {
+          "id": "global_health_aid",
+          "label": "State global health and child survival",
+          "amountB": 6.12435766021,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            418
+          ]
+        },
+        {
+          "id": "refugee_aid",
+          "label": "State migration and refugee assistance",
+          "amountB": 2.26168460503,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            419
+          ]
+        },
+        {
+          "id": "peace_corps",
+          "label": "Peace Corps",
+          "amountB": 0.41739440065,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            613
+          ]
+        },
+        {
+          "id": "other_international_affairs",
+          "label": "Other international affairs and net accounting adjustments",
+          "amountB": 11.05764478908,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts",
+          "note": "Arithmetic residual: category MTS table 9 FYTD amount minus the other listed programs. Includes unitemized programs and any applicable offsetting receipts/classification differences; not an independently reported program."
+        }
+      ]
+    },
+    {
+      "id": "law_enforcement",
+      "label": "Administration of justice",
+      "amountB": 109.9154424789,
+      "sourceId": "mts",
+      "sourceLines": [
+        29
+      ],
+      "programs": [
+        {
+          "id": "fbi",
+          "label": "Federal Bureau of Investigation",
+          "amountB": 10.72263976213,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            359
+          ]
+        },
+        {
+          "id": "border_security",
+          "label": "Customs and Border Protection and ICE",
+          "amountB": 51.34986295236,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            259,
+            260
+          ]
+        },
+        {
+          "id": "federal_prisons",
+          "label": "Federal Prison System",
+          "amountB": 8.74192166064,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            362
+          ]
+        },
+        {
+          "id": "federal_courts",
+          "label": "Judicial Branch, including defender services",
+          "amountB": 9.985272808,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            23
+          ],
+          "note": "Includes defender services; do not add the unavailable public_defenders subcomponent to this total."
+        },
+        {
+          "id": "other_law_enforcement",
+          "label": "Other administration of justice and net accounting adjustments",
+          "amountB": 29.11574529577,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts",
+          "note": "Arithmetic residual: category MTS table 9 FYTD amount minus the other listed programs. Includes unitemized programs and any applicable offsetting receipts/classification differences; not an independently reported program."
+        }
+      ],
+      "note": "Budget function 750; courts moved from government_ops for consistency with federal function definitions."
+    },
+    {
+      "id": "science",
+      "label": "General science, space and technology",
+      "amountB": 39.87675907393,
+      "sourceId": "mts",
+      "sourceLines": [
+        16
+      ],
+      "programs": [
+        {
+          "id": "nasa",
+          "label": "NASA excluding aeronautics",
+          "amountB": 22.56138808037,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "note": "NASA net agency outlays minus separately listed aeronautics (in transportation). Includes commercial space contracts; those cannot be added again.",
+          "sourceLines": [
+            631,
+            624
+          ]
+        },
+        {
+          "id": "nsf",
+          "label": "National Science Foundation",
+          "amountB": 8.87681168753,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            637
+          ]
+        },
+        {
+          "id": "doe_science",
+          "label": "DOE Office of Science",
+          "amountB": 8.43142153856,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            189
+          ]
+        },
+        {
+          "id": "other_science",
+          "label": "Other general science, space and technology and net accounting adjustments",
+          "amountB": 0.00713776747,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts",
+          "note": "Arithmetic residual: category MTS table 9 FYTD amount minus the other listed programs. Includes unitemized programs and any applicable offsetting receipts/classification differences; not an independently reported program."
+        }
+      ]
+    },
+    {
+      "id": "government_ops",
+      "label": "General government",
+      "amountB": 32.34346338761,
+      "sourceId": "mts",
+      "sourceLines": [
+        30
+      ],
+      "programs": [
+        {
+          "id": "irs",
+          "label": "IRS taxpayer services, enforcement and operations support",
+          "amountB": 14.32564723462,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            487,
+            488,
+            489
+          ],
+          "note": "Tax administration only. Refundable credits and refund interest are not included in this operating-cost line."
+        },
+        {
+          "id": "legislative_branch",
+          "label": "Legislative Branch",
+          "amountB": 7.0488466269,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            16
+          ]
+        },
+        {
+          "id": "other_government_ops",
+          "label": "Other general government and net accounting adjustments",
+          "amountB": 10.96896952609,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts",
+          "note": "Arithmetic residual: category MTS table 9 FYTD amount minus the other listed programs. Includes unitemized programs and any applicable offsetting receipts/classification differences; not an independently reported program."
+        }
+      ]
+    },
+    {
+      "id": "agriculture",
+      "label": "Agriculture",
+      "amountB": 52.56616774402,
+      "sourceId": "mts",
+      "sourceLines": [
+        19
+      ],
+      "programs": [
+        {
+          "id": "crop_insurance",
+          "label": "Federal Crop Insurance Corporation Fund",
+          "amountB": 15.46455816065,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            35
+          ]
+        },
+        {
+          "id": "commodity_credit",
+          "label": "Commodity Credit Corporation",
+          "amountB": 6.37926689675,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            40
+          ]
+        },
+        {
+          "id": "other_agriculture",
+          "label": "Other agriculture and net accounting adjustments",
+          "amountB": 30.72234268662,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts",
+          "note": "Arithmetic residual: category MTS table 9 FYTD amount minus the other listed programs. Includes unitemized programs and any applicable offsetting receipts/classification differences; not an independently reported program."
+        }
+      ],
+      "note": "Budget function 350. SNAP, WIC and child nutrition are in economic_security, not counted twice here."
+    },
+    {
+      "id": "commerce_housing_credit",
+      "label": "Commerce and housing credit",
+      "amountB": -15.46529214592,
+      "sourceId": "mts",
+      "sourceLines": [
+        20
+      ],
+      "programs": [
+        {
+          "id": "cfpb",
+          "label": "Consumer Financial Protection Bureau",
+          "amountB": 0.54525685255,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            683
+          ]
+        },
+        {
+          "id": "mbda",
+          "label": "Minority Business Development account",
+          "amountB": 0.01515988556,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "usa_mbda",
+          "note": "Reported account outlay; not the appropriation and not proof of current organizational staffing/operating status. Snapshot endpoint does not establish September certification/completeness.",
+          "dataStatus": "preliminary"
+        },
+        {
+          "id": "fdic",
+          "label": "Federal Deposit Insurance Corporation net outlays",
+          "amountB": -22.19186275036,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts5",
+          "sourceLines": [
+            699
+          ],
+          "note": "Net recoveries/receipts can make outlays negative. Self-financing does not justify omitting it from the unified budget."
+        },
+        {
+          "id": "other_commerce_housing_credit",
+          "label": "Other commerce and housing credit and net accounting adjustments",
+          "amountB": 6.16615386633,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts",
+          "note": "Arithmetic residual: category MTS table 9 FYTD amount minus the other listed programs. Includes unitemized programs and any applicable offsetting receipts/classification differences; not an independently reported program."
+        }
+      ],
+      "note": "Budget function 370 can be negative because financial/credit programs record recoveries, fees and subsidy reestimates."
+    },
+    {
+      "id": "other_offsetting_receipts",
+      "label": "Undistributed offsetting receipts",
+      "amountB": -155.01877852626,
+      "sourceId": "mts",
+      "sourceLines": [
+        32
+      ],
+      "programs": [
+        {
+          "id": "undistributed_offsetting_receipts",
+          "label": "Undistributed offsetting receipts",
+          "amountB": -155.01877852626,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts",
+          "note": "Negative budget function 950. Includes employer retirement contributions, rents/royalties and other offsets. Table 5 has a different, larger undistributed receipt grouping: do not substitute it or subtract it again after using functional net interest.",
+          "sourceLines": [
+            32
+          ]
+        },
+        {
+          "id": "other_other_offsetting_receipts",
+          "label": "Other undistributed offsetting receipts and net accounting adjustments",
+          "amountB": 0.0,
+          "basis": "outlays",
+          "year": 2026,
+          "sourceId": "mts",
+          "note": "Arithmetic residual: category MTS table 9 FYTD amount minus the other listed programs. Includes unitemized programs and any applicable offsetting receipts/classification differences; not an independently reported program."
+        }
+      ]
+    }
+  ],
+  "nonAdditivePrograms": [
+    {
+      "id": "hud",
+      "label": "Department of Housing and Urban Development (cross-cutting total)",
+      "amountB": 68.26337380371,
+      "basis": "outlays",
+      "year": 2026,
+      "sourceId": "mts5",
+      "sourceLines": [
+        317
+      ],
+      "additive": false,
+      "note": "Agency total overlaps public_housing and community_block_grants and spans income security, community development and mortgage credit. For reference/matching only; never add to categories."
+    },
+    {
+      "id": "head_start",
+      "label": "Head Start",
+      "amountB": null,
+      "basis": null,
+      "year": 2026,
+      "sourceId": "mts5",
+      "sourceLines": [
+        239
+      ],
+      "additive": false,
+      "status": "actual_unavailable_separately",
+      "coveredBy": [
+        "other_education"
+      ],
+      "note": "MTS reports Children and Families Services Programs together. USAspending Head Start account/activity searches returned no separate result. No FY2026 actual isolated; do not equate the whole account with Head Start."
+    },
+    {
+      "id": "public_defenders",
+      "label": "Federal defender services",
+      "amountB": null,
+      "basis": null,
+      "year": 2026,
+      "sourceId": "mts5",
+      "sourceLines": [
+        19
+      ],
+      "additive": false,
+      "status": "actual_unavailable_separately",
+      "coveredBy": [
+        "federal_courts"
+      ],
+      "note": "Included in Judicial Branch; a search result for District of Columbia defender payments is not the national Federal Defender Services account. No separate FY2026 national outlay substituted."
+    },
+    {
+      "id": "commercial_space",
+      "label": "NASA commercial space contracts",
+      "amountB": null,
+      "basis": null,
+      "year": 2026,
+      "sourceId": "mts5",
+      "sourceLines": [
+        631
+      ],
+      "additive": false,
+      "status": "actual_unavailable_separately",
+      "coveredBy": [
+        "nasa"
+      ],
+      "note": "Embedded in NASA. No complete FY2026 contract cash-outlay total isolated; obligations, contract ceilings, and awards are not equivalent to outlays."
+    },
+    {
+      "id": "arpa_research",
+      "label": "DARPA / ARPA-style research (cross-cutting)",
+      "amountB": null,
+      "basis": null,
+      "year": 2026,
+      "sourceId": "mts5",
+      "sourceLines": [
+        111,
+        196,
+        209
+      ],
+      "additive": false,
+      "status": "overlapping_aggregate",
+      "coveredBy": [
+        "defense_rdte",
+        "arpa_e",
+        "nih"
+      ],
+      "note": "DARPA is within DoD R&D, ARPA-E is separately listed, and ARPA-H can be within NIH. Preserve identifier for matching, not an additional spending line."
+    },
+    {
+      "id": "climate_aid",
+      "label": "International climate aid",
+      "amountB": null,
+      "basis": null,
+      "year": 2026,
+      "sourceId": "mts5",
+      "additive": false,
+      "status": "actual_unavailable_separately",
+      "coveredBy": [
+        "usaid",
+        "other_international_affairs"
+      ],
+      "note": "No complete separate FY2026 actual found. Do not treat a prior-year pledge or appropriation as 2026 spending; former USAID funding can be in transferred or closeout accounts."
+    }
+  ],
+  "taxEstimator": {
+    "taxYear": 2025,
+    "brackets": {
+      "single": [
+        [
+          11925,
+          0.1
+        ],
+        [
+          48475,
+          0.12
+        ],
+        [
+          103350,
+          0.22
+        ],
+        [
+          197300,
+          0.24
+        ],
+        [
+          250525,
+          0.32
+        ],
+        [
+          626350,
+          0.35
+        ],
+        [
+          null,
+          0.37
+        ]
+      ],
+      "married_joint": [
+        [
+          23850,
+          0.1
+        ],
+        [
+          96950,
+          0.12
+        ],
+        [
+          206700,
+          0.22
+        ],
+        [
+          394600,
+          0.24
+        ],
+        [
+          501050,
+          0.32
+        ],
+        [
+          751600,
+          0.35
+        ],
+        [
+          null,
+          0.37
+        ]
+      ],
+      "head_of_household": [
+        [
+          17000,
+          0.1
+        ],
+        [
+          64850,
+          0.12
+        ],
+        [
+          103350,
+          0.22
+        ],
+        [
+          197300,
+          0.24
+        ],
+        [
+          250500,
+          0.32
+        ],
+        [
+          626350,
+          0.35
+        ],
+        [
+          null,
+          0.37
+        ]
+      ]
+    },
+    "standardDeduction": {
+      "single": 15750,
+      "married_joint": 31500,
+      "head_of_household": 23625
+    },
+    "sourceUrl": "https://www.irs.gov/irb/2024-45_IRB",
+    "standardDeductionSourceUrl": "https://www.irs.gov/publications/p501",
+    "bracketConvention": "Upper limits apply to taxable ordinary income after deductions, not gross income. null upper limit is unbounded. Rates are fractions. This is an ordinary-income, before-credit estimate, not a complete tax return calculation.",
+    "averageIncomeTaxPerReturn": 13223.5,
+    "medianIncomeTaxPerReturn": null,
+    "averagesYear": 2023,
+    "averagesSourceUrl": "https://www.irs.gov/pub/irs-soi/23in55cmcsv.csv",
+    "averagesDefinition": "A06500 (Form 1040 line 22, income tax after nonrefundable credits) * 1000 / N1 (all returns). Nominal 2023 dollars. Excludes payroll taxes, NIIT/other Schedule 2 Part II taxes, and refundable credit netting; not fiscal-year Treasury cash collections divided by returns.",
+    "averageAmongReturnsWithIncomeTax": 18474.58,
+    "nationalNumberOfReturns": 159949000,
+    "nationalIncomeTaxAfterCreditsThousands": 2115085827,
+    "medianStatus": "Unknown: published grouped-by-AGI totals do not identify the median of individual tax liability. Do not impute a numeric median, use the mean as a median, or compute tax on median income as median tax."
+  },
+  "byState": {
+    "AL": {
+      "avgIncomeTax": 8969.13,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 19201480,
+      "numberOfReturns": 2140840
+    },
+    "AK": {
+      "avgIncomeTax": 11362.0,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 3953181,
+      "numberOfReturns": 347930
+    },
+    "AZ": {
+      "avgIncomeTax": 11648.59,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 39500719,
+      "numberOfReturns": 3391030
+    },
+    "AR": {
+      "avgIncomeTax": 9274.08,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 11983878,
+      "numberOfReturns": 1292190
+    },
+    "CA": {
+      "avgIncomeTax": 17158.44,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 317127370,
+      "numberOfReturns": 18482300
+    },
+    "CO": {
+      "avgIncomeTax": 14284.3,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 44093212,
+      "numberOfReturns": 3086830
+    },
+    "CT": {
+      "avgIncomeTax": 20148.71,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 36719210,
+      "numberOfReturns": 1822410
+    },
+    "DE": {
+      "avgIncomeTax": 10936.48,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 5549059,
+      "numberOfReturns": 507390
+    },
+    "DC": {
+      "avgIncomeTax": 25418.26,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 8861821,
+      "numberOfReturns": 348640
+    },
+    "FL": {
+      "avgIncomeTax": 14697.82,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 164880602,
+      "numberOfReturns": 11218030
+    },
+    "GA": {
+      "avgIncomeTax": 10965.88,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 53533666,
+      "numberOfReturns": 4881840
+    },
+    "HI": {
+      "avgIncomeTax": 10019.29,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 6968115,
+      "numberOfReturns": 695470
+    },
+    "ID": {
+      "avgIncomeTax": 10041.58,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 8883382,
+      "numberOfReturns": 884660
+    },
+    "IL": {
+      "avgIncomeTax": 14096.64,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 85993008,
+      "numberOfReturns": 6100250
+    },
+    "IN": {
+      "avgIncomeTax": 9228.62,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 29918453,
+      "numberOfReturns": 3241920
+    },
+    "IA": {
+      "avgIncomeTax": 9970.93,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 14776918,
+      "numberOfReturns": 1482000
+    },
+    "KS": {
+      "avgIncomeTax": 10531.02,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 14386433,
+      "numberOfReturns": 1366100
+    },
+    "KY": {
+      "avgIncomeTax": 8204.56,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 16251930,
+      "numberOfReturns": 1980840
+    },
+    "LA": {
+      "avgIncomeTax": 8727.67,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 16866575,
+      "numberOfReturns": 1932540
+    },
+    "ME": {
+      "avgIncomeTax": 9510.55,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 6772561,
+      "numberOfReturns": 712110
+    },
+    "MD": {
+      "avgIncomeTax": 13815.93,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 42832131,
+      "numberOfReturns": 3100200
+    },
+    "MA": {
+      "avgIncomeTax": 19175.58,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 68950192,
+      "numberOfReturns": 3595730
+    },
+    "MI": {
+      "avgIncomeTax": 10056.8,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 49000065,
+      "numberOfReturns": 4872330
+    },
+    "MN": {
+      "avgIncomeTax": 12249.32,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 35555362,
+      "numberOfReturns": 2902640
+    },
+    "MS": {
+      "avgIncomeTax": 6907.84,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 8493817,
+      "numberOfReturns": 1229590
+    },
+    "MO": {
+      "avgIncomeTax": 10289.01,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 29532444,
+      "numberOfReturns": 2870290
+    },
+    "MT": {
+      "avgIncomeTax": 10500.73,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 5816462,
+      "numberOfReturns": 553910
+    },
+    "NE": {
+      "avgIncomeTax": 10532.17,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 10020835,
+      "numberOfReturns": 951450
+    },
+    "NV": {
+      "avgIncomeTax": 13413.98,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 20987381,
+      "numberOfReturns": 1564590
+    },
+    "NH": {
+      "avgIncomeTax": 15359.89,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 11247283,
+      "numberOfReturns": 732250
+    },
+    "NJ": {
+      "avgIncomeTax": 17203.16,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 80064862,
+      "numberOfReturns": 4654080
+    },
+    "NM": {
+      "avgIncomeTax": 7702.2,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 7552927,
+      "numberOfReturns": 980620
+    },
+    "NY": {
+      "avgIncomeTax": 17353.78,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 169881879,
+      "numberOfReturns": 9789330
+    },
+    "NC": {
+      "avgIncomeTax": 10593.69,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 52160239,
+      "numberOfReturns": 4923710
+    },
+    "ND": {
+      "avgIncomeTax": 12619.44,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 4685850,
+      "numberOfReturns": 371320
+    },
+    "OH": {
+      "avgIncomeTax": 9754.29,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 55393330,
+      "numberOfReturns": 5678870
+    },
+    "OK": {
+      "avgIncomeTax": 8903.27,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 15161643,
+      "numberOfReturns": 1702930
+    },
+    "OR": {
+      "avgIncomeTax": 10810.21,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 22351185,
+      "numberOfReturns": 2067600
+    },
+    "PA": {
+      "avgIncomeTax": 11988.98,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 75544224,
+      "numberOfReturns": 6301140
+    },
+    "RI": {
+      "avgIncomeTax": 11296.22,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 6448561,
+      "numberOfReturns": 570860
+    },
+    "SC": {
+      "avgIncomeTax": 9803.93,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 24391108,
+      "numberOfReturns": 2487890
+    },
+    "SD": {
+      "avgIncomeTax": 11423.86,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 5082359,
+      "numberOfReturns": 444890
+    },
+    "TN": {
+      "avgIncomeTax": 11325.94,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 36917568,
+      "numberOfReturns": 3259560
+    },
+    "TX": {
+      "avgIncomeTax": 12929.06,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 176758969,
+      "numberOfReturns": 13671450
+    },
+    "UT": {
+      "avgIncomeTax": 11756.37,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 18134555,
+      "numberOfReturns": 1542530
+    },
+    "VT": {
+      "avgIncomeTax": 10055.74,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 3370081,
+      "numberOfReturns": 335140
+    },
+    "VA": {
+      "avgIncomeTax": 14261.76,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 59444004,
+      "numberOfReturns": 4168070
+    },
+    "WA": {
+      "avgIncomeTax": 16939.32,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 64062635,
+      "numberOfReturns": 3781890
+    },
+    "WV": {
+      "avgIncomeTax": 7099.15,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 5519515,
+      "numberOfReturns": 777490
+    },
+    "WI": {
+      "avgIncomeTax": 10618.55,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 31267709,
+      "numberOfReturns": 2944630
+    },
+    "WY": {
+      "avgIncomeTax": 15926.55,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 4496701,
+      "numberOfReturns": 282340
+    },
+    "PR": {
+      "avgIncomeTax": 6059.86,
+      "year": 2023,
+      "sourceId": "irs2023",
+      "incomeTaxAfterCreditsThousands": 513755,
+      "numberOfReturns": 84780
+    }
+  },
+  "stateStatisticsDefinition": "Same A06500 * 1000 / N1 definition as the national mean; includes all returns in the geography. Puerto Rico federal-return filers are a selected subset, not all island households. IRS return addresses may differ from residence; counts rounded to nearest 10.",
+  "legacyAudit": {
+    "repository": "/Users/trevorrosato/code/myTaxReciept",
+    "commit": "f59585b39c6fbf883a22910b129c4ea050f45c2a",
+    "legacyIds": [
+      "social_security",
+      "ss_retirement",
+      "ss_disability",
+      "health",
+      "medicare",
+      "medicaid",
+      "aca_subsidies",
+      "chip",
+      "nih",
+      "cdc",
+      "defense",
+      "military_personnel",
+      "operations_maintenance",
+      "weapons_procurement",
+      "nuclear_weapons",
+      "foreign_military_aid",
+      "interest_debt",
+      "veterans_retirement",
+      "va_programs",
+      "military_pensions",
+      "civilian_pensions",
+      "pact_act",
+      "economic_security",
+      "snap",
+      "unemployment_insurance",
+      "ssi",
+      "tanf",
+      "child_tax_credit",
+      "liheap",
+      "education",
+      "k12_schools",
+      "college_aid",
+      "ed_ops",
+      "housing_community",
+      "hud",
+      "public_housing",
+      "fema_disaster",
+      "head_start",
+      "community_block_grants",
+      "transportation",
+      "highways",
+      "public_transit",
+      "rail_service",
+      "tsa",
+      "faa",
+      "energy_environment",
+      "epa",
+      "renewables",
+      "forest_service",
+      "national_parks",
+      "noaa",
+      "international_affairs",
+      "diplomacy",
+      "usaid",
+      "climate_aid",
+      "law_enforcement",
+      "fbi",
+      "border_security",
+      "federal_prisons",
+      "science",
+      "nasa",
+      "nsf",
+      "arpa_research",
+      "commercial_space",
+      "government_ops",
+      "irs",
+      "federal_courts",
+      "public_defenders",
+      "cfpb",
+      "mbda"
+    ]
+  },
+  "schemaNotes": [
+    "Unknown values use JSON null, never zero. Nonadditive records retain legacy identifiers without entering reconciliation sums.",
+    "Treasury dataStatus is final FY2026 MTS, not an audited financial statement. Three USAspending program splits are reported outlays with completeness/certification caveats and marked preliminary.",
+    "The dataset contains unified outlays; a dedicated-fund income-tax-only receipt needs an additional financing allocation, discussed in budget-notes.md."
+  ]
+}

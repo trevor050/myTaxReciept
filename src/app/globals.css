@@ -126,6 +126,10 @@ a {
   width: 112px;
 }
 
+.line-box-mid {
+  width: 136px;
+}
+
 .line-box input {
   width: 100%;
   min-width: 0;
@@ -436,15 +440,6 @@ a {
   color: var(--thermal-soft);
 }
 
-.rc-note {
-  margin-top: 3px;
-  font-family: var(--sans);
-  font-size: 0.75rem;
-  line-height: 1.35;
-  font-style: italic;
-  color: var(--thermal-soft);
-}
-
 .mark-buttons {
   display: inline-flex;
   gap: 6px;
@@ -610,6 +605,7 @@ a {
   background: var(--paper);
   box-shadow: 0 10px 22px rgb(16 40 30 / 0.16);
   resize: vertical;
+  field-sizing: content;
 }
 
 .plain-field {
@@ -722,7 +718,8 @@ a {
   margin-top: 8px;
 }
 
-.ai-links a {
+.ai-links a,
+.ai-links button {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -732,7 +729,12 @@ a {
   border: 1px solid var(--ink);
 }
 
-.ai-links a:hover {
+.ai-links button {
+  cursor: pointer;
+}
+
+.ai-links a:hover,
+.ai-links button:hover {
   background: rgb(16 40 30 / 0.08);
 }
 
@@ -746,6 +748,10 @@ a {
 
 .org-head .text-button {
   margin: 0;
+}
+
+.org-list a.org-evidence {
+  font-weight: inherit;
 }
 
 .org-action {
@@ -763,6 +769,10 @@ a {
   border-top: 2px solid var(--ink);
   font-size: 0.9375rem;
   line-height: 1.5;
+}
+
+.method p + p {
+  margin-top: 8px;
 }
 
 .colophon h2 {

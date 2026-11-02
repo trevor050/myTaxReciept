@@ -49,8 +49,6 @@ function CategoryRow({ category, tax, wage, showHours, marks, onMark }: { catego
   };
   const share = (category.amountB / budget.totals.outlaysB) * 100;
   const markedInside = category.programs.filter((p) => marks[p.id]);
-  const hasPrograms = category.programs.length > 0;
-  const selfMark = marks[category.id];
   const panelId = `lines-${category.id}`;
 
   return (
@@ -60,25 +58,17 @@ function CategoryRow({ category, tax, wage, showHours, marks, onMark }: { catego
         <span className="rc-label">
           <span className="rc-label-text">
             {category.label}
-            {selfMark === 'less' && <PenMark stance="less" />}
           </span>
           {markedInside.length > 0 && !open && <span className="pen-note">{markedInside.length} marked</span>}
         </span>
         <span className="rc-share">{share.toFixed(1)}%</span>
         <span className="rc-amount">
           {display(category.amountB)}
-          {selfMark === 'more' && <PenMark stance="more" />}
         </span>
       </button>
 
       {open && (
         <div id={panelId} className="rc-panel">
-          {!hasPrograms && (
-            <div className="rc-program">
-              <p className="rc-blurb">{BLURBS[category.id]}</p>
-              <MarkButtons id={category.id} label={category.label} stance={selfMark} onMark={onMark} />
-            </div>
-          )}
           {category.programs.map((program) => {
             const stance = marks[program.id];
             return (
@@ -106,8 +96,7 @@ function CategoryRow({ category, tax, wage, showHours, marks, onMark }: { catego
                     )}
                   </p>
                 )}
-                {program.note && <p className="rc-note">{program.note}</p>}
-                <MarkButtons id={program.id} label={program.label} stance={stance} onMark={onMark} />
+                {program.markable && <MarkButtons id={program.id} label={program.label} stance={stance} onMark={onMark} />}
               </div>
             );
           })}
@@ -121,9 +110,11 @@ function CategoryRow({ category, tax, wage, showHours, marks, onMark }: { catego
 function BudgetBarcode() {
   return (
     <div className="rc-barcode" role="img" aria-label="A barcode whose bars are sized by each category's share of federal spending">
-      {categories.map((category) => (
-        <span key={category.id} style={{ flexGrow: category.amountB }} />
-      ))}
+      {categories
+        .filter((category) => category.amountB > 0)
+        .map((category) => (
+          <span key={category.id} style={{ flexGrow: category.amountB }} />
+        ))}
     </div>
   );
 }
@@ -140,7 +131,7 @@ export const Receipt = forwardRef<HTMLDivElement, ReceiptProps>(function Receipt
       <dl className="rc-meta">
         <div><dt>Fiscal year</dt><dd>{budget.fiscalYear}</dd></div>
         {today && <div><dt>Printed</dt><dd>{today}</dd></div>}
-        <div><dt>Customer</dt><dd>{isSample ? 'Average filer' : 'You'}</dd></div>
+        <div><dt>Customer</dt><dd>{isSample ? 'Average tax return' : 'You'}</dd></div>
         <div><dt>Served by</dt><dd>535 members of Congress</dd></div>
       </dl>
 
@@ -162,7 +153,7 @@ export const Receipt = forwardRef<HTMLDivElement, ReceiptProps>(function Receipt
           </div>
         )}
         <div className="rc-subtotal">
-          <span>Borrowed on top, on your behalf</span>
+          <span>Also put on the national credit card</span>
           <span>{formatMoney(borrowedAlongside(tax))}</span>
         </div>
       </div>

@@ -8,24 +8,19 @@ export interface Program {
   id: string;
   label: string;
   amountB: number;
-  basis?: string;
-  year?: number;
-  sourceId?: string;
-  note?: string;
+  markable: boolean;
 }
 
 export interface Category {
   id: string;
   label: string;
   amountB: number;
-  sourceId?: string;
   programs: Program[];
 }
 
 export interface Estimator {
   brackets: Record<FilingStatus, [number | null, number][]>;
   standardDeduction: Record<FilingStatus, number>;
-  taxYear: number;
 }
 
 export const budget = budgetData as unknown as {
@@ -33,12 +28,9 @@ export const budget = budgetData as unknown as {
   dataStatus: string;
   asOf: string;
   totals: { outlaysB: number; receiptsB: number; deficitB: number };
-  sources: { id: string; title: string; url: string; accessed?: string }[];
+  sources: { id: string; title: string; url: string }[];
   categories: Category[];
-  taxEstimator: Partial<Estimator> & {
-    averageIncomeTaxPerReturn: number;
-    medianIncomeTaxPerReturn?: number;
-  };
+  taxEstimator: Estimator & { taxYear: number; averageIncomeTaxPerReturn: number; averagesYear: number };
 };
 
 export const categories: Category[] = [...budget.categories].sort((a, b) => b.amountB - a.amountB);
@@ -60,7 +52,7 @@ export function borrowedAlongside(tax: number): number {
 export function estimateTax(
   income: number,
   status: FilingStatus,
-  estimator: Pick<Estimator, 'brackets' | 'standardDeduction'> = budget.taxEstimator as Estimator,
+  estimator: Estimator = budget.taxEstimator,
 ): number {
   const taxable = Math.max(0, income - estimator.standardDeduction[status]);
   let tax = 0;
@@ -72,6 +64,14 @@ export function estimateTax(
     floor = top;
   }
   return Math.round(tax);
+}
+
+/** The 2025 Social Security wage cap, from the SSA contribution and benefit base. */
+const SOCIAL_SECURITY_WAGE_BASE = 176_100;
+
+/** The employee share of Social Security and Medicare tax, treating all income as wages. */
+export function estimatePayrollTax(income: number): number {
+  return Math.round(Math.min(income, SOCIAL_SECURITY_WAGE_BASE) * 0.062 + income * 0.0145);
 }
 
 /** Parses free-form currency input such as "$12,500.50". Returns null when there is no number. */
@@ -93,7 +93,8 @@ export function formatWhole(value: number): string {
 export function formatBillions(amountB: number): string {
   if (amountB >= 1000) return `$${(amountB / 1000).toFixed(2)} trillion`;
   if (amountB >= 10) return `$${Math.round(amountB)} billion`;
-  return `$${amountB.toFixed(1)} billion`;
+  if (amountB >= 1) return `$${amountB.toFixed(1)} billion`;
+  return `$${Math.round(amountB * 1000)} million`;
 }
 
 /** Work time at an hourly wage, as "3h 20m" or "45m". */
@@ -107,8 +108,7 @@ export function formatHours(dollars: number, wage: number): string {
 
 export function findLine(id: string): { label: string; amountB: number; category: string } | null {
   for (const category of categories) {
-    if (category.id === id) return { label: category.label, amountB: category.amountB, category: category.label };
-    const program = category.programs.find((p) => p.id === id);
+    const program = category.programs.find((p) => p.id === id && p.markable);
     if (program) return { label: program.label, amountB: program.amountB, category: category.label };
   }
   return null;

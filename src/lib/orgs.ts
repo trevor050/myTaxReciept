@@ -10,7 +10,7 @@ export interface Org {
   description: string;
   kind?: string;
   prominence?: string;
-  stances: { id: string; direction: Direction }[];
+  stances: { id: string; direction: Direction; evidenceUrl?: string }[];
 }
 
 const orgs = orgsData as unknown as Org[];
@@ -20,7 +20,7 @@ const opposite: Record<Stance, Stance> = { less: 'more', more: 'less' };
 export interface OrgMatch {
   org: Org;
   /** Marked lines this group works on, and what it wants on each. */
-  matched: { id: string; direction: Direction }[];
+  matched: { id: string; direction: Direction; evidenceUrl?: string }[];
 }
 
 interface Candidate extends OrgMatch {

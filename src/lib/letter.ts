@@ -29,11 +29,11 @@ export interface LetterInput {
 
 const opening: Record<Tone, (who: string, paid: string) => string> = {
   polite: (who, paid) =>
-    `I'm ${who}, and this year I paid ${paid} in federal income tax. I looked up where that money goes, line by line, and I'm writing to share what I'd like to see change.`,
+    `I'm ${who}, and this year I paid ${paid} in federal taxes. I looked up where that money goes, line by line, and I'm writing to share what I'd like to see change.`,
   direct: (who, paid) =>
-    `I'm ${who}. I paid ${paid} in federal income tax this year, I looked up where it goes, and I want the next budget to change.`,
+    `I'm ${who}. I paid ${paid} in federal taxes this year, I looked up where it goes, and I want the next budget to change.`,
   furious: (who, paid) =>
-    `I'm ${who}. I paid ${paid} in federal income tax this year. I read the itemized breakdown, and I'm angry about how my money is being spent.`,
+    `I'm ${who}. I paid ${paid} in federal taxes this year. I read the itemized breakdown, and I'm angry about how my money is being spent.`,
 };
 
 const heading: Record<Tone, Record<Stance, string>> = {
@@ -136,7 +136,7 @@ export function buildPrompt(input: LetterInput, maxEncoded: number): string {
   const { marks, tax, fiscalYear, tone, chamber, recipient, name, place, story } = input;
   const line = (id: string, withShare: boolean) => {
     const found = findLine(id)!;
-    const billions = `$${Math.round(found.amountB)}B`;
+    const billions = found.amountB >= 1 ? `$${Math.round(found.amountB)}B` : `$${Math.round(found.amountB * 1000)}M`;
     return `${spokenLabel(found.label)} ${billions}${withShare ? ` (my share ${money(shareOf(tax, found.amountB))})` : ''}`;
   };
 
@@ -149,7 +149,7 @@ export function buildPrompt(input: LetterInput, maxEncoded: number): string {
     const dropped = ids.length - kept.size;
     return [
       `Write my letter to my US ${TITLES[chamber].toLowerCase()}${recipient.trim() ? ` ${recipient.trim()}` : ''}.`,
-      `Me: ${name.trim() || '[name]'}, constituent${place.trim() ? ` in ${place.trim()}` : ''}, paid ${money(tax)} federal income tax.`,
+      `Me: ${name.trim() || '[name]'}, constituent${place.trim() ? ` in ${place.trim()}` : ''}, paid ${money(tax)} federal taxes.`,
       `Figures are FY${fiscalYear} federal outlays.`,
       less && `I want LESS spent on: ${less}.`,
       more && `I want MORE spent on: ${more}.`,

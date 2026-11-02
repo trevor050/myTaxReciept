@@ -4,7 +4,7 @@
  * claim must stay general enough to hold up without a citation. Figures come from the budget data.
  */
 export const REASONS: Record<string, { less: string; more: string }> = {
-  interest_debt: {
+  net_interest: {
     less: 'Every dollar of interest buys nothing new, and the way to shrink this line is to stop adding to the debt.',
     more: 'If this bill has to be paid, it should be paid in full and on time, with a real plan for bringing it down, so the country keeps its credit.',
   },
@@ -119,10 +119,6 @@ export const REASONS: Record<string, { less: string; more: string }> = {
     more: 'Someone has to protect student civil rights and oversee loans, and that takes enough staff to do it well.',
   },
 
-  hud: {
-    less: 'Federal housing programs are costly and slow, and zoning reform would do more to bring prices down.',
-    more: 'Rents have outrun paychecks across the country, and we need more affordable housing.',
-  },
   public_housing: {
     less: 'Public housing is costly to maintain, and rental aid should be better targeted and tied to work where possible.',
     more: 'Most families who qualify for rental help never get it, because there is not enough to go around.',
@@ -130,10 +126,6 @@ export const REASONS: Record<string, { less: string; more: string }> = {
   fema_disaster: {
     less: 'States and insurers should carry more of the cost, and we should stop subsidizing rebuilding in the same risky places.',
     more: 'Disasters are getting costlier, and communities need help that arrives quickly when one hits.',
-  },
-  head_start: {
-    less: 'This money should be tied to evidence of lasting results, with more options for parents.',
-    more: 'The earliest years shape a child’s whole life, and many eligible kids are still left out.',
   },
   community_block_grants: {
     less: 'Local projects should be funded locally, without sending the money through Washington first.',
@@ -190,10 +182,6 @@ export const REASONS: Record<string, { less: string; more: string }> = {
     less: 'Aid abroad should wait until needs at home are met, and every program should show that it works.',
     more: 'Foreign aid is a very small part of the budget, and it saves lives while building goodwill for the US.',
   },
-  climate_aid: {
-    less: 'US taxpayers should not be paying for climate programs in other countries.',
-    more: 'Climate disasters abroad lead to instability and migration, and it is cheaper to help before that happens.',
-  },
 
   fbi: {
     less: 'The agency needs stricter oversight, and limits on surveillance of Americans, before it gets more money.',
@@ -216,14 +204,6 @@ export const REASONS: Record<string, { less: string; more: string }> = {
     less: 'Grants should be held to a higher standard and focused on research with clear national value.',
     more: 'Basic research is where tomorrow’s industries come from, and rivals are investing heavily in it.',
   },
-  arpa_research: {
-    less: 'High-risk research should be open to more scrutiny, and the private sector should take on more of the cost.',
-    more: 'This kind of research gave us the internet and GPS, and it is exactly the risk that markets will not take.',
-  },
-  commercial_space: {
-    less: 'Billion-dollar companies should not rely so heavily on public contracts.',
-    more: 'Buying launches on the open market is cheaper than building them ourselves and keeps the US ahead.',
-  },
 
   irs: {
     less: 'The tax code should be simpler, so we would not need such a large agency to enforce it.',
@@ -233,10 +213,6 @@ export const REASONS: Record<string, { less: string; more: string }> = {
     less: 'The courts should find savings in administration and show they are using what they have well.',
     more: 'Cases should not sit for years because there are too few judges and staff.',
   },
-  public_defenders: {
-    less: 'Costs should be checked regularly so the money is used efficiently.',
-    more: 'The right to a lawyer means little if defenders have too many cases to handle them well.',
-  },
   cfpb: {
     less: 'This agency has too much power and too little accountability to Congress.',
     more: 'Families need a regulator on their side against hidden fees and predatory lending.',
@@ -244,6 +220,83 @@ export const REASONS: Record<string, { less: string; more: string }> = {
   mbda: {
     less: 'Federal business programs should be open to everyone, regardless of race.',
     more: 'Minority-owned businesses still have a harder time getting capital and contracts, and this help is small but useful.',
+  },
+
+  mental_health: {
+    less: 'These grants should be held to measurable results, with states deciding more of how the money is used.',
+    more: 'Too many people cannot find treatment for addiction or mental illness when they need it.',
+  },
+  hrsa: {
+    less: 'These grants overlap with other federal health programs and should be consolidated.',
+    more: 'Community clinics are often the only care available in rural and low-income areas.',
+  },
+  indian_health_service: {
+    less: 'The system needs reform and more choice of providers for patients before it gets more money.',
+    more: 'The US promised health care to tribal nations by treaty, and it has never paid enough to keep that promise.',
+  },
+  defense_rdte: {
+    less: 'Too many development programs run for years and billions of dollars without ever producing anything usable.',
+    more: 'Staying ahead of rivals in new technology is what will deter the next war.',
+  },
+  military_construction: {
+    less: 'The US keeps too many bases, and closing some would save money for years to come.',
+    more: 'Too many troops and families live and work in facilities that are falling apart.',
+  },
+  earned_income_tax_credit: {
+    less: 'The credit has a high rate of improper payments, and that should be fixed before it goes any further.',
+    more: 'This credit rewards work and lifts millions of families out of poverty.',
+  },
+  child_nutrition: {
+    less: 'Free meals should go to the children who need them, not to students from families who can pay.',
+    more: 'Kids cannot learn when they are hungry, and school may be where they get their most reliable meal.',
+  },
+  wic: {
+    less: 'The program should be better targeted, with spending checked against how much it improves health.',
+    more: 'Good nutrition early in life is cheap compared with the health problems it prevents.',
+  },
+  child_care: {
+    less: 'Parents should get more flexibility and choice, and the money should not be going to more bureaucracy.',
+    more: 'Child care costs as much as rent in many places and keeps parents from working.',
+  },
+  foster_care: {
+    less: 'The money should go further toward keeping families together and moving kids into permanent homes.',
+    more: 'Children in foster care have no one else to count on, and the system is badly stretched.',
+  },
+  crop_insurance: {
+    less: 'Taxpayers cover too much of the premiums, and much of the benefit goes to the largest farms.',
+    more: 'Farmers face weather and markets they cannot control, and this keeps a bad year from ending a family farm.',
+  },
+  commodity_credit: {
+    less: 'Farm payments flow largely to big operations and should be capped or phased out.',
+    more: 'Farmers need a dependable safety net against price collapses and trade disputes.',
+  },
+  global_health_aid: {
+    less: 'Global health spending should wait until needs at home are met, and other wealthy countries should pay a fairer share.',
+    more: 'These programs save lives at a very low cost and stop diseases before they reach the US.',
+  },
+  refugee_aid: {
+    less: 'Other wealthy countries should carry more of this cost, and the money should come with stricter oversight.',
+    more: 'People fleeing war and persecution need help, and stable host countries serve US interests as well.',
+  },
+  peace_corps: {
+    less: 'This is a modest program, but it should show clear results or give way to higher priorities.',
+    more: 'Volunteers build goodwill for the US at a tiny fraction of what other foreign programs cost.',
+  },
+  nasa_aeronautics: {
+    less: 'Companies that profit from aviation research should pay more of its cost.',
+    more: 'Research into safer, cleaner aircraft keeps the US aviation industry ahead.',
+  },
+  arpa_e: {
+    less: 'Government should not be placing bets on energy technology that private investors can fund themselves.',
+    more: 'Breakthrough energy research takes the kind of early risk that markets will not take on.',
+  },
+  doe_science: {
+    less: 'National labs should be reviewed for overlap and focused on national priorities.',
+    more: 'National labs run the research facilities no company or university could afford to build.',
+  },
+  legislative_branch: {
+    less: 'Congress should tighten its own belt before asking anyone else to do so.',
+    more: 'Congress needs enough expert staff to write laws itself and not depend on lobbyists.',
   },
 };
 

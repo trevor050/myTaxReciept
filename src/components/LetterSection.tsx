@@ -9,6 +9,9 @@ import { budget, findLine, type Marks } from '@/lib/tax';
 const HOUSE_URL = 'https://www.house.gov/representatives/find-your-representative';
 const SENATE_URL = 'https://www.senate.gov/senators/senators-contact.htm';
 
+/** A pasted prompt has no URL to fit in, so it keeps every line. */
+const FULL_PROMPT_CAP = 20_000;
+
 const WANTS: Record<Direction, string> = { less: 'less for', more: 'more for', reform: 'changes to' };
 
 export function LetterSection({ marks, tax }: { marks: Marks; tax: number }) {
@@ -33,10 +36,10 @@ export function LetterSection({ marks, tax }: { marks: Marks; tax: number }) {
     if (!hasMarks) setEdited(null);
   }, [hasMarks]);
 
-  async function copyLetter() {
+  async function copyText(text: string, done: string) {
     try {
-      await navigator.clipboard.writeText(`Subject: ${letter.subject}\n\n${body}`);
-      setCopied('Letter copied');
+      await navigator.clipboard.writeText(text);
+      setCopied(done);
     } catch {
       setCopied('Your browser blocked clipboard access. Select the text and copy it.');
     }
@@ -97,7 +100,7 @@ export function LetterSection({ marks, tax }: { marks: Marks; tax: number }) {
             {edited !== null && <p className="control-note">Your edits are in charge now. Discard them to apply changes from these fields.</p>}
 
             <div className="actions">
-              <button type="button" className="button" onClick={copyLetter}>Copy letter</button>
+              <button type="button" className="button" onClick={() => copyText(`Subject: ${letter.subject}\n\n${body}`, 'Letter copied')}>Copy letter</button>
               <p className="action-note" role="status">{copied}</p>
             </div>
 
@@ -123,6 +126,9 @@ export function LetterSection({ marks, tax }: { marks: Marks; tax: number }) {
                     </a>
                   </li>
                 ))}
+                <li>
+                  <button type="button" onClick={() => copyText(buildPrompt(input, FULL_PROMPT_CAP), 'Prompt copied. Paste it into any AI assistant.')}>Copy prompt</button>
+                </li>
               </ul>
             </div>
           </div>
@@ -145,7 +151,18 @@ export function LetterSection({ marks, tax }: { marks: Marks; tax: number }) {
                     <a href={org.url} target="_blank" rel="noreferrer">{org.name}</a>
                     <p>{org.description}</p>
                     <p className="org-why">
-                      Wants {matched.map(({ id, direction }) => `${WANTS[direction]} ${findLine(id)?.label}`).join('; ')}
+                      Wants{' '}
+                      {matched.map(({ id, direction, evidenceUrl }, index) => (
+                        <span key={id}>
+                          {index > 0 && '; '}
+                          {WANTS[direction]}{' '}
+                          {evidenceUrl ? (
+                            <a className="org-evidence" href={evidenceUrl} target="_blank" rel="noreferrer">{findLine(id)?.label}</a>
+                          ) : (
+                            findLine(id)?.label
+                          )}
+                        </span>
+                      ))}
                       {org.actionUrl && (
                         <>
                           {'. '}

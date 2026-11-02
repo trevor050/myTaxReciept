@@ -6,6 +6,7 @@ import {
   budget,
   decodeMarks,
   encodeMarks,
+  estimatePayrollTax,
   estimateTax,
   formatWhole,
   parseMoney,
@@ -35,6 +36,7 @@ export function TaxReceiptApp() {
   const [estimating, setEstimating] = useState(false);
   const [incomeInput, setIncomeInput] = useState('');
   const [status, setStatus] = useState<FilingStatus>('single');
+  const [payrollInput, setPayrollInput] = useState('');
   const [wageInput, setWageInput] = useState('');
   const [showHours, setShowHours] = useState(false);
   const [marks, setMarks] = useState<Marks>({});
@@ -53,8 +55,10 @@ export function TaxReceiptApp() {
 
   const income = parseMoney(incomeInput);
   const estimated = estimating && income !== null ? estimateTax(income, status) : null;
+  const estimatedPayroll = estimated !== null && income !== null ? estimatePayrollTax(income) : null;
+  const payroll = estimating ? (estimatedPayroll ?? 0) : (parseMoney(payrollInput) ?? 0);
   const entered = estimating ? estimated : parseMoney(taxInput);
-  const tax = entered ?? SAMPLE_TAX;
+  const tax = entered === null ? SAMPLE_TAX : entered + payroll;
   const isSample = entered === null;
 
   const wage = useMemo(() => {
@@ -115,7 +119,7 @@ export function TaxReceiptApp() {
         <section className="intake">
           <h1>Here&rsquo;s what your federal taxes bought.</h1>
           <p className="lede">
-            Enter what you paid. Every line comes from the government&rsquo;s own books for fiscal {budget.fiscalYear}.
+            Enter what you paid. Every line comes from the Treasury&rsquo;s books for fiscal {budget.fiscalYear}.
           </p>
 
           <div className="form-lines">
@@ -149,7 +153,7 @@ export function TaxReceiptApp() {
                 </fieldset>
                 {estimated !== null && (
                   <p className="estimate-result" role="status">
-                    About <strong>${formatWhole(estimated)}</strong> with the standard deduction, before credits.
+                    About <strong>${formatWhole(estimated)}</strong> in income tax with the standard deduction, before credits, plus <strong>${formatWhole(estimatedPayroll ?? 0)}</strong> in Social Security and Medicare tax.
                   </p>
                 )}
               </>
@@ -157,6 +161,17 @@ export function TaxReceiptApp() {
             <button type="button" className="text-button" onClick={() => setEstimating(!estimating)}>
               {estimating ? 'I know my total tax' : 'Don’t have it? Estimate from income'}
             </button>
+
+            {!estimating && (
+              <label className="form-line">
+                <span className="line-no">W-2</span>
+                <span className="line-name">Social Security and Medicare withheld, boxes 4 and 6 (optional)</span>
+                <span className="line-box line-box-mid">
+                  <span aria-hidden="true">$</span>
+                  <input inputMode="decimal" autoComplete="off" placeholder="0" value={payrollInput} onChange={(e) => setPayrollInput(groupDigits(e.target.value))} />
+                </span>
+              </label>
+            )}
 
             <label className="form-line">
               <span className="line-no">$/h</span>
@@ -200,11 +215,13 @@ export function TaxReceiptApp() {
       <LetterSection marks={marks} tax={tax} />
 
       <footer className="colophon">
-        <div>
+        <div className="method">
           <h2>How this is calculated</h2>
           <p>
-            Each line is that category&rsquo;s share of {budget.fiscalYear} federal spending, applied to the amount you entered. Taxes aren&rsquo;t earmarked, so this
-            shows how your payment compares with the whole budget, not which programs your dollars paid for. Payroll taxes are not included in the amount unless you add them.
+            Each line is that category&rsquo;s share of fiscal {budget.fiscalYear} federal spending, applied to the amount you entered. This is a proportional picture of the whole budget, not a trace of your dollars. Taxes aren&rsquo;t earmarked this way, and Social Security and much of Medicare run mainly on their own payroll taxes.
+          </p>
+          <p>
+            The government collected ${(budget.totals.receiptsB / 1000).toFixed(2)} trillion and spent ${(budget.totals.outlaysB / 1000).toFixed(2)} trillion, borrowing about {Math.round((budget.totals.deficitB / budget.totals.receiptsB) * 100)}&cent; for every dollar it collected. That&rsquo;s the credit card line. It isn&rsquo;t money you paid. Negative lines are money agencies took in, which is counted against spending. The sample uses the average of ${formatWhole(SAMPLE_TAX)} per return from IRS data for tax year {budget.taxEstimator.averagesYear}.
           </p>
         </div>
         <div>

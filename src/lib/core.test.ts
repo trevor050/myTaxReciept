@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import { BLURBS } from '@/data/blurbs';
 import { REASONS } from '@/data/reasons';
 import { buildLetter, buildPrompt, type LetterInput } from './letter';
 import { matchOrgs } from './orgs';
-import { budget, categories, decodeMarks, encodeMarks, estimateTax, formatHours, parseMoney, shareOf, type Marks } from './tax';
+import { budget, categories, decodeMarks, encodeMarks, estimatePayrollTax, estimateTax, formatHours, parseMoney, shareOf, type Marks } from './tax';
 
-const estimator = {
+const estimator: Pick<typeof budget.taxEstimator, 'brackets' | 'standardDeduction'> = {
   standardDeduction: { single: 10_000, married_joint: 20_000, head_of_household: 15_000 },
   brackets: {
     single: [[10_000, 0.1], [null, 0.2]],
@@ -36,10 +37,17 @@ describe('budget data', () => {
     expect(total).toBeCloseTo(10_000, 0);
   });
 
+  it('has a blurb for every line except residuals', () => {
+    const missing = categories
+      .flatMap((category) => category.programs)
+      .filter((line) => !line.id.startsWith('other_') && !BLURBS[line.id]);
+    expect(missing.map((line) => line.id)).toEqual([]);
+  });
+
   it('has a reason in each direction for every named program', () => {
     const missing = categories
-      .flatMap((category): { id: string }[] => (category.programs.length ? category.programs : [category]))
-      .filter((line) => !line.id.startsWith('other') && !REASONS[line.id]);
+      .flatMap((category) => category.programs)
+      .filter((line) => line.markable && !REASONS[line.id]);
     expect(missing.map((line) => line.id)).toEqual([]);
   });
 });
@@ -55,6 +63,16 @@ describe('estimateTax', () => {
 
   it('uses the filing status', () => {
     expect(estimateTax(30_000, 'married_joint', estimator)).toBe(1_000);
+  });
+});
+
+describe('estimatePayrollTax', () => {
+  it('applies the employee share under the wage base', () => {
+    expect(estimatePayrollTax(50_000)).toBe(3_825);
+  });
+
+  it('stops Social Security at the wage base but not Medicare', () => {
+    expect(estimatePayrollTax(200_000)).toBe(Math.round(176_100 * 0.062 + 200_000 * 0.0145));
   });
 });
 
@@ -98,7 +116,7 @@ describe('buildLetter', () => {
   });
 
   it('never argues more than five lines, and still mentions the rest', () => {
-    const ids = categories.flatMap((category) => category.programs).slice(0, 9).map((program) => program.id);
+    const ids = categories.flatMap((category) => category.programs).filter((program) => program.markable).slice(0, 9).map((program) => program.id);
     const marks = Object.fromEntries(ids.map((id) => [id, 'more'])) as Marks;
     const letter = buildLetter({ ...baseInput, marks }).body;
     expect(letter.match(/about \$/g)?.length).toBe(5);
@@ -107,7 +125,7 @@ describe('buildLetter', () => {
 });
 
 describe('buildPrompt', () => {
-  const ids = categories.flatMap((category) => category.programs).map((program) => program.id);
+  const ids = categories.flatMap((category) => category.programs).filter((program) => program.markable).map((program) => program.id);
   const every = Object.fromEntries(ids.map((id, i) => [id, i % 2 ? 'less' : 'more'])) as Marks;
 
   it('keeps every position and share when there is room', () => {

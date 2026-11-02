@@ -1,6 +1,6 @@
 /** One neutral sentence per line of the receipt. Facts, not positions. */
 export const BLURBS: Record<string, string> = {
-  interest_debt: 'What the government pays to borrow, on debt built up over decades of spending more than it collected.',
+  net_interest: 'What the government pays to borrow, on debt built up over decades of spending more than it collected.',
 
   ss_retirement: 'Monthly payments to retired workers, their spouses, and survivors.',
   ss_disability: 'Income for workers who can no longer work because of a serious disability.',
@@ -30,19 +30,17 @@ export const BLURBS: Record<string, string> = {
   child_tax_credit: 'The part of the child tax credit paid out to families as refunds.',
   liheap: 'Help for low-income households with heating and cooling bills.',
 
-  k12_schools: 'Grants to schools for low-income students and students with disabilities.',
+  k12_schools: 'Federal grants to schools, largely for low-income students and students with disabilities.',
   college_aid: 'Pell Grants and the cost of federal student loans.',
   ed_ops: 'Running the Department of Education.',
 
-  hud: 'The Department of Housing and Urban Development, apart from its rental aid.',
   public_housing: 'Public housing and Section 8 vouchers that help low-income renters.',
-  fema_disaster: 'Federal money for recovery after hurricanes, floods, wildfires, and other disasters.',
-  head_start: 'Preschool, health, and nutrition services for low-income children.',
+  fema_disaster: 'FEMA’s fund for recovery after hurricanes, floods, wildfires, and other disasters.',
   community_block_grants: 'Flexible grants cities and counties use for local housing and infrastructure.',
 
   highways: 'Money to states for building and repairing highways.',
   public_transit: 'Grants for buses, subways, and light rail.',
-  rail_service: 'Federal support for Amtrak and passenger rail.',
+  rail_service: 'Federal Railroad Administration spending, including support for Amtrak.',
   tsa: 'Airport security screening.',
   faa: 'Air traffic control and aviation safety.',
 
@@ -53,8 +51,7 @@ export const BLURBS: Record<string, string> = {
   noaa: 'Weather forecasts, climate monitoring, and ocean science.',
 
   diplomacy: 'The State Department, embassies, and diplomatic staff.',
-  usaid: 'Civilian foreign aid for health, hunger, and development.',
-  climate_aid: 'Aid that helps other countries handle climate change and disasters.',
+  usaid: 'Aid still paid through USAID’s old accounts. USAID stopped running awards in July 2025, and the State Department took over what remains.',
 
   fbi: 'The main federal law enforcement and domestic intelligence agency.',
   border_security: 'Customs and Border Protection, plus Immigration and Customs Enforcement.',
@@ -62,12 +59,32 @@ export const BLURBS: Record<string, string> = {
 
   nasa: 'The civilian space program and aeronautics research.',
   nsf: 'The main funder of basic research outside medicine.',
-  arpa_research: 'High-risk research programs in the mold of DARPA and ARPA-E.',
-  commercial_space: 'NASA contracts with private companies for launches and crew flights.',
 
   irs: 'Collecting taxes, enforcing tax law, and helping taxpayers.',
-  federal_courts: 'The Supreme Court, appeals courts, and district courts.',
-  public_defenders: 'Lawyers for federal defendants who cannot afford one.',
+  federal_courts: 'The Supreme Court, lower courts, and federal public defenders.',
   cfpb: 'The regulator for consumer financial products such as mortgages and credit cards.',
   mbda: 'A Commerce Department agency that supports minority-owned businesses.',
+
+  mental_health: 'Grants for addiction treatment and mental health care, including the 988 crisis line.',
+  hrsa: 'Grants for community health centers, rural clinics, and health care for people without insurance.',
+  indian_health_service: 'Health care for members of federally recognized tribes.',
+  defense_rdte: 'Developing and testing new weapons and military technology, including DARPA.',
+  military_construction: 'Building and repairing bases and military housing.',
+  earned_income_tax_credit: 'The part of this credit for low- and moderate-income workers that is paid out as refunds.',
+  child_nutrition: 'Free and reduced-price school breakfasts and lunches.',
+  wic: 'Food and nutrition help for low-income pregnant women, new mothers, and young children.',
+  child_care: 'Grants that help low-income families pay for child care.',
+  foster_care: 'Support for children in foster care and for families who adopt them.',
+  student_loan_and_education_offsets: 'Money coming back to the Education Department, which lowers the total.',
+  crop_insurance: 'Federal help paying for farmers’ crop insurance.',
+  commodity_credit: 'Payments that support farmers when crop prices or revenue fall.',
+  global_health_aid: 'Programs abroad for HIV, malaria, and child and maternal health.',
+  refugee_aid: 'Aid for refugees and displaced people, and help resettling them.',
+  peace_corps: 'American volunteers serving in communities abroad.',
+  nasa_aeronautics: 'NASA research on aircraft and air travel.',
+  arpa_e: 'Early-stage research on new energy technology.',
+  doe_science: 'National labs and research in physics, chemistry, and materials.',
+  legislative_branch: 'Members of Congress, their staff, and support agencies such as the Library of Congress.',
+  fdic: 'Money recovered from failed banks and fees paid by banks, which lowers the total.',
+  undistributed_offsetting_receipts: 'Money the government collects, such as offshore oil royalties and its own employer pension contributions, which is counted as negative spending.',
 };

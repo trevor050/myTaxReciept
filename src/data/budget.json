@@ -1,449 +1,798 @@
 {
-  "fiscalYear": 2026,
-  "dataStatus": "placeholder",
-  "asOf": "2026-11-02",
-  "totals": {
-    "outlaysB": 7000,
-    "receiptsB": 5200,
-    "deficitB": 1800
+ "fiscalYear": 2026,
+ "dataStatus": "final",
+ "asOf": "2026-11-02",
+ "totals": {
+  "outlaysB": 7395.8,
+  "receiptsB": 5403.327,
+  "deficitB": 1992.473
+ },
+ "sources": [
+  {
+   "id": "mts",
+   "title": "Monthly Treasury Statement, September 2026, table 9: spending by function",
+   "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/mts/mts_table_9?filter=record_date:eq:2026-09-30&page%5Bsize%5D=10000"
   },
-  "sources": [],
-  "categories": [
-    {
-      "id": "social_security",
-      "label": "Social Security",
-      "amountB": 1470,
-      "programs": [
-        {
-          "id": "ss_retirement",
-          "label": "Retirement benefits",
-          "amountB": 1200.8,
-          "basis": "estimate"
-        },
-        {
-          "id": "ss_disability",
-          "label": "Disability benefits",
-          "amountB": 269.2,
-          "basis": "estimate"
-        }
-      ]
-    },
-    {
-      "id": "health",
-      "label": "Health",
-      "amountB": 1610,
-      "programs": [
-        {
-          "id": "medicare",
-          "label": "Medicare",
-          "amountB": 726.9,
-          "basis": "estimate"
-        },
-        {
-          "id": "medicaid",
-          "label": "Medicaid",
-          "amountB": 619.2,
-          "basis": "estimate"
-        },
-        {
-          "id": "aca_subsidies",
-          "label": "ACA marketplace subsidies",
-          "amountB": 168.3,
-          "basis": "estimate"
-        },
-        {
-          "id": "chip",
-          "label": "CHIP (children)",
-          "amountB": 33.7,
-          "basis": "estimate"
-        },
-        {
-          "id": "nih",
-          "label": "NIH – Medical research",
-          "amountB": 53.8,
-          "basis": "estimate"
-        },
-        {
-          "id": "cdc",
-          "label": "CDC – Disease control",
-          "amountB": 13.5,
-          "basis": "estimate"
-        }
-      ]
-    },
-    {
-      "id": "defense",
-      "label": "Defense (War & Weapons)",
-      "amountB": 910,
-      "programs": [
-        {
-          "id": "military_personnel",
-          "label": "Military personnel",
-          "amountB": 242.3,
-          "basis": "estimate"
-        },
-        {
-          "id": "operations_maintenance",
-          "label": "Operations & maintenance",
-          "amountB": 323.1,
-          "basis": "estimate"
-        },
-        {
-          "id": "weapons_procurement",
-          "label": "Weapons & procurement",
-          "amountB": 242.3,
-          "basis": "estimate"
-        },
-        {
-          "id": "nuclear_weapons",
-          "label": "Nuclear forces",
-          "amountB": 40.4,
-          "basis": "estimate"
-        },
-        {
-          "id": "foreign_military_aid",
-          "label": "Foreign military aid",
-          "amountB": 61.9,
-          "basis": "estimate"
-        }
-      ]
-    },
-    {
-      "id": "interest_debt",
-      "label": "Interest on Debt",
-      "amountB": 910,
-      "programs": []
-    },
-    {
-      "id": "veterans_retirement",
-      "label": "Veterans & Federal Retirement",
-      "amountB": 560,
-      "programs": [
-        {
-          "id": "va_programs",
-          "label": "Veterans Affairs (VA)",
-          "amountB": 336.5,
-          "basis": "estimate"
-        },
-        {
-          "id": "military_pensions",
-          "label": "Military retirement pay",
-          "amountB": 121.2,
-          "basis": "estimate"
-        },
-        {
-          "id": "civilian_pensions",
-          "label": "Federal civilian pensions",
-          "amountB": 91.5,
-          "basis": "estimate"
-        },
-        {
-          "id": "pact_act",
-          "label": "PACT Act – Toxic-exposure care",
-          "amountB": 10.8,
-          "basis": "estimate"
-        }
-      ]
-    },
-    {
-      "id": "economic_security",
-      "label": "Economic Security & Job Benefits",
-      "amountB": 490,
-      "programs": [
-        {
-          "id": "snap",
-          "label": "SNAP (food assistance)",
-          "amountB": 175,
-          "basis": "estimate"
-        },
-        {
-          "id": "unemployment_insurance",
-          "label": "Unemployment insurance",
-          "amountB": 80.8,
-          "basis": "estimate"
-        },
-        {
-          "id": "ssi",
-          "label": "Supplemental Security Income",
-          "amountB": 48.5,
-          "basis": "estimate"
-        },
-        {
-          "id": "tanf",
-          "label": "TANF cash assistance",
-          "amountB": 32.3,
-          "basis": "estimate"
-        },
-        {
-          "id": "child_tax_credit",
-          "label": "Child tax credit",
-          "amountB": 36.3,
-          "basis": "estimate"
-        },
-        {
-          "id": "liheap",
-          "label": "Energy assistance (LIHEAP)",
-          "amountB": 6.7,
-          "basis": "estimate"
-        }
-      ]
-    },
-    {
-      "id": "education",
-      "label": "Education",
-      "amountB": 350,
-      "programs": [
-        {
-          "id": "k12_schools",
-          "label": "K-12 schools (Title I, IDEA)",
-          "amountB": 121.2,
-          "basis": "estimate"
-        },
-        {
-          "id": "college_aid",
-          "label": "College aid (Pell, loans)",
-          "amountB": 175,
-          "basis": "estimate"
-        },
-        {
-          "id": "ed_ops",
-          "label": "Education Dept. operations",
-          "amountB": 53.8,
-          "basis": "estimate"
-        }
-      ]
-    },
-    {
-      "id": "housing_community",
-      "label": "Housing & Community",
-      "amountB": 210,
-      "programs": [
-        {
-          "id": "hud",
-          "label": "Housing & Urban Development",
-          "amountB": 70.8,
-          "basis": "estimate"
-        },
-        {
-          "id": "public_housing",
-          "label": "Public housing & vouchers",
-          "amountB": 40.4,
-          "basis": "estimate"
-        },
-        {
-          "id": "fema_disaster",
-          "label": "FEMA – disaster relief",
-          "amountB": 75.4,
-          "basis": "estimate"
-        },
-        {
-          "id": "head_start",
-          "label": "Head Start (early childhood)",
-          "amountB": 15.2,
-          "basis": "estimate"
-        },
-        {
-          "id": "community_block_grants",
-          "label": "Community development grants",
-          "amountB": 8.2,
-          "basis": "estimate"
-        }
-      ]
-    },
-    {
-      "id": "transportation",
-      "label": "Transportation",
-      "amountB": 140,
-      "programs": [
-        {
-          "id": "highways",
-          "label": "Highways",
-          "amountB": 67.3,
-          "basis": "estimate"
-        },
-        {
-          "id": "public_transit",
-          "label": "Public transit",
-          "amountB": 29.6,
-          "basis": "estimate"
-        },
-        {
-          "id": "rail_service",
-          "label": "Amtrak & rail service",
-          "amountB": 16.2,
-          "basis": "estimate"
-        },
-        {
-          "id": "tsa",
-          "label": "TSA & aviation security",
-          "amountB": 13.5,
-          "basis": "estimate"
-        },
-        {
-          "id": "faa",
-          "label": "FAA – air-traffic control",
-          "amountB": 13.5,
-          "basis": "estimate"
-        }
-      ]
-    },
-    {
-      "id": "energy_environment",
-      "label": "Energy & Environment",
-      "amountB": 70,
-      "programs": [
-        {
-          "id": "epa",
-          "label": "EPA – environmental protection",
-          "amountB": 24.2,
-          "basis": "estimate"
-        },
-        {
-          "id": "renewables",
-          "label": "Renewable energy & efficiency",
-          "amountB": 10.8,
-          "basis": "estimate"
-        },
-        {
-          "id": "forest_service",
-          "label": "Forest Service",
-          "amountB": 14.8,
-          "basis": "estimate"
-        },
-        {
-          "id": "national_parks",
-          "label": "National Park Service",
-          "amountB": 6.7,
-          "basis": "estimate"
-        },
-        {
-          "id": "noaa",
-          "label": "NOAA – oceans & atmosphere",
-          "amountB": 13.5,
-          "basis": "estimate"
-        }
-      ]
-    },
-    {
-      "id": "international_affairs",
-      "label": "International Affairs",
-      "amountB": 70,
-      "programs": [
-        {
-          "id": "diplomacy",
-          "label": "Diplomacy (State Dept.)",
-          "amountB": 26.9,
-          "basis": "estimate"
-        },
-        {
-          "id": "usaid",
-          "label": "Development aid (USAID)",
-          "amountB": 26.9,
-          "basis": "estimate"
-        },
-        {
-          "id": "climate_aid",
-          "label": "Climate & disaster aid",
-          "amountB": 16.2,
-          "basis": "estimate"
-        }
-      ]
-    },
-    {
-      "id": "law_enforcement",
-      "label": "Law Enforcement & Justice",
-      "amountB": 70,
-      "programs": [
-        {
-          "id": "fbi",
-          "label": "FBI & federal investigators",
-          "amountB": 25.6,
-          "basis": "estimate"
-        },
-        {
-          "id": "border_security",
-          "label": "Border security & ICE",
-          "amountB": 29.6,
-          "basis": "estimate"
-        },
-        {
-          "id": "federal_prisons",
-          "label": "Federal prisons",
-          "amountB": 14.8,
-          "basis": "estimate"
-        }
-      ]
-    },
-    {
-      "id": "science",
-      "label": "Science & Technology",
-      "amountB": 70,
-      "programs": [
-        {
-          "id": "nasa",
-          "label": "NASA – space exploration",
-          "amountB": 33.7,
-          "basis": "estimate"
-        },
-        {
-          "id": "nsf",
-          "label": "National Science Foundation",
-          "amountB": 13.5,
-          "basis": "estimate"
-        },
-        {
-          "id": "arpa_research",
-          "label": "DARPA / ARPA-style R&D",
-          "amountB": 10.8,
-          "basis": "estimate"
-        },
-        {
-          "id": "commercial_space",
-          "label": "Commercial space contracts",
-          "amountB": 12.1,
-          "basis": "estimate"
-        }
-      ]
-    },
-    {
-      "id": "government_ops",
-      "label": "Government Operations",
-      "amountB": 70,
-      "programs": [
-        {
-          "id": "irs",
-          "label": "Internal Revenue Service",
-          "amountB": 32.3,
-          "basis": "estimate"
-        },
-        {
-          "id": "federal_courts",
-          "label": "Federal court system",
-          "amountB": 12.1,
-          "basis": "estimate"
-        },
-        {
-          "id": "public_defenders",
-          "label": "Federal public defenders",
-          "amountB": 1.8,
-          "basis": "estimate"
-        },
-        {
-          "id": "cfpb",
-          "label": "Consumer Financial Protection Bureau",
-          "amountB": 1.2,
-          "basis": "estimate"
-        },
-        {
-          "id": "mbda",
-          "label": "Minority Business Dev. Agency",
-          "amountB": 0.1,
-          "basis": "estimate"
-        }
-      ]
-    }
-  ],
-  "taxEstimator": {
-    "averageIncomeTaxPerReturn": 16000
+  {
+   "id": "mts5",
+   "title": "Monthly Treasury Statement, September 2026, table 5: spending by agency and program",
+   "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/mts/mts_table_5?filter=record_date:eq:2026-09-30&page%5Bsize%5D=10000"
+  },
+  {
+   "id": "usa_pact",
+   "title": "USAspending: PACT Act toxic exposures fund",
+   "url": "https://api.usaspending.gov/api/v2/federal_accounts/6479/fiscal_year_snapshot/2026/"
+  },
+  {
+   "id": "irs2023",
+   "title": "IRS Statistics of Income, tax year 2023: income tax per return",
+   "url": "https://www.irs.gov/pub/irs-soi/23in55cmcsv.csv"
+  },
+  {
+   "id": "irsbrackets",
+   "title": "IRS Revenue Procedure 2024-40: 2025 tax brackets",
+   "url": "https://www.irs.gov/irb/2024-45_IRB#REV-PROC-2024-40"
+  },
+  {
+   "id": "irsdeduction",
+   "title": "IRS Publication 501: 2025 standard deductions",
+   "url": "https://www.irs.gov/publications/p501"
+  },
+  {
+   "id": "gao_usaid",
+   "title": "GAO, September 2026: foreign assistance after USAID",
+   "url": "https://www.gao.gov/products/gao-26-108607"
   }
+ ],
+ "categories": [
+  {
+   "id": "social_security",
+   "label": "Social Security",
+   "amountB": 1667.097,
+   "programs": [
+    {
+     "id": "ss_retirement",
+     "label": "Retirement and survivor benefits",
+     "amountB": 1494.559,
+     "markable": true
+    },
+    {
+     "id": "ss_disability",
+     "label": "Disability benefits",
+     "amountB": 159.903,
+     "markable": true
+    },
+    {
+     "id": "other_social_security",
+     "label": "Everything else",
+     "amountB": 12.636,
+     "markable": false
+    }
+   ]
+  },
+  {
+   "id": "health",
+   "label": "Health & Medicare",
+   "amountB": 2098.213,
+   "programs": [
+    {
+     "id": "medicare",
+     "label": "Medicare",
+     "amountB": 1072.626,
+     "markable": true
+    },
+    {
+     "id": "medicaid",
+     "label": "Medicaid",
+     "amountB": 722.977,
+     "markable": true
+    },
+    {
+     "id": "aca_subsidies",
+     "label": "ACA marketplace subsidies",
+     "amountB": 126.03,
+     "markable": true
+    },
+    {
+     "id": "chip",
+     "label": "CHIP (children)",
+     "amountB": 25.04,
+     "markable": true
+    },
+    {
+     "id": "nih",
+     "label": "NIH medical research",
+     "amountB": 45.63,
+     "markable": true
+    },
+    {
+     "id": "cdc",
+     "label": "CDC",
+     "amountB": 9.912,
+     "markable": true
+    },
+    {
+     "id": "mental_health",
+     "label": "Mental health and addiction services",
+     "amountB": 7.704,
+     "markable": true
+    },
+    {
+     "id": "hrsa",
+     "label": "Community health centers and clinics",
+     "amountB": 14.676,
+     "markable": true
+    },
+    {
+     "id": "indian_health_service",
+     "label": "Indian Health Service",
+     "amountB": 10.088,
+     "markable": true
+    },
+    {
+     "id": "other_health",
+     "label": "Everything else",
+     "amountB": 63.531,
+     "markable": false
+    }
+   ]
+  },
+  {
+   "id": "defense",
+   "label": "Defense",
+   "amountB": 965.16,
+   "programs": [
+    {
+     "id": "military_personnel",
+     "label": "Military pay and benefits",
+     "amountB": 223.252,
+     "markable": true
+    },
+    {
+     "id": "operations_maintenance",
+     "label": "Military operations and maintenance",
+     "amountB": 336.048,
+     "markable": true
+    },
+    {
+     "id": "weapons_procurement",
+     "label": "Weapons procurement",
+     "amountB": 176.675,
+     "markable": true
+    },
+    {
+     "id": "nuclear_weapons",
+     "label": "Nuclear weapons",
+     "amountB": 34.546,
+     "markable": true
+    },
+    {
+     "id": "defense_rdte",
+     "label": "Military research and development",
+     "amountB": 161.095,
+     "markable": true
+    },
+    {
+     "id": "military_construction",
+     "label": "Military construction",
+     "amountB": 14.231,
+     "markable": true
+    },
+    {
+     "id": "other_defense",
+     "label": "Everything else",
+     "amountB": 19.313,
+     "markable": false
+    }
+   ]
+  },
+  {
+   "id": "interest_debt",
+   "label": "Interest on the debt",
+   "amountB": 1051.754,
+   "programs": [
+    {
+     "id": "net_interest",
+     "label": "Interest paid on the debt",
+     "amountB": 1051.754,
+     "markable": true
+    }
+   ]
+  },
+  {
+   "id": "veterans_retirement",
+   "label": "Veterans",
+   "amountB": 416.204,
+   "programs": [
+    {
+     "id": "va_programs",
+     "label": "Veterans Affairs",
+     "amountB": 367.832,
+     "markable": true
+    },
+    {
+     "id": "pact_act",
+     "label": "Toxic exposure care (PACT Act)",
+     "amountB": 47.743,
+     "markable": true
+    },
+    {
+     "id": "other_veterans_retirement",
+     "label": "Everything else",
+     "amountB": 0.629,
+     "markable": false
+    }
+   ]
+  },
+  {
+   "id": "economic_security",
+   "label": "Income support & federal pensions",
+   "amountB": 694.224,
+   "programs": [
+    {
+     "id": "snap",
+     "label": "SNAP (food assistance)",
+     "amountB": 95.393,
+     "markable": true
+    },
+    {
+     "id": "unemployment_insurance",
+     "label": "Unemployment insurance",
+     "amountB": 42.039,
+     "markable": true
+    },
+    {
+     "id": "ssi",
+     "label": "Supplemental Security Income",
+     "amountB": 70.457,
+     "markable": true
+    },
+    {
+     "id": "tanf",
+     "label": "TANF family assistance",
+     "amountB": 17.519,
+     "markable": true
+    },
+    {
+     "id": "child_tax_credit",
+     "label": "Child tax credit refunds",
+     "amountB": 28.61,
+     "markable": true
+    },
+    {
+     "id": "liheap",
+     "label": "Home energy assistance",
+     "amountB": 4.082,
+     "markable": true
+    },
+    {
+     "id": "public_housing",
+     "label": "Public housing and rental vouchers",
+     "amountB": 67.025,
+     "markable": true
+    },
+    {
+     "id": "military_pensions",
+     "label": "Military pensions",
+     "amountB": 82.95,
+     "markable": true
+    },
+    {
+     "id": "civilian_pensions",
+     "label": "Federal civilian pensions",
+     "amountB": 115.92,
+     "markable": true
+    },
+    {
+     "id": "earned_income_tax_credit",
+     "label": "Earned income tax credit refunds",
+     "amountB": 68.492,
+     "markable": true
+    },
+    {
+     "id": "child_nutrition",
+     "label": "School meals",
+     "amountB": 33.344,
+     "markable": true
+    },
+    {
+     "id": "wic",
+     "label": "WIC (mothers and infants)",
+     "amountB": 7.698,
+     "markable": true
+    },
+    {
+     "id": "child_care",
+     "label": "Child care grants",
+     "amountB": 13.325,
+     "markable": true
+    },
+    {
+     "id": "foster_care",
+     "label": "Foster care and adoption",
+     "amountB": 10.69,
+     "markable": true
+    },
+    {
+     "id": "other_economic_security",
+     "label": "Everything else",
+     "amountB": 36.682,
+     "markable": false
+    }
+   ]
+  },
+  {
+   "id": "education",
+   "label": "Education & job training",
+   "amountB": 107.551,
+   "programs": [
+    {
+     "id": "k12_schools",
+     "label": "K-12 schools",
+     "amountB": 44.314,
+     "markable": true
+    },
+    {
+     "id": "college_aid",
+     "label": "College aid and student loans",
+     "amountB": 99.79,
+     "markable": true
+    },
+    {
+     "id": "ed_ops",
+     "label": "Running the Education Department",
+     "amountB": 0.571,
+     "markable": true
+    },
+    {
+     "id": "student_loan_and_education_offsets",
+     "label": "Student loan repayments and adjustments",
+     "amountB": -76.662,
+     "markable": false
+    },
+    {
+     "id": "other_education",
+     "label": "Everything else",
+     "amountB": 39.538,
+     "markable": false
+    }
+   ]
+  },
+  {
+   "id": "housing_community",
+   "label": "Communities & disaster relief",
+   "amountB": 62.43,
+   "programs": [
+    {
+     "id": "fema_disaster",
+     "label": "FEMA disaster relief",
+     "amountB": 31.777,
+     "markable": true
+    },
+    {
+     "id": "community_block_grants",
+     "label": "Community development grants",
+     "amountB": 9.506,
+     "markable": true
+    },
+    {
+     "id": "other_housing_community",
+     "label": "Everything else",
+     "amountB": 21.146,
+     "markable": false
+    }
+   ]
+  },
+  {
+   "id": "transportation",
+   "label": "Transportation",
+   "amountB": 142.864,
+   "programs": [
+    {
+     "id": "highways",
+     "label": "Highways",
+     "amountB": 65.951,
+     "markable": true
+    },
+    {
+     "id": "public_transit",
+     "label": "Public transit",
+     "amountB": 21.068,
+     "markable": true
+    },
+    {
+     "id": "rail_service",
+     "label": "Amtrak and rail",
+     "amountB": 7.089,
+     "markable": true
+    },
+    {
+     "id": "faa",
+     "label": "FAA and air traffic control",
+     "amountB": 25.616,
+     "markable": true
+    },
+    {
+     "id": "tsa",
+     "label": "TSA",
+     "amountB": 7.902,
+     "markable": true
+    },
+    {
+     "id": "nasa_aeronautics",
+     "label": "NASA aeronautics",
+     "amountB": 0.796,
+     "markable": true
+    },
+    {
+     "id": "other_transportation",
+     "label": "Everything else",
+     "amountB": 14.443,
+     "markable": false
+    }
+   ]
+  },
+  {
+   "id": "energy_environment",
+   "label": "Energy & environment",
+   "amountB": 78.069,
+   "programs": [
+    {
+     "id": "epa",
+     "label": "EPA",
+     "amountB": 17.365,
+     "markable": true
+    },
+    {
+     "id": "renewables",
+     "label": "Clean energy programs",
+     "amountB": 3.599,
+     "markable": true
+    },
+    {
+     "id": "forest_service",
+     "label": "Forest Service",
+     "amountB": 12.816,
+     "markable": true
+    },
+    {
+     "id": "national_parks",
+     "label": "National parks",
+     "amountB": 4.946,
+     "markable": true
+    },
+    {
+     "id": "noaa",
+     "label": "NOAA weather and oceans",
+     "amountB": 7.333,
+     "markable": true
+    },
+    {
+     "id": "arpa_e",
+     "label": "ARPA-E energy research",
+     "amountB": 0.318,
+     "markable": true
+    },
+    {
+     "id": "other_energy_environment",
+     "label": "Everything else",
+     "amountB": 31.691,
+     "markable": false
+    }
+   ]
+  },
+  {
+   "id": "international_affairs",
+   "label": "Foreign affairs",
+   "amountB": 48.015,
+   "programs": [
+    {
+     "id": "diplomacy",
+     "label": "Diplomacy and embassies",
+     "amountB": 12.296,
+     "markable": true
+    },
+    {
+     "id": "usaid",
+     "label": "Foreign aid (former USAID accounts)",
+     "amountB": 7.35,
+     "markable": true
+    },
+    {
+     "id": "foreign_military_aid",
+     "label": "Foreign military aid",
+     "amountB": 8.508,
+     "markable": true
+    },
+    {
+     "id": "global_health_aid",
+     "label": "Global health aid",
+     "amountB": 6.124,
+     "markable": true
+    },
+    {
+     "id": "refugee_aid",
+     "label": "Refugee assistance",
+     "amountB": 2.262,
+     "markable": true
+    },
+    {
+     "id": "peace_corps",
+     "label": "Peace Corps",
+     "amountB": 0.417,
+     "markable": true
+    },
+    {
+     "id": "other_international_affairs",
+     "label": "Everything else",
+     "amountB": 11.058,
+     "markable": false
+    }
+   ]
+  },
+  {
+   "id": "law_enforcement",
+   "label": "Law enforcement & courts",
+   "amountB": 109.915,
+   "programs": [
+    {
+     "id": "fbi",
+     "label": "FBI",
+     "amountB": 10.723,
+     "markable": true
+    },
+    {
+     "id": "border_security",
+     "label": "Border Patrol, customs and ICE",
+     "amountB": 51.35,
+     "markable": true
+    },
+    {
+     "id": "federal_prisons",
+     "label": "Federal prisons",
+     "amountB": 8.742,
+     "markable": true
+    },
+    {
+     "id": "federal_courts",
+     "label": "Federal courts and public defenders",
+     "amountB": 9.985,
+     "markable": true
+    },
+    {
+     "id": "other_law_enforcement",
+     "label": "Everything else",
+     "amountB": 29.116,
+     "markable": false
+    }
+   ]
+  },
+  {
+   "id": "science",
+   "label": "Science & space",
+   "amountB": 39.877,
+   "programs": [
+    {
+     "id": "nasa",
+     "label": "NASA",
+     "amountB": 22.561,
+     "markable": true
+    },
+    {
+     "id": "nsf",
+     "label": "National Science Foundation",
+     "amountB": 8.877,
+     "markable": true
+    },
+    {
+     "id": "doe_science",
+     "label": "Energy Department science labs",
+     "amountB": 8.431,
+     "markable": true
+    },
+    {
+     "id": "other_science",
+     "label": "Everything else",
+     "amountB": 0.007,
+     "markable": false
+    }
+   ]
+  },
+  {
+   "id": "government_ops",
+   "label": "Running the government",
+   "amountB": 32.343,
+   "programs": [
+    {
+     "id": "irs",
+     "label": "IRS",
+     "amountB": 14.326,
+     "markable": true
+    },
+    {
+     "id": "legislative_branch",
+     "label": "Congress",
+     "amountB": 7.049,
+     "markable": true
+    },
+    {
+     "id": "other_government_ops",
+     "label": "Everything else",
+     "amountB": 10.969,
+     "markable": false
+    }
+   ]
+  },
+  {
+   "id": "agriculture",
+   "label": "Agriculture",
+   "amountB": 52.566,
+   "programs": [
+    {
+     "id": "crop_insurance",
+     "label": "Crop insurance",
+     "amountB": 15.465,
+     "markable": true
+    },
+    {
+     "id": "commodity_credit",
+     "label": "Farm commodity payments",
+     "amountB": 6.379,
+     "markable": true
+    },
+    {
+     "id": "other_agriculture",
+     "label": "Everything else",
+     "amountB": 30.722,
+     "markable": false
+    }
+   ]
+  },
+  {
+   "id": "commerce_housing_credit",
+   "label": "Commerce & housing credit",
+   "amountB": -15.465,
+   "programs": [
+    {
+     "id": "cfpb",
+     "label": "Consumer Financial Protection Bureau",
+     "amountB": 0.545,
+     "markable": true
+    },
+    {
+     "id": "mbda",
+     "label": "Minority Business Development Agency",
+     "amountB": 0.015,
+     "markable": true
+    },
+    {
+     "id": "fdic",
+     "label": "FDIC recoveries",
+     "amountB": -22.192,
+     "markable": false
+    },
+    {
+     "id": "other_commerce_housing_credit",
+     "label": "Everything else",
+     "amountB": 6.166,
+     "markable": false
+    }
+   ]
+  },
+  {
+   "id": "other_offsetting_receipts",
+   "label": "Money agencies took in",
+   "amountB": -155.019,
+   "programs": [
+    {
+     "id": "undistributed_offsetting_receipts",
+     "label": "Offsetting receipts",
+     "amountB": -155.019,
+     "markable": false
+    }
+   ]
+  }
+ ],
+ "taxEstimator": {
+  "taxYear": 2025,
+  "brackets": {
+   "single": [
+    [
+     11925,
+     0.1
+    ],
+    [
+     48475,
+     0.12
+    ],
+    [
+     103350,
+     0.22
+    ],
+    [
+     197300,
+     0.24
+    ],
+    [
+     250525,
+     0.32
+    ],
+    [
+     626350,
+     0.35
+    ],
+    [
+     null,
+     0.37
+    ]
+   ],
+   "married_joint": [
+    [
+     23850,
+     0.1
+    ],
+    [
+     96950,
+     0.12
+    ],
+    [
+     206700,
+     0.22
+    ],
+    [
+     394600,
+     0.24
+    ],
+    [
+     501050,
+     0.32
+    ],
+    [
+     751600,
+     0.35
+    ],
+    [
+     null,
+     0.37
+    ]
+   ],
+   "head_of_household": [
+    [
+     17000,
+     0.1
+    ],
+    [
+     64850,
+     0.12
+    ],
+    [
+     103350,
+     0.22
+    ],
+    [
+     197300,
+     0.24
+    ],
+    [
+     250500,
+     0.32
+    ],
+    [
+     626350,
+     0.35
+    ],
+    [
+     null,
+     0.37
+    ]
+   ]
+  },
+  "standardDeduction": {
+   "single": 15750,
+   "married_joint": 31500,
+   "head_of_household": 23625
+  },
+  "averageIncomeTaxPerReturn": 13223.5,
+  "averagesYear": 2023
+ }
 }
