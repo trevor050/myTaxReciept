@@ -1,0 +1,2282 @@
+[
+ {
+  "name": "Peace Action",
+  "url": "https://www.peaceaction.org/",
+  "actionUrl": null,
+  "description": "Works to promote peace and demilitarization through grassroots organizing and advocacy.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "diplomacy",
+    "direction": "more"
+   },
+   {
+    "id": "defense",
+    "direction": "less"
+   },
+   {
+    "id": "military_personnel",
+    "direction": "reform"
+   },
+   {
+    "id": "operations_maintenance",
+    "direction": "less"
+   },
+   {
+    "id": "weapons_procurement",
+    "direction": "less"
+   },
+   {
+    "id": "nuclear_weapons",
+    "direction": "less"
+   },
+   {
+    "id": "foreign_military_aid",
+    "direction": "less"
+   },
+   {
+    "id": "international_affairs",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "Friends Committee on National Legislation (FCNL)",
+  "url": "https://www.fcnl.org/",
+  "actionUrl": null,
+  "description": "A Quaker lobby in the public interest, working for peace, justice, and environmental stewardship.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "defense",
+    "direction": "reform"
+   },
+   {
+    "id": "weapons_procurement",
+    "direction": "reform"
+   },
+   {
+    "id": "nuclear_weapons",
+    "direction": "reform"
+   },
+   {
+    "id": "foreign_military_aid",
+    "direction": "reform"
+   },
+   {
+    "id": "diplomacy",
+    "direction": "more"
+   },
+   {
+    "id": "international_affairs",
+    "direction": "more"
+   },
+   {
+    "id": "epa",
+    "direction": "more"
+   },
+   {
+    "id": "federal_prisons",
+    "direction": "reform"
+   },
+   {
+    "id": "law_enforcement",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Win Without War",
+  "url": "https://winwithoutwar.org/",
+  "actionUrl": null,
+  "description": "Advocates for a more progressive U.S. foreign policy centered on diplomacy and demilitarization.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "defense",
+    "direction": "less"
+   },
+   {
+    "id": "diplomacy",
+    "direction": "more"
+   },
+   {
+    "id": "usaid",
+    "direction": "more"
+   },
+   {
+    "id": "international_affairs",
+    "direction": "more"
+   },
+   {
+    "id": "foreign_military_aid",
+    "direction": "less"
+   }
+  ]
+ },
+ {
+  "name": "Council for a Livable World",
+  "url": "https://livableworld.org/",
+  "actionUrl": null,
+  "description": "Advocates for policies to reduce the danger of nuclear weapons and promote national security.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "defense",
+    "direction": "reform"
+   },
+   {
+    "id": "nuclear_weapons",
+    "direction": "less"
+   }
+  ]
+ },
+ {
+  "name": "Code Pink",
+  "url": "https://www.codepink.org/",
+  "actionUrl": null,
+  "description": "A women-led grassroots organization working to end U.S. wars and militarism and redirect resources to life-affirming programs.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "defense",
+    "direction": "less"
+   },
+   {
+    "id": "foreign_military_aid",
+    "direction": "less"
+   },
+   {
+    "id": "diplomacy",
+    "direction": "more"
+   },
+   {
+    "id": "social_spending",
+    "direction": "more"
+   },
+   {
+    "id": "health",
+    "direction": "more"
+   },
+   {
+    "id": "education",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "Security Policy Reform Institute (SPRI)",
+  "url": "https://www.securitypolicy.us/",
+  "actionUrl": null,
+  "description": "Provides research and analysis to promote diplomacy and reduce military intervention.",
+  "kind": "advocacy",
+  "prominence": "low",
+  "stances": [
+   {
+    "id": "diplomacy",
+    "direction": "more"
+   },
+   {
+    "id": "defense",
+    "direction": "reform"
+   },
+   {
+    "id": "operations_maintenance",
+    "direction": "reform"
+   },
+   {
+    "id": "arpa_research",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Quincy Institute for Responsible Statecraft",
+  "url": "https://quincyinst.org/",
+  "actionUrl": null,
+  "description": "A think tank promoting ideas that move U.S. foreign policy away from endless war and toward vigorous diplomacy.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "diplomacy",
+    "direction": "more"
+   },
+   {
+    "id": "defense",
+    "direction": "reform"
+   },
+   {
+    "id": "international_affairs",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "Center for International Policy",
+  "url": "https://www.internationalpolicy.org/",
+  "actionUrl": null,
+  "description": "Promotes cooperation, transparency, and accountability in global relations. Focuses on peace-building and demilitarization.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "diplomacy",
+    "direction": "more"
+   },
+   {
+    "id": "foreign_military_aid",
+    "direction": "reform"
+   },
+   {
+    "id": "usaid",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "Beyond the Bomb",
+  "url": "https://www.beyondthebomb.org/",
+  "actionUrl": null,
+  "description": "A grassroots movement working to free us from the threat of nuclear weapons and build a more just and secure world.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "nuclear_weapons",
+    "direction": "less"
+   },
+   {
+    "id": "defense",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Center for Arms Control and Non-Proliferation",
+  "url": "https://armscontrolcenter.org/",
+  "actionUrl": null,
+  "description": "A non-partisan research organization dedicated to enhancing peace and security through expert policy analysis and thought leadership.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "nuclear_weapons",
+    "direction": "reform"
+   },
+   {
+    "id": "defense",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "US Campaign for Palestinian Rights (USCPR)",
+  "url": "https://uscpr.org/",
+  "actionUrl": null,
+  "description": "A national coalition working for Palestinian rights and an end to U.S. support for Israeli occupation.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "foreign_military_aid",
+    "direction": "less"
+   }
+  ]
+ },
+ {
+  "name": "Jewish Voice for Peace (JVP)",
+  "url": "https://www.jewishvoiceforpeace.org/",
+  "actionUrl": null,
+  "description": "A progressive Jewish anti-Zionist organization working for peace, justice, and human rights.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "foreign_military_aid",
+    "direction": "less"
+   }
+  ]
+ },
+ {
+  "name": "Amnesty International USA",
+  "url": "https://www.amnestyusa.org/",
+  "actionUrl": null,
+  "description": "Works to protect people wherever justice, freedom, truth and dignity are denied.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "foreign_military_aid",
+    "direction": "reform"
+   },
+   {
+    "id": "border_security",
+    "direction": "reform"
+   },
+   {
+    "id": "law_enforcement",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Human Rights Watch",
+  "url": "https://www.hrw.org/",
+  "actionUrl": null,
+  "description": "Investigates and reports on abuses, holding abusers accountable to end abusive practices.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "war_crimes",
+    "direction": "reform"
+   },
+   {
+    "id": "foreign_military_aid",
+    "direction": "reform"
+   },
+   {
+    "id": "border_security",
+    "direction": "reform"
+   },
+   {
+    "id": "federal_prisons",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "The Carter Center",
+  "url": "https://www.cartercenter.org/",
+  "actionUrl": null,
+  "description": "Wages peace, fights disease, and builds hope. Focuses on human rights, democracy building, and conflict resolution.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "diplomacy",
+    "direction": "more"
+   },
+   {
+    "id": "usaid",
+    "direction": "reform"
+   },
+   {
+    "id": "international_affairs",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "National Priorities Project (IPS)",
+  "url": "https://nationalpriorities.org/",
+  "actionUrl": null,
+  "description": "Analyzes and advocates for a federal budget that prioritizes peace, economic opportunity, and a healthy environment.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "defense",
+    "direction": "less"
+   },
+   {
+    "id": "weapons_procurement",
+    "direction": "less"
+   },
+   {
+    "id": "nuclear_weapons",
+    "direction": "less"
+   },
+   {
+    "id": "social_spending",
+    "direction": "more"
+   },
+   {
+    "id": "interest_debt",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Taxpayers for Common Sense",
+  "url": "https://www.taxpayer.net/",
+  "actionUrl": null,
+  "description": "A non-partisan budget watchdog working to ensure taxpayer dollars are spent responsibly.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "wasteful_spending",
+    "direction": "less"
+   },
+   {
+    "id": "defense",
+    "direction": "less"
+   },
+   {
+    "id": "weapons_procurement",
+    "direction": "less"
+   },
+   {
+    "id": "operations_maintenance",
+    "direction": "less"
+   },
+   {
+    "id": "commercial_space",
+    "direction": "reform"
+   },
+   {
+    "id": "interest_debt",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Committee for a Responsible Federal Budget",
+  "url": "https://www.crfb.org/",
+  "actionUrl": null,
+  "description": "A nonpartisan organization committed to educating the public about fiscal policy issues.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "interest_debt",
+    "direction": "reform"
+   },
+   {
+    "id": "tax_reform",
+    "direction": "reform"
+   },
+   {
+    "id": "social_security",
+    "direction": "reform"
+   },
+   {
+    "id": "medicare",
+    "direction": "reform"
+   },
+   {
+    "id": "medicaid",
+    "direction": "reform"
+   },
+   {
+    "id": "snap",
+    "direction": "reform"
+   },
+   {
+    "id": "child_tax_credit",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "The Concord Coalition",
+  "url": "https://www.concordcoalition.org/",
+  "actionUrl": null,
+  "description": "A nationwide, non-partisan, grassroots organization advocating for responsible fiscal policy and generational equity.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "social_security",
+    "direction": "reform"
+   },
+   {
+    "id": "medicare",
+    "direction": "reform"
+   },
+   {
+    "id": "interest_debt",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Americans for Tax Fairness",
+  "url": "https://americansfortaxfairness.org/",
+  "actionUrl": null,
+  "description": "A coalition of national, state, and local organizations united in support of a fair tax system that works for all Americans.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "irs",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "Cato Institute",
+  "url": "https://www.cato.org/",
+  "actionUrl": null,
+  "description": "A think tank dedicated to the principles of individual liberty, limited government, free markets, and peace.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "defense",
+    "direction": "reform"
+   },
+   {
+    "id": "tax_reform",
+    "direction": "reform"
+   },
+   {
+    "id": "social_security",
+    "direction": "reform"
+   },
+   {
+    "id": "medicare",
+    "direction": "reform"
+   },
+   {
+    "id": "education",
+    "direction": "less"
+   },
+   {
+    "id": "epa",
+    "direction": "less"
+   }
+  ]
+ },
+ {
+  "name": "The Heritage Foundation",
+  "url": "https://www.heritage.org/",
+  "actionUrl": null,
+  "description": "Promotes conservative public policies based on free enterprise, limited government, and a strong national defense.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "defense",
+    "direction": "more"
+   },
+   {
+    "id": "military_personnel",
+    "direction": "more"
+   },
+   {
+    "id": "tax_reform",
+    "direction": "reform"
+   },
+   {
+    "id": "irs",
+    "direction": "less"
+   }
+  ]
+ },
+ {
+  "name": "American Enterprise Institute (AEI)",
+  "url": "https://www.aei.org/",
+  "actionUrl": null,
+  "description": "A conservative think tank that researches government, politics, economics, and social welfare.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "economic_policy",
+    "direction": "reform"
+   },
+   {
+    "id": "national_security",
+    "direction": "more"
+   },
+   {
+    "id": "defense",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "Reason Foundation",
+  "url": "https://reason.org/",
+  "actionUrl": null,
+  "description": "Advances the values of individual freedom and limited government through journalism and public policy research.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "transportation",
+    "direction": "reform"
+   },
+   {
+    "id": "education",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "FreedomWorks",
+  "url": "https://www.freedomworks.org/",
+  "actionUrl": null,
+  "description": "A conservative and libertarian advocacy group that promotes free markets and limited government.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "tax_reform",
+    "direction": "reform"
+   },
+   {
+    "id": "irs",
+    "direction": "less"
+   }
+  ]
+ },
+ {
+  "name": "Physicians for a National Health Program (PNHP)",
+  "url": "https://pnhp.org/",
+  "actionUrl": null,
+  "description": "Advocates for a universal, comprehensive single-payer national health program.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "health",
+    "direction": "more"
+   },
+   {
+    "id": "medicare",
+    "direction": "more"
+   },
+   {
+    "id": "medicaid",
+    "direction": "more"
+   },
+   {
+    "id": "aca_subsidies",
+    "direction": "more"
+   },
+   {
+    "id": "chip",
+    "direction": "more"
+   },
+   {
+    "id": "nih",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "National Alliance on Mental Illness (NAMI)",
+  "url": "https://www.nami.org/",
+  "actionUrl": null,
+  "description": "The nation's largest grassroots mental health organization dedicated to building better lives for Americans affected by mental illness.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "mental_health",
+    "direction": "more"
+   },
+   {
+    "id": "health",
+    "direction": "more"
+   },
+   {
+    "id": "medicaid",
+    "direction": "more"
+   },
+   {
+    "id": "nih",
+    "direction": "more"
+   },
+   {
+    "id": "cdc",
+    "direction": "more"
+   },
+   {
+    "id": "va_programs",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "Families USA",
+  "url": "https://familiesusa.org/",
+  "actionUrl": null,
+  "description": "A leading national, non-partisan voice for health care consumers, dedicated to high-quality, affordable health care for all.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "medicaid",
+    "direction": "more"
+   },
+   {
+    "id": "medicare",
+    "direction": "more"
+   },
+   {
+    "id": "aca_subsidies",
+    "direction": "more"
+   },
+   {
+    "id": "chip",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "NARAL Pro-Choice America",
+  "url": "https://www.prochoiceamerica.org/",
+  "actionUrl": null,
+  "description": "Works to protect and expand reproductive freedom, including access to abortion and contraception.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "health",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "Planned Parenthood Action Fund",
+  "url": "https://www.plannedparenthoodaction.org/",
+  "actionUrl": null,
+  "description": "The advocacy and political arm of Planned Parenthood, fighting to protect and expand access to reproductive health care.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "health",
+    "direction": "more"
+   },
+   {
+    "id": "medicaid",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "The Commonwealth Fund",
+  "url": "https://www.commonwealthfund.org/",
+  "actionUrl": null,
+  "description": "Promotes a high-performing health care system that achieves better access, improved quality, and greater efficiency, particularly for society's most vulnerable.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "medicare",
+    "direction": "reform"
+   },
+   {
+    "id": "medicaid",
+    "direction": "reform"
+   },
+   {
+    "id": "aca_subsidies",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Environmental Working Group (EWG)",
+  "url": "https://www.ewg.org/",
+  "actionUrl": null,
+  "description": "A non-profit organization dedicated to protecting human health and the environment through research and advocacy.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "toxic_chemicals",
+    "direction": "less"
+   },
+   {
+    "id": "epa",
+    "direction": "more"
+   },
+   {
+    "id": "renewables",
+    "direction": "more"
+   },
+   {
+    "id": "snap",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Sierra Club",
+  "url": "https://www.sierraclub.org/",
+  "actionUrl": null,
+  "description": "The nation's largest and most influential grassroots environmental organization.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "climate_action",
+    "direction": "more"
+   },
+   {
+    "id": "public_lands",
+    "direction": "more"
+   },
+   {
+    "id": "energy_environment",
+    "direction": "more"
+   },
+   {
+    "id": "epa",
+    "direction": "more"
+   },
+   {
+    "id": "renewables",
+    "direction": "more"
+   },
+   {
+    "id": "forest_service",
+    "direction": "more"
+   },
+   {
+    "id": "national_parks",
+    "direction": "more"
+   },
+   {
+    "id": "noaa",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "Natural Resources Defense Council (NRDC)",
+  "url": "https://www.nrdc.org/",
+  "actionUrl": null,
+  "description": "Works to safeguard the earth—its people, its plants and animals, and the natural systems on which all life depends.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "climate_action",
+    "direction": "more"
+   },
+   {
+    "id": "energy_environment",
+    "direction": "more"
+   },
+   {
+    "id": "epa",
+    "direction": "more"
+   },
+   {
+    "id": "renewables",
+    "direction": "more"
+   },
+   {
+    "id": "forest_service",
+    "direction": "more"
+   },
+   {
+    "id": "noaa",
+    "direction": "more"
+   },
+   {
+    "id": "usaid",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "Earthjustice",
+  "url": "https://earthjustice.org/",
+  "actionUrl": null,
+  "description": "A nonprofit public interest environmental law organization that wields the power of law to protect people's health and our planet.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "climate_action",
+    "direction": "more"
+   },
+   {
+    "id": "energy_environment",
+    "direction": "more"
+   },
+   {
+    "id": "epa",
+    "direction": "more"
+   },
+   {
+    "id": "renewables",
+    "direction": "reform"
+   },
+   {
+    "id": "forest_service",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Greenpeace USA",
+  "url": "https://www.greenpeace.org/usa/",
+  "actionUrl": null,
+  "description": "Uses non-violent creative action to confront the systems that threaten our environment.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "deforestation",
+    "direction": "less"
+   },
+   {
+    "id": "plastic_pollution",
+    "direction": "less"
+   },
+   {
+    "id": "climate_action",
+    "direction": "more"
+   },
+   {
+    "id": "renewables",
+    "direction": "more"
+   },
+   {
+    "id": "epa",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "League of Conservation Voters (LCV)",
+  "url": "https://www.lcv.org/",
+  "actionUrl": null,
+  "description": "Advocates for sound environmental laws, holds elected officials accountable, and elects pro-environment candidates.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "climate_action",
+    "direction": "more"
+   },
+   {
+    "id": "epa",
+    "direction": "more"
+   },
+   {
+    "id": "renewables",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "Defenders of Wildlife",
+  "url": "https://defenders.org/",
+  "actionUrl": null,
+  "description": "Dedicated to the protection of all native animals and plants in their natural communities.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "energy_environment",
+    "direction": "reform"
+   },
+   {
+    "id": "forest_service",
+    "direction": "more"
+   },
+   {
+    "id": "national_parks",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "Sunrise Movement",
+  "url": "https://www.sunrisemovement.org/",
+  "actionUrl": null,
+  "description": "A youth-led movement to stop climate change and create millions of good jobs in the process.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "climate_action",
+    "direction": "more"
+   },
+   {
+    "id": "renewables",
+    "direction": "more"
+   },
+   {
+    "id": "public_transit",
+    "direction": "more"
+   },
+   {
+    "id": "climate_aid",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "The Nature Conservancy",
+  "url": "https://www.nature.org/",
+  "actionUrl": null,
+  "description": "A global environmental nonprofit working to create a world where people and nature can thrive.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "climate_action",
+    "direction": "more"
+   },
+   {
+    "id": "forest_service",
+    "direction": "reform"
+   },
+   {
+    "id": "national_parks",
+    "direction": "reform"
+   },
+   {
+    "id": "noaa",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "The Planetary Society",
+  "url": "https://www.planetary.org/",
+  "actionUrl": null,
+  "description": "Empowers the world's citizens to advance space science and exploration.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "science",
+    "direction": "more"
+   },
+   {
+    "id": "nasa",
+    "direction": "more"
+   },
+   {
+    "id": "nsf",
+    "direction": "more"
+   },
+   {
+    "id": "commercial_space",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Union of Concerned Scientists",
+  "url": "https://www.ucsusa.org/",
+  "actionUrl": null,
+  "description": "Puts rigorous, independent science to work to solve our planet's most pressing problems.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "science",
+    "direction": "more"
+   },
+   {
+    "id": "climate_action",
+    "direction": "more"
+   },
+   {
+    "id": "nuclear_weapons",
+    "direction": "reform"
+   },
+   {
+    "id": "epa",
+    "direction": "reform"
+   },
+   {
+    "id": "nsf",
+    "direction": "reform"
+   },
+   {
+    "id": "nasa",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Federation of American Scientists (FAS)",
+  "url": "https://fas.org/",
+  "actionUrl": null,
+  "description": "Provides science-based analysis of and solutions to protect against catastrophic threats to national and international security.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "nuclear_weapons",
+    "direction": "reform"
+   },
+   {
+    "id": "arpa_research",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Electronic Frontier Foundation (EFF)",
+  "url": "https://www.eff.org/",
+  "actionUrl": null,
+  "description": "Defending civil liberties in the digital world. Works on issues of free speech, privacy, innovation, and consumer rights online.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "surveillance",
+    "direction": "reform"
+   },
+   {
+    "id": "corporate_power",
+    "direction": "reform"
+   },
+   {
+    "id": "tsa",
+    "direction": "reform"
+   },
+   {
+    "id": "cfpb",
+    "direction": "reform"
+   },
+   {
+    "id": "commercial_space",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Center for Democracy & Technology (CDT)",
+  "url": "https://cdt.org/",
+  "actionUrl": null,
+  "description": "Works to promote democratic values by shaping technology policy and architecture, with a focus on the rights of the individual.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "surveillance",
+    "direction": "reform"
+   },
+   {
+    "id": "fbi",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "American Civil Liberties Union (ACLU)",
+  "url": "https://www.aclu.org/",
+  "actionUrl": null,
+  "description": "Works to defend and preserve the individual rights and liberties guaranteed by the Constitution and laws of the United States.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "law_enforcement",
+    "direction": "reform"
+   },
+   {
+    "id": "border_security",
+    "direction": "reform"
+   },
+   {
+    "id": "federal_prisons",
+    "direction": "reform"
+   },
+   {
+    "id": "public_defenders",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "NAACP Legal Defense Fund (LDF)",
+  "url": "https://www.naacpldf.org/",
+  "actionUrl": null,
+  "description": "America's premier legal organization fighting for racial justice through litigation, advocacy, and public education.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "k12_schools",
+    "direction": "reform"
+   },
+   {
+    "id": "mbda",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "Southern Poverty Law Center (SPLC)",
+  "url": "https://www.splcenter.org/",
+  "actionUrl": null,
+  "description": "Dedicated to fighting hate and bigotry and to seeking justice for the most vulnerable members of our society.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "law_enforcement",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "The Marshall Project",
+  "url": "https://www.themarshallproject.org/",
+  "actionUrl": null,
+  "description": "A nonpartisan, nonprofit news organization covering the U.S. criminal justice system.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "law_enforcement",
+    "direction": "reform"
+   },
+   {
+    "id": "federal_prisons",
+    "direction": "reform"
+   },
+   {
+    "id": "border_security",
+    "direction": "reform"
+   },
+   {
+    "id": "public_defenders",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "The Sentencing Project",
+  "url": "https://www.sentencingproject.org/",
+  "actionUrl": null,
+  "description": "Works for a fair and effective U.S. criminal justice system by promoting reforms in sentencing policy, addressing unjust racial disparities and practices, and advocating for alternatives to incarceration.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "federal_prisons",
+    "direction": "less"
+   },
+   {
+    "id": "law_enforcement",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Brady United Against Gun Violence",
+  "url": "https://www.bradyunited.org/",
+  "actionUrl": null,
+  "description": "Works to pass, enforce, and protect sensible gun laws and regulations to reduce gun violence.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "law_enforcement",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "The Bail Project",
+  "url": "https://bailproject.org/",
+  "actionUrl": null,
+  "description": "A national nonprofit organization that pays bail for people in need, reuniting families and restoring the presumption of innocence.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "federal_prisons",
+    "direction": "reform"
+   },
+   {
+    "id": "public_defenders",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "Human Rights Campaign (HRC)",
+  "url": "https://www.hrc.org/",
+  "actionUrl": null,
+  "description": "The largest LGBTQ civil rights organization in the United States, working to achieve equality for lesbian, gay, bisexual, transgender and queer Americans.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": []
+ },
+ {
+  "name": "Common Cause",
+  "url": "https://www.commoncause.org/",
+  "actionUrl": null,
+  "description": "A nonpartisan grassroots organization dedicated to upholding the core values of American democracy.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "federal_courts",
+    "direction": "reform"
+   },
+   {
+    "id": "irs",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Brennan Center for Justice",
+  "url": "https://www.brennancenter.org/",
+  "actionUrl": null,
+  "description": "A nonpartisan law and policy institute that works to reform, revitalize, and defend our country's systems of democracy and justice.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "justice_system",
+    "direction": "reform"
+   },
+   {
+    "id": "government_ops",
+    "direction": "reform"
+   },
+   {
+    "id": "federal_courts",
+    "direction": "reform"
+   },
+   {
+    "id": "public_defenders",
+    "direction": "more"
+   },
+   {
+    "id": "federal_prisons",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Center for Responsive Politics (OpenSecrets)",
+  "url": "https://www.opensecrets.org/",
+  "actionUrl": null,
+  "description": "Tracks money in U.S. politics and its effect on elections and public policy.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "weapons_procurement",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Demand Progress",
+  "url": "https://demandprogress.org/",
+  "actionUrl": null,
+  "description": "Fights for a more just and democratic world by organizing for progressive policy changes on surveillance, money in politics, and corporate power.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "corporate_power",
+    "direction": "reform"
+   },
+   {
+    "id": "cfpb",
+    "direction": "more"
+   },
+   {
+    "id": "tsa",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Project On Government Oversight (POGO)",
+  "url": "https://www.pogo.org/",
+  "actionUrl": null,
+  "description": "A nonpartisan independent watchdog that investigates and exposes waste, corruption, and abuse of power.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "wasteful_spending",
+    "direction": "less"
+   },
+   {
+    "id": "defense",
+    "direction": "reform"
+   },
+   {
+    "id": "weapons_procurement",
+    "direction": "reform"
+   },
+   {
+    "id": "operations_maintenance",
+    "direction": "reform"
+   },
+   {
+    "id": "government_ops",
+    "direction": "reform"
+   },
+   {
+    "id": "irs",
+    "direction": "reform"
+   },
+   {
+    "id": "cfpb",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "ProPublica",
+  "url": "https://www.propublica.org/",
+  "actionUrl": null,
+  "description": "An independent, nonprofit newsroom that produces investigative journalism with moral force.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "defense",
+    "direction": "reform"
+   },
+   {
+    "id": "irs",
+    "direction": "reform"
+   },
+   {
+    "id": "fema_disaster",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "League of Women Voters",
+  "url": "https://www.lwv.org/",
+  "actionUrl": null,
+  "description": "A nonpartisan political organization encouraging informed and active participation in government.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": []
+ },
+ {
+  "name": "National Education Association (NEA)",
+  "url": "https://www.nea.org/",
+  "actionUrl": null,
+  "description": "The nation's largest professional employee organization, committed to advancing the cause of public education.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "education",
+    "direction": "more"
+   },
+   {
+    "id": "k12_schools",
+    "direction": "more"
+   },
+   {
+    "id": "college_aid",
+    "direction": "more"
+   },
+   {
+    "id": "head_start",
+    "direction": "more"
+   },
+   {
+    "id": "ed_ops",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "The Education Trust",
+  "url": "https://edtrust.org/",
+  "actionUrl": null,
+  "description": "Works to close opportunity gaps that disproportionately affect students of color and students from low-income families.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "education",
+    "direction": "more"
+   },
+   {
+    "id": "k12_schools",
+    "direction": "more"
+   },
+   {
+    "id": "college_aid",
+    "direction": "more"
+   },
+   {
+    "id": "ed_ops",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Teach For America",
+  "url": "https://www.teachforamerica.org/",
+  "actionUrl": null,
+  "description": "Finds, develops, and supports a network of leaders who expand opportunity for children from classrooms, schools, and every sector and field that shapes the broader systems in which schools operate.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "k12_schools",
+    "direction": "reform"
+   },
+   {
+    "id": "ed_ops",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Student Debt Crisis Center",
+  "url": "https://www.studentdebtcrisis.org/",
+  "actionUrl": null,
+  "description": "A non-profit organization dedicated to ending the student debt crisis.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "college_aid",
+    "direction": "reform"
+   },
+   {
+    "id": "education",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "National Low Income Housing Coalition",
+  "url": "https://nlihc.org/",
+  "actionUrl": null,
+  "description": "Dedicated to achieving socially just public policy that ensures people with the lowest incomes have affordable and decent homes.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "social_spending",
+    "direction": "more"
+   },
+   {
+    "id": "housing_community",
+    "direction": "more"
+   },
+   {
+    "id": "hud",
+    "direction": "more"
+   },
+   {
+    "id": "public_housing",
+    "direction": "more"
+   },
+   {
+    "id": "liheap",
+    "direction": "more"
+   },
+   {
+    "id": "community_block_grants",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "National Alliance to End Homelessness",
+  "url": "https://endhomelessness.org/",
+  "actionUrl": null,
+  "description": "A nonpartisan organization committed to preventing and ending homelessness in the United States.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "housing_community",
+    "direction": "more"
+   },
+   {
+    "id": "hud",
+    "direction": "more"
+   },
+   {
+    "id": "public_housing",
+    "direction": "reform"
+   },
+   {
+    "id": "mental_health",
+    "direction": "more"
+   },
+   {
+    "id": "va_programs",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "Habitat for Humanity International",
+  "url": "https://www.habitat.org/",
+  "actionUrl": null,
+  "description": "A nonprofit organization that helps families build and improve places to call home.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "hud",
+    "direction": "reform"
+   },
+   {
+    "id": "community_block_grants",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "Local Initiatives Support Corporation (LISC)",
+  "url": "https://www.lisc.org/",
+  "actionUrl": null,
+  "description": "A national non-profit that equips communities with the capital, strategy, and know-how to become places where people can thrive.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "community_block_grants",
+    "direction": "more"
+   },
+   {
+    "id": "hud",
+    "direction": "reform"
+   },
+   {
+    "id": "mbda",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "Food Research & Action Center (FRAC)",
+  "url": "https://frac.org/",
+  "actionUrl": null,
+  "description": "The leading national nonprofit organization working to eradicate poverty-related hunger and undernutrition in the United States.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "social_spending",
+    "direction": "more"
+   },
+   {
+    "id": "economic_security",
+    "direction": "more"
+   },
+   {
+    "id": "snap",
+    "direction": "more"
+   },
+   {
+    "id": "tanf",
+    "direction": "more"
+   },
+   {
+    "id": "child_tax_credit",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "National Sustainable Agriculture Coalition",
+  "url": "https://sustainableagriculture.net/",
+  "actionUrl": null,
+  "description": "An alliance of grassroots organizations that advocates for federal policy reform for sustainable agriculture and food systems.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "snap",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Feeding America",
+  "url": "https://www.feedingamerica.org/",
+  "actionUrl": null,
+  "description": "The nation's largest domestic hunger-relief organization, a network of 200 food banks and 60,000 food pantries.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "snap",
+    "direction": "more"
+   },
+   {
+    "id": "tanf",
+    "direction": "more"
+   },
+   {
+    "id": "child_tax_credit",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "Heifer International",
+  "url": "https://www.heifer.org/",
+  "actionUrl": null,
+  "description": "Works with communities to end hunger and poverty and care for the Earth.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "usaid",
+    "direction": "reform"
+   },
+   {
+    "id": "climate_aid",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Veterans of Foreign Wars (VFW)",
+  "url": "https://www.vfw.org/",
+  "actionUrl": null,
+  "description": "A nonprofit service organization for eligible veterans and military service members from the active, guard and reserve forces.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "national_security",
+    "direction": "more"
+   },
+   {
+    "id": "veterans_retirement",
+    "direction": "more"
+   },
+   {
+    "id": "va_programs",
+    "direction": "more"
+   },
+   {
+    "id": "military_pensions",
+    "direction": "more"
+   },
+   {
+    "id": "pact_act",
+    "direction": "more"
+   },
+   {
+    "id": "defense",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "Iraq and Afghanistan Veterans of America (IAVA)",
+  "url": "https://iava.org/",
+  "actionUrl": null,
+  "description": "The leading post-9/11 veteran empowerment organization with a diverse and rapidly growing membership.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "suicide_prevention",
+    "direction": "more"
+   },
+   {
+    "id": "veterans_retirement",
+    "direction": "more"
+   },
+   {
+    "id": "va_programs",
+    "direction": "more"
+   },
+   {
+    "id": "pact_act",
+    "direction": "more"
+   },
+   {
+    "id": "mental_health",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "Disabled American Veterans (DAV)",
+  "url": "https://www.dav.org/",
+  "actionUrl": null,
+  "description": "Provides a lifetime of support for veterans of all generations and their families, helping more than 1 million veterans in positive, life-changing ways each year.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "va_programs",
+    "direction": "more"
+   },
+   {
+    "id": "ss_disability",
+    "direction": "reform"
+   },
+   {
+    "id": "military_pensions",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Student Veterans of America (SVA)",
+  "url": "https://studentveterans.org/",
+  "actionUrl": null,
+  "description": "Provides military veterans with the resources, support, and advocacy needed to succeed in higher education and following graduation.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "va_programs",
+    "direction": "reform"
+   },
+   {
+    "id": "college_aid",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "AFL-CIO",
+  "url": "https://aflcio.org/",
+  "actionUrl": null,
+  "description": "The largest federation of unions in the United States, representing more than 12.5 million working men and women.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "economic_security",
+    "direction": "more"
+   },
+   {
+    "id": "unemployment_insurance",
+    "direction": "more"
+   },
+   {
+    "id": "tanf",
+    "direction": "more"
+   },
+   {
+    "id": "child_tax_credit",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "National Employment Law Project (NELP)",
+  "url": "https://www.nelp.org/",
+  "actionUrl": null,
+  "description": "A research and advocacy organization that fights for policies to create good jobs and strengthen protections for low-wage workers.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "social_safety_net",
+    "direction": "more"
+   },
+   {
+    "id": "unemployment_insurance",
+    "direction": "reform"
+   },
+   {
+    "id": "economic_security",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Service Employees International Union (SEIU)",
+  "url": "https://www.seiu.org/",
+  "actionUrl": null,
+  "description": "An organization of 2 million members united by the belief in the dignity and worth of workers and the services they provide.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": []
+ },
+ {
+  "name": "Fight for $15",
+  "url": "https://fightfor15.org/",
+  "actionUrl": null,
+  "description": "A global political movement working to increase the minimum wage to $15 an hour.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": []
+ },
+ {
+  "name": "National Immigration Law Center (NILC)",
+  "url": "https://www.nilc.org/",
+  "actionUrl": null,
+  "description": "Dedicated to defending and advancing the rights of immigrants with low income.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "law_enforcement",
+    "direction": "reform"
+   },
+   {
+    "id": "border_security",
+    "direction": "less"
+   },
+   {
+    "id": "snap",
+    "direction": "more"
+   },
+   {
+    "id": "medicaid",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "American Immigration Council",
+  "url": "https://www.americanimmigrationcouncil.org/",
+  "actionUrl": null,
+  "description": "Works to strengthen America by shaping how America thinks about and acts towards immigrants and immigration.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "law_enforcement",
+    "direction": "reform"
+   },
+   {
+    "id": "border_security",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "RAICES",
+  "url": "https://www.raicestexas.org/",
+  "actionUrl": null,
+  "description": "Provides free and low-cost legal services to underserved immigrant children, families, and refugees.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "law_enforcement",
+    "direction": "less"
+   },
+   {
+    "id": "border_security",
+    "direction": "less"
+   }
+  ]
+ },
+ {
+  "name": "United We Dream",
+  "url": "https://unitedwedream.org/",
+  "actionUrl": null,
+  "description": "The largest immigrant youth-led community in the country, creating welcoming spaces for young people - regardless of immigration status.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "border_security",
+    "direction": "less"
+   }
+  ]
+ },
+ {
+  "name": "Consumer Federation of America (CFA)",
+  "url": "https://consumerfed.org/",
+  "actionUrl": null,
+  "description": "An association of non-profit consumer organizations advancing the consumer interest through research, advocacy, and education.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "financial_regulation",
+    "direction": "reform"
+   },
+   {
+    "id": "government_ops",
+    "direction": "more"
+   },
+   {
+    "id": "cfpb",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "U.S. PIRG (Public Interest Research Group)",
+  "url": "https://pirg.org/",
+  "actionUrl": null,
+  "description": "Stands up to powerful interests whenever they threaten our health and safety, our financial security, or our right to fully participate in our democratic society.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "cfpb",
+    "direction": "more"
+   },
+   {
+    "id": "epa",
+    "direction": "more"
+   },
+   {
+    "id": "transportation",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Center for Science in the Public Interest (CSPI)",
+  "url": "https://www.cspinet.org/",
+  "actionUrl": null,
+  "description": "A consumer advocacy organization whose twin missions are to conduct innovative research and advocacy programs in health and nutrition, and to provide consumers with current, useful information.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "snap",
+    "direction": "reform"
+   },
+   {
+    "id": "cdc",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "Transportation for America",
+  "url": "https://t4america.org/",
+  "actionUrl": null,
+  "description": "An alliance of leaders from across the country united to invest in a modern transportation system.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "transportation",
+    "direction": "more"
+   },
+   {
+    "id": "public_transit",
+    "direction": "more"
+   },
+   {
+    "id": "highways",
+    "direction": "reform"
+   },
+   {
+    "id": "rail_service",
+    "direction": "more"
+   },
+   {
+    "id": "faa",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "America Walks",
+  "url": "https://americawalks.org/",
+  "actionUrl": null,
+  "description": "Works to make America a great place to walk by promoting walkable communities.",
+  "kind": "advocacy",
+  "prominence": "low",
+  "stances": [
+   {
+    "id": "public_transit",
+    "direction": "more"
+   },
+   {
+    "id": "highways",
+    "direction": "less"
+   }
+  ]
+ },
+ {
+  "name": "Center on Budget and Policy Priorities (CBPP)",
+  "url": "https://www.cbpp.org/",
+  "actionUrl": null,
+  "description": "A nonpartisan research and policy institute pursuing policies designed to reduce poverty and inequality.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "social_safety_net",
+    "direction": "more"
+   },
+   {
+    "id": "economic_security",
+    "direction": "more"
+   },
+   {
+    "id": "snap",
+    "direction": "more"
+   },
+   {
+    "id": "child_tax_credit",
+    "direction": "more"
+   },
+   {
+    "id": "hud",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "Center for Economic and Policy Research (CEPR)",
+  "url": "https://cepr.net/",
+  "actionUrl": null,
+  "description": "Promoting democratic debate on the most important economic and social issues that affect people's lives.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "economic_policy",
+    "direction": "reform"
+   },
+   {
+    "id": "social_safety_net",
+    "direction": "more"
+   },
+   {
+    "id": "social_security",
+    "direction": "reform"
+   },
+   {
+    "id": "medicare",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "The Roosevelt Institute",
+  "url": "https://rooseveltinstitute.org/",
+  "actionUrl": null,
+  "description": "A think tank that promotes the legacy of Franklin and Eleanor Roosevelt by developing progressive ideas and leadership.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "corporate_power",
+    "direction": "reform"
+   },
+   {
+    "id": "climate_action",
+    "direction": "more"
+   },
+   {
+    "id": "social_safety_net",
+    "direction": "more"
+   }
+  ]
+ },
+ {
+  "name": "Demos",
+  "url": "https://www.demos.org/",
+  "actionUrl": null,
+  "description": "A dynamic \"think-and-do\" tank that powers the movement for a just, inclusive, multiracial democracy.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": []
+ },
+ {
+  "name": "Institute for Policy Studies (IPS)",
+  "url": "https://ips-dc.org/",
+  "actionUrl": null,
+  "description": "A multi-issue think tank that has conducted progressive research and action for over 50 years.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": []
+ },
+ {
+  "name": "Brookings Institution",
+  "url": "https://www.brookings.edu/",
+  "actionUrl": null,
+  "description": "A nonprofit public policy organization committed to independent research and policy solutions.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "economic_policy",
+    "direction": "reform"
+   },
+   {
+    "id": "foreign_policy",
+    "direction": "reform"
+   },
+   {
+    "id": "social_policy",
+    "direction": "reform"
+   },
+   {
+    "id": "defense",
+    "direction": "reform"
+   },
+   {
+    "id": "health",
+    "direction": "reform"
+   },
+   {
+    "id": "education",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "The Urban Institute",
+  "url": "https://www.urban.org/",
+  "actionUrl": null,
+  "description": "A nonprofit research organization that provides data and evidence to help advance upward mobility and equity.",
+  "kind": "advocacy",
+  "prominence": "medium",
+  "stances": [
+   {
+    "id": "social_policy",
+    "direction": "reform"
+   },
+   {
+    "id": "economic_policy",
+    "direction": "reform"
+   },
+   {
+    "id": "housing",
+    "direction": "reform"
+   },
+   {
+    "id": "criminal_justice",
+    "direction": "reform"
+   }
+  ]
+ },
+ {
+  "name": "RAND Corporation",
+  "url": "https://www.rand.org/",
+  "actionUrl": null,
+  "description": "A research organization that develops solutions to public policy challenges to help make communities throughout the world safer and more secure.",
+  "kind": "advocacy",
+  "prominence": "high",
+  "stances": [
+   {
+    "id": "national_security",
+    "direction": "reform"
+   },
+   {
+    "id": "health_policy",
+    "direction": "reform"
+   },
+   {
+    "id": "education_policy",
+    "direction": "reform"
+   },
+   {
+    "id": "infrastructure",
+    "direction": "reform"
+   }
+  ]
+ }
+]

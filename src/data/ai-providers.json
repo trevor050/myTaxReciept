@@ -1,0 +1,4 @@
+[
+  { "id": "chatgpt", "name": "ChatGPT", "urlTemplate": "https://chatgpt.com/?q={prompt}", "maxEncodedChars": 1800 },
+  { "id": "claude", "name": "Claude", "urlTemplate": "https://claude.ai/new?q={prompt}", "maxEncodedChars": 1800 }
+]

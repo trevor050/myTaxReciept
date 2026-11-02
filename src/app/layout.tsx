@@ -1,75 +1,38 @@
-import type {Metadata} from 'next';
-import { GeistSans } from 'geist/font/sans';
+import type { Metadata, Viewport } from 'next';
+import { Public_Sans, Reenie_Beanie, Sometype_Mono } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import './globals.css';
-import { Toaster } from "@/components/ui/toaster"; // Import Toaster
-import { ThemeProvider } from "@/components/ThemeProvider"; // Import ThemeProvider
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next"; // Import SpeedInsights component
 
-// Use GeistSans.variable directly
-const geistSansVariable = GeistSans.variable;
+const sans = Public_Sans({ subsets: ['latin'], variable: '--font-public-sans', display: 'swap' });
+const mono = Sometype_Mono({ subsets: ['latin'], variable: '--font-sometype', display: 'swap' });
+const pen = Reenie_Beanie({ weight: '400', subsets: ['latin'], variable: '--font-reenie', display: 'swap' });
+
+const description = 'See where your federal taxes went, line by line, and tell Congress what you would change.';
 
 export const metadata: Metadata = {
-  // Base URL for generating absolute URLs in metadata
   metadataBase: new URL('https://mytaxreceipt.org'),
-  title: 'MyTaxReceipt.org',
-  description: 'See exactly where your federal income taxes go — and message Congress about it in one click.',
+  title: 'MyTaxReceipt: the itemized bill for your federal taxes',
+  description,
   openGraph: {
-    title: 'MyTaxReceipt.org',
-    description: 'See exactly where your federal income taxes go — and message Congress about it in one click.',
+    title: 'MyTaxReceipt',
+    description,
     url: 'https://mytaxreceipt.org',
-    siteName: 'MyTaxReceipt.org',
-    images: [
-      {
-        url: '/share.png', // 1200x630 preferred
-        width: 1200,
-        height: 630,
-        alt: 'MyTaxReceipt pie-chart preview',
-      },
-    ],
+    siteName: 'MyTaxReceipt',
+    images: [{ url: '/share.png', width: 1200, height: 630, alt: 'An itemized receipt for federal taxes' }],
     locale: 'en_US',
     type: 'website',
   },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'MyTaxReceipt.org',
-    description: 'See exactly where your federal income taxes go — and message Congress about it in one click.',
-    images: ['/share.png'],
-  },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: { index: true, follow: true },
-  },
-  icons: {
-    icon: '/favicon.ico',
-  },
+  twitter: { card: 'summary_large_image', title: 'MyTaxReceipt', description, images: ['/share.png'] },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#d5e6db' };
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    // Remove extra whitespace between tags
-    <html lang="en" suppressHydrationWarning>
-      {/* Apply font variable and antialiased class */}
-      <body className={`${geistSansVariable} font-sans antialiased`} suppressHydrationWarning>
-         <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-         >
-            {children}
-            <Toaster /> {/* Add Toaster component here */}
-        </ThemeProvider>
+    <html lang="en" className={`${sans.variable} ${mono.variable} ${pen.variable}`}>
+      <body>
+        {children}
         <Analytics />
         <SpeedInsights />
       </body>

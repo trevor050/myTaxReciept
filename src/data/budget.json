@@ -1,0 +1,449 @@
+{
+  "fiscalYear": 2026,
+  "dataStatus": "placeholder",
+  "asOf": "2026-11-02",
+  "totals": {
+    "outlaysB": 7000,
+    "receiptsB": 5200,
+    "deficitB": 1800
+  },
+  "sources": [],
+  "categories": [
+    {
+      "id": "social_security",
+      "label": "Social Security",
+      "amountB": 1470,
+      "programs": [
+        {
+          "id": "ss_retirement",
+          "label": "Retirement benefits",
+          "amountB": 1200.8,
+          "basis": "estimate"
+        },
+        {
+          "id": "ss_disability",
+          "label": "Disability benefits",
+          "amountB": 269.2,
+          "basis": "estimate"
+        }
+      ]
+    },
+    {
+      "id": "health",
+      "label": "Health",
+      "amountB": 1610,
+      "programs": [
+        {
+          "id": "medicare",
+          "label": "Medicare",
+          "amountB": 726.9,
+          "basis": "estimate"
+        },
+        {
+          "id": "medicaid",
+          "label": "Medicaid",
+          "amountB": 619.2,
+          "basis": "estimate"
+        },
+        {
+          "id": "aca_subsidies",
+          "label": "ACA marketplace subsidies",
+          "amountB": 168.3,
+          "basis": "estimate"
+        },
+        {
+          "id": "chip",
+          "label": "CHIP (children)",
+          "amountB": 33.7,
+          "basis": "estimate"
+        },
+        {
+          "id": "nih",
+          "label": "NIH – Medical research",
+          "amountB": 53.8,
+          "basis": "estimate"
+        },
+        {
+          "id": "cdc",
+          "label": "CDC – Disease control",
+          "amountB": 13.5,
+          "basis": "estimate"
+        }
+      ]
+    },
+    {
+      "id": "defense",
+      "label": "Defense (War & Weapons)",
+      "amountB": 910,
+      "programs": [
+        {
+          "id": "military_personnel",
+          "label": "Military personnel",
+          "amountB": 242.3,
+          "basis": "estimate"
+        },
+        {
+          "id": "operations_maintenance",
+          "label": "Operations & maintenance",
+          "amountB": 323.1,
+          "basis": "estimate"
+        },
+        {
+          "id": "weapons_procurement",
+          "label": "Weapons & procurement",
+          "amountB": 242.3,
+          "basis": "estimate"
+        },
+        {
+          "id": "nuclear_weapons",
+          "label": "Nuclear forces",
+          "amountB": 40.4,
+          "basis": "estimate"
+        },
+        {
+          "id": "foreign_military_aid",
+          "label": "Foreign military aid",
+          "amountB": 61.9,
+          "basis": "estimate"
+        }
+      ]
+    },
+    {
+      "id": "interest_debt",
+      "label": "Interest on Debt",
+      "amountB": 910,
+      "programs": []
+    },
+    {
+      "id": "veterans_retirement",
+      "label": "Veterans & Federal Retirement",
+      "amountB": 560,
+      "programs": [
+        {
+          "id": "va_programs",
+          "label": "Veterans Affairs (VA)",
+          "amountB": 336.5,
+          "basis": "estimate"
+        },
+        {
+          "id": "military_pensions",
+          "label": "Military retirement pay",
+          "amountB": 121.2,
+          "basis": "estimate"
+        },
+        {
+          "id": "civilian_pensions",
+          "label": "Federal civilian pensions",
+          "amountB": 91.5,
+          "basis": "estimate"
+        },
+        {
+          "id": "pact_act",
+          "label": "PACT Act – Toxic-exposure care",
+          "amountB": 10.8,
+          "basis": "estimate"
+        }
+      ]
+    },
+    {
+      "id": "economic_security",
+      "label": "Economic Security & Job Benefits",
+      "amountB": 490,
+      "programs": [
+        {
+          "id": "snap",
+          "label": "SNAP (food assistance)",
+          "amountB": 175,
+          "basis": "estimate"
+        },
+        {
+          "id": "unemployment_insurance",
+          "label": "Unemployment insurance",
+          "amountB": 80.8,
+          "basis": "estimate"
+        },
+        {
+          "id": "ssi",
+          "label": "Supplemental Security Income",
+          "amountB": 48.5,
+          "basis": "estimate"
+        },
+        {
+          "id": "tanf",
+          "label": "TANF cash assistance",
+          "amountB": 32.3,
+          "basis": "estimate"
+        },
+        {
+          "id": "child_tax_credit",
+          "label": "Child tax credit",
+          "amountB": 36.3,
+          "basis": "estimate"
+        },
+        {
+          "id": "liheap",
+          "label": "Energy assistance (LIHEAP)",
+          "amountB": 6.7,
+          "basis": "estimate"
+        }
+      ]
+    },
+    {
+      "id": "education",
+      "label": "Education",
+      "amountB": 350,
+      "programs": [
+        {
+          "id": "k12_schools",
+          "label": "K-12 schools (Title I, IDEA)",
+          "amountB": 121.2,
+          "basis": "estimate"
+        },
+        {
+          "id": "college_aid",
+          "label": "College aid (Pell, loans)",
+          "amountB": 175,
+          "basis": "estimate"
+        },
+        {
+          "id": "ed_ops",
+          "label": "Education Dept. operations",
+          "amountB": 53.8,
+          "basis": "estimate"
+        }
+      ]
+    },
+    {
+      "id": "housing_community",
+      "label": "Housing & Community",
+      "amountB": 210,
+      "programs": [
+        {
+          "id": "hud",
+          "label": "Housing & Urban Development",
+          "amountB": 70.8,
+          "basis": "estimate"
+        },
+        {
+          "id": "public_housing",
+          "label": "Public housing & vouchers",
+          "amountB": 40.4,
+          "basis": "estimate"
+        },
+        {
+          "id": "fema_disaster",
+          "label": "FEMA – disaster relief",
+          "amountB": 75.4,
+          "basis": "estimate"
+        },
+        {
+          "id": "head_start",
+          "label": "Head Start (early childhood)",
+          "amountB": 15.2,
+          "basis": "estimate"
+        },
+        {
+          "id": "community_block_grants",
+          "label": "Community development grants",
+          "amountB": 8.2,
+          "basis": "estimate"
+        }
+      ]
+    },
+    {
+      "id": "transportation",
+      "label": "Transportation",
+      "amountB": 140,
+      "programs": [
+        {
+          "id": "highways",
+          "label": "Highways",
+          "amountB": 67.3,
+          "basis": "estimate"
+        },
+        {
+          "id": "public_transit",
+          "label": "Public transit",
+          "amountB": 29.6,
+          "basis": "estimate"
+        },
+        {
+          "id": "rail_service",
+          "label": "Amtrak & rail service",
+          "amountB": 16.2,
+          "basis": "estimate"
+        },
+        {
+          "id": "tsa",
+          "label": "TSA & aviation security",
+          "amountB": 13.5,
+          "basis": "estimate"
+        },
+        {
+          "id": "faa",
+          "label": "FAA – air-traffic control",
+          "amountB": 13.5,
+          "basis": "estimate"
+        }
+      ]
+    },
+    {
+      "id": "energy_environment",
+      "label": "Energy & Environment",
+      "amountB": 70,
+      "programs": [
+        {
+          "id": "epa",
+          "label": "EPA – environmental protection",
+          "amountB": 24.2,
+          "basis": "estimate"
+        },
+        {
+          "id": "renewables",
+          "label": "Renewable energy & efficiency",
+          "amountB": 10.8,
+          "basis": "estimate"
+        },
+        {
+          "id": "forest_service",
+          "label": "Forest Service",
+          "amountB": 14.8,
+          "basis": "estimate"
+        },
+        {
+          "id": "national_parks",
+          "label": "National Park Service",
+          "amountB": 6.7,
+          "basis": "estimate"
+        },
+        {
+          "id": "noaa",
+          "label": "NOAA – oceans & atmosphere",
+          "amountB": 13.5,
+          "basis": "estimate"
+        }
+      ]
+    },
+    {
+      "id": "international_affairs",
+      "label": "International Affairs",
+      "amountB": 70,
+      "programs": [
+        {
+          "id": "diplomacy",
+          "label": "Diplomacy (State Dept.)",
+          "amountB": 26.9,
+          "basis": "estimate"
+        },
+        {
+          "id": "usaid",
+          "label": "Development aid (USAID)",
+          "amountB": 26.9,
+          "basis": "estimate"
+        },
+        {
+          "id": "climate_aid",
+          "label": "Climate & disaster aid",
+          "amountB": 16.2,
+          "basis": "estimate"
+        }
+      ]
+    },
+    {
+      "id": "law_enforcement",
+      "label": "Law Enforcement & Justice",
+      "amountB": 70,
+      "programs": [
+        {
+          "id": "fbi",
+          "label": "FBI & federal investigators",
+          "amountB": 25.6,
+          "basis": "estimate"
+        },
+        {
+          "id": "border_security",
+          "label": "Border security & ICE",
+          "amountB": 29.6,
+          "basis": "estimate"
+        },
+        {
+          "id": "federal_prisons",
+          "label": "Federal prisons",
+          "amountB": 14.8,
+          "basis": "estimate"
+        }
+      ]
+    },
+    {
+      "id": "science",
+      "label": "Science & Technology",
+      "amountB": 70,
+      "programs": [
+        {
+          "id": "nasa",
+          "label": "NASA – space exploration",
+          "amountB": 33.7,
+          "basis": "estimate"
+        },
+        {
+          "id": "nsf",
+          "label": "National Science Foundation",
+          "amountB": 13.5,
+          "basis": "estimate"
+        },
+        {
+          "id": "arpa_research",
+          "label": "DARPA / ARPA-style R&D",
+          "amountB": 10.8,
+          "basis": "estimate"
+        },
+        {
+          "id": "commercial_space",
+          "label": "Commercial space contracts",
+          "amountB": 12.1,
+          "basis": "estimate"
+        }
+      ]
+    },
+    {
+      "id": "government_ops",
+      "label": "Government Operations",
+      "amountB": 70,
+      "programs": [
+        {
+          "id": "irs",
+          "label": "Internal Revenue Service",
+          "amountB": 32.3,
+          "basis": "estimate"
+        },
+        {
+          "id": "federal_courts",
+          "label": "Federal court system",
+          "amountB": 12.1,
+          "basis": "estimate"
+        },
+        {
+          "id": "public_defenders",
+          "label": "Federal public defenders",
+          "amountB": 1.8,
+          "basis": "estimate"
+        },
+        {
+          "id": "cfpb",
+          "label": "Consumer Financial Protection Bureau",
+          "amountB": 1.2,
+          "basis": "estimate"
+        },
+        {
+          "id": "mbda",
+          "label": "Minority Business Dev. Agency",
+          "amountB": 0.1,
+          "basis": "estimate"
+        }
+      ]
+    }
+  ],
+  "taxEstimator": {
+    "averageIncomeTaxPerReturn": 16000
+  }
+}

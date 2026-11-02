@@ -1,0 +1,230 @@
+'use client';
+
+import { toPng } from 'html-to-image';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  budget,
+  decodeMarks,
+  encodeMarks,
+  estimateTax,
+  formatWhole,
+  parseMoney,
+  SAMPLE_TAX,
+  type FilingStatus,
+  type Marks,
+  type Stance,
+} from '@/lib/tax';
+import { LetterSection } from './LetterSection';
+import { Receipt } from './Receipt';
+
+const STATUSES: { id: FilingStatus; label: string }[] = [
+  { id: 'single', label: 'Single' },
+  { id: 'married_joint', label: 'Married, jointly' },
+  { id: 'head_of_household', label: 'Head of household' },
+];
+
+const WORK_HOURS_PER_YEAR = 2080;
+
+function groupDigits(raw: string): string {
+  const value = parseMoney(raw);
+  return value === null ? '' : formatWhole(value);
+}
+
+export function TaxReceiptApp() {
+  const [taxInput, setTaxInput] = useState('');
+  const [estimating, setEstimating] = useState(false);
+  const [incomeInput, setIncomeInput] = useState('');
+  const [status, setStatus] = useState<FilingStatus>('single');
+  const [wageInput, setWageInput] = useState('');
+  const [showHours, setShowHours] = useState(false);
+  const [marks, setMarks] = useState<Marks>({});
+  const [today, setToday] = useState<string | null>(null);
+  const [actionNote, setActionNote] = useState<string | null>(null);
+  const receiptRef = useRef<HTMLDivElement>(null);
+
+  // Share links carry the amount and marks, so they can only be read once in the browser.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sharedTax = params.get('tax');
+    if (sharedTax) setTaxInput(groupDigits(sharedTax));
+    setMarks(decodeMarks(params.get('marks')));
+    setToday(new Date().toLocaleDateString('en-US'));
+  }, []);
+
+  const income = parseMoney(incomeInput);
+  const estimated = estimating && income !== null ? estimateTax(income, status) : null;
+  const entered = estimating ? estimated : parseMoney(taxInput);
+  const tax = entered ?? SAMPLE_TAX;
+  const isSample = entered === null;
+
+  const wage = useMemo(() => {
+    const typed = parseMoney(wageInput);
+    if (typed && typed > 0) return typed;
+    return estimating && income ? income / WORK_HOURS_PER_YEAR : null;
+  }, [wageInput, estimating, income]);
+
+  const markCount = Object.keys(marks).length;
+
+  function toggleMark(id: string, stance: Stance) {
+    setMarks((current) => {
+      const next = { ...current };
+      if (next[id] === stance) delete next[id];
+      else next[id] = stance;
+      return next;
+    });
+  }
+
+  function flash(note: string) {
+    setActionNote(note);
+    window.setTimeout(() => setActionNote(null), 2400);
+  }
+
+  async function saveImage() {
+    const node = receiptRef.current;
+    if (!node) return;
+    try {
+      const url = await toPng(node, {
+        pixelRatio: 2,
+        filter: (el) => !(el instanceof HTMLElement && el.dataset.export === 'hide'),
+      });
+      const link = document.createElement('a');
+      link.download = 'my-tax-receipt.png';
+      link.href = url;
+      link.click();
+      flash('Receipt saved');
+    } catch {
+      flash('Could not save the image. Take a screenshot instead.');
+    }
+  }
+
+  async function copyLink() {
+    const url = new URL(window.location.origin);
+    if (!isSample) url.searchParams.set('tax', String(Math.round(tax)));
+    if (markCount) url.searchParams.set('marks', encodeMarks(marks));
+    try {
+      await navigator.clipboard.writeText(url.toString());
+      flash(isSample ? 'Link copied' : 'Link copied. It includes your amount.');
+    } catch {
+      flash('Could not copy. Your browser blocked clipboard access.');
+    }
+  }
+
+  return (
+    <>
+      <main className="workbench">
+        <section className="intake">
+          <h1>Here&rsquo;s what your federal taxes bought.</h1>
+          <p className="lede">
+            Enter what you paid. Every line comes from the government&rsquo;s own books for fiscal {budget.fiscalYear}.
+          </p>
+
+          <div className="form-lines">
+            {!estimating ? (
+              <label className="form-line">
+                <span className="line-no">24</span>
+                <span className="line-name">Total tax, Form 1040</span>
+                <span className="line-box">
+                  <span aria-hidden="true">$</span>
+                  <input inputMode="decimal" autoComplete="off" placeholder={formatWhole(SAMPLE_TAX)} value={taxInput} onChange={(e) => setTaxInput(groupDigits(e.target.value))} />
+                </span>
+              </label>
+            ) : (
+              <>
+                <label className="form-line">
+                  <span className="line-no">1z</span>
+                  <span className="line-name">Your yearly income</span>
+                  <span className="line-box">
+                    <span aria-hidden="true">$</span>
+                    <input inputMode="decimal" autoComplete="off" autoFocus placeholder="65,000" value={incomeInput} onChange={(e) => setIncomeInput(groupDigits(e.target.value))} />
+                  </span>
+                </label>
+                <fieldset className="filing">
+                  <legend>Filing status</legend>
+                  {STATUSES.map((option) => (
+                    <label key={option.id}>
+                      <input type="radio" name="status" checked={status === option.id} onChange={() => setStatus(option.id)} />
+                      <span>{option.label}</span>
+                    </label>
+                  ))}
+                </fieldset>
+                {estimated !== null && (
+                  <p className="estimate-result" role="status">
+                    About <strong>${formatWhole(estimated)}</strong> with the standard deduction, before credits.
+                  </p>
+                )}
+              </>
+            )}
+            <button type="button" className="text-button" onClick={() => setEstimating(!estimating)}>
+              {estimating ? 'I know my total tax' : 'Don’t have it? Estimate from income'}
+            </button>
+
+            <label className="form-line">
+              <span className="line-no">$/h</span>
+              <span className="line-name">Your hourly pay, to see work time</span>
+              <span className="line-box line-box-short">
+                <span aria-hidden="true">$</span>
+                <input
+                  inputMode="decimal"
+                  autoComplete="off"
+                  placeholder={estimating && income ? (income / WORK_HOURS_PER_YEAR).toFixed(0) : '30'}
+                  value={wageInput}
+                  onChange={(e) => setWageInput(e.target.value.replace(/[^0-9.]/g, ''))}
+                />
+              </span>
+            </label>
+          </div>
+
+          <div className="units" role="group" aria-label="Show amounts in">
+            <button type="button" aria-pressed={!showHours} onClick={() => setShowHours(false)}>Dollars</button>
+            <button type="button" aria-pressed={showHours} disabled={!wage} onClick={() => setShowHours(true)}>Hours of work</button>
+          </div>
+
+          <div className="actions">
+            <button type="button" className="button" onClick={saveImage}>Save image</button>
+            <button type="button" className="button button-quiet" onClick={copyLink}>Copy link</button>
+            {markCount > 0 && <a className="button button-pen" href="#letter">Write to Congress</a>}
+            <p className="action-note" role="status">{actionNote}</p>
+          </div>
+
+          <p className="hint">Open any line on the receipt to see its programs. Mark what you&rsquo;d change, and your letter to Congress writes itself.</p>
+        </section>
+
+        <section className="printer" aria-label="Your receipt">
+          <div className="printer-slot" aria-hidden="true" />
+          <div className="printer-feed">
+            <Receipt ref={receiptRef} tax={tax} isSample={isSample} wage={wage} showHours={showHours && !!wage} marks={marks} today={today} onMark={toggleMark} />
+          </div>
+        </section>
+      </main>
+
+      <LetterSection marks={marks} tax={tax} />
+
+      <footer className="colophon">
+        <div>
+          <h2>How this is calculated</h2>
+          <p>
+            Each line is that category&rsquo;s share of {budget.fiscalYear} federal spending, applied to the amount you entered. Taxes aren&rsquo;t earmarked, so this
+            shows how your payment compares with the whole budget, not which programs your dollars paid for. Payroll taxes are not included in the amount unless you add them.
+          </p>
+        </div>
+        <div>
+          <h2>Sources</h2>
+          <ul>
+            {budget.sources.map((source) => (
+              <li key={source.id}><a href={source.url} target="_blank" rel="noreferrer">{source.title}</a></li>
+            ))}
+          </ul>
+        </div>
+        <p className="credit">
+          Built by <a href="https://github.com/trevor050">Trevor Rosato</a>. <a href="https://github.com/trevor050/myTaxReciept">Open source on GitHub</a>. Nothing you enter leaves your browser.
+        </p>
+      </footer>
+
+      {markCount > 0 && (
+        <a className="mobile-letter-bar" href="#letter">
+          Write to Congress about {markCount} {markCount === 1 ? 'line' : 'lines'}
+        </a>
+      )}
+    </>
+  );
+}
