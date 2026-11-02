@@ -17,7 +17,7 @@ Recommended by [Recomendo](https://archive.recomendo.com/posts/where-your-tax-do
 
 ## The data
 
-Spending comes from the [Monthly Treasury Statement](https://fiscaldata.treasury.gov/datasets/monthly-treasury-statement/) for fiscal 2026 (final September figures): $7.40 trillion in outlays against $5.40 trillion in receipts. Every category reconciles to the Treasury total, with explicit residual lines rather than rounding. Negative lines are offsetting receipts, which is how the budget actually counts them.
+Spending comes from the [Monthly Treasury Statement](https://fiscaldata.treasury.gov/datasets/monthly-treasury-statement/) for fiscal 2026 (final September figures, with preliminary USAspending data for three small lines): $7.40 trillion in outlays against $5.40 trillion in receipts. Every category reconciles to the Treasury total, with explicit residual lines rather than rounding. Negative lines are offsetting receipts, which is how the budget actually counts them.
 
 Each line is a proportional share of the whole budget, not a trace of your dollars. See [docs/budget-methodology.md](docs/budget-methodology.md) for category mapping, known gaps, and why some programs have no separately reported figure.
 

@@ -754,6 +754,19 @@ a {
   font-weight: inherit;
 }
 
+.org-general {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--ink);
+}
+
+.org-general h4 {
+  max-width: 44em;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
 .org-action {
   white-space: nowrap;
 }

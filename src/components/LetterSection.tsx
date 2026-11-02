@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import providers from '@/data/ai-providers.json';
 import { buildLetter, buildPrompt, TONES, type Chamber, type Tone } from '@/lib/letter';
-import { matchOrgs, type Direction } from '@/lib/orgs';
+import { generalCutGroups, matchOrgs, type Direction } from '@/lib/orgs';
 import { budget, findLine, type Marks } from '@/lib/tax';
 
 const HOUSE_URL = 'https://www.house.gov/representatives/find-your-representative';
@@ -13,6 +13,7 @@ const SENATE_URL = 'https://www.senate.gov/senators/senators-contact.htm';
 const FULL_PROMPT_CAP = 20_000;
 
 const WANTS: Record<Direction, string> = { less: 'less for', more: 'more for', reform: 'changes to' };
+const PARTIAL_WANTS: Record<Direction, string> = { less: 'cuts to part of', more: 'more for part of', reform: 'changes to' };
 
 export function LetterSection({ marks, tax }: { marks: Marks; tax: number }) {
   const [tone, setTone] = useState<Tone>('direct');
@@ -29,6 +30,7 @@ export function LetterSection({ marks, tax }: { marks: Marks; tax: number }) {
   const input = { marks, tax, fiscalYear: budget.fiscalYear, tone, chamber, recipient, name, place, story };
   const letter = buildLetter(input);
   const orgs = useMemo(() => matchOrgs(marks, { opposing }), [marks, opposing]);
+  const general = useMemo(() => generalCutGroups(marks), [marks]);
   const body = edited ?? letter.body;
 
   // With no marks left there is nothing to write about, so hand edits no longer apply.
@@ -137,7 +139,7 @@ export function LetterSection({ marks, tax }: { marks: Marks; tax: number }) {
             <div className="org-head">
               <h3>{opposing ? 'Who argues the other side' : 'Groups working on this'}</h3>
               <button type="button" className="text-button" aria-pressed={opposing} onClick={() => setOpposing(!opposing)}>
-                {opposing ? 'Show groups on your side' : 'See who argues the other side'}
+                {opposing ? 'Show groups working on these lines' : 'See who argues the other side'}
               </button>
             </div>
             {orgs.length === 0 ? (
@@ -152,10 +154,10 @@ export function LetterSection({ marks, tax }: { marks: Marks; tax: number }) {
                     <p>{org.description}</p>
                     <p className="org-why">
                       Wants{' '}
-                      {matched.map(({ id, direction, evidenceUrl }, index) => (
+                      {matched.map(({ id, direction, evidenceUrl, partial }, index) => (
                         <span key={id}>
                           {index > 0 && '; '}
-                          {WANTS[direction]}{' '}
+                          {partial ? PARTIAL_WANTS[direction] : WANTS[direction]}{' '}
                           {evidenceUrl ? (
                             <a className="org-evidence" href={evidenceUrl} target="_blank" rel="noreferrer">{findLine(id)?.label}</a>
                           ) : (
@@ -173,6 +175,21 @@ export function LetterSection({ marks, tax }: { marks: Marks; tax: number }) {
                   </li>
                 ))}
               </ul>
+            )}
+            {!opposing && general.orgs.length > 0 && (
+              <div className="org-general">
+                <h4>
+                  We found no group with a published position on cutting {general.lines.map((id) => findLine(id)?.label).join(', ')}. These campaign to cut federal spending in general:
+                </h4>
+                <ul>
+                  {general.orgs.map((org) => (
+                    <li key={org.url}>
+                      <a href={org.url} target="_blank" rel="noreferrer">{org.name}</a>
+                      <p>{org.description}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
         </div>

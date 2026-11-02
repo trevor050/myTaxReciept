@@ -8,8 +8,10 @@ import {
   encodeMarks,
   estimatePayrollTax,
   estimateTax,
+  formatMoneyInput,
   formatWhole,
   parseMoney,
+  parseSharedTax,
   SAMPLE_TAX,
   type FilingStatus,
   type Marks,
@@ -25,11 +27,6 @@ const STATUSES: { id: FilingStatus; label: string }[] = [
 ];
 
 const WORK_HOURS_PER_YEAR = 2080;
-
-function groupDigits(raw: string): string {
-  const value = parseMoney(raw);
-  return value === null ? '' : formatWhole(value);
-}
 
 export function TaxReceiptApp() {
   const [taxInput, setTaxInput] = useState('');
@@ -47,15 +44,15 @@ export function TaxReceiptApp() {
   // Share links carry the amount and marks, so they can only be read once in the browser.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const sharedTax = params.get('tax');
-    if (sharedTax) setTaxInput(groupDigits(sharedTax));
+    const sharedTax = parseSharedTax(params.get('tax'));
+    if (sharedTax !== null) setTaxInput(formatMoneyInput(String(sharedTax)));
     setMarks(decodeMarks(params.get('marks')));
     setToday(new Date().toLocaleDateString('en-US'));
   }, []);
 
   const income = parseMoney(incomeInput);
   const estimated = estimating && income !== null ? estimateTax(income, status) : null;
-  const estimatedPayroll = estimated !== null && income !== null ? estimatePayrollTax(income) : null;
+  const estimatedPayroll = estimated !== null && income !== null ? estimatePayrollTax(income, status) : null;
   const payroll = estimating ? (estimatedPayroll ?? 0) : (parseMoney(payrollInput) ?? 0);
   const entered = estimating ? estimated : parseMoney(taxInput);
   const tax = entered === null ? SAMPLE_TAX : entered + payroll;
@@ -68,6 +65,7 @@ export function TaxReceiptApp() {
   }, [wageInput, estimating, income]);
 
   const markCount = Object.keys(marks).length;
+  const hoursOn = showHours && wage !== null;
 
   function toggleMark(id: string, stance: Stance) {
     setMarks((current) => {
@@ -119,7 +117,7 @@ export function TaxReceiptApp() {
         <section className="intake">
           <h1>Here&rsquo;s what your federal taxes bought.</h1>
           <p className="lede">
-            Enter what you paid. Every line comes from the Treasury&rsquo;s books for fiscal {budget.fiscalYear}.
+            Enter what you paid. The figures come from federal spending records for fiscal {budget.fiscalYear}.
           </p>
 
           <div className="form-lines">
@@ -129,7 +127,7 @@ export function TaxReceiptApp() {
                 <span className="line-name">Total tax, Form 1040</span>
                 <span className="line-box">
                   <span aria-hidden="true">$</span>
-                  <input inputMode="decimal" autoComplete="off" placeholder={formatWhole(SAMPLE_TAX)} value={taxInput} onChange={(e) => setTaxInput(groupDigits(e.target.value))} />
+                  <input inputMode="decimal" autoComplete="off" placeholder={formatWhole(SAMPLE_TAX)} value={taxInput} onChange={(e) => setTaxInput(formatMoneyInput(e.target.value))} />
                 </span>
               </label>
             ) : (
@@ -139,7 +137,7 @@ export function TaxReceiptApp() {
                   <span className="line-name">Your yearly income</span>
                   <span className="line-box">
                     <span aria-hidden="true">$</span>
-                    <input inputMode="decimal" autoComplete="off" autoFocus placeholder="65,000" value={incomeInput} onChange={(e) => setIncomeInput(groupDigits(e.target.value))} />
+                    <input inputMode="decimal" autoComplete="off" autoFocus placeholder="65,000" value={incomeInput} onChange={(e) => setIncomeInput(formatMoneyInput(e.target.value))} />
                   </span>
                 </label>
                 <fieldset className="filing">
@@ -168,7 +166,7 @@ export function TaxReceiptApp() {
                 <span className="line-name">Social Security and Medicare withheld, boxes 4 and 6 (optional)</span>
                 <span className="line-box line-box-mid">
                   <span aria-hidden="true">$</span>
-                  <input inputMode="decimal" autoComplete="off" placeholder="0" value={payrollInput} onChange={(e) => setPayrollInput(groupDigits(e.target.value))} />
+                  <input inputMode="decimal" autoComplete="off" placeholder="0" value={payrollInput} onChange={(e) => setPayrollInput(formatMoneyInput(e.target.value))} />
                 </span>
               </label>
             )}
@@ -190,8 +188,8 @@ export function TaxReceiptApp() {
           </div>
 
           <div className="units" role="group" aria-label="Show amounts in">
-            <button type="button" aria-pressed={!showHours} onClick={() => setShowHours(false)}>Dollars</button>
-            <button type="button" aria-pressed={showHours} disabled={!wage} onClick={() => setShowHours(true)}>Hours of work</button>
+            <button type="button" aria-pressed={!hoursOn} onClick={() => setShowHours(false)}>Dollars</button>
+            <button type="button" aria-pressed={hoursOn} disabled={!wage} onClick={() => setShowHours(true)}>Hours of work</button>
           </div>
 
           <div className="actions">
@@ -207,7 +205,7 @@ export function TaxReceiptApp() {
         <section className="printer" aria-label="Your receipt">
           <div className="printer-slot" aria-hidden="true" />
           <div className="printer-feed">
-            <Receipt ref={receiptRef} tax={tax} isSample={isSample} wage={wage} showHours={showHours && !!wage} marks={marks} today={today} onMark={toggleMark} />
+            <Receipt ref={receiptRef} tax={tax} isSample={isSample} wage={wage} showHours={hoursOn} marks={marks} today={today} onMark={toggleMark} />
           </div>
         </section>
       </main>
@@ -221,7 +219,10 @@ export function TaxReceiptApp() {
             Each line is that category&rsquo;s share of fiscal {budget.fiscalYear} federal spending, applied to the amount you entered. This is a proportional picture of the whole budget, not a trace of your dollars. Taxes aren&rsquo;t earmarked this way, and Social Security and much of Medicare run mainly on their own payroll taxes.
           </p>
           <p>
-            The government collected ${(budget.totals.receiptsB / 1000).toFixed(2)} trillion and spent ${(budget.totals.outlaysB / 1000).toFixed(2)} trillion, borrowing about {Math.round((budget.totals.deficitB / budget.totals.receiptsB) * 100)}&cent; for every dollar it collected. That&rsquo;s the credit card line. It isn&rsquo;t money you paid. Negative lines are money agencies took in, which is counted against spending. The sample uses the average of ${formatWhole(SAMPLE_TAX)} per return from IRS data for tax year {budget.taxEstimator.averagesYear}.
+            The government collected ${(budget.totals.receiptsB / 1000).toFixed(2)} trillion and spent ${(budget.totals.outlaysB / 1000).toFixed(2)} trillion, borrowing about {Math.round((budget.totals.deficitB / budget.totals.receiptsB) * 100)}&cent; for every dollar it collected. That&rsquo;s the credit card line. It isn&rsquo;t money you paid. Negative lines are money agencies took in, which is counted against spending.
+          </p>
+          <p>
+            Figures are Treasury actuals, except the PACT Act, ARPA-E, and Minority Business Development Agency lines, which use preliminary USAspending data. If your Form 1040 total already includes Additional Medicare or self-employment tax, leave that amount out of the W-2 line. The sample uses the average of ${formatWhole(SAMPLE_TAX)} per return from IRS data for tax year {budget.taxEstimator.averagesYear}.
           </p>
         </div>
         <div>

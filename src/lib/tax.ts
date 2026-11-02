@@ -69,9 +69,32 @@ export function estimateTax(
 /** The 2025 Social Security wage cap, from the SSA contribution and benefit base. */
 const SOCIAL_SECURITY_WAGE_BASE = 176_100;
 
+/** Where the 0.9% Additional Medicare Tax starts, which the IRS sets by filing status. */
+const ADDITIONAL_MEDICARE_THRESHOLD: Record<FilingStatus, number> = {
+  single: 200_000,
+  married_joint: 250_000,
+  head_of_household: 200_000,
+};
+
 /** The employee share of Social Security and Medicare tax, treating all income as wages. */
-export function estimatePayrollTax(income: number): number {
-  return Math.round(Math.min(income, SOCIAL_SECURITY_WAGE_BASE) * 0.062 + income * 0.0145);
+export function estimatePayrollTax(income: number, status: FilingStatus): number {
+  const additional = Math.max(0, income - ADDITIONAL_MEDICARE_THRESHOLD[status]) * 0.009;
+  return Math.round(Math.min(income, SOCIAL_SECURITY_WAGE_BASE) * 0.062 + income * 0.0145 + additional);
+}
+
+/** Formats a money field as it is typed, keeping a trailing decimal point and up to two cents digits. */
+export function formatMoneyInput(raw: string): string {
+  const cleaned = raw.replace(/[^0-9.]/g, '');
+  if (!cleaned) return '';
+  const [whole, ...fraction] = cleaned.split('.');
+  const grouped = whole ? Number(whole).toLocaleString('en-US', { maximumFractionDigits: 0 }) : '0';
+  return cleaned.includes('.') ? `${grouped}.${fraction.join('').slice(0, 2)}` : grouped;
+}
+
+/** Reads the `tax` value from a share link. Rejects anything that isn't a plausible amount. */
+export function parseSharedTax(raw: string | null): number | null {
+  if (!raw || !/^\d{1,12}(\.\d{1,2})?$/.test(raw)) return null;
+  return Number(raw);
 }
 
 /** Parses free-form currency input such as "$12,500.50". Returns null when there is no number. */

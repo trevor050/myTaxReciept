@@ -10,7 +10,7 @@ export interface Org {
   description: string;
   kind?: string;
   prominence?: string;
-  stances: { id: string; direction: Direction; evidenceUrl?: string }[];
+  stances: { id: string; direction: Direction; evidenceUrl?: string; partial?: boolean }[];
 }
 
 const orgs = orgsData as unknown as Org[];
@@ -20,7 +20,7 @@ const opposite: Record<Stance, Stance> = { less: 'more', more: 'less' };
 export interface OrgMatch {
   org: Org;
   /** Marked lines this group works on, and what it wants on each. */
-  matched: { id: string; direction: Direction; evidenceUrl?: string }[];
+  matched: { id: string; direction: Direction; evidenceUrl?: string; partial?: boolean }[];
 }
 
 interface Candidate extends OrgMatch {
@@ -83,4 +83,19 @@ export function matchOrgs(marks: Marks, { limit = 8, opposing = false }: { limit
     picked.push({ org: choice.org, matched: choice.matched });
   }
   return picked;
+}
+
+/** Groups whose own work is reducing federal spending across the board. */
+export const GENERAL_CUT_GROUPS = ['Citizens Against Government Waste', 'National Taxpayers Union', 'Taxpayers for Common Sense'];
+
+/**
+ * For "less" lines where no group has a verified position on that specific program.
+ * Shown under its own label, because these groups are not claiming a stance on the line.
+ */
+export function generalCutGroups(marks: Marks): { lines: string[]; orgs: Org[] } {
+  const lines = Object.keys(marks).filter(
+    (id) => marks[id] === 'less' && !orgs.some((org) => org.stances.some((stance) => stance.id === id && stance.direction === 'less')),
+  );
+  if (!lines.length) return { lines, orgs: [] };
+  return { lines, orgs: orgs.filter((org) => GENERAL_CUT_GROUPS.includes(org.name)) };
 }

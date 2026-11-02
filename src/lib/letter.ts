@@ -79,7 +79,7 @@ function buildSubject({ marks }: Pick<LetterInput, 'marks'>): string {
   const parts: string[] = [];
   const less = marked(marks, 'less');
   const more = marked(marks, 'more');
-  if (less.length) parts.push(`less on ${spokenLabel(findLine(less[0])!.label)}${less.length > 1 ? ' and more' : ''}`);
+  if (less.length) parts.push(`less on ${spokenLabel(findLine(less[0])!.label)}${less.length > 1 ? ' and others' : ''}`);
   if (more.length) parts.push(`more on ${spokenLabel(findLine(more[0])!.label)}${more.length > 1 ? ' and others' : ''}`);
   return `Constituent request: spend ${parts.join(', ')}`;
 }
@@ -129,8 +129,9 @@ const encodedLength = (text: string) => encodeURIComponent(text).length;
 /**
  * Builds a self-contained prompt that fits in a URL. Chatbots need the facts and the
  * position, not a draft, so it sends compact data and instructions. As space runs out it
- * sheds, in order, per-person shares, the story, and then whole lines (noting how many),
- * never the instructions or the user's direction on the lines that remain.
+ * sheds, in order, per-person shares, the story, names and places, and then whole lines,
+ * alternating directions and noting how many of each it dropped. It always keeps two lines
+ * and the instructions, so caps below about 900 encoded characters are not supported.
  */
 export function buildPrompt(input: LetterInput, maxEncoded: number): string {
   const { marks, tax, fiscalYear, tone, chamber, recipient, name, place, story } = input;
@@ -140,20 +141,31 @@ export function buildPrompt(input: LetterInput, maxEncoded: number): string {
     return `${spokenLabel(found.label)} ${billions}${withShare ? ` (my share ${money(shareOf(tax, found.amountB))})` : ''}`;
   };
 
-  const compose = (withShare: boolean, withStory: boolean, keep: number) => {
-    const ids = [...marked(marks, 'less'), ...marked(marks, 'more')];
-    const kept = new Set(ids.slice(0, keep));
-    const group = (stance: Stance) => marked(marks, stance).filter((id) => kept.has(id)).map((id) => line(id, withShare)).join('; ');
-    const less = group('less');
-    const more = group('more');
-    const dropped = ids.length - kept.size;
+  const less = marked(marks, 'less');
+  const more = marked(marks, 'more');
+
+  // Alternate directions when trimming so neither side's requests disappear first.
+  const priority: string[] = [];
+  for (let i = 0; i < Math.max(less.length, more.length); i += 1) {
+    if (i < less.length) priority.push(less[i]);
+    if (i < more.length) priority.push(more[i]);
+  }
+
+  const compose = (withShare: boolean, withStory: boolean, withIdentity: boolean, keep: number) => {
+    const kept = new Set(priority.slice(0, keep));
+    const group = (ids: string[]) => ids.filter((id) => kept.has(id)).map((id) => line(id, withShare)).join('; ');
+    const droppedLess = less.filter((id) => !kept.has(id)).length;
+    const droppedMore = more.filter((id) => !kept.has(id)).length;
+    const lessText = group(less);
+    const moreText = group(more);
     return [
-      `Write my letter to my US ${TITLES[chamber].toLowerCase()}${recipient.trim() ? ` ${recipient.trim()}` : ''}.`,
-      `Me: ${name.trim() || '[name]'}, constituent${place.trim() ? ` in ${place.trim()}` : ''}, paid ${money(tax)} federal taxes.`,
+      `Write my letter to my US ${TITLES[chamber].toLowerCase()}${withIdentity && recipient.trim() ? ` ${recipient.trim()}` : ''}.`,
+      `Me: ${withIdentity && name.trim() ? name.trim() : '[name]'}, constituent${withIdentity && place.trim() ? ` in ${place.trim()}` : ''}, paid ${money(tax)} federal taxes.`,
       `Figures are FY${fiscalYear} federal outlays.`,
-      less && `I want LESS spent on: ${less}.`,
-      more && `I want MORE spent on: ${more}.`,
-      dropped > 0 && `Also ${dropped} more lines; add a placeholder for them.`,
+      lessText && `I want LESS spent on: ${lessText}.`,
+      moreText && `I want MORE spent on: ${moreText}.`,
+      droppedLess > 0 && `Also ${droppedLess} more I want cut; add a placeholder.`,
+      droppedMore > 0 && `Also ${droppedMore} more I want increased; add a placeholder.`,
       withStory && story.trim() && `Why it matters to me: ${story.trim()}`,
       `Tone: ${TONE_WORDS[tone]}.`,
       'Rules: under 200 words; first person; sound like a real person, not a template; one specific reason per program, arguing my side honestly; use my figures and invent no other statistics or personal details; end by asking how they will vote on the next budget.',
@@ -163,14 +175,20 @@ export function buildPrompt(input: LetterInput, maxEncoded: number): string {
       .join(' ');
   };
 
-  const count = Object.keys(marks).length;
-  for (const [withShare, withStory] of [[true, true], [false, true], [false, false]] as const) {
-    const prompt = compose(withShare, withStory, count);
+  const count = priority.length;
+  const attempts: [boolean, boolean, boolean][] = [
+    [true, true, true],
+    [false, true, true],
+    [false, false, true],
+    [false, false, false],
+  ];
+  for (const [withShare, withStory, withIdentity] of attempts) {
+    const prompt = compose(withShare, withStory, withIdentity, count);
     if (encodedLength(prompt) <= maxEncoded) return prompt;
   }
-  for (let keep = count - 1; keep > 0; keep -= 1) {
-    const prompt = compose(false, false, keep);
+  for (let keep = count - 1; keep > 1; keep -= 1) {
+    const prompt = compose(false, false, false, keep);
     if (encodedLength(prompt) <= maxEncoded) return prompt;
   }
-  return compose(false, false, 1);
+  return compose(false, false, false, Math.min(count, 2));
 }

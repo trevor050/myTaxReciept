@@ -1,5 +1,252 @@
 [
  {
+  "name": "Reason Foundation",
+  "url": "https://reason.org/",
+  "actionUrl": null,
+  "description": "Public policy research organization that advocates market-oriented solutions.",
+  "kind": "think-tank",
+  "stances": [
+   {
+    "id": "public_transit",
+    "direction": "less",
+    "evidenceUrl": "https://reason.org/backgrounder/how-to-improve-transit-service-for-todays-workers-and-commuters/",
+    "partial": true
+   }
+  ],
+  "prominence": "medium"
+ },
+ {
+  "name": "R Street Institute",
+  "url": "https://www.rstreet.org/",
+  "actionUrl": null,
+  "description": "Public policy research organization focused on limited, effective government.",
+  "kind": "think-tank",
+  "stances": [
+   {
+    "id": "crop_insurance",
+    "direction": "less",
+    "evidenceUrl": "https://www.rstreet.org/research/crop-insurance-reform/",
+    "partial": true
+   },
+   {
+    "id": "weapons_procurement",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/docLib/defending-america-defending-taxpayers.pdf",
+    "partial": true
+   },
+   {
+    "id": "nuclear_weapons",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/docLib/defending-america-defending-taxpayers.pdf",
+    "partial": true
+   },
+   {
+    "id": "military_personnel",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/docLib/defending-america-defending-taxpayers.pdf",
+    "partial": true
+   },
+   {
+    "id": "military_pensions",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/docLib/defending-america-defending-taxpayers.pdf",
+    "partial": true
+   },
+   {
+    "id": "military_construction",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/docLib/defending-america-defending-taxpayers.pdf",
+    "partial": true
+   }
+  ]
+ },
+ {
+  "name": "Friends of the Earth",
+  "url": "https://foe.org/",
+  "actionUrl": null,
+  "description": "Environmental advocacy organization working to protect people and the planet.",
+  "kind": "advocacy",
+  "stances": [
+   {
+    "id": "commodity_credit",
+    "direction": "less",
+    "evidenceUrl": "https://foe.org/wp-content/uploads/wpallimport/files/archive/Green_Scissors_2011.pdf",
+    "partial": true
+   }
+  ]
+ },
+ {
+  "name": "Manhattan Institute",
+  "url": "https://manhattan.institute/",
+  "actionUrl": null,
+  "description": "Public policy research organization focused on economic opportunity and urban life.",
+  "kind": "think-tank",
+  "stances": [
+   {
+    "id": "medicaid",
+    "direction": "less",
+    "evidenceUrl": "https://manhattan.institute/article/restraining-medicaids-budget-busting-waivers",
+    "partial": true
+   }
+  ]
+ },
+ {
+  "name": "Foundation for Government Accountability",
+  "url": "https://thefga.org/",
+  "actionUrl": null,
+  "description": "Research and advocacy organization focused on welfare and government accountability.",
+  "kind": "think-tank",
+  "stances": [
+   {
+    "id": "snap",
+    "direction": "reform",
+    "evidenceUrl": "https://thefga.org/press/house-agriculture-committee-takes-bold-steps-toward-strengthening-food-stampprogram-integrity-accountability-and-fiscal-responsibility/",
+    "partial": true
+   }
+  ]
+ },
+ {
+  "name": "EPIC (Economic Policy Innovation Center)",
+  "url": "https://epicforamerica.org/",
+  "actionUrl": null,
+  "description": "Research organization focused on federal economic and budget policy.",
+  "kind": "think-tank",
+  "stances": [
+   {
+    "id": "epa",
+    "direction": "less",
+    "evidenceUrl": "https://epicforamerica.org/federal-budget/scrap-the-clean-school-bus-program-and-save-taxpayer-dollars/",
+    "partial": true
+   }
+  ]
+ },
+ {
+  "name": "National Taxpayers Union",
+  "url": "https://www.ntu.org/foundation/about/",
+  "actionUrl": null,
+  "description": "Nonpartisan research organization focused on taxes, government spending, and regulation.",
+  "kind": "research",
+  "stances": [
+   {
+    "id": "net_interest",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/publications/detail/urgent-solutions-are-needed-to-address-ballooning-federal-deficits"
+   },
+   {
+    "id": "weapons_procurement",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/doclib/2020/04/Toward-Common-Ground-2020.pdf",
+    "partial": true
+   },
+   {
+    "id": "nuclear_weapons",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/doclib/2020/04/Toward-Common-Ground-2020.pdf",
+    "partial": true
+   },
+   {
+    "id": "military_personnel",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/docLib/defending-america-defending-taxpayers.pdf",
+    "partial": true
+   },
+   {
+    "id": "military_pensions",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/docLib/defending-america-defending-taxpayers.pdf",
+    "partial": true
+   },
+   {
+    "id": "military_construction",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/docLib/defending-america-defending-taxpayers.pdf",
+    "partial": true
+   },
+   {
+    "id": "crop_insurance",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/doclib/common-ground.html"
+   },
+   {
+    "id": "highways",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/doclib/2020/04/Toward-Common-Ground-2020.pdf",
+    "partial": true
+   },
+   {
+    "id": "public_transit",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/doclib/2020/04/Toward-Common-Ground-2020.pdf",
+    "partial": true
+   },
+   {
+    "id": "tsa",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/doclib/2020/04/Toward-Common-Ground-2020.pdf",
+    "partial": true
+   },
+   {
+    "id": "operations_maintenance",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/doclib/2020/04/Toward-Common-Ground-2020.pdf",
+    "partial": true
+   },
+   {
+    "id": "defense_rdte",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/doclib/2020/04/Toward-Common-Ground-2020.pdf",
+    "partial": true
+   },
+   {
+    "id": "commodity_credit",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/doclib/2020/04/Toward-Common-Ground-2020.pdf"
+   },
+   {
+    "id": "medicare",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/doclib/2020/04/Toward-Common-Ground-2020.pdf",
+    "partial": true
+   }
+  ]
+ },
+ {
+  "name": "National Priorities Project",
+  "url": "https://www.nationalpriorities.org/",
+  "actionUrl": null,
+  "description": "Research and advocacy organization for a federal budget prioritizing peace and shared prosperity.",
+  "kind": "advocacy",
+  "stances": [
+   {
+    "id": "weapons_procurement",
+    "direction": "less"
+   },
+   {
+    "id": "nuclear_weapons",
+    "direction": "less",
+    "evidenceUrl": "https://www.nationalpriorities.org/analysis/2023/warfare-state-how-funding-militarism-compromises-our-welfare/",
+    "partial": true
+   }
+  ],
+  "prominence": "high"
+ },
+ {
+  "name": "The Sentencing Project",
+  "url": "https://www.sentencingproject.org/",
+  "actionUrl": null,
+  "description": "Research and advocacy organization working to reduce incarceration and racial disparities.",
+  "kind": "advocacy",
+  "stances": [
+   {
+    "id": "federal_prisons",
+    "direction": "less",
+    "evidenceUrl": "https://www.sentencingproject.org/app/uploads/2025/06/2025-FCI-Letcher-Testimony.pdf",
+    "partial": true
+   }
+  ],
+  "prominence": "medium"
+ },
+ {
   "name": "AARP",
   "url": "https://www.aarp.org/",
   "actionUrl": "https://www.aarp.org/advocacy/ways-to-be-an-advocate/",
@@ -156,13 +403,20 @@
   "stances": [
    {
     "id": "medicaid",
-    "direction": "less",
-    "evidenceUrl": "https://paragoninstitute.org/medicaid/what-made-it-into-law-health-provisions-of-the-one-big-beautiful-bill/"
+    "direction": "reform",
+    "evidenceUrl": "https://paragoninstitute.org/medicare/restoring-fiscal-sustainability-to-federal-health-programs-reforming-the-incentives-that-drive-health-care-spending/",
+    "partial": true
    },
    {
     "id": "aca_subsidies",
     "direction": "less",
     "evidenceUrl": "https://paragoninstitute.org/medicaid/what-made-it-into-law-health-provisions-of-the-one-big-beautiful-bill/"
+   },
+   {
+    "id": "medicare",
+    "direction": "less",
+    "evidenceUrl": "https://paragoninstitute.org/medicare/restoring-fiscal-sustainability-to-federal-health-programs-reforming-the-incentives-that-drive-health-care-spending/",
+    "partial": true
    }
   ]
  },
@@ -351,20 +605,6 @@
   ]
  },
  {
-  "name": "National Taxpayers Union",
-  "url": "https://www.ntu.org/",
-  "actionUrl": "https://www.ntu.org/take-action",
-  "description": "A taxpayer advocacy organization focused on fiscal and tax policy.",
-  "kind": "advocacy",
-  "stances": [
-   {
-    "id": "net_interest",
-    "direction": "less",
-    "evidenceUrl": "https://www.ntu.org/publications/detail/urgent-solutions-are-needed-to-address-ballooning-federal-deficits"
-   }
-  ]
- },
- {
   "name": "Americans for Tax Reform",
   "url": "https://atr.org/",
   "actionUrl": "https://atr.org/take-action/",
@@ -418,6 +658,22 @@
     "id": "net_interest",
     "direction": "less",
     "evidenceUrl": "https://www.cagw.org/critical-waste-issues-for-the-119th-congress/"
+   },
+   {
+    "id": "community_block_grants",
+    "direction": "less",
+    "evidenceUrl": "https://www.cagw.org/press/citizens-against-government-waste-releases-5-4-trillion-in-prime-waste-cutting-recommendations/"
+   },
+   {
+    "id": "commodity_credit",
+    "direction": "less",
+    "evidenceUrl": "https://www.cagw.org/prime-cuts/",
+    "partial": true
+   },
+   {
+    "id": "rail_service",
+    "direction": "less",
+    "evidenceUrl": "https://www.cagw.org/prime-cuts/"
    }
   ]
  },
@@ -993,10 +1249,6 @@
     "direction": "more"
    },
    {
-    "id": "military_personnel",
-    "direction": "reform"
-   },
-   {
     "id": "operations_maintenance",
     "direction": "less"
    },
@@ -1023,28 +1275,12 @@
   "prominence": "medium",
   "stances": [
    {
-    "id": "weapons_procurement",
-    "direction": "reform"
-   },
-   {
-    "id": "nuclear_weapons",
-    "direction": "reform"
-   },
-   {
-    "id": "foreign_military_aid",
-    "direction": "reform"
-   },
-   {
     "id": "diplomacy",
     "direction": "more"
    },
    {
     "id": "epa",
     "direction": "more"
-   },
-   {
-    "id": "federal_prisons",
-    "direction": "reform"
    }
   ]
  },
@@ -1113,14 +1349,6 @@
    {
     "id": "diplomacy",
     "direction": "more"
-   },
-   {
-    "id": "operations_maintenance",
-    "direction": "reform"
-   },
-   {
-    "id": "arpa_e",
-    "direction": "reform"
    }
   ]
  },
@@ -1151,26 +1379,8 @@
     "direction": "more"
    },
    {
-    "id": "foreign_military_aid",
-    "direction": "reform"
-   },
-   {
     "id": "usaid",
     "direction": "more"
-   }
-  ]
- },
- {
-  "name": "Center for Arms Control and Non-Proliferation",
-  "url": "https://armscontrolcenter.org/",
-  "actionUrl": null,
-  "description": "Researches and advocates on nuclear weapons, arms control, and security policy.",
-  "kind": "think-tank",
-  "prominence": "medium",
-  "stances": [
-   {
-    "id": "nuclear_weapons",
-    "direction": "reform"
    }
   ]
  },
@@ -1203,46 +1413,6 @@
   ]
  },
  {
-  "name": "Amnesty International USA",
-  "url": "https://www.amnestyusa.org/",
-  "actionUrl": null,
-  "description": "Investigates and campaigns against human rights abuses in the United States and worldwide.",
-  "kind": "advocacy",
-  "prominence": "high",
-  "stances": [
-   {
-    "id": "foreign_military_aid",
-    "direction": "reform"
-   },
-   {
-    "id": "border_security",
-    "direction": "reform"
-   }
-  ]
- },
- {
-  "name": "Human Rights Watch",
-  "url": "https://www.hrw.org/",
-  "actionUrl": null,
-  "description": "Investigates and reports on human rights abuses around the world.",
-  "kind": "advocacy",
-  "prominence": "high",
-  "stances": [
-   {
-    "id": "foreign_military_aid",
-    "direction": "reform"
-   },
-   {
-    "id": "border_security",
-    "direction": "reform"
-   },
-   {
-    "id": "federal_prisons",
-    "direction": "reform"
-   }
-  ]
- },
- {
   "name": "The Carter Center",
   "url": "https://www.cartercenter.org/",
   "actionUrl": null,
@@ -1253,32 +1423,6 @@
    {
     "id": "diplomacy",
     "direction": "more"
-   },
-   {
-    "id": "usaid",
-    "direction": "reform"
-   }
-  ]
- },
- {
-  "name": "National Priorities Project (IPS)",
-  "url": "https://www.nationalpriorities.org/",
-  "actionUrl": null,
-  "description": "Analyzes the federal budget and advocates for peace and economic security.",
-  "kind": "think-tank",
-  "prominence": "high",
-  "stances": [
-   {
-    "id": "weapons_procurement",
-    "direction": "less"
-   },
-   {
-    "id": "nuclear_weapons",
-    "direction": "less"
-   },
-   {
-    "id": "net_interest",
-    "direction": "reform"
    }
   ]
  },
@@ -1292,19 +1436,25 @@
   "stances": [
    {
     "id": "weapons_procurement",
-    "direction": "less"
+    "direction": "less",
+    "evidenceUrl": "https://www.taxpayer.net/national-security/how-to-cut-half-a-trillion-dollars-from-the-pentagon-budget-request-and-strengthen-national-security/",
+    "partial": true
    },
    {
     "id": "operations_maintenance",
     "direction": "less"
    },
    {
-    "id": "nasa",
-    "direction": "reform"
+    "id": "crop_insurance",
+    "direction": "less",
+    "evidenceUrl": "https://www.taxpayer.net/agriculture/new-gao-report-recommends-cut-in-crop-insurance-subsidies/",
+    "partial": true
    },
    {
-    "id": "net_interest",
-    "direction": "reform"
+    "id": "commodity_credit",
+    "direction": "less",
+    "evidenceUrl": "https://www.taxpayer.net/agriculture/recommendations-for-an-alternative-accountable-farm-safety-net/",
+    "partial": true
    }
   ]
  },
@@ -1318,41 +1468,8 @@
   "stances": [
    {
     "id": "net_interest",
-    "direction": "reform"
-   },
-   {
-    "id": "medicare",
-    "direction": "reform"
-   },
-   {
-    "id": "medicaid",
-    "direction": "reform"
-   },
-   {
-    "id": "snap",
-    "direction": "reform"
-   },
-   {
-    "id": "child_tax_credit",
-    "direction": "reform"
-   }
-  ]
- },
- {
-  "name": "The Concord Coalition",
-  "url": "https://www.concordcoalition.org/",
-  "actionUrl": null,
-  "description": "Organizes public education on federal budget and long-term fiscal policy.",
-  "kind": "advocacy",
-  "prominence": "medium",
-  "stances": [
-   {
-    "id": "medicare",
-    "direction": "reform"
-   },
-   {
-    "id": "net_interest",
-    "direction": "reform"
+    "direction": "less",
+    "evidenceUrl": "https://www.crfb.org/papers/case-3-gdp-deficit-target"
    }
   ]
  },
@@ -1379,12 +1496,96 @@
   "prominence": "high",
   "stances": [
    {
-    "id": "medicare",
-    "direction": "reform"
+    "id": "epa",
+    "direction": "less",
+    "evidenceUrl": "https://www.downsizinggovernment.org/sites/downsizinggovernment.org/files/balanced-budget-plan.pdf",
+    "partial": true
    },
    {
-    "id": "epa",
-    "direction": "less"
+    "id": "ss_disability",
+    "direction": "less",
+    "evidenceUrl": "https://www.cato.org/cato-handbook-policymakers/cato-handbook-policy-makers-8th-edition-2017/32-cutting-federal-spending"
+   },
+   {
+    "id": "ssi",
+    "direction": "less",
+    "evidenceUrl": "https://www.cato.org/cato-handbook-policymakers/cato-handbook-policy-makers-8th-edition-2017/32-cutting-federal-spending"
+   },
+   {
+    "id": "aca_subsidies",
+    "direction": "less",
+    "evidenceUrl": "https://www.cato.org/cato-handbook-policymakers/cato-handbook-policy-makers-8th-edition-2017/32-cutting-federal-spending"
+   },
+   {
+    "id": "k12_schools",
+    "direction": "less",
+    "evidenceUrl": "https://www.downsizinggovernment.org/education/k-12-education-subsidies"
+   },
+   {
+    "id": "community_block_grants",
+    "direction": "less",
+    "evidenceUrl": "https://www.cato.org/policy-analysis/ending-community-development-subsidies"
+   },
+   {
+    "id": "public_housing",
+    "direction": "less",
+    "evidenceUrl": "https://www.downsizinggovernment.org/hud/public-housing-rental-subsidies"
+   },
+   {
+    "id": "highways",
+    "direction": "less",
+    "evidenceUrl": "https://www.cato.org/cato-handbook-policymakers/cato-handbook-policy-makers-8th-edition-2017/52-surface-transportation-policy"
+   },
+   {
+    "id": "public_transit",
+    "direction": "less",
+    "evidenceUrl": "https://www.cato.org/cato-handbook-policymakers/cato-handbook-policy-makers-8th-edition-2017/52-surface-transportation-policy"
+   },
+   {
+    "id": "rail_service",
+    "direction": "less",
+    "evidenceUrl": "https://www.cato.org/cato-handbook-policymakers/cato-handbook-policymakers-9th-edition-2022/cutting-federal-spending"
+   },
+   {
+    "id": "faa",
+    "direction": "reform",
+    "evidenceUrl": "https://www.cato.org/cato-handbook-policymakers/cato-handbook-policymakers-9th-edition-2022/cutting-federal-spending",
+    "partial": true
+   },
+   {
+    "id": "medicaid",
+    "direction": "less",
+    "evidenceUrl": "https://www.cato.org/cato-handbook-policymakers/cato-handbook-policymakers-9th-edition-2022/cutting-federal-spending",
+    "partial": true
+   },
+   {
+    "id": "medicare",
+    "direction": "less",
+    "evidenceUrl": "https://www.cato.org/cato-handbook-policymakers/cato-handbook-policymakers-9th-edition-2022/cutting-federal-spending",
+    "partial": true
+   },
+   {
+    "id": "crop_insurance",
+    "direction": "less",
+    "evidenceUrl": "https://www.cato.org/cato-handbook-policymakers/cato-handbook-policymakers-9th-edition-2022/cutting-federal-spending",
+    "partial": true
+   },
+   {
+    "id": "commodity_credit",
+    "direction": "less",
+    "evidenceUrl": "https://www.cato.org/cato-handbook-policymakers/cato-handbook-policymakers-9th-edition-2022/cutting-federal-spending",
+    "partial": true
+   },
+   {
+    "id": "renewables",
+    "direction": "less",
+    "evidenceUrl": "https://www.cato.org/cato-handbook-policymakers/cato-handbook-policymakers-9th-edition-2022/cutting-federal-spending",
+    "partial": true
+   },
+   {
+    "id": "fema_disaster",
+    "direction": "less",
+    "evidenceUrl": "https://www.downsizinggovernment.org/trump-right-end-fema"
    }
   ]
  },
@@ -1403,6 +1604,30 @@
    {
     "id": "irs",
     "direction": "less"
+   },
+   {
+    "id": "medicaid",
+    "direction": "less",
+    "evidenceUrl": "https://static.heritage.org/government-spending/budget-and-spending/budget-blueprint/2022/budget-blueprint-executive-summary-2023.pdf",
+    "partial": true
+   },
+   {
+    "id": "aca_subsidies",
+    "direction": "less",
+    "evidenceUrl": "https://static.heritage.org/government-spending/budget-and-spending/budget-blueprint/2022/budget-blueprint-executive-summary-2023.pdf",
+    "partial": true
+   },
+   {
+    "id": "public_housing",
+    "direction": "reform",
+    "evidenceUrl": "https://static.heritage.org/government-spending/budget-and-spending/budget-blueprint/2022/budget-blueprint-executive-summary-2023.pdf",
+    "partial": true
+   },
+   {
+    "id": "ed_ops",
+    "direction": "less",
+    "evidenceUrl": "https://static.heritage.org/government-spending/budget-and-spending/budget-blueprint/2022/budget-blueprint-executive-summary-2023.pdf",
+    "partial": true
    }
   ]
  },
@@ -1493,42 +1718,6 @@
   ]
  },
  {
-  "name": "Planned Parenthood Action Fund",
-  "url": "https://www.plannedparenthoodaction.org/",
-  "actionUrl": null,
-  "description": "Advocates for reproductive health care and access to Planned Parenthood services.",
-  "kind": "advocacy",
-  "prominence": "high",
-  "stances": [
-   {
-    "id": "medicaid",
-    "direction": "reform"
-   }
-  ]
- },
- {
-  "name": "The Commonwealth Fund",
-  "url": "https://www.commonwealthfund.org/",
-  "actionUrl": null,
-  "description": "Conducts research on health care access, quality, and system performance.",
-  "kind": "think-tank",
-  "prominence": "medium",
-  "stances": [
-   {
-    "id": "medicare",
-    "direction": "reform"
-   },
-   {
-    "id": "medicaid",
-    "direction": "reform"
-   },
-   {
-    "id": "aca_subsidies",
-    "direction": "reform"
-   }
-  ]
- },
- {
   "name": "Environmental Working Group (EWG)",
   "url": "https://www.ewg.org/",
   "actionUrl": null,
@@ -1543,10 +1732,6 @@
    {
     "id": "renewables",
     "direction": "more"
-   },
-   {
-    "id": "snap",
-    "direction": "reform"
    }
   ]
  },
@@ -1621,14 +1806,6 @@
    {
     "id": "epa",
     "direction": "more"
-   },
-   {
-    "id": "renewables",
-    "direction": "reform"
-   },
-   {
-    "id": "forest_service",
-    "direction": "reform"
    }
   ]
  },
@@ -1705,28 +1882,6 @@
   ]
  },
  {
-  "name": "The Nature Conservancy",
-  "url": "https://www.nature.org/en-us/",
-  "actionUrl": null,
-  "description": "Works to conserve lands and waters in the United States and worldwide.",
-  "kind": "advocacy",
-  "prominence": "high",
-  "stances": [
-   {
-    "id": "forest_service",
-    "direction": "reform"
-   },
-   {
-    "id": "national_parks",
-    "direction": "reform"
-   },
-   {
-    "id": "noaa",
-    "direction": "reform"
-   }
-  ]
- },
- {
   "name": "The Planetary Society",
   "url": "https://www.planetary.org/",
   "actionUrl": null,
@@ -1745,104 +1900,22 @@
   ]
  },
  {
-  "name": "Union of Concerned Scientists",
-  "url": "https://www.ucs.org/",
-  "actionUrl": null,
-  "description": "Uses independent science and advocacy to advance public policy solutions.",
-  "kind": "think-tank",
-  "prominence": "high",
-  "stances": [
-   {
-    "id": "nuclear_weapons",
-    "direction": "reform"
-   },
-   {
-    "id": "epa",
-    "direction": "reform"
-   },
-   {
-    "id": "nsf",
-    "direction": "reform"
-   },
-   {
-    "id": "nasa",
-    "direction": "reform"
-   }
-  ]
- },
- {
-  "name": "Federation of American Scientists (FAS)",
-  "url": "https://fas.org/",
-  "actionUrl": null,
-  "description": "Conducts research and advocacy on science, technology, and national security policy.",
-  "kind": "think-tank",
-  "prominence": "medium",
-  "stances": [
-   {
-    "id": "nuclear_weapons",
-    "direction": "reform"
-   },
-   {
-    "id": "arpa_e",
-    "direction": "reform"
-   }
-  ]
- },
- {
-  "name": "Electronic Frontier Foundation (EFF)",
-  "url": "https://www.eff.org/",
-  "actionUrl": null,
-  "description": "Defends civil liberties and digital rights through law, policy, and technology work.",
-  "kind": "advocacy",
-  "prominence": "high",
-  "stances": [
-   {
-    "id": "tsa",
-    "direction": "reform"
-   },
-   {
-    "id": "cfpb",
-    "direction": "reform"
-   },
-   {
-    "id": "nasa",
-    "direction": "reform"
-   }
-  ]
- },
- {
-  "name": "Center for Democracy & Technology (CDT)",
-  "url": "https://cdt.org/",
-  "actionUrl": null,
-  "description": "Advocates for civil rights and civil liberties in the digital age.",
-  "kind": "think-tank",
-  "prominence": "medium",
-  "stances": [
-   {
-    "id": "fbi",
-    "direction": "reform"
-   }
-  ]
- },
- {
   "name": "American Civil Liberties Union (ACLU)",
   "url": "https://www.aclu.org/",
-  "actionUrl": null,
+  "actionUrl": "https://action.aclu.org/send-message/no-more-funding-ice",
   "description": "Defends civil liberties and civil rights through litigation, advocacy, and public education.",
   "kind": "advocacy",
   "prominence": "high",
   "stances": [
    {
-    "id": "border_security",
-    "direction": "reform"
-   },
-   {
-    "id": "federal_prisons",
-    "direction": "reform"
-   },
-   {
     "id": "federal_courts",
     "direction": "more"
+   },
+   {
+    "id": "border_security",
+    "direction": "less",
+    "evidenceUrl": "https://action.aclu.org/send-message/no-more-funding-ice",
+    "partial": true
    }
   ]
  },
@@ -1854,10 +1927,6 @@
   "kind": "advocacy",
   "prominence": "high",
   "stances": [
-   {
-    "id": "k12_schools",
-    "direction": "reform"
-   },
    {
     "id": "mbda",
     "direction": "more"
@@ -1873,30 +1942,8 @@
   "prominence": "medium",
   "stances": [
    {
-    "id": "federal_prisons",
-    "direction": "reform"
-   },
-   {
-    "id": "border_security",
-    "direction": "reform"
-   },
-   {
     "id": "federal_courts",
     "direction": "more"
-   }
-  ]
- },
- {
-  "name": "The Sentencing Project",
-  "url": "https://www.sentencingproject.org/",
-  "actionUrl": null,
-  "description": "Researches and advocates for reforms to reduce incarceration and racial disparities.",
-  "kind": "think-tank",
-  "prominence": "medium",
-  "stances": [
-   {
-    "id": "federal_prisons",
-    "direction": "less"
    }
   ]
  },
@@ -1909,30 +1956,8 @@
   "prominence": "medium",
   "stances": [
    {
-    "id": "federal_prisons",
-    "direction": "reform"
-   },
-   {
     "id": "federal_courts",
     "direction": "more"
-   }
-  ]
- },
- {
-  "name": "Common Cause",
-  "url": "https://www.commoncause.org/",
-  "actionUrl": null,
-  "description": "Advocates for voting rights, campaign finance reform, and accountable government.",
-  "kind": "advocacy",
-  "prominence": "medium",
-  "stances": [
-   {
-    "id": "federal_courts",
-    "direction": "reform"
-   },
-   {
-    "id": "irs",
-    "direction": "reform"
    }
   ]
  },
@@ -1946,25 +1971,7 @@
   "stances": [
    {
     "id": "federal_courts",
-    "direction": "reform"
-   },
-   {
-    "id": "federal_prisons",
-    "direction": "reform"
-   }
-  ]
- },
- {
-  "name": "Center for Responsive Politics (OpenSecrets)",
-  "url": "https://www.opensecrets.org/",
-  "actionUrl": null,
-  "description": "Tracks money in U.S. politics and publishes campaign finance data.",
-  "kind": "advocacy",
-  "prominence": "high",
-  "stances": [
-   {
-    "id": "weapons_procurement",
-    "direction": "reform"
+    "direction": "more"
    }
   ]
  },
@@ -1979,54 +1986,6 @@
    {
     "id": "cfpb",
     "direction": "more"
-   },
-   {
-    "id": "tsa",
-    "direction": "reform"
-   }
-  ]
- },
- {
-  "name": "Project On Government Oversight (POGO)",
-  "url": "https://www.pogo.org/",
-  "actionUrl": null,
-  "description": "Investigates government waste and abuse and advocates for oversight reforms.",
-  "kind": "advocacy",
-  "prominence": "high",
-  "stances": [
-   {
-    "id": "weapons_procurement",
-    "direction": "reform"
-   },
-   {
-    "id": "operations_maintenance",
-    "direction": "reform"
-   },
-   {
-    "id": "irs",
-    "direction": "reform"
-   },
-   {
-    "id": "cfpb",
-    "direction": "reform"
-   }
-  ]
- },
- {
-  "name": "ProPublica",
-  "url": "https://www.propublica.org/",
-  "actionUrl": null,
-  "description": "A nonprofit newsroom that investigates abuses of power and public trust.",
-  "kind": "advocacy",
-  "prominence": "high",
-  "stances": [
-   {
-    "id": "irs",
-    "direction": "reform"
-   },
-   {
-    "id": "fema_disaster",
-    "direction": "reform"
    }
   ]
  },
@@ -2067,42 +2026,6 @@
    {
     "id": "college_aid",
     "direction": "more"
-   },
-   {
-    "id": "ed_ops",
-    "direction": "reform"
-   }
-  ]
- },
- {
-  "name": "Teach For America",
-  "url": "https://www.teachforamerica.org/",
-  "actionUrl": null,
-  "description": "Recruits and develops teachers and advocates for educational equity.",
-  "kind": "advocacy",
-  "prominence": "medium",
-  "stances": [
-   {
-    "id": "k12_schools",
-    "direction": "reform"
-   },
-   {
-    "id": "ed_ops",
-    "direction": "reform"
-   }
-  ]
- },
- {
-  "name": "Student Debt Crisis Center",
-  "url": "https://www.studentdebtcrisis.org/",
-  "actionUrl": null,
-  "description": "Organizes borrowers and advocates for student debt relief and higher education affordability.",
-  "kind": "advocacy",
-  "prominence": "medium",
-  "stances": [
-   {
-    "id": "college_aid",
-    "direction": "reform"
    }
   ]
  },
@@ -2159,10 +2082,6 @@
   "prominence": "high",
   "stances": [
    {
-    "id": "public_housing",
-    "direction": "reform"
-   },
-   {
     "id": "community_block_grants",
     "direction": "more"
    }
@@ -2179,10 +2098,6 @@
    {
     "id": "community_block_grants",
     "direction": "more"
-   },
-   {
-    "id": "public_housing",
-    "direction": "reform"
    },
    {
     "id": "mbda",
@@ -2213,20 +2128,6 @@
   ]
  },
  {
-  "name": "National Sustainable Agriculture Coalition",
-  "url": "https://sustainableagriculture.net/",
-  "actionUrl": null,
-  "description": "Advocates for federal policies that support sustainable agriculture and rural communities.",
-  "kind": "think-tank",
-  "prominence": "medium",
-  "stances": [
-   {
-    "id": "snap",
-    "direction": "reform"
-   }
-  ]
- },
- {
   "name": "Feeding America",
   "url": "https://www.feedingamerica.org/",
   "actionUrl": null,
@@ -2245,20 +2146,6 @@
    {
     "id": "child_tax_credit",
     "direction": "more"
-   }
-  ]
- },
- {
-  "name": "Heifer International",
-  "url": "https://www.heifer.org/",
-  "actionUrl": null,
-  "description": "Works with communities on agriculture, livelihoods, and food security.",
-  "kind": "advocacy",
-  "prominence": "medium",
-  "stances": [
-   {
-    "id": "usaid",
-    "direction": "reform"
    }
   ]
  },
@@ -2317,32 +2204,6 @@
    {
     "id": "va_programs",
     "direction": "more"
-   },
-   {
-    "id": "ss_disability",
-    "direction": "reform"
-   },
-   {
-    "id": "military_pensions",
-    "direction": "reform"
-   }
-  ]
- },
- {
-  "name": "Student Veterans of America (SVA)",
-  "url": "https://studentveterans.org/",
-  "actionUrl": null,
-  "description": "Supports student veterans and advocates for their educational opportunities.",
-  "kind": "advocacy",
-  "prominence": "medium",
-  "stances": [
-   {
-    "id": "va_programs",
-    "direction": "reform"
-   },
-   {
-    "id": "college_aid",
-    "direction": "reform"
    }
   ]
  },
@@ -2369,20 +2230,6 @@
   ]
  },
  {
-  "name": "National Employment Law Project (NELP)",
-  "url": "https://www.nelp.org/",
-  "actionUrl": null,
-  "description": "Advocates for workers’ rights, good jobs, and economic security.",
-  "kind": "think-tank",
-  "prominence": "medium",
-  "stances": [
-   {
-    "id": "unemployment_insurance",
-    "direction": "reform"
-   }
-  ]
- },
- {
   "name": "National Immigration Law Center (NILC)",
   "url": "https://www.nilc.org/",
   "actionUrl": null,
@@ -2401,20 +2248,6 @@
    {
     "id": "medicaid",
     "direction": "more"
-   }
-  ]
- },
- {
-  "name": "American Immigration Council",
-  "url": "https://www.americanimmigrationcouncil.org/",
-  "actionUrl": null,
-  "description": "Uses research, legal work, and advocacy to improve immigration policy.",
-  "kind": "think-tank",
-  "prominence": "medium",
-  "stances": [
-   {
-    "id": "border_security",
-    "direction": "reform"
    }
   ]
  },
@@ -2475,24 +2308,64 @@
    {
     "id": "epa",
     "direction": "more"
-   }
-  ]
- },
- {
-  "name": "Center for Science in the Public Interest (CSPI)",
-  "url": "https://www.cspi.org/",
-  "actionUrl": null,
-  "description": "Conducts research and advocacy on food, nutrition, and public health.",
-  "kind": "advocacy",
-  "prominence": "medium",
-  "stances": [
-   {
-    "id": "snap",
-    "direction": "reform"
    },
    {
-    "id": "cdc",
-    "direction": "reform"
+    "id": "crop_insurance",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/doclib/common-ground.html"
+   },
+   {
+    "id": "highways",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/doclib/2020/04/Toward-Common-Ground-2020.pdf",
+    "partial": true
+   },
+   {
+    "id": "public_transit",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/doclib/2020/04/Toward-Common-Ground-2020.pdf",
+    "partial": true
+   },
+   {
+    "id": "tsa",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/doclib/2020/04/Toward-Common-Ground-2020.pdf",
+    "partial": true
+   },
+   {
+    "id": "operations_maintenance",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/doclib/2020/04/Toward-Common-Ground-2020.pdf",
+    "partial": true
+   },
+   {
+    "id": "weapons_procurement",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/doclib/2020/04/Toward-Common-Ground-2020.pdf",
+    "partial": true
+   },
+   {
+    "id": "nuclear_weapons",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/doclib/2020/04/Toward-Common-Ground-2020.pdf",
+    "partial": true
+   },
+   {
+    "id": "defense_rdte",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/doclib/2020/04/Toward-Common-Ground-2020.pdf",
+    "partial": true
+   },
+   {
+    "id": "commodity_credit",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/doclib/2020/04/Toward-Common-Ground-2020.pdf"
+   },
+   {
+    "id": "medicare",
+    "direction": "less",
+    "evidenceUrl": "https://www.ntu.org/library/doclib/2020/04/Toward-Common-Ground-2020.pdf",
+    "partial": true
    }
   ]
  },
@@ -2509,16 +2382,8 @@
     "direction": "more"
    },
    {
-    "id": "highways",
-    "direction": "reform"
-   },
-   {
     "id": "rail_service",
     "direction": "more"
-   },
-   {
-    "id": "faa",
-    "direction": "reform"
    }
   ]
  },
@@ -2559,20 +2424,6 @@
    {
     "id": "public_housing",
     "direction": "more"
-   }
-  ]
- },
- {
-  "name": "Center for Economic and Policy Research (CEPR)",
-  "url": "https://cepr.net/",
-  "actionUrl": null,
-  "description": "Conducts research on economic and social policy.",
-  "kind": "think-tank",
-  "prominence": "medium",
-  "stances": [
-   {
-    "id": "medicare",
-    "direction": "reform"
    }
   ]
  }
