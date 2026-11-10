@@ -75,12 +75,11 @@ function CategoryRow({ category, tax, wage, showHours, marks, onMark }: { catego
               <div key={program.id} className="rc-program">
                 <div className="rc-program-line">
                   <span className="rc-label-text">
-                    {program.label}
-                    {stance === 'less' && <PenMark stance="less" />}
+                    <span className={stance === 'less' ? 'pen-strike' : undefined}>{program.label}</span>
                   </span>
                   <span className="rc-amount">
                     {display(program.amountB)}
-                    {stance === 'more' && <PenMark stance="more" />}
+                    {stance === 'more' && <PenMark />}
                   </span>
                 </div>
                 {BLURBS[program.id] && (

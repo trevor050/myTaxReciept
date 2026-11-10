@@ -488,13 +488,20 @@ a {
   animation: draw 0.32s ease-out both;
 }
 
+/* A background, not an absolutely positioned SVG: with box-decoration-break: clone each
+   wrapped line fragment gets its own stroke, so long program names are fully crossed out. */
 .pen-strike {
-  top: 50%;
-  left: -3px;
-  width: calc(100% + 6px);
-  height: 8px;
-  margin-top: -4px;
-  stroke: var(--red-pen);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10' preserveAspectRatio='none'%3E%3Cpath d='M1 6 C 18 3, 30 8, 48 5 S 80 3, 99 5' fill='none' stroke='%23c4261d' stroke-width='2' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E")
+    no-repeat 0 55% / 100% 0.5em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  animation: strike 0.32s ease-out both;
+}
+
+@keyframes strike {
+  from {
+    background-size: 0% 0.5em;
+  }
 }
 
 .pen-loop {
@@ -902,6 +909,7 @@ a {
   }
 
   .receipt,
+  .pen-strike,
   .pen-mark path {
     animation: none;
   }
