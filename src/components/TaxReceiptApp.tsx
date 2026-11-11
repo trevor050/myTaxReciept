@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   budget,
   decodeMarks,
-  encodeMarks,
+  buildShareUrl,
   estimatePayrollTax,
   estimateTax,
   formatMoneyInput,
@@ -100,11 +100,9 @@ export function TaxReceiptApp() {
   }
 
   async function copyLink() {
-    const url = new URL(window.location.origin);
-    if (!isSample) url.searchParams.set('tax', String(Math.round(tax)));
-    if (markCount) url.searchParams.set('marks', encodeMarks(marks));
+    const url = buildShareUrl(window.location.origin, isSample ? null : tax, marks);
     try {
-      await navigator.clipboard.writeText(url.toString());
+      await navigator.clipboard.writeText(url);
       flash(isSample ? 'Link copied' : 'Link copied. It includes your amount.');
     } catch {
       flash('Could not copy. Your browser blocked clipboard access.');

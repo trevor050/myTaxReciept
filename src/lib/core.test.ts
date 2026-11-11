@@ -3,7 +3,7 @@ import { BLURBS } from '@/data/blurbs';
 import { REASONS } from '@/data/reasons';
 import { buildLetter, buildPrompt, type LetterInput } from './letter';
 import { GENERAL_CUT_GROUPS, generalCutGroups, matchOrgs } from './orgs';
-import { budget, categories, decodeMarks, encodeMarks, estimatePayrollTax, estimateTax, formatHours, formatMoneyInput, parseMoney, parseSharedTax, shareOf, type Marks } from './tax';
+import { budget, buildShareUrl, categories, decodeMarks, encodeMarks, estimatePayrollTax, estimateTax, formatHours, formatMoneyInput, parseMoney, parseSharedTax, shareOf, type Marks } from './tax';
 
 const estimator: Pick<typeof budget.taxEstimator, 'brackets' | 'standardDeduction'> = {
   standardDeduction: { single: 10_000, married_joint: 20_000, head_of_household: 15_000 },
@@ -242,5 +242,21 @@ describe('matchOrgs', () => {
         expect(direction).not.toBe('reform');
       }
     }
+  });
+});
+
+
+describe('receipt share links', () => {
+  it.each([18_500.25, 0.29, 0, 19_750.47])('restores the same amount, including cents: %s', (tax) => {
+    const marks: Marks = { weapons_procurement: 'less', military_construction: 'more' };
+    const url = new URL(buildShareUrl('https://receipt.example', tax, marks));
+    expect(parseSharedTax(url.searchParams.get('tax'))).toBe(tax);
+    expect(decodeMarks(url.searchParams.get('marks'))).toEqual(marks);
+  });
+
+  it('keeps a sample receipt as a sample while preserving marks', () => {
+    const url = new URL(buildShareUrl('https://receipt.example', null, { snap: 'more' }));
+    expect(url.searchParams.has('tax')).toBe(false);
+    expect(decodeMarks(url.searchParams.get('marks'))).toEqual({ snap: 'more' });
   });
 });

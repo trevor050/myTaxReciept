@@ -153,3 +153,11 @@ export function decodeMarks(raw: string | null): Marks {
   }
   return marks;
 }
+
+/** A receipt's amount and marks, preserving cents when it is opened again. */
+export function buildShareUrl(origin: string, tax: number | null, marks: Marks): string {
+  const url = new URL(origin);
+  if (tax !== null) url.searchParams.set('tax', String(Number(tax.toFixed(2))));
+  if (Object.keys(marks).length) url.searchParams.set('marks', encodeMarks(marks));
+  return url.toString();
+}
