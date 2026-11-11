@@ -4,6 +4,8 @@ An itemized receipt for your federal taxes. Enter what you paid and see your sha
 
 **Live:** https://mytaxreceipt.org
 
+![The receipt for an $18,500 tax bill, with Defense opened, weapons procurement struck out and military construction circled](docs/screenshots/receipt.png)
+
 Recommended by [Recomendo](https://archive.recomendo.com/posts/where-your-tax-dollars-actually-go), [Deal Secrets](https://dealsecrets.substack.com/p/strap-the-featured-packed-amazfit?open=false), and [Idea Surplus Disorder](https://www.ideasurplusdisorder.com/122/), with 300+ upvotes on [r/InternetIsBeautiful](https://www.reddit.com/r/InternetIsBeautiful/comments/1laxodq/).
 
 ## What it does
@@ -14,6 +16,8 @@ Recommended by [Recomendo](https://archive.recomendo.com/posts/where-your-tax-do
 - **AI handoff.** Sends a compact, self-contained prompt to ChatGPT, Claude, Perplexity, or Grok. It sheds detail as needed to fit in a URL.
 - **Groups on both sides.** Finds organizations working on the lines you marked, with a link to each position where one was checked, and shows who argues the other side.
 - **Private by design.** Everything runs in your browser. Your amount only leaves it if you copy a share link.
+
+![The letter to Congress built from those two marks, with tone, recipient and AI handoff controls](docs/screenshots/letter.png)
 
 ## The data
 
@@ -30,7 +34,10 @@ npm install
 npm run dev        # http://localhost:9002
 npm test
 npm run typecheck
+npm run build
 ```
+
+CI runs all of that on every PR, and also regenerates `src/data/budget.json` from the sourced dataset to make sure nobody hand-edited it.
 
 Built with Next.js, React, TypeScript, and Tailwind CSS. No backend, database, or API keys.
 

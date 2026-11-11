@@ -1,11 +1,11 @@
 'use client';
 
-import { toPng } from 'html-to-image';
+import { getFontEmbedCSS, toPng } from 'html-to-image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   budget,
   decodeMarks,
-  encodeMarks,
+  buildShareUrl,
   estimatePayrollTax,
   estimateTax,
   formatMoneyInput,
@@ -85,8 +85,17 @@ export function TaxReceiptApp() {
     const node = receiptRef.current;
     if (!node) return;
     try {
+      const fonts = await getFontEmbedCSS(node);
       const url = await toPng(node, {
         pixelRatio: 2,
+        // The cloned receipt must not restart its slide-in animation during capture.
+        style: { animation: 'none', transform: 'none' },
+        // Pen strokes animate too; capture their completed state in the clone only.
+        fontEmbedCSS: `${fonts}
+          .receipt * { animation: none !important; transition: none !important; }
+          .pen-strike { background-size: 100% 0.5em !important; }
+          .pen-mark path { stroke-dashoffset: 0 !important; }
+        `,
         filter: (el) => !(el instanceof HTMLElement && el.dataset.export === 'hide'),
       });
       const link = document.createElement('a');
@@ -100,11 +109,9 @@ export function TaxReceiptApp() {
   }
 
   async function copyLink() {
-    const url = new URL(window.location.origin);
-    if (!isSample) url.searchParams.set('tax', String(Math.round(tax)));
-    if (markCount) url.searchParams.set('marks', encodeMarks(marks));
+    const url = buildShareUrl(window.location.origin, isSample ? null : tax, marks);
     try {
-      await navigator.clipboard.writeText(url.toString());
+      await navigator.clipboard.writeText(url);
       flash(isSample ? 'Link copied' : 'Link copied. It includes your amount.');
     } catch {
       flash('Could not copy. Your browser blocked clipboard access.');
