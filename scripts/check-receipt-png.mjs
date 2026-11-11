@@ -18,6 +18,12 @@ for (let offset = 8; offset < png.length;) {
   offset += size + 12;
 }
 const stride = width * 4;
+// Optional browser-captured CSS rectangles, relative to the receipt, at pixelRatio 2.
+const strikes = process.argv[3] ? JSON.parse(readFileSync(process.argv[3], 'utf8')).strikes.map((r) => ({
+  left: Math.max(0, Math.floor(r.x * 2)), right: Math.min(width, Math.ceil((r.x + r.width) * 2)),
+  top: Math.max(0, Math.floor(r.y * 2)), bottom: Math.min(height, Math.ceil((r.y + r.height) * 2)),
+  columns: new Set(),
+})) : [];
 const raw = inflateSync(Buffer.concat(chunks), { maxOutputLength: (stride + 1) * height });
 assert.equal(raw.length, (stride + 1) * height, 'Incomplete PNG pixels');
 let previous = Buffer.alloc(stride);
@@ -39,6 +45,13 @@ for (let y = 0; y < height; y++) {
     assert(row[center + 3] >= 250, 'Paper shifted up: transparent gap below receipt (print animation restarted)');
     assert(row[center] > 220 && row[center + 1] > 220 && row[center + 2] > 220, 'Receipt footer paper is clipped');
   }
+  for (const r of strikes) if (y >= r.top && y < r.bottom) {
+    for (let x = r.left; x < r.right; x++) {
+      const i = x * 4;
+      if (row[i] > 100 && row[i] > row[i + 1] * 1.5 && row[i] > row[i + 2] * 1.5 && row[i + 3] > 200) r.columns.add(x);
+    }
+  }
   previous = row;
 }
+for (const r of strikes) assert(r.columns.size / (r.right - r.left) >= 0.65, 'Incomplete red strike: pen animation restarted in export');
 console.log(`Receipt PNG paper bounds OK: ${width} × ${height}. Also inspect fonts, marks and header visually.`);

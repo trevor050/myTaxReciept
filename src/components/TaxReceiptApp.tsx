@@ -1,6 +1,6 @@
 'use client';
 
-import { toPng } from 'html-to-image';
+import { getFontEmbedCSS, toPng } from 'html-to-image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   budget,
@@ -85,10 +85,17 @@ export function TaxReceiptApp() {
     const node = receiptRef.current;
     if (!node) return;
     try {
+      const fonts = await getFontEmbedCSS(node);
       const url = await toPng(node, {
         pixelRatio: 2,
         // The cloned receipt must not restart its slide-in animation during capture.
         style: { animation: 'none', transform: 'none' },
+        // Pen strokes animate too; capture their completed state in the clone only.
+        fontEmbedCSS: `${fonts}
+          .receipt * { animation: none !important; transition: none !important; }
+          .pen-strike { background-size: 100% 0.5em !important; }
+          .pen-mark path { stroke-dashoffset: 0 !important; }
+        `,
         filter: (el) => !(el instanceof HTMLElement && el.dataset.export === 'hide'),
       });
       const link = document.createElement('a');
