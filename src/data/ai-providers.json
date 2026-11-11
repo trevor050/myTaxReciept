@@ -1,0 +1,6 @@
+[
+  { "id": "chatgpt", "name": "ChatGPT", "urlTemplate": "https://chatgpt.com/?q={prompt}", "maxEncodedChars": 1900 },
+  { "id": "claude", "name": "Claude", "urlTemplate": "https://claude.ai/new?q={prompt}", "maxEncodedChars": 1900 },
+  { "id": "perplexity", "name": "Perplexity", "urlTemplate": "https://www.perplexity.ai/search?q={prompt}", "maxEncodedChars": 1900 },
+  { "id": "grok", "name": "Grok", "urlTemplate": "https://grok.com/?q={prompt}", "maxEncodedChars": 1900 }
+]
