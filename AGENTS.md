@@ -18,4 +18,5 @@ Static single-page Next app (no backend). Live: mytaxreceipt.org, Vercel project
 - `.printer-feed` clip-path clips the top only so the receipt prints out of the slot; shadow must stay on that wrapper because `.receipt` clip-path would cut it.
 - Less strike is a CSS background on an inline span (`.pen-strike`, `box-decoration-break: clone`), not an SVG. `.rc-program-line` is flex, which blockifies direct children; an absolute SVG or a background on the flex item lands between wrapped lines on phones.
 - README screenshots in `docs/screenshots/` are captured from `next start` at 1280x820 with $18,500 entered, Defense open, procurement Less, military construction More. Wait ~1.5s for the print animation, and set `scroll-behavior: auto` before scripted scrolling.
+- Save image must override animation AND transform on the html-to-image clone. Copying the root's print animation restarts it in the SVG rasterizer, clipping the header and leaving blank pixels below (Windows Chrome/Firefox/Edge).
 - "ignored package-lock.json in /Users/trevorrosato" build warning is a stray file on Trevor's machine, not a repo issue.

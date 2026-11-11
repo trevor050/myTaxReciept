@@ -87,6 +87,8 @@ export function TaxReceiptApp() {
     try {
       const url = await toPng(node, {
         pixelRatio: 2,
+        // The cloned receipt must not restart its slide-in animation during capture.
+        style: { animation: 'none', transform: 'none' },
         filter: (el) => !(el instanceof HTMLElement && el.dataset.export === 'hide'),
       });
       const link = document.createElement('a');
